@@ -1,0 +1,183 @@
+site_name: 資安防護基礎教材 | Shield of Self-Defense (SSD)
+site_url: https://ssd.ocf.tw/
+site_description: "給公民團體 CSOs 的資安防護基礎教材"
+site_author: "財團法人開放文化基金會 (Open Culture Foundation, OCF)"
+copyright: "CC-BY 4.0 姓名標示"
+nav:
+  - 首頁:
+      - index.md
+      - 如何使用線上教材:
+          - howtouse/index.md
+          - 關懷組: howtouse/a_team.md
+          - 自學組: howtouse/self.md
+          - 教材資源:
+              - course/index.md
+              - 章節內容: chapter/index.md
+              - 操作手冊: user_guide/index.md
+          - 政策制定: policy/index.md
+          - 狀態評估: assessment/index.md
+          - 關懷與諮詢: support/index.md
+  - 章節內容:
+      - chapter/index.md
+      - 威脅建模: chapter/threat_modeling_class.md
+      - 裝置安全: chapter/devices.md
+      - 身份驗證:
+          - chapter/profile/index.md
+          - 密碼管理器: chapter/profile/password_manager.md
+          - 密碼強度: chapter/profile/password.md
+          - 多因子驗證: chapter/profile/mfa.md
+      - 網路使用行為:
+          - chapter/network/index.md
+          - 隱私瀏覽行為: chapter/network/browser_privacy.md
+          - 釣魚、詐騙: chapter/network/phishing.md
+          - VPN: chapter/network/vpn.md
+          - 網路與 Wi-Fi: chapter/network/wifi.md
+      - 加密通訊:
+          - chapter/e2ee/index.md
+          - 加密即時通訊: chapter/e2ee/im.md
+          - 加密電子郵件: chapter/e2ee/mails.md
+      - 帳號管理:
+          - chapter/account/index.md
+          - 帳號權限管理與追蹤: chapter/account/management.md
+      - 資料管理與備份:
+          - chapter/files_management/index.md
+          - 檔案存取權限: chapter/files_management/files_access.md
+          - 資料備份與封存: chapter/files_management/backup_archive.md
+          - 更新軟體: chapter/files_management/software_update.md
+      - 海外出差: chapter/abroad.md
+  - 操作手冊:
+      - user_guide/index.md
+      - 風險評估表: user_guide/risk_assessment.md
+      - 裝置安全:
+          - user_guide/devices/index.md
+          - iOS 裝置設定: user_guide/devices/ios.md
+          - MacOS: user_guide/devices/macOS.md
+          - Windows: user_guide/devices/windows.md
+          - Android: user_guide/devices/android.md
+      - 身份驗證:
+          - user_guide/profile/index.md
+          - 密碼管理器: user_guide/profile/password_manager.md
+          - 多因子驗證: user_guide/profile/mfa.md
+      - 網路使用行為:
+          - user_guide/network/index.md
+          - 隱私瀏覽行為: user_guide/network/browser_privacy.md
+          - 釣魚、詐騙: user_guide/network/phishing.md
+          - VPN: user_guide/network/vpn.md
+          - 網路與 Wi-Fi: user_guide/network/wifi.md
+      - 帳號管理:
+          - user_guide/account/index.md
+          - 帳號權限管理與追蹤: user_guide/account/management.md
+      - 資料管理與備份:
+          - user_guide/files_management/index.md
+          - 檔案存取權限: user_guide/files_management/files_access.md
+          - 資料備份與封存: user_guide/files_management/backup_archive.md
+          - 更新軟體: user_guide/files_management/software_update.md
+      - 海外出差: user_guide/abroad.md
+  - 政策制定:
+      - policy/index.md
+      - 威脅建模: ./policy/risk_assessment.md
+      - 裝置安全: ./policy/devices.md
+      - 身分驗證: ./policy/profile.md
+      - 網路使用行為: ./policy/network.md
+      - 加密通訊: ./policy/e2ee.md
+      - 帳號管理: ./policy/account_management.md
+      - 資料管理與備份: ./policy/files_management.md
+      - 海外出差: policy/abroad.md
+  - 狀態評估:
+      - assessment/index.md
+      - 檢查清單:
+          - assessment/checklist/index.md
+          - 場勘紀錄表: assessment/checklist/site_survey.md
+          - 課後任務清單: assessment/checklist/homework.md
+  - 關懷與諮詢:
+      - support/index.md
+      - 參考資源: ./support/resource.md
+theme:
+  name: material
+  icon:
+    logo: material/security
+  favicon: asserts/security.svg
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: 自動偵測模式
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: pink
+      toggle:
+        icon: material/weather-sunny
+        name: 切換到深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: orange
+      accent: yellow
+      toggle:
+        icon: material/weather-night
+        name: 切換到明亮模式
+  language: zh-TW
+  features:
+    - search.suggest
+    - search.highlight
+    - search.share
+    - header.autohide
+    - navigation.indexes
+    - navigation.top
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.footer
+    - content.tooltips
+  custom_dir: overrides
+plugins:
+  - search:
+      pipeline:
+        - stemmer
+        - stopWordFilter
+        - trimmer
+      lang:
+        - en
+        - zh
+  - offline
+  - privacy
+  - social:
+      cards_layout_options:
+        font_family: Noto Sans TC
+  - git-revision-date-localized:
+      locale: en
+      timezone: Asia/Taipei
+markdown_extensions:
+  - abbr
+  - attr_list
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.tasklist:
+      custom_checkbox: true
+      clickable_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+extra:
+  analytics:
+    provider: google
+    property: G-X3DG2E5E3W
+  social:
+    - icon: material/home
+      link: https://ssd.ocf.tw/
+    - icon: fontawesome/brands/github
+      link: https://github.com/ocftw/ssd
+extra_css:
+  - stylesheets/extra.css
