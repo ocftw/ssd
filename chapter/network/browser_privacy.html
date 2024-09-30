@@ -1,0 +1,3678 @@
+
+<!doctype html>
+<html lang="zh-TW" class="no-js">
+  <head>
+    
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta
+  http-equiv="onion-location"
+  content="http://ssdocftwvq6csls7gnjubyrmar7no7ww3gmgodhznxgsoor6ot42lrad.onion/chapter/network/browser_privacy.html"
+/>
+
+<!-- Page description -->
+
+<meta name="description" content="給公民團體 CSOs 的資安防護基礎教材" />
+
+
+<!-- Page author -->
+
+<meta name="author" content="財團法人開放文化基金會 (Open Culture Foundation, OCF)" />
+
+
+<!-- Canonical -->
+
+<link rel="canonical" href="https://ssd.ocf.tw/chapter/network/browser_privacy.html">
+
+
+<!-- Previous page -->
+
+<link rel="prev" href="index.html" />
+
+
+<!-- Next page -->
+
+<link rel="next" href="phishing.html" />
+
+
+<!-- RSS feed -->
+
+
+<!-- Favicon -->
+<link rel="icon" href="../../asserts/security.svg" />
+
+<!-- Generator banner -->
+<meta
+  name="generator"
+  content="mkdocs-1.6.1, $md-name$-$md-version$"
+/>
+
+    
+      
+        <title>隱私瀏覽行為 - 資安防護基礎教材 | Shield of Self-Defense (SSD)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.06209087.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="../../assets/external/unpkg.com/iframe-worker/shim.js"></script>
+      
+    
+    
+      
+        
+        
+        
+        <link rel="stylesheet" href="../../assets/external/fonts.googleapis.com/css.49ea35f2.css">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-X3DG2E5E3W"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-X3DG2E5E3W",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-X3DG2E5E3W",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+      
+        <meta  property="og:type"  content="website" >
+      
+        <meta  property="og:title"  content="隱私瀏覽行為 - 資安防護基礎教材 | Shield of Self-Defense (SSD)" >
+      
+        <meta  property="og:description"  content="給公民團體 CSOs 的資安防護基礎教材" >
+      
+        <meta  property="og:image"  content="https://ssd.ocf.tw/assets/images/social/chapter/network/browser_privacy.png" >
+      
+        <meta  property="og:image:type"  content="image/png" >
+      
+        <meta  property="og:image:width"  content="1200" >
+      
+        <meta  property="og:image:height"  content="630" >
+      
+        <meta  property="og:url"  content="https://ssd.ocf.tw/chapter/network/browser_privacy.html" >
+      
+        <meta  name="twitter:card"  content="summary_large_image" >
+      
+        <meta  name="twitter:title"  content="隱私瀏覽行為 - 資安防護基礎教材 | Shield of Self-Defense (SSD)" >
+      
+        <meta  name="twitter:description"  content="給公民團體 CSOs 的資安防護基礎教材" >
+      
+        <meta  name="twitter:image"  content="https://ssd.ocf.tw/assets/images/social/chapter/network/browser_privacy.png" >
+      
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳轉到
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="頁首">
+    <a href="../.." title="資安防護基礎教材 | Shield of Self-Defense (SSD)" class="md-header__button md-logo" aria-label="資安防護基礎教材 | Shield of Self-Defense (SSD)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 12h7c-.53 4.11-3.28 7.78-7 8.92zH5V6.3l7-3.11M12 1 3 5v6c0 5.55 3.84 10.73 9 12 5.16-1.27 9-6.45 9-12V5z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            資安防護基礎教材 | Shield of Self-Defense (SSD)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              隱私瀏覽行為
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="自動偵測模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="自動偵測模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="pink"  aria-label="切換到深色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切換到深色模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="orange" data-md-color-accent="yellow"  aria-label="切換到明亮模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切換到明亮模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="標籤" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../index.html" class="md-tabs__link">
+          
+  
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.906.664a1.75 1.75 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z"/></svg>
+    
+  
+  首頁
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../index.html" class="md-tabs__link">
+          
+  
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.74 3.74 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574M8.755 4.75l-.004 7.322a3.75 3.75 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25"/></svg>
+    
+  
+  章節內容
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user_guide/index.html" class="md-tabs__link">
+          
+  
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 0 1 .701.031C9.444.095 9.99.645 10.16 1.29l.288 1.107c.018.066.079.158.212.224q.347.171.668.386c.123.082.233.09.299.071l1.103-.303c.644-.176 1.392.021 1.82.63q.406.578.704 1.218c.315.675.111 1.422-.364 1.891l-.814.806c-.049.048-.098.147-.088.294q.024.386 0 .772c-.01.147.038.246.088.294l.814.806c.475.469.679 1.216.364 1.891a8 8 0 0 1-.704 1.217c-.428.61-1.176.807-1.82.63l-1.102-.302c-.067-.019-.177-.011-.3.071a6 6 0 0 1-.668.386c-.133.066-.194.158-.211.224l-.29 1.106c-.168.646-.715 1.196-1.458 1.26a8 8 0 0 1-1.402 0c-.743-.064-1.289-.614-1.458-1.26l-.289-1.106c-.018-.066-.079-.158-.212-.224a6 6 0 0 1-.668-.386c-.123-.082-.233-.09-.299-.071l-1.103.303c-.644.176-1.392-.021-1.82-.63a8 8 0 0 1-.704-1.218c-.315-.675-.111-1.422.363-1.891l.815-.806c.05-.048.098-.147.088-.294a6 6 0 0 1 0-.772c.01-.147-.038-.246-.088-.294l-.815-.806C.635 6.045.431 5.298.746 4.623a8 8 0 0 1 .704-1.217c.428-.61 1.176-.807 1.82-.63l1.102.302c.067.019.177.011.3-.071q.321-.215.668-.386c.133-.066.194-.158.211-.224l.29-1.106C6.009.645 6.556.095 7.299.03Q7.646 0 8 0m-.571 1.525c-.036.003-.108.036-.137.146l-.289 1.105c-.147.561-.549.967-.998 1.189q-.26.13-.5.29c-.417.278-.97.423-1.529.27l-1.103-.303c-.109-.03-.175.016-.195.045q-.33.47-.573.99c-.014.031-.021.11.059.19l.815.806c.411.406.562.957.53 1.456a5 5 0 0 0 0 .582c.032.499-.119 1.05-.53 1.456l-.815.806c-.081.08-.073.159-.059.19q.243.52.573.989c.02.03.085.076.195.046l1.102-.303c.56-.153 1.113-.008 1.53.27q.242.16.501.29c.447.222.85.629.997 1.189l.289 1.105c.029.109.101.143.137.146a6.6 6.6 0 0 0 1.142 0c.036-.003.108-.036.137-.146l.289-1.105c.147-.561.549-.967.998-1.189q.26-.13.5-.29c.417-.278.97-.423 1.529-.27l1.103.303c.109.029.175-.016.195-.045q.33-.47.573-.99c.014-.031.021-.11-.059-.19l-.815-.806c-.411-.406-.562-.957-.53-1.456a5 5 0 0 0 0-.582c-.032-.499.119-1.05.53-1.456l.815-.806c.081-.08.073-.159.059-.19a6.5 6.5 0 0 0-.573-.989c-.02-.03-.085-.076-.195-.046l-1.102.303c-.56.153-1.113.008-1.53-.27a4.4 4.4 0 0 0-.501-.29c-.447-.222-.85-.629-.997-1.189l-.289-1.105c-.029-.11-.101-.143-.137-.146a6.6 6.6 0 0 0-1.142 0M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M9.5 8a1.5 1.5 0 1 0-3.001.001A1.5 1.5 0 0 0 9.5 8"/></svg>
+    
+  
+  操作手冊
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../policy/index.html" class="md-tabs__link">
+          
+  
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M5 8.25a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4A.75.75 0 0 1 5 8.25M4 10.5A.75.75 0 0 0 4 12h4a.75.75 0 0 0 0-1.5z"/><path d="M13-.005c1.654 0 3 1.328 3 3 0 .982-.338 1.933-.783 2.818-.443.879-1.028 1.758-1.582 2.588l-.011.017c-.568.853-1.104 1.659-1.501 2.446-.398.789-.623 1.494-.623 2.136a1.5 1.5 0 1 0 2.333-1.248.75.75 0 0 1 .834-1.246A3 3 0 0 1 13 16H3a3 3 0 0 1-3-3c0-1.582.891-3.135 1.777-4.506q.315-.483.623-.946c.473-.709.923-1.386 1.287-2.048H2.51c-.576 0-1.381-.133-1.907-.783A2.68 2.68 0 0 1 0 2.995a3 3 0 0 1 3-3Zm0 1.5a1.5 1.5 0 0 0-1.5 1.5c0 .476.223.834.667 1.132A.75.75 0 0 1 11.75 5.5H5.368c-.467 1.003-1.141 2.015-1.773 2.963-.192.289-.381.571-.558.845C2.13 10.711 1.5 11.916 1.5 13A1.5 1.5 0 0 0 3 14.5h7.401A3 3 0 0 1 10 13c0-.979.338-1.928.784-2.812.441-.874 1.023-1.748 1.575-2.576l.017-.026c.568-.853 1.103-1.658 1.501-2.448s.623-1.497.623-2.143c0-.838-.669-1.5-1.5-1.5m-10 0a1.5 1.5 0 0 0-1.5 1.5c0 .321.1.569.27.778.097.12.325.227.74.227h7.674A2.7 2.7 0 0 1 10 2.995c0-.546.146-1.059.401-1.5Z"/></svg>
+    
+  
+  政策制定
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../assessment/index.html" class="md-tabs__link">
+          
+  
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.5 1.75V13.5h13.75a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1-.75-.75V1.75a.75.75 0 0 1 1.5 0m14.28 2.53-5.25 5.25a.75.75 0 0 1-1.06 0L7 7.06 4.28 9.78a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l3.25-3.25a.75.75 0 0 1 1.06 0L10 7.94l4.72-4.72a.75.75 0 0 1 1.042.018.75.75 0 0 1 .018 1.042"/></svg>
+    
+  
+  狀態評估
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../support/index.html" class="md-tabs__link">
+          
+  
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="m8 14.25.345.666a.75.75 0 0 1-.69 0l-.008-.004-.018-.01a7 7 0 0 1-.31-.17 22 22 0 0 1-3.434-2.414C2.045 10.731 0 8.35 0 5.5 0 2.836 2.086 1 4.25 1 5.797 1 7.153 1.802 8 3.02 8.847 1.802 10.203 1 11.75 1 13.914 1 16 2.836 16 5.5c0 2.85-2.045 5.231-3.885 6.818a22 22 0 0 1-3.744 2.584l-.018.01-.006.003h-.002ZM4.25 2.5c-1.336 0-2.75 1.164-2.75 3 0 2.15 1.58 4.144 3.365 5.682A20.6 20.6 0 0 0 8 13.393a20.6 20.6 0 0 0 3.135-2.211C12.92 9.644 14.5 7.65 14.5 5.5c0-1.836-1.414-3-2.75-3-1.373 0-2.609.986-3.029 2.456a.749.749 0 0 1-1.442 0C6.859 3.486 5.623 2.5 4.25 2.5"/></svg>
+    
+  
+  關懷與諮詢
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="資安防護基礎教材 | Shield of Self-Defense (SSD)" class="md-nav__button md-logo" aria-label="資安防護基礎教材 | Shield of Self-Defense (SSD)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 12h7c-.53 4.11-3.28 7.78-7 8.92zH5V6.3l7-3.11M12 1 3 5v6c0 5.55 3.84 10.73 9 12 5.16-1.27 9-6.45 9-12V5z"/></svg>
+
+    </a>
+    資安防護基礎教材 | Shield of Self-Defense (SSD)
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.906.664a1.75 1.75 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z"/></svg>
+  
+  <span class="md-ellipsis">
+    首頁
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            首頁
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+          
+        
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../howtouse/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M6.415.52a2.68 2.68 0 0 1 3.17 0l.928.68c.153.113.33.186.518.215l1.138.175a2.68 2.68 0 0 1 2.241 2.24l.175 1.138c.029.187.102.365.215.518l.68.928a2.68 2.68 0 0 1 0 3.17l-.68.928a1.2 1.2 0 0 0-.215.518l-.175 1.138a2.68 2.68 0 0 1-2.241 2.241l-1.138.175a1.2 1.2 0 0 0-.518.215l-.928.68a2.68 2.68 0 0 1-3.17 0l-.928-.68a1.2 1.2 0 0 0-.518-.215L3.83 14.41a2.68 2.68 0 0 1-2.24-2.24l-.175-1.138a1.2 1.2 0 0 0-.215-.518l-.68-.928a2.68 2.68 0 0 1 0-3.17l.68-.928a1.2 1.2 0 0 0 .215-.518l.175-1.14a2.68 2.68 0 0 1 2.24-2.24l1.138-.175c.187-.029.365-.102.518-.215l.928-.68Zm2.282 1.209a1.18 1.18 0 0 0-1.394 0l-.928.68a2.7 2.7 0 0 1-1.18.489l-1.136.174a1.18 1.18 0 0 0-.987.987l-.174 1.137a2.7 2.7 0 0 1-.489 1.18l-.68.927c-.305.415-.305.98 0 1.394l.68.928c.256.348.423.752.489 1.18l.174 1.136c.078.51.478.909.987.987l1.137.174c.427.066.831.233 1.18.489l.927.68c.415.305.98.305 1.394 0l.928-.68a2.7 2.7 0 0 1 1.18-.489l1.136-.174c.51-.078.909-.478.987-.987l.174-1.137c.066-.427.233-.831.489-1.18l.68-.927c.305-.415.305-.98 0-1.394l-.68-.928a2.7 2.7 0 0 1-.489-1.18l-.174-1.136a1.18 1.18 0 0 0-.987-.987l-1.137-.174a2.7 2.7 0 0 1-1.18-.489ZM6.92 6.085h.001a.75.75 0 0 1-1.342-.67c.169-.339.436-.701.849-.977C6.846 4.16 7.369 4 8 4a2.76 2.76 0 0 1 1.638.525c.502.377.862.965.862 1.725 0 .448-.115.83-.329 1.15-.205.307-.47.513-.692.662-.109.072-.22.138-.313.195l-.006.004a6 6 0 0 0-.26.16 1 1 0 0 0-.276.245.75.75 0 0 1-1.248-.832c.184-.264.42-.489.692-.661.109-.073.22-.139.313-.195l.007-.004c.1-.061.182-.11.258-.161a1 1 0 0 0 .277-.245C8.96 6.514 9 6.427 9 6.25a.61.61 0 0 0-.262-.525A1.27 1.27 0 0 0 8 5.5c-.369 0-.595.09-.74.187a1 1 0 0 0-.34.398M9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/></svg>
+  
+  <span class="md-ellipsis">
+    如何使用線上教材
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_2" id="__nav_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            如何使用線上教材
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../howtouse/a_team.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 23.3-.6-.5c-2-1.9-3.4-3.1-3.4-4.6 0-1.2 1-2.2 2.2-2.2.7 0 1.4.3 1.8.8.4-.5 1.1-.8 1.8-.8 1.2 0 2.2.9 2.2 2.2 0 1.5-1.4 2.7-3.4 4.6zM6 22a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2h1v7l2.5-1.5L12 9V2h6a2 2 0 0 1 2 2v9.08L19 13a6.005 6.005 0 0 0-5.2 9z"/></svg>
+  
+  <span class="md-ellipsis">
+    關懷組
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../howtouse/self.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 2h-6v7L9.5 7.5 7 9V2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2m-4 10a2 2 0 1 1-2 2 2 2 0 0 1 2-2m4 8h-8v-1c0-1.33 2.67-2 4-2s4 .67 4 2Z"/></svg>
+  
+  <span class="md-ellipsis">
+    自學組
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+          
+        
+      
+        
+          
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../course/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M.513 1.513A1.75 1.75 0 0 1 1.75 1h3.5c.55 0 1.07.26 1.4.7l.9 1.2a.25.25 0 0 0 .2.1H13a1 1 0 0 1 1 1v.5H2.75a.75.75 0 0 0 0 1.5h11.978a1 1 0 0 1 .994 1.117L15 13.25A1.75 1.75 0 0 1 13.25 15H1.75A1.75 1.75 0 0 1 0 13.25V2.75c0-.464.184-.91.513-1.237"/></svg>
+  
+  <span class="md-ellipsis">
+    教材資源
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_2_4" id="__nav_1_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            教材資源
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.74 3.74 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574M8.755 4.75l-.004 7.322a3.75 3.75 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25"/></svg>
+  
+  <span class="md-ellipsis">
+    章節內容
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/index.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 0 1 .701.031C9.444.095 9.99.645 10.16 1.29l.288 1.107c.018.066.079.158.212.224q.347.171.668.386c.123.082.233.09.299.071l1.103-.303c.644-.176 1.392.021 1.82.63q.406.578.704 1.218c.315.675.111 1.422-.364 1.891l-.814.806c-.049.048-.098.147-.088.294q.024.386 0 .772c-.01.147.038.246.088.294l.814.806c.475.469.679 1.216.364 1.891a8 8 0 0 1-.704 1.217c-.428.61-1.176.807-1.82.63l-1.102-.302c-.067-.019-.177-.011-.3.071a6 6 0 0 1-.668.386c-.133.066-.194.158-.211.224l-.29 1.106c-.168.646-.715 1.196-1.458 1.26a8 8 0 0 1-1.402 0c-.743-.064-1.289-.614-1.458-1.26l-.289-1.106c-.018-.066-.079-.158-.212-.224a6 6 0 0 1-.668-.386c-.123-.082-.233-.09-.299-.071l-1.103.303c-.644.176-1.392-.021-1.82-.63a8 8 0 0 1-.704-1.218c-.315-.675-.111-1.422.363-1.891l.815-.806c.05-.048.098-.147.088-.294a6 6 0 0 1 0-.772c.01-.147-.038-.246-.088-.294l-.815-.806C.635 6.045.431 5.298.746 4.623a8 8 0 0 1 .704-1.217c.428-.61 1.176-.807 1.82-.63l1.102.302c.067.019.177.011.3-.071q.321-.215.668-.386c.133-.066.194-.158.211-.224l.29-1.106C6.009.645 6.556.095 7.299.03Q7.646 0 8 0m-.571 1.525c-.036.003-.108.036-.137.146l-.289 1.105c-.147.561-.549.967-.998 1.189q-.26.13-.5.29c-.417.278-.97.423-1.529.27l-1.103-.303c-.109-.03-.175.016-.195.045q-.33.47-.573.99c-.014.031-.021.11.059.19l.815.806c.411.406.562.957.53 1.456a5 5 0 0 0 0 .582c.032.499-.119 1.05-.53 1.456l-.815.806c-.081.08-.073.159-.059.19q.243.52.573.989c.02.03.085.076.195.046l1.102-.303c.56-.153 1.113-.008 1.53.27q.242.16.501.29c.447.222.85.629.997 1.189l.289 1.105c.029.109.101.143.137.146a6.6 6.6 0 0 0 1.142 0c.036-.003.108-.036.137-.146l.289-1.105c.147-.561.549-.967.998-1.189q.26-.13.5-.29c.417-.278.97-.423 1.529-.27l1.103.303c.109.029.175-.016.195-.045q.33-.47.573-.99c.014-.031.021-.11-.059-.19l-.815-.806c-.411-.406-.562-.957-.53-1.456a5 5 0 0 0 0-.582c-.032-.499.119-1.05.53-1.456l.815-.806c.081-.08.073-.159.059-.19a6.5 6.5 0 0 0-.573-.989c-.02-.03-.085-.076-.195-.046l-1.102.303c-.56.153-1.113.008-1.53-.27a4.4 4.4 0 0 0-.501-.29c-.447-.222-.85-.629-.997-1.189l-.289-1.105c-.029-.11-.101-.143-.137-.146a6.6 6.6 0 0 0-1.142 0M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M9.5 8a1.5 1.5 0 1 0-3.001.001A1.5 1.5 0 0 0 9.5 8"/></svg>
+  
+  <span class="md-ellipsis">
+    操作手冊
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/index.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M5 8.25a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4A.75.75 0 0 1 5 8.25M4 10.5A.75.75 0 0 0 4 12h4a.75.75 0 0 0 0-1.5z"/><path d="M13-.005c1.654 0 3 1.328 3 3 0 .982-.338 1.933-.783 2.818-.443.879-1.028 1.758-1.582 2.588l-.011.017c-.568.853-1.104 1.659-1.501 2.446-.398.789-.623 1.494-.623 2.136a1.5 1.5 0 1 0 2.333-1.248.75.75 0 0 1 .834-1.246A3 3 0 0 1 13 16H3a3 3 0 0 1-3-3c0-1.582.891-3.135 1.777-4.506q.315-.483.623-.946c.473-.709.923-1.386 1.287-2.048H2.51c-.576 0-1.381-.133-1.907-.783A2.68 2.68 0 0 1 0 2.995a3 3 0 0 1 3-3Zm0 1.5a1.5 1.5 0 0 0-1.5 1.5c0 .476.223.834.667 1.132A.75.75 0 0 1 11.75 5.5H5.368c-.467 1.003-1.141 2.015-1.773 2.963-.192.289-.381.571-.558.845C2.13 10.711 1.5 11.916 1.5 13A1.5 1.5 0 0 0 3 14.5h7.401A3 3 0 0 1 10 13c0-.979.338-1.928.784-2.812.441-.874 1.023-1.748 1.575-2.576l.017-.026c.568-.853 1.103-1.658 1.501-2.448s.623-1.497.623-2.143c0-.838-.669-1.5-1.5-1.5m-10 0a1.5 1.5 0 0 0-1.5 1.5c0 .321.1.569.27.778.097.12.325.227.74.227h7.674A2.7 2.7 0 0 1 10 2.995c0-.546.146-1.059.401-1.5Z"/></svg>
+  
+  <span class="md-ellipsis">
+    政策制定
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assessment/index.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.5 1.75V13.5h13.75a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1-.75-.75V1.75a.75.75 0 0 1 1.5 0m14.28 2.53-5.25 5.25a.75.75 0 0 1-1.06 0L7 7.06 4.28 9.78a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l3.25-3.25a.75.75 0 0 1 1.06 0L10 7.94l4.72-4.72a.75.75 0 0 1 1.042.018.75.75 0 0 1 .018 1.042"/></svg>
+  
+  <span class="md-ellipsis">
+    狀態評估
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support/index.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="m8 14.25.345.666a.75.75 0 0 1-.69 0l-.008-.004-.018-.01a7 7 0 0 1-.31-.17 22 22 0 0 1-3.434-2.414C2.045 10.731 0 8.35 0 5.5 0 2.836 2.086 1 4.25 1 5.797 1 7.153 1.802 8 3.02 8.847 1.802 10.203 1 11.75 1 13.914 1 16 2.836 16 5.5c0 2.85-2.045 5.231-3.885 6.818a22 22 0 0 1-3.744 2.584l-.018.01-.006.003h-.002ZM4.25 2.5c-1.336 0-2.75 1.164-2.75 3 0 2.15 1.58 4.144 3.365 5.682A20.6 20.6 0 0 0 8 13.393a20.6 20.6 0 0 0 3.135-2.211C12.92 9.644 14.5 7.65 14.5 5.5c0-1.836-1.414-3-2.75-3-1.373 0-2.609.986-3.029 2.456a.749.749 0 0 1-1.442 0C6.859 3.486 5.623 2.5 4.25 2.5"/></svg>
+  
+  <span class="md-ellipsis">
+    關懷與諮詢
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.74 3.74 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574M8.755 4.75l-.004 7.322a3.75 3.75 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25"/></svg>
+  
+  <span class="md-ellipsis">
+    章節內容
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            章節內容
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../threat_modeling_class.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 3c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h4c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2m.2 1.5 1.06 1.05L5.27 9.5 2.74 6.95 3.81 5.9l1.47 1.49M4 13c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h4c1.11 0 2-.89 2-2v-4c0-1.11-.89-2-2-2m-4 2h4v4H4m8-14h10v2H12m0 12v-2h10v2m-10-8h10v2H12Z"/></svg>
+  
+  <span class="md-ellipsis">
+    威脅建模
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../devices.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M1 3.75C1 2.784 1.784 2 2.75 2h18.5c.966 0 1.75.784 1.75 1.75v4a.75.75 0 0 1-1.5 0v-4a.25.25 0 0 0-.25-.25H2.75a.25.25 0 0 0-.25.25v11.5c0 .138.112.25.25.25h9a.75.75 0 0 1 0 1.5h-1.287c-.126 1.266-.564 2.445-1.223 3.5h2.51a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1-.565-1.243c.964-1.105 1.598-2.382 1.769-3.757H2.75A1.75 1.75 0 0 1 1 15.25z"/><path d="M14 11.75c0-.967.783-1.75 1.75-1.75h5.5c.966 0 1.75.783 1.75 1.75v8.5A1.75 1.75 0 0 1 21.25 22h-5.5A1.75 1.75 0 0 1 14 20.25Zm1.75-.25a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h5.5a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25Z"/></svg>
+  
+  <span class="md-ellipsis">
+    裝置安全
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../profile/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 3h20a2.07 2.07 0 0 1 2 2v14a2.07 2.07 0 0 1-2 2H2a2.07 2.07 0 0 1-2-2V5a2.07 2.07 0 0 1 2-2m6 10.91C6 13.91 2 15 2 17v1h12v-1c0-2-4-3.09-6-3.09M8 6a3 3 0 1 0 3 3 3 3 0 0 0-3-3m9 4v3h4v-3z"/></svg>
+  
+  <span class="md-ellipsis">
+    身份驗證
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            身份驗證
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profile/password_manager.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    密碼管理器
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profile/password.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    密碼強度
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profile/mfa.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    多因子驗證
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_5" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13 3 1 .06c2.8-1.27 5.23-1.42 6.5-.14 1 1.01 1.08 2.75.42 4.8A9 9 0 0 1 22 12l-.05 1H9.08c.37 2.28 1.98 4 3.92 4 1.31 0 2.47-.79 3.2-2h5.3c-1.25 3.5-4.58 6-8.5 6-1.28 0-2.5-.27-3.59-.75-2.91 1.43-5.52 1.65-6.84.31C1 18.96 1.68 15.57 4 12c.93-1.46 2.14-2.94 3.57-4.35l.81-.77c-1.17.69-2.67 1.74-4.19 3.29A9 9 0 0 1 13 3m0 4c-1.79 0-3.31 1.47-3.82 3.5h7.64C16.31 8.47 14.79 7 13 7m7.06-2.94c-.66-.67-1.84-.71-3.32-.25 1.48.69 2.76 1.75 3.67 3.08.32-1.24.23-2.24-.35-2.83M3.89 20c.83.84 2.51.69 4.55-.24a9.05 9.05 0 0 1-3.97-4.88C3.27 17.15 3 19.07 3.89 20"/></svg>
+  
+  <span class="md-ellipsis">
+    網路使用行為
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            網路使用行為
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    隱私瀏覽行為
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="browser_privacy.html" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    隱私瀏覽行為
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      瀏覽器選擇
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="瀏覽器選擇">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#firefox" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firefox
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brave" class="md-nav__link">
+    <span class="md-ellipsis">
+      Brave
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tor" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tor 瀏覽器
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      隱私保護附加元件
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="隱私保護附加元件">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ublock-origin" class="md-nav__link">
+    <span class="md-ellipsis">
+      uBlock Origin
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#privacy-badger" class="md-nav__link">
+    <span class="md-ellipsis">
+      Privacy Badger
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookie-autodelete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cookie AutoDelete
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clearurls" class="md-nav__link">
+    <span class="md-ellipsis">
+      ClearURLs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      瀏覽模式
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="瀏覽模式">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      一般瀏覽器
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="一般瀏覽器">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      主要特點和其限制
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      不足與限制
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tor_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tor 瀏覽器
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tor 瀏覽器">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      主要特點和優點
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      不足和限制
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      適用情境
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      搜尋引擎
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      定期更新
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="phishing.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    釣魚、詐騙
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="vpn.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="wifi.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    網路與 Wi-Fi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../e2ee/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6 0 1.2.6 1.2 1.3v3.5c0 .6-.6 1.2-1.3 1.2H9.2c-.6 0-1.2-.6-1.2-1.3v-3.5c0-.6.6-1.2 1.2-1.2V9.5C9.2 8.1 10.6 7 12 7m0 1.2c-.8 0-1.5.5-1.5 1.3V11h3V9.5c0-.8-.7-1.3-1.5-1.3"/></svg>
+  
+  <span class="md-ellipsis">
+    加密通訊
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            加密通訊
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../e2ee/im.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    加密即時通訊
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../e2ee/mails.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    加密電子郵件
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../account/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 17c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1H6m9-9a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3M3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2"/></svg>
+  
+  <span class="md-ellipsis">
+    帳號管理
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            帳號管理
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account/management.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    帳號權限管理與追蹤
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../files_management/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 20H4a2 2 0 0 1-2-2V6c0-1.11.89-2 2-2h6l2 2h7a2 2 0 0 1 2 2H4v10l2.14-8h17.07l-2.28 8.5c-.23.87-1.01 1.5-1.93 1.5"/></svg>
+  
+  <span class="md-ellipsis">
+    資料管理與備份
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            資料管理與備份
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../files_management/files_access.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    檔案存取權限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../files_management/backup_archive.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    資料備份與封存
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../files_management/software_update.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    更新軟體
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../abroad.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.56 3.91c.59.59.59 1.54 0 2.12l-3.89 3.89 2.12 9.19-1.41 1.42-3.88-7.43L9.6 17l.36 2.47-1.07 1.06-1.76-3.18-3.19-1.77L5 14.5l2.5.37L11.37 11 3.94 7.09l1.42-1.41 9.19 2.12 3.89-3.89c.56-.58 1.56-.58 2.12 0"/></svg>
+  
+  <span class="md-ellipsis">
+    海外出差
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_guide/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 0 1 .701.031C9.444.095 9.99.645 10.16 1.29l.288 1.107c.018.066.079.158.212.224q.347.171.668.386c.123.082.233.09.299.071l1.103-.303c.644-.176 1.392.021 1.82.63q.406.578.704 1.218c.315.675.111 1.422-.364 1.891l-.814.806c-.049.048-.098.147-.088.294q.024.386 0 .772c-.01.147.038.246.088.294l.814.806c.475.469.679 1.216.364 1.891a8 8 0 0 1-.704 1.217c-.428.61-1.176.807-1.82.63l-1.102-.302c-.067-.019-.177-.011-.3.071a6 6 0 0 1-.668.386c-.133.066-.194.158-.211.224l-.29 1.106c-.168.646-.715 1.196-1.458 1.26a8 8 0 0 1-1.402 0c-.743-.064-1.289-.614-1.458-1.26l-.289-1.106c-.018-.066-.079-.158-.212-.224a6 6 0 0 1-.668-.386c-.123-.082-.233-.09-.299-.071l-1.103.303c-.644.176-1.392-.021-1.82-.63a8 8 0 0 1-.704-1.218c-.315-.675-.111-1.422.363-1.891l.815-.806c.05-.048.098-.147.088-.294a6 6 0 0 1 0-.772c.01-.147-.038-.246-.088-.294l-.815-.806C.635 6.045.431 5.298.746 4.623a8 8 0 0 1 .704-1.217c.428-.61 1.176-.807 1.82-.63l1.102.302c.067.019.177.011.3-.071q.321-.215.668-.386c.133-.066.194-.158.211-.224l.29-1.106C6.009.645 6.556.095 7.299.03Q7.646 0 8 0m-.571 1.525c-.036.003-.108.036-.137.146l-.289 1.105c-.147.561-.549.967-.998 1.189q-.26.13-.5.29c-.417.278-.97.423-1.529.27l-1.103-.303c-.109-.03-.175.016-.195.045q-.33.47-.573.99c-.014.031-.021.11.059.19l.815.806c.411.406.562.957.53 1.456a5 5 0 0 0 0 .582c.032.499-.119 1.05-.53 1.456l-.815.806c-.081.08-.073.159-.059.19q.243.52.573.989c.02.03.085.076.195.046l1.102-.303c.56-.153 1.113-.008 1.53.27q.242.16.501.29c.447.222.85.629.997 1.189l.289 1.105c.029.109.101.143.137.146a6.6 6.6 0 0 0 1.142 0c.036-.003.108-.036.137-.146l.289-1.105c.147-.561.549-.967.998-1.189q.26-.13.5-.29c.417-.278.97-.423 1.529-.27l1.103.303c.109.029.175-.016.195-.045q.33-.47.573-.99c.014-.031.021-.11-.059-.19l-.815-.806c-.411-.406-.562-.957-.53-1.456a5 5 0 0 0 0-.582c-.032-.499.119-1.05.53-1.456l.815-.806c.081-.08.073-.159.059-.19a6.5 6.5 0 0 0-.573-.989c-.02-.03-.085-.076-.195-.046l-1.102.303c-.56.153-1.113.008-1.53-.27a4.4 4.4 0 0 0-.501-.29c-.447-.222-.85-.629-.997-1.189l-.289-1.105c-.029-.11-.101-.143-.137-.146a6.6 6.6 0 0 0-1.142 0M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M9.5 8a1.5 1.5 0 1 0-3.001.001A1.5 1.5 0 0 0 9.5 8"/></svg>
+  
+  <span class="md-ellipsis">
+    操作手冊
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            操作手冊
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/risk_assessment.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 3c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h4c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2m.2 1.5 1.06 1.05L5.27 9.5 2.74 6.95 3.81 5.9l1.47 1.49M4 13c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h4c1.11 0 2-.89 2-2v-4c0-1.11-.89-2-2-2m-4 2h4v4H4m8-14h10v2H12m0 12v-2h10v2m-10-8h10v2H12Z"/></svg>
+  
+  <span class="md-ellipsis">
+    風險評估表
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_guide/devices/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M1 3.75C1 2.784 1.784 2 2.75 2h18.5c.966 0 1.75.784 1.75 1.75v4a.75.75 0 0 1-1.5 0v-4a.25.25 0 0 0-.25-.25H2.75a.25.25 0 0 0-.25.25v11.5c0 .138.112.25.25.25h9a.75.75 0 0 1 0 1.5h-1.287c-.126 1.266-.564 2.445-1.223 3.5h2.51a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1-.565-1.243c.964-1.105 1.598-2.382 1.769-3.757H2.75A1.75 1.75 0 0 1 1 15.25z"/><path d="M14 11.75c0-.967.783-1.75 1.75-1.75h5.5c.966 0 1.75.783 1.75 1.75v8.5A1.75 1.75 0 0 1 21.25 22h-5.5A1.75 1.75 0 0 1 14 20.25Zm1.75-.25a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h5.5a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25Z"/></svg>
+  
+  <span class="md-ellipsis">
+    裝置安全
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            裝置安全
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/devices/ios.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    iOS 裝置設定
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/devices/macOS.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MacOS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/devices/windows.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Windows
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/devices/android.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Android
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_guide/profile/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 3h20a2.07 2.07 0 0 1 2 2v14a2.07 2.07 0 0 1-2 2H2a2.07 2.07 0 0 1-2-2V5a2.07 2.07 0 0 1 2-2m6 10.91C6 13.91 2 15 2 17v1h12v-1c0-2-4-3.09-6-3.09M8 6a3 3 0 1 0 3 3 3 3 0 0 0-3-3m9 4v3h4v-3z"/></svg>
+  
+  <span class="md-ellipsis">
+    身份驗證
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            身份驗證
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/profile/password_manager.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    密碼管理器
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/profile/mfa.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    多因子驗證
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_guide/network/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13 3 1 .06c2.8-1.27 5.23-1.42 6.5-.14 1 1.01 1.08 2.75.42 4.8A9 9 0 0 1 22 12l-.05 1H9.08c.37 2.28 1.98 4 3.92 4 1.31 0 2.47-.79 3.2-2h5.3c-1.25 3.5-4.58 6-8.5 6-1.28 0-2.5-.27-3.59-.75-2.91 1.43-5.52 1.65-6.84.31C1 18.96 1.68 15.57 4 12c.93-1.46 2.14-2.94 3.57-4.35l.81-.77c-1.17.69-2.67 1.74-4.19 3.29A9 9 0 0 1 13 3m0 4c-1.79 0-3.31 1.47-3.82 3.5h7.64C16.31 8.47 14.79 7 13 7m7.06-2.94c-.66-.67-1.84-.71-3.32-.25 1.48.69 2.76 1.75 3.67 3.08.32-1.24.23-2.24-.35-2.83M3.89 20c.83.84 2.51.69 4.55-.24a9.05 9.05 0 0 1-3.97-4.88C3.27 17.15 3 19.07 3.89 20"/></svg>
+  
+  <span class="md-ellipsis">
+    網路使用行為
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            網路使用行為
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/network/browser_privacy.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    隱私瀏覽行為
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/network/phishing.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    釣魚、詐騙
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/network/vpn.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/network/wifi.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    網路與 Wi-Fi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_guide/account/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 17c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1H6m9-9a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3M3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2"/></svg>
+  
+  <span class="md-ellipsis">
+    帳號管理
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            帳號管理
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/account/management.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    帳號權限管理與追蹤
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user_guide/files_management/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 20H4a2 2 0 0 1-2-2V6c0-1.11.89-2 2-2h6l2 2h7a2 2 0 0 1 2 2H4v10l2.14-8h17.07l-2.28 8.5c-.23.87-1.01 1.5-1.93 1.5"/></svg>
+  
+  <span class="md-ellipsis">
+    資料管理與備份
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            資料管理與備份
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/files_management/files_access.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    檔案存取權限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/files_management/backup_archive.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    資料備份與封存
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/files_management/software_update.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    更新軟體
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/abroad.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.56 3.91c.59.59.59 1.54 0 2.12l-3.89 3.89 2.12 9.19-1.41 1.42-3.88-7.43L9.6 17l.36 2.47-1.07 1.06-1.76-3.18-3.19-1.77L5 14.5l2.5.37L11.37 11 3.94 7.09l1.42-1.41 9.19 2.12 3.89-3.89c.56-.58 1.56-.58 2.12 0"/></svg>
+  
+  <span class="md-ellipsis">
+    海外出差
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../policy/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M5 8.25a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4A.75.75 0 0 1 5 8.25M4 10.5A.75.75 0 0 0 4 12h4a.75.75 0 0 0 0-1.5z"/><path d="M13-.005c1.654 0 3 1.328 3 3 0 .982-.338 1.933-.783 2.818-.443.879-1.028 1.758-1.582 2.588l-.011.017c-.568.853-1.104 1.659-1.501 2.446-.398.789-.623 1.494-.623 2.136a1.5 1.5 0 1 0 2.333-1.248.75.75 0 0 1 .834-1.246A3 3 0 0 1 13 16H3a3 3 0 0 1-3-3c0-1.582.891-3.135 1.777-4.506q.315-.483.623-.946c.473-.709.923-1.386 1.287-2.048H2.51c-.576 0-1.381-.133-1.907-.783A2.68 2.68 0 0 1 0 2.995a3 3 0 0 1 3-3Zm0 1.5a1.5 1.5 0 0 0-1.5 1.5c0 .476.223.834.667 1.132A.75.75 0 0 1 11.75 5.5H5.368c-.467 1.003-1.141 2.015-1.773 2.963-.192.289-.381.571-.558.845C2.13 10.711 1.5 11.916 1.5 13A1.5 1.5 0 0 0 3 14.5h7.401A3 3 0 0 1 10 13c0-.979.338-1.928.784-2.812.441-.874 1.023-1.748 1.575-2.576l.017-.026c.568-.853 1.103-1.658 1.501-2.448s.623-1.497.623-2.143c0-.838-.669-1.5-1.5-1.5m-10 0a1.5 1.5 0 0 0-1.5 1.5c0 .321.1.569.27.778.097.12.325.227.74.227h7.674A2.7 2.7 0 0 1 10 2.995c0-.546.146-1.059.401-1.5Z"/></svg>
+  
+  <span class="md-ellipsis">
+    政策制定
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            政策制定
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/risk_assessment.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 3c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h4c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2m.2 1.5 1.06 1.05L5.27 9.5 2.74 6.95 3.81 5.9l1.47 1.49M4 13c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h4c1.11 0 2-.89 2-2v-4c0-1.11-.89-2-2-2m-4 2h4v4H4m8-14h10v2H12m0 12v-2h10v2m-10-8h10v2H12Z"/></svg>
+  
+  <span class="md-ellipsis">
+    威脅建模
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/devices.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M1 3.75C1 2.784 1.784 2 2.75 2h18.5c.966 0 1.75.784 1.75 1.75v4a.75.75 0 0 1-1.5 0v-4a.25.25 0 0 0-.25-.25H2.75a.25.25 0 0 0-.25.25v11.5c0 .138.112.25.25.25h9a.75.75 0 0 1 0 1.5h-1.287c-.126 1.266-.564 2.445-1.223 3.5h2.51a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1-.565-1.243c.964-1.105 1.598-2.382 1.769-3.757H2.75A1.75 1.75 0 0 1 1 15.25z"/><path d="M14 11.75c0-.967.783-1.75 1.75-1.75h5.5c.966 0 1.75.783 1.75 1.75v8.5A1.75 1.75 0 0 1 21.25 22h-5.5A1.75 1.75 0 0 1 14 20.25Zm1.75-.25a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h5.5a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25Z"/></svg>
+  
+  <span class="md-ellipsis">
+    裝置安全
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/profile.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 3h20a2.07 2.07 0 0 1 2 2v14a2.07 2.07 0 0 1-2 2H2a2.07 2.07 0 0 1-2-2V5a2.07 2.07 0 0 1 2-2m6 10.91C6 13.91 2 15 2 17v1h12v-1c0-2-4-3.09-6-3.09M8 6a3 3 0 1 0 3 3 3 3 0 0 0-3-3m9 4v3h4v-3z"/></svg>
+  
+  <span class="md-ellipsis">
+    身分驗證
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/network.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13 3 1 .06c2.8-1.27 5.23-1.42 6.5-.14 1 1.01 1.08 2.75.42 4.8A9 9 0 0 1 22 12l-.05 1H9.08c.37 2.28 1.98 4 3.92 4 1.31 0 2.47-.79 3.2-2h5.3c-1.25 3.5-4.58 6-8.5 6-1.28 0-2.5-.27-3.59-.75-2.91 1.43-5.52 1.65-6.84.31C1 18.96 1.68 15.57 4 12c.93-1.46 2.14-2.94 3.57-4.35l.81-.77c-1.17.69-2.67 1.74-4.19 3.29A9 9 0 0 1 13 3m0 4c-1.79 0-3.31 1.47-3.82 3.5h7.64C16.31 8.47 14.79 7 13 7m7.06-2.94c-.66-.67-1.84-.71-3.32-.25 1.48.69 2.76 1.75 3.67 3.08.32-1.24.23-2.24-.35-2.83M3.89 20c.83.84 2.51.69 4.55-.24a9.05 9.05 0 0 1-3.97-4.88C3.27 17.15 3 19.07 3.89 20"/></svg>
+  
+  <span class="md-ellipsis">
+    網路使用行為
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/e2ee.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6 0 1.2.6 1.2 1.3v3.5c0 .6-.6 1.2-1.3 1.2H9.2c-.6 0-1.2-.6-1.2-1.3v-3.5c0-.6.6-1.2 1.2-1.2V9.5C9.2 8.1 10.6 7 12 7m0 1.2c-.8 0-1.5.5-1.5 1.3V11h3V9.5c0-.8-.7-1.3-1.5-1.3"/></svg>
+  
+  <span class="md-ellipsis">
+    加密通訊
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/account_management.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 17c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1H6m9-9a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3M3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2"/></svg>
+  
+  <span class="md-ellipsis">
+    帳號管理
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/files_management.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 20H4a2 2 0 0 1-2-2V6c0-1.11.89-2 2-2h6l2 2h7a2 2 0 0 1 2 2H4v10l2.14-8h17.07l-2.28 8.5c-.23.87-1.01 1.5-1.93 1.5"/></svg>
+  
+  <span class="md-ellipsis">
+    資料管理與備份
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../policy/abroad.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.56 3.91c.59.59.59 1.54 0 2.12l-3.89 3.89 2.12 9.19-1.41 1.42-3.88-7.43L9.6 17l.36 2.47-1.07 1.06-1.76-3.18-3.19-1.77L5 14.5l2.5.37L11.37 11 3.94 7.09l1.42-1.41 9.19 2.12 3.89-3.89c.56-.58 1.56-.58 2.12 0"/></svg>
+  
+  <span class="md-ellipsis">
+    海外出差
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../assessment/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1.5 1.75V13.5h13.75a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1-.75-.75V1.75a.75.75 0 0 1 1.5 0m14.28 2.53-5.25 5.25a.75.75 0 0 1-1.06 0L7 7.06 4.28 9.78a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l3.25-3.25a.75.75 0 0 1 1.06 0L10 7.94l4.72-4.72a.75.75 0 0 1 1.042.018.75.75 0 0 1 .018 1.042"/></svg>
+  
+  <span class="md-ellipsis">
+    狀態評估
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            狀態評估
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../assessment/checklist/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.5 1.75v11.5c0 .138.112.25.25.25h3.17a.75.75 0 0 1 0 1.5H2.75A1.75 1.75 0 0 1 1 13.25V1.75C1 .784 1.784 0 2.75 0h8.5C12.216 0 13 .784 13 1.75v7.736a.75.75 0 0 1-1.5 0V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25m13.274 9.537zl-4.557 4.45a.75.75 0 0 1-1.055-.008l-1.943-1.95a.75.75 0 0 1 1.062-1.058l1.419 1.425 4.026-3.932a.75.75 0 1 1 1.048 1.074M4.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5M4 7.75A.75.75 0 0 1 4.75 7h2a.75.75 0 0 1 0 1.5h-2A.75.75 0 0 1 4 7.75"/></svg>
+  
+  <span class="md-ellipsis">
+    檢查清單
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            檢查清單
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assessment/checklist/site_survey.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.5 1.75v11.5c0 .138.112.25.25.25h3.17a.75.75 0 0 1 0 1.5H2.75A1.75 1.75 0 0 1 1 13.25V1.75C1 .784 1.784 0 2.75 0h8.5C12.216 0 13 .784 13 1.75v7.736a.75.75 0 0 1-1.5 0V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25m13.274 9.537zl-4.557 4.45a.75.75 0 0 1-1.055-.008l-1.943-1.95a.75.75 0 0 1 1.062-1.058l1.419 1.425 4.026-3.932a.75.75 0 1 1 1.048 1.074M4.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5M4 7.75A.75.75 0 0 1 4.75 7h2a.75.75 0 0 1 0 1.5h-2A.75.75 0 0 1 4 7.75"/></svg>
+  
+  <span class="md-ellipsis">
+    場勘紀錄表
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../assessment/checklist/homework.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3 2 12h3v8h5v-6h4v1.11l5.43-5.43zm9.04 8.14a.6.6 0 0 0-.39.16l-1 1 2.05 2.05 1-1a.55.55 0 0 0 0-.77l-1.28-1.28c-.1-.1-.24-.16-.38-.16m-1.98 1.74L13 18.94V21h2.06l6.05-6.07z"/></svg>
+  
+  <span class="md-ellipsis">
+    課後任務清單
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../support/index.html" class="md-nav__link ">
+              
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="m8 14.25.345.666a.75.75 0 0 1-.69 0l-.008-.004-.018-.01a7 7 0 0 1-.31-.17 22 22 0 0 1-3.434-2.414C2.045 10.731 0 8.35 0 5.5 0 2.836 2.086 1 4.25 1 5.797 1 7.153 1.802 8 3.02 8.847 1.802 10.203 1 11.75 1 13.914 1 16 2.836 16 5.5c0 2.85-2.045 5.231-3.885 6.818a22 22 0 0 1-3.744 2.584l-.018.01-.006.003h-.002ZM4.25 2.5c-1.336 0-2.75 1.164-2.75 3 0 2.15 1.58 4.144 3.365 5.682A20.6 20.6 0 0 0 8 13.393a20.6 20.6 0 0 0 3.135-2.211C12.92 9.644 14.5 7.65 14.5 5.5c0-1.836-1.414-3-2.75-3-1.373 0-2.609.986-3.029 2.456a.749.749 0 0 1-1.442 0C6.859 3.486 5.623 2.5 4.25 2.5"/></svg>
+  
+  <span class="md-ellipsis">
+    關懷與諮詢
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            關懷與諮詢
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support/resource.html" class="md-nav__link">
+        
+  
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 3a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2zm-6 11 6.25-6.24-1.41-1.42L11 11.18 8.41 8.59 7 10z"/></svg>
+  
+  <span class="md-ellipsis">
+    參考資源
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      瀏覽器選擇
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="瀏覽器選擇">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#firefox" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firefox
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brave" class="md-nav__link">
+    <span class="md-ellipsis">
+      Brave
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tor" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tor 瀏覽器
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      隱私保護附加元件
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="隱私保護附加元件">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ublock-origin" class="md-nav__link">
+    <span class="md-ellipsis">
+      uBlock Origin
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#privacy-badger" class="md-nav__link">
+    <span class="md-ellipsis">
+      Privacy Badger
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookie-autodelete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cookie AutoDelete
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clearurls" class="md-nav__link">
+    <span class="md-ellipsis">
+      ClearURLs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      瀏覽模式
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="瀏覽模式">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      一般瀏覽器
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="一般瀏覽器">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      主要特點和其限制
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      不足與限制
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tor_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tor 瀏覽器
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tor 瀏覽器">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      主要特點和優點
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      不足和限制
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      適用情境
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      搜尋引擎
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      定期更新
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="_1"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> 隱私瀏覽行為</h1>
+<h2 id="_2">瀏覽器選擇</h2>
+<p>瀏覽器已是我們每日探索世界、瞭解新知時所使用到的第一個工具，我們也需要透過瀏覽器來使用雲端服務來完成日常工作，因此瀏覽器有著無比重要的存在，也是駭客常常鎖定攻擊我們的重要途徑之一。</p>
+<p>以下是一些主要的隱私瀏覽器，以及它們的特色比較：</p>
+<h3 id="firefox"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.824 7.287c.008 0 .004 0 0 0m-2.8-1.4c.006 0 .003 0 0 0m16.754 2.161c-.505-1.215-1.53-2.528-2.333-2.943.654 1.283 1.033 2.57 1.177 3.53l.002.02c-1.314-3.278-3.544-4.6-5.366-7.477-.091-.147-.184-.292-.273-.446a4 4 0 0 1-.13-.24 2 2 0 0 1-.172-.46.03.03 0 0 0-.027-.03.04.04 0 0 0-.021 0l-.006.001-.01.005.005-.008c-2.585 1.515-3.657 4.168-3.932 5.856a6.2 6.2 0 0 0-2.305.587.297.297 0 0 0-.147.37c.057.162.24.24.396.17a5.6 5.6 0 0 1 2.008-.523l.067-.005a5.9 5.9 0 0 1 1.957.222l.095.03a6 6 0 0 1 .616.228q.12.054.238.112l.107.055a6 6 0 0 1 .368.211 5.95 5.95 0 0 1 2.034 2.104c-.62-.437-1.733-.868-2.803-.681 4.183 2.09 3.06 9.292-2.737 9.02a5.2 5.2 0 0 1-1.513-.292 4.4 4.4 0 0 1-.538-.232c-1.42-.735-2.593-2.121-2.74-3.806 0 0 .537-2 3.845-2 .357 0 1.38-.998 1.398-1.287-.005-.095-2.029-.9-2.817-1.677-.422-.416-.622-.616-.8-.767a4 4 0 0 0-.301-.227 5.4 5.4 0 0 1-.032-2.842c-1.195.544-2.124 1.403-2.8 2.163h-.006c-.46-.584-.428-2.51-.402-2.913-.006-.025-.343.176-.389.206a8.4 8.4 0 0 0-1.136.974q-.596.606-1.085 1.303a9.8 9.8 0 0 0-1.562 3.52c-.003.013-.11.487-.19 1.073q-.02.135-.037.272a8 8 0 0 0-.069.667l-.002.034-.023.387-.001.06C.386 18.795 5.593 24 12.016 24c5.752 0 10.527-4.176 11.463-9.661q.028-.223.052-.448c.232-1.994-.025-4.09-.753-5.844z"/></svg></span> Firefox</h3>
+<p><ins class="critic"><img alt="🥇" class="twemoji" src="../../assets/external/cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f947.svg" title=":first_place:"> 擴充彈性最高</ins></p>
+<ul>
+<li><strong>隱私保護級別</strong>：高。Firefox 預設啟用了「<a href="https://support.mozilla.org/zh-TW/kb/enhanced-tracking-protection-firefox-desktop">加強型追蹤保護功能</a>」，可以阻擋廣告追踪和第三方 <abbr title="Cookie 是網站儲存在你瀏覽器中的小檔案，用來記錄你的偏好和登入狀態，提升使用體驗。">Cookie</abbr>。</li>
+<li><strong>附加元件與擴充功能</strong>：Firefox 支持多種隱私保護附加元件（如 uBlock Origin、Privacy Badger 等），用戶可以根據需要進一步加強隱私保護。</li>
+<li><strong>透明及開放源碼</strong>：作為一個開放源碼的瀏覽器，社群和安全專家可以檢查和審核其源碼，確保沒有惡意或隱私侵害的功能。</li>
+<li><strong>隱身模式</strong>：提供標準的隱身模式，不保存瀏覽歷史、 <abbr title="Cookie 是網站儲存在你瀏覽器中的小檔案，用來記錄你的偏好和登入狀態，提升使用體驗。">Cookie</abbr> 和搜尋紀錄。</li>
+</ul>
+<h3 id="brave"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.68 0 2.096 2.38s1.84-.512 2.709.358c.868.87 1.584 1.638 1.584 1.638l-.562 1.381.715 2.047s-2.104 7.98-2.35 8.955c-.486 1.919-.818 2.66-2.198 3.633a186 186 0 0 1-4.293 2.916c-.409.256-.92.692-1.38.692s-.97-.436-1.38-.692a186 186 0 0 1-4.293-2.916c-1.38-.973-1.712-1.714-2.197-3.633-.247-.975-2.351-8.955-2.351-8.955l.715-2.047-.562-1.381s.716-.768 1.585-1.638c.868-.87 2.708-.358 2.708-.358L8.321 0h7.36zm-3.679 14.936c-.14 0-1.038.317-1.758.69s-1.242.637-1.409.742-.065.301.087.409 2.194 1.69 2.393 1.866c.198.175.489.464.687.464s.49-.29.688-.464 2.24-1.759 2.392-1.866.254-.305.087-.41-.689-.368-1.41-.741c-.72-.373-1.617-.69-1.757-.69m0-11.278s-.409.001-1.022.206-1.278.46-1.584.46-2.581-.434-2.581-.434-2.695 3.262-2.695 3.959.339.881.68 1.243l2.02 2.149c.192.203.59.511.356 1.066-.235.555-.58 1.26-.196 1.977.384.716 1.042 1.194 1.464 1.115.421-.08 1.412-.598 1.776-.834.364-.237 1.518-1.19 1.518-1.554s-1.193-1.02-1.413-1.168c-.22-.15-1.226-.725-1.247-.95-.02-.227-.012-.293.284-.851.297-.559.831-1.304.742-1.8-.089-.495-.95-.753-1.565-.986s-1.799-.671-1.947-.74-.11-.133.339-.175c.448-.043 1.719-.212 2.292-.052s1.552.403 1.632.532c.079.13.149.134.067.579s-.5 2.581-.541 2.96c-.04.38-.12.63.288.724.409.094 1.097.256 1.333.256s.924-.162 1.333-.256c.408-.093.329-.344.288-.723-.04-.38-.46-2.516-.541-2.961s-.012-.45.067-.579c.08-.129 1.059-.372 1.632-.532s1.845.009 2.292.052c.449.042.487.107.339.175-.148.069-1.332.508-1.947.74-.615.233-1.476.49-1.565.986-.09.496.445 1.241.742 1.8s.304.624.284.85-1.026.802-1.247.95c-.22.15-1.413.804-1.413 1.169 0 .364 1.154 1.317 1.518 1.554.364.236 1.355.755 1.776.834s1.08-.4 1.464-1.115c.384-.716.039-1.422-.195-1.977s.163-.863.355-1.066l2.02-2.149c.341-.362.68-.546.68-1.243s-2.695-3.96-2.695-3.96-2.274.436-2.58.436-.972-.256-1.585-.461-1.022-.206-1.022-.206"/></svg></span> Brave</h3>
+<p><ins class="critic"><img alt="🥇" class="twemoji" src="../../assets/external/cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f947.svg" title=":first_place:"> 綜合平衡（隱私與性能）</ins></p>
+<ul>
+<li><strong>內建廣告阻擋</strong>：自帶廣告阻擋功能，防止追踪並提高頁面加載速度。</li>
+<li><strong>隱私保護級別</strong>：非常高。Brave 專注於隱私保護和去中心化技術，避免第三方追踪。</li>
+<li><strong><abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 整合</strong>：內建能夠使用 <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 網路的隱私視窗，進一步提升匿名性。</li>
+<li><strong>IPFS 星際檔案</strong>：整合 <a href="https://ipfs.tech/">IPFS</a>（<a href="https://zh.wikipedia.org/zh-tw/%E6%98%9F%E9%99%85%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F">星際檔案系統</a>），提供去中心化的檔案分享與存取，提升網路安全性與資料持久性。</li>
+</ul>
+<h3 id="tor"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 21.82v-1.46A8.36 8.36 0 0 0 20.36 12 8.36 8.36 0 0 0 12 3.64V2.18A9.83 9.83 0 0 1 21.82 12 9.83 9.83 0 0 1 12 21.82m0-5.09A4.74 4.74 0 0 0 16.73 12 4.74 4.74 0 0 0 12 7.27V5.82A6.17 6.17 0 0 1 18.18 12 6.17 6.17 0 0 1 12 18.18zm0-7.27A2.54 2.54 0 0 1 14.55 12 2.54 2.54 0 0 1 12 14.54zM0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0 12 12 0 0 0 0 12"/></svg></span> <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 瀏覽器</h3>
+<p><ins class="critic"><img alt="🥇" class="twemoji" src="../../assets/external/cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f947.svg" title=":first_place:"> 最強隱私保護</ins></p>
+<ul>
+<li><strong>匿名瀏覽</strong>：通過 <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 網路將您的流量經過多個 <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.982 1.14a8.42 8.42 0 0 0-4.47 3.12 21.4 21.4 0 0 1 3-4.26 12.4 12.4 0 0 0-4 4.36l.64-2.55a14.6 14.6 0 0 0-1.9 5.35l1.12.48a33.1 33.1 0 0 1 5.61-6.5m.82 13.069c-.82-1.52-2.92-3.01-5.13-4.39-.51-.3-.61-1.41-.53-1.89l-.51-.24a6.4 6.4 0 0 0 .16 2.39c.24.75 1 1.6 1.52 2.8a18 18 0 0 1 .72 2.92 13.2 13.2 0 0 1-.54 6.119 4.26 4.26 0 0 1-1.43 1.92l-.24.16c4.16.13 8.83-4.63 5.98-9.79zm-5.4 4.789a6.6 6.6 0 0 0-.42-2 12 12 0 0 0-.75-1.44 6.2 6.2 0 0 1-.16-2.07 7 7 0 0 0 .32 1.94 11 11 0 0 1 .69 1.3 9 9 0 0 1 .59 2.27 10.4 10.4 0 0 1-.35 3 5 5 0 0 1-.4 1 4.9 4.9 0 0 0 .7-1.52 12.4 12.4 0 0 0 .36-4.48 11.6 11.6 0 0 0-.46-1.89c-.44-1.2-1.07-2.23-1.15-2.47a16.2 16.2 0 0 1-.39-3.359 14.3 14.3 0 0 0 .44 3.12c.08.24.8 1.38 1.3 2.58a7.5 7.5 0 0 1 .48 1.73 10.7 10.7 0 0 1-.53 5.159 4 4 0 0 1-.35.82 3.7 3.7 0 0 0 .8-1.41 16.14 16.14 0 0 0 0-8.11c-.42-1.28-1.41-2.4-1.65-3.169a7.7 7.7 0 0 1-.08-2.39l-2.15-1c.56 1.44.66 2.56.08 3-2.26 1.87-5.999 4-5.999 7.11 0 3.319 2 6.908 7.05 7.178a13 13 0 0 1-1.7-.56 3.45 3.45 0 0 1-1.31-.9l-.13-.14a9.34 9.34 0 0 1-2-3.639 2.7 2.7 0 0 1-.08-1.52 6.68 6.68 0 0 1 3.28-4 10 10 0 0 0 1-.61c.47-.29.77-1.53 1.08-2.53-.16.77-.34 2.26-1.06 2.82-.29.22-.61.43-.93.64-1.28.88-2.54 1.7-3.17 3.81a2.8 2.8 0 0 0 .08 1.38 9.3 9.3 0 0 0 1.95 3.51s.13.13.13.16a3 3 0 0 0 1.94 1.15c-.29-.16-.53-.35-.74-.48a4.36 4.36 0 0 1-2-3.6 3.7 3.7 0 0 1 2.18-3.39 3.58 3.58 0 0 0 1.68-2.38 3.12 3.12 0 0 1-1.59 2.5 4 4 0 0 0-2.1 3.17 5.66 5.66 0 0 0 1.89 3.4 4.1 4.1 0 0 0 1.59.72 3 3 0 0 1-.48-.5 5 5 0 0 1-.45-1 3 3 0 0 1-.27-1 3.6 3.6 0 0 1 .64-2.37 2.84 2.84 0 0 0 .9-1.35 2.87 2.87 0 0 1-.72 1.51 3 3 0 0 0-.56 2.24 4 4 0 0 0 .29.93 4 4 0 0 0 .51 1c.18.21.26.37.55.48a6.5 6.5 0 0 0 .49-2.35 9.5 9.5 0 0 0 0-1.76c-.13-.8-.4-1.6-.4-2.24.12.59.43 1.38.61 2.21a5.6 5.6 0 0 1 .11 1.73c0 .56-.08 1-.16 1.49a2 2 0 0 1-.45.93 3.2 3.2 0 0 0 1.11-2 7.9 7.9 0 0 0 .32-2.36z"/></svg></span> 洋蔥網路中繼點（Relay）進行加密，極大提高了匿名性和隱私保護。</li>
+<li><strong>預設隱私保護</strong>：完全專注於隱私保護的設置，預設阻擋追蹤及腳本。</li>
+<li><strong>進階隱私需求</strong>：適合高隱私需求的用戶（如記者、研究人員等），但可能會降低瀏覽速度。</li>
+</ul>
+<h2 id="_3">隱私保護附加元件</h2>
+<p>瀏覽器附加元件（Browser Extensions），這些附加元件可以防止網站和第三方追踪使用者的瀏覽行為，從而保護個人資料隱私。此外有效的廣告阻擋工具不僅能提升網頁瀏覽速度，還能減少惡意廣告軟體的風險。</p>
+<div class="admonition note">
+<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.68 0 2.096 2.38s1.84-.512 2.709.358c.868.87 1.584 1.638 1.584 1.638l-.562 1.381.715 2.047s-2.104 7.98-2.35 8.955c-.486 1.919-.818 2.66-2.198 3.633a186 186 0 0 1-4.293 2.916c-.409.256-.92.692-1.38.692s-.97-.436-1.38-.692a186 186 0 0 1-4.293-2.916c-1.38-.973-1.712-1.714-2.197-3.633-.247-.975-2.351-8.955-2.351-8.955l.715-2.047-.562-1.381s.716-.768 1.585-1.638c.868-.87 2.708-.358 2.708-.358L8.321 0h7.36zm-3.679 14.936c-.14 0-1.038.317-1.758.69s-1.242.637-1.409.742-.065.301.087.409 2.194 1.69 2.393 1.866c.198.175.489.464.687.464s.49-.29.688-.464 2.24-1.759 2.392-1.866.254-.305.087-.41-.689-.368-1.41-.741c-.72-.373-1.617-.69-1.757-.69m0-11.278s-.409.001-1.022.206-1.278.46-1.584.46-2.581-.434-2.581-.434-2.695 3.262-2.695 3.959.339.881.68 1.243l2.02 2.149c.192.203.59.511.356 1.066-.235.555-.58 1.26-.196 1.977.384.716 1.042 1.194 1.464 1.115.421-.08 1.412-.598 1.776-.834.364-.237 1.518-1.19 1.518-1.554s-1.193-1.02-1.413-1.168c-.22-.15-1.226-.725-1.247-.95-.02-.227-.012-.293.284-.851.297-.559.831-1.304.742-1.8-.089-.495-.95-.753-1.565-.986s-1.799-.671-1.947-.74-.11-.133.339-.175c.448-.043 1.719-.212 2.292-.052s1.552.403 1.632.532c.079.13.149.134.067.579s-.5 2.581-.541 2.96c-.04.38-.12.63.288.724.409.094 1.097.256 1.333.256s.924-.162 1.333-.256c.408-.093.329-.344.288-.723-.04-.38-.46-2.516-.541-2.961s-.012-.45.067-.579c.08-.129 1.059-.372 1.632-.532s1.845.009 2.292.052c.449.042.487.107.339.175-.148.069-1.332.508-1.947.74-.615.233-1.476.49-1.565.986-.09.496.445 1.241.742 1.8s.304.624.284.85-1.026.802-1.247.95c-.22.15-1.413.804-1.413 1.169 0 .364 1.154 1.317 1.518 1.554.364.236 1.355.755 1.776.834s1.08-.4 1.464-1.115c.384-.716.039-1.422-.195-1.977s.163-.863.355-1.066l2.02-2.149c.341-.362.68-.546.68-1.243s-2.695-3.96-2.695-3.96-2.274.436-2.58.436-.972-.256-1.585-.461-1.022-.206-1.022-.206"/></svg></span> Breve 與 <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> Chrome 是同一架構的瀏覽器，可以直接取用 <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> Chrome 的附加元件使用。</p>
+</div>
+<h3 id="ublock-origin">uBlock Origin</h3>
+<p>這是一款高效的廣告阻擋器，可以阻止惡意網頁、釣魚網站和跟踪器。</p>
+<p><a href="https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> Chrome</a> | <a href="https://addons.mozilla.org/zh-TW/firefox/addon/ublock-origin/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.824 7.287c.008 0 .004 0 0 0m-2.8-1.4c.006 0 .003 0 0 0m16.754 2.161c-.505-1.215-1.53-2.528-2.333-2.943.654 1.283 1.033 2.57 1.177 3.53l.002.02c-1.314-3.278-3.544-4.6-5.366-7.477-.091-.147-.184-.292-.273-.446a4 4 0 0 1-.13-.24 2 2 0 0 1-.172-.46.03.03 0 0 0-.027-.03.04.04 0 0 0-.021 0l-.006.001-.01.005.005-.008c-2.585 1.515-3.657 4.168-3.932 5.856a6.2 6.2 0 0 0-2.305.587.297.297 0 0 0-.147.37c.057.162.24.24.396.17a5.6 5.6 0 0 1 2.008-.523l.067-.005a5.9 5.9 0 0 1 1.957.222l.095.03a6 6 0 0 1 .616.228q.12.054.238.112l.107.055a6 6 0 0 1 .368.211 5.95 5.95 0 0 1 2.034 2.104c-.62-.437-1.733-.868-2.803-.681 4.183 2.09 3.06 9.292-2.737 9.02a5.2 5.2 0 0 1-1.513-.292 4.4 4.4 0 0 1-.538-.232c-1.42-.735-2.593-2.121-2.74-3.806 0 0 .537-2 3.845-2 .357 0 1.38-.998 1.398-1.287-.005-.095-2.029-.9-2.817-1.677-.422-.416-.622-.616-.8-.767a4 4 0 0 0-.301-.227 5.4 5.4 0 0 1-.032-2.842c-1.195.544-2.124 1.403-2.8 2.163h-.006c-.46-.584-.428-2.51-.402-2.913-.006-.025-.343.176-.389.206a8.4 8.4 0 0 0-1.136.974q-.596.606-1.085 1.303a9.8 9.8 0 0 0-1.562 3.52c-.003.013-.11.487-.19 1.073q-.02.135-.037.272a8 8 0 0 0-.069.667l-.002.034-.023.387-.001.06C.386 18.795 5.593 24 12.016 24c5.752 0 10.527-4.176 11.463-9.661q.028-.223.052-.448c.232-1.994-.025-4.09-.753-5.844z"/></svg></span> Firefox</a></p>
+<h3 id="privacy-badger">Privacy Badger</h3>
+<p>由電子前哨基金會（EFF）開發，它可自動學習並阻止跟踪機制，以保護您的隱私。</p>
+<p><a href="https://chromewebstore.google.com/detail/privacy-badger/pkehgijcmpdhfbdbbnkijodmdjhbjlgp"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> Chrome</a> | <a href="https://addons.mozilla.org/zh-TW/firefox/addon/privacy-badger17/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.824 7.287c.008 0 .004 0 0 0m-2.8-1.4c.006 0 .003 0 0 0m16.754 2.161c-.505-1.215-1.53-2.528-2.333-2.943.654 1.283 1.033 2.57 1.177 3.53l.002.02c-1.314-3.278-3.544-4.6-5.366-7.477-.091-.147-.184-.292-.273-.446a4 4 0 0 1-.13-.24 2 2 0 0 1-.172-.46.03.03 0 0 0-.027-.03.04.04 0 0 0-.021 0l-.006.001-.01.005.005-.008c-2.585 1.515-3.657 4.168-3.932 5.856a6.2 6.2 0 0 0-2.305.587.297.297 0 0 0-.147.37c.057.162.24.24.396.17a5.6 5.6 0 0 1 2.008-.523l.067-.005a5.9 5.9 0 0 1 1.957.222l.095.03a6 6 0 0 1 .616.228q.12.054.238.112l.107.055a6 6 0 0 1 .368.211 5.95 5.95 0 0 1 2.034 2.104c-.62-.437-1.733-.868-2.803-.681 4.183 2.09 3.06 9.292-2.737 9.02a5.2 5.2 0 0 1-1.513-.292 4.4 4.4 0 0 1-.538-.232c-1.42-.735-2.593-2.121-2.74-3.806 0 0 .537-2 3.845-2 .357 0 1.38-.998 1.398-1.287-.005-.095-2.029-.9-2.817-1.677-.422-.416-.622-.616-.8-.767a4 4 0 0 0-.301-.227 5.4 5.4 0 0 1-.032-2.842c-1.195.544-2.124 1.403-2.8 2.163h-.006c-.46-.584-.428-2.51-.402-2.913-.006-.025-.343.176-.389.206a8.4 8.4 0 0 0-1.136.974q-.596.606-1.085 1.303a9.8 9.8 0 0 0-1.562 3.52c-.003.013-.11.487-.19 1.073q-.02.135-.037.272a8 8 0 0 0-.069.667l-.002.034-.023.387-.001.06C.386 18.795 5.593 24 12.016 24c5.752 0 10.527-4.176 11.463-9.661q.028-.223.052-.448c.232-1.994-.025-4.09-.753-5.844z"/></svg></span> Firefox</a></p>
+<h3 id="cookie-autodelete"><abbr title="Cookie 是網站儲存在你瀏覽器中的小檔案，用來記錄你的偏好和登入狀態，提升使用體驗。">Cookie</abbr> AutoDelete</h3>
+<p>自動刪除不必要的 <abbr title="Cookie 是網站儲存在你瀏覽器中的小檔案，用來記錄你的偏好和登入狀態，提升使用體驗。">Cookie</abbr>，只有您信任且在白名單中的網站才能保存 <abbr title="Cookie 是網站儲存在你瀏覽器中的小檔案，用來記錄你的偏好和登入狀態，提升使用體驗。">Cookie</abbr>，有效保護隱私。</p>
+<p><a href="https://chromewebstore.google.com/detail/cookie-autodelete/fhcgjolkccmbidfldomjliifgaodjagh"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> Chrome</a> | <a href="https://addons.mozilla.org/zh-TW/firefox/addon/cookie-autodelete/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.824 7.287c.008 0 .004 0 0 0m-2.8-1.4c.006 0 .003 0 0 0m16.754 2.161c-.505-1.215-1.53-2.528-2.333-2.943.654 1.283 1.033 2.57 1.177 3.53l.002.02c-1.314-3.278-3.544-4.6-5.366-7.477-.091-.147-.184-.292-.273-.446a4 4 0 0 1-.13-.24 2 2 0 0 1-.172-.46.03.03 0 0 0-.027-.03.04.04 0 0 0-.021 0l-.006.001-.01.005.005-.008c-2.585 1.515-3.657 4.168-3.932 5.856a6.2 6.2 0 0 0-2.305.587.297.297 0 0 0-.147.37c.057.162.24.24.396.17a5.6 5.6 0 0 1 2.008-.523l.067-.005a5.9 5.9 0 0 1 1.957.222l.095.03a6 6 0 0 1 .616.228q.12.054.238.112l.107.055a6 6 0 0 1 .368.211 5.95 5.95 0 0 1 2.034 2.104c-.62-.437-1.733-.868-2.803-.681 4.183 2.09 3.06 9.292-2.737 9.02a5.2 5.2 0 0 1-1.513-.292 4.4 4.4 0 0 1-.538-.232c-1.42-.735-2.593-2.121-2.74-3.806 0 0 .537-2 3.845-2 .357 0 1.38-.998 1.398-1.287-.005-.095-2.029-.9-2.817-1.677-.422-.416-.622-.616-.8-.767a4 4 0 0 0-.301-.227 5.4 5.4 0 0 1-.032-2.842c-1.195.544-2.124 1.403-2.8 2.163h-.006c-.46-.584-.428-2.51-.402-2.913-.006-.025-.343.176-.389.206a8.4 8.4 0 0 0-1.136.974q-.596.606-1.085 1.303a9.8 9.8 0 0 0-1.562 3.52c-.003.013-.11.487-.19 1.073q-.02.135-.037.272a8 8 0 0 0-.069.667l-.002.034-.023.387-.001.06C.386 18.795 5.593 24 12.016 24c5.752 0 10.527-4.176 11.463-9.661q.028-.223.052-.448c.232-1.994-.025-4.09-.753-5.844z"/></svg></span> Firefox</a></p>
+<h3 id="clearurls">ClearURLs</h3>
+<p>此附加元件功能將自動移除網址中的追蹤元素，以幫助保護您在瀏覽網路時的隱私。</p>
+<p><a href="https://chromewebstore.google.com/detail/clearurls/lckanjgmijmafbedllaakclkaicjfmnk"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> Chrome</a> | <a href="https://addons.mozilla.org/zh-TW/firefox/addon/clearurls/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.824 7.287c.008 0 .004 0 0 0m-2.8-1.4c.006 0 .003 0 0 0m16.754 2.161c-.505-1.215-1.53-2.528-2.333-2.943.654 1.283 1.033 2.57 1.177 3.53l.002.02c-1.314-3.278-3.544-4.6-5.366-7.477-.091-.147-.184-.292-.273-.446a4 4 0 0 1-.13-.24 2 2 0 0 1-.172-.46.03.03 0 0 0-.027-.03.04.04 0 0 0-.021 0l-.006.001-.01.005.005-.008c-2.585 1.515-3.657 4.168-3.932 5.856a6.2 6.2 0 0 0-2.305.587.297.297 0 0 0-.147.37c.057.162.24.24.396.17a5.6 5.6 0 0 1 2.008-.523l.067-.005a5.9 5.9 0 0 1 1.957.222l.095.03a6 6 0 0 1 .616.228q.12.054.238.112l.107.055a6 6 0 0 1 .368.211 5.95 5.95 0 0 1 2.034 2.104c-.62-.437-1.733-.868-2.803-.681 4.183 2.09 3.06 9.292-2.737 9.02a5.2 5.2 0 0 1-1.513-.292 4.4 4.4 0 0 1-.538-.232c-1.42-.735-2.593-2.121-2.74-3.806 0 0 .537-2 3.845-2 .357 0 1.38-.998 1.398-1.287-.005-.095-2.029-.9-2.817-1.677-.422-.416-.622-.616-.8-.767a4 4 0 0 0-.301-.227 5.4 5.4 0 0 1-.032-2.842c-1.195.544-2.124 1.403-2.8 2.163h-.006c-.46-.584-.428-2.51-.402-2.913-.006-.025-.343.176-.389.206a8.4 8.4 0 0 0-1.136.974q-.596.606-1.085 1.303a9.8 9.8 0 0 0-1.562 3.52c-.003.013-.11.487-.19 1.073q-.02.135-.037.272a8 8 0 0 0-.069.667l-.002.034-.023.387-.001.06C.386 18.795 5.593 24 12.016 24c5.752 0 10.527-4.176 11.463-9.661q.028-.223.052-.448c.232-1.994-.025-4.09-.753-5.844z"/></svg></span> Firefox</a></p>
+<h2 id="_4">瀏覽模式</h2>
+<h3 id="_5">一般瀏覽器</h3>
+<p>如 <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15.68 0 2.096 2.38s1.84-.512 2.709.358c.868.87 1.584 1.638 1.584 1.638l-.562 1.381.715 2.047s-2.104 7.98-2.35 8.955c-.486 1.919-.818 2.66-2.198 3.633a186 186 0 0 1-4.293 2.916c-.409.256-.92.692-1.38.692s-.97-.436-1.38-.692a186 186 0 0 1-4.293-2.916c-1.38-.973-1.712-1.714-2.197-3.633-.247-.975-2.351-8.955-2.351-8.955l.715-2.047-.562-1.381s.716-.768 1.585-1.638c.868-.87 2.708-.358 2.708-.358L8.321 0h7.36zm-3.679 14.936c-.14 0-1.038.317-1.758.69s-1.242.637-1.409.742-.065.301.087.409 2.194 1.69 2.393 1.866c.198.175.489.464.687.464s.49-.29.688-.464 2.24-1.759 2.392-1.866.254-.305.087-.41-.689-.368-1.41-.741c-.72-.373-1.617-.69-1.757-.69m0-11.278s-.409.001-1.022.206-1.278.46-1.584.46-2.581-.434-2.581-.434-2.695 3.262-2.695 3.959.339.881.68 1.243l2.02 2.149c.192.203.59.511.356 1.066-.235.555-.58 1.26-.196 1.977.384.716 1.042 1.194 1.464 1.115.421-.08 1.412-.598 1.776-.834.364-.237 1.518-1.19 1.518-1.554s-1.193-1.02-1.413-1.168c-.22-.15-1.226-.725-1.247-.95-.02-.227-.012-.293.284-.851.297-.559.831-1.304.742-1.8-.089-.495-.95-.753-1.565-.986s-1.799-.671-1.947-.74-.11-.133.339-.175c.448-.043 1.719-.212 2.292-.052s1.552.403 1.632.532c.079.13.149.134.067.579s-.5 2.581-.541 2.96c-.04.38-.12.63.288.724.409.094 1.097.256 1.333.256s.924-.162 1.333-.256c.408-.093.329-.344.288-.723-.04-.38-.46-2.516-.541-2.961s-.012-.45.067-.579c.08-.129 1.059-.372 1.632-.532s1.845.009 2.292.052c.449.042.487.107.339.175-.148.069-1.332.508-1.947.74-.615.233-1.476.49-1.565.986-.09.496.445 1.241.742 1.8s.304.624.284.85-1.026.802-1.247.95c-.22.15-1.413.804-1.413 1.169 0 .364 1.154 1.317 1.518 1.554.364.236 1.355.755 1.776.834s1.08-.4 1.464-1.115c.384-.716.039-1.422-.195-1.977s.163-.863.355-1.066l2.02-2.149c.341-.362.68-.546.68-1.243s-2.695-3.96-2.695-3.96-2.274.436-2.58.436-.972-.256-1.585-.461-1.022-.206-1.022-.206"/></svg></span> Brave、<span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0C8.21 0 4.831 1.757 2.632 4.501l3.953 6.848A5.454 5.454 0 0 1 12 6.545h10.691A12 12 0 0 0 12 0M1.931 5.47A11.94 11.94 0 0 0 0 12c0 6.012 4.42 10.991 10.189 11.864l3.953-6.847a5.45 5.45 0 0 1-6.865-2.29zm13.342 2.166a5.446 5.446 0 0 1 1.45 7.09l.002.001h-.002l-5.344 9.257q.309.015.621.016c6.627 0 12-5.373 12-12 0-1.54-.29-3.011-.818-4.364zM12 16.364a4.364 4.364 0 1 1 0-8.728 4.364 4.364 0 0 1 0 8.728"/></svg></span> Chrome、<span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.824 7.287c.008 0 .004 0 0 0m-2.8-1.4c.006 0 .003 0 0 0m16.754 2.161c-.505-1.215-1.53-2.528-2.333-2.943.654 1.283 1.033 2.57 1.177 3.53l.002.02c-1.314-3.278-3.544-4.6-5.366-7.477-.091-.147-.184-.292-.273-.446a4 4 0 0 1-.13-.24 2 2 0 0 1-.172-.46.03.03 0 0 0-.027-.03.04.04 0 0 0-.021 0l-.006.001-.01.005.005-.008c-2.585 1.515-3.657 4.168-3.932 5.856a6.2 6.2 0 0 0-2.305.587.297.297 0 0 0-.147.37c.057.162.24.24.396.17a5.6 5.6 0 0 1 2.008-.523l.067-.005a5.9 5.9 0 0 1 1.957.222l.095.03a6 6 0 0 1 .616.228q.12.054.238.112l.107.055a6 6 0 0 1 .368.211 5.95 5.95 0 0 1 2.034 2.104c-.62-.437-1.733-.868-2.803-.681 4.183 2.09 3.06 9.292-2.737 9.02a5.2 5.2 0 0 1-1.513-.292 4.4 4.4 0 0 1-.538-.232c-1.42-.735-2.593-2.121-2.74-3.806 0 0 .537-2 3.845-2 .357 0 1.38-.998 1.398-1.287-.005-.095-2.029-.9-2.817-1.677-.422-.416-.622-.616-.8-.767a4 4 0 0 0-.301-.227 5.4 5.4 0 0 1-.032-2.842c-1.195.544-2.124 1.403-2.8 2.163h-.006c-.46-.584-.428-2.51-.402-2.913-.006-.025-.343.176-.389.206a8.4 8.4 0 0 0-1.136.974q-.596.606-1.085 1.303a9.8 9.8 0 0 0-1.562 3.52c-.003.013-.11.487-.19 1.073q-.02.135-.037.272a8 8 0 0 0-.069.667l-.002.034-.023.387-.001.06C.386 18.795 5.593 24 12.016 24c5.752 0 10.527-4.176 11.463-9.661q.028-.223.052-.448c.232-1.994-.025-4.09-.753-5.844z"/></svg></span> Firefox、<span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0m-.004.953h.006c.063 0 .113.05.113.113v1.842c0 .063-.05.113-.113.113h-.006a.11.11 0 0 1-.113-.113V1.066c0-.063.05-.113.113-.113m-.941.041a.115.115 0 0 1 .11.104l.077.918a.11.11 0 0 1-.101.12h-.01a.11.11 0 0 1-.12-.1l-.08-.919a.11.11 0 0 1 .102-.12h.01zm1.892 0h.018a.113.113 0 0 1 .103.121l-.08.92a.11.11 0 0 1-.12.102h-.009a.11.11 0 0 1-.101-.121l.078-.92a.11.11 0 0 1 .111-.102m-2.838.123a.11.11 0 0 1 .106.092l.32 1.818c.01.06-.03.119-.09.13l-.01.001a.11.11 0 0 1-.128-.09l-.32-1.818a.11.11 0 0 1 .09-.129l.01-.002zm3.784.002h.021l.008.002c.061.01.102.07.092.131l-.32 1.814a.11.11 0 0 1-.132.09h-.005a.113.113 0 0 1-.092-.13l.32-1.815a.11.11 0 0 1 .108-.092m-4.715.203c.048.002.09.035.103.084l.239.893a.11.11 0 0 1-.079.139l-.005.001a.114.114 0 0 1-.14-.08l-.237-.894a.11.11 0 0 1 .078-.137l.006-.002a.1.1 0 0 1 .035-.004m5.644 0a.1.1 0 0 1 .033.004l.006.002c.06.016.097.079.08.139l-.24.892a.11.11 0 0 1-.137.08l-.005-.002a.114.114 0 0 1-.08-.138l.24-.893a.11.11 0 0 1 .103-.084m-6.562.285a.11.11 0 0 1 .107.073L9 3.42a.107.107 0 0 1-.064.139l-.012.005a.11.11 0 0 1-.14-.066L8.15 1.76a.11.11 0 0 1 .065-.14l.014-.005a.1.1 0 0 1 .03-.008zm7.469.002q.021 0 .042.006l.012.006c.057.02.087.082.067.139l-.633 1.738a.11.11 0 0 1-.14.066l-.013-.003A.11.11 0 0 1 15 3.42l.633-1.738a.11.11 0 0 1 .096-.073m-8.352.366a.11.11 0 0 1 .105.064l.393.838a.11.11 0 0 1-.055.148l-.008.004a.11.11 0 0 1-.146-.054l-.395-.838a.11.11 0 0 1 .055-.149l.008-.004a.1.1 0 0 1 .043-.01zm9.246 0a.1.1 0 0 1 .043.01l.006.003a.11.11 0 0 1 .053.149l-.391.838a.11.11 0 0 1-.148.054l-.006-.002a.11.11 0 0 1-.055-.148l.393-.84a.11.11 0 0 1 .105-.064m-10.092.44c.04-.002.08.018.102.056l.922 1.597a.113.113 0 0 1-.041.155l-.006.002a.113.113 0 0 1-.154-.041l-.922-1.598a.113.113 0 0 1 .04-.154l.007-.002a.1.1 0 0 1 .052-.016zm10.94.001a.1.1 0 0 1 .052.014l.004.002a.114.114 0 0 1 .041.156l-.923 1.596a.114.114 0 0 1-.157.04l-.004-.001a.11.11 0 0 1-.04-.155l.925-1.595a.11.11 0 0 1 .102-.057M5.729 2.93a.11.11 0 0 1 .093.047l.532.753a.114.114 0 0 1-.028.159l-.004.002a.114.114 0 0 1-.158-.028l-.531-.752a.114.114 0 0 1 .027-.158l.006-.002a.1.1 0 0 1 .063-.021m12.542 0a.1.1 0 0 1 .063.02l.006.003a.11.11 0 0 1 .027.156l-.531.756a.11.11 0 0 1-.156.028l-.006-.004a.11.11 0 0 1-.028-.157l.532-.755a.11.11 0 0 1 .093-.047m.747.578a.1.1 0 0 1 .08.027l.006.004c.047.04.053.111.013.158L17.932 5.11a.11.11 0 0 1-.157.016l-.005-.006a.11.11 0 0 1-.014-.156l1.185-1.414a.11.11 0 0 1 .077-.041zM4.984 3.51a.1.1 0 0 1 .077.039L6.244 4.96a.11.11 0 0 1-.014.158l-.003.004a.11.11 0 0 1-.159-.014L4.883 3.697a.11.11 0 0 1 .013-.158l.006-.004a.11.11 0 0 1 .082-.025m-.714.64q.042 0 .076.032l.658.66a.107.107 0 0 1 0 .152l-.01.01a.107.107 0 0 1-.152 0l-.66-.658a.11.11 0 0 1 0-.155l.01-.01a.1.1 0 0 1 .078-.03zm15.462 0q.043 0 .077.032l.007.007a.11.11 0 0 1 0 .155l-.658.66a.11.11 0 0 1-.154 0l-.008-.008a.11.11 0 0 1 0-.154l.658-.66a.1.1 0 0 1 .078-.032m.707.66c.038 0 .071.02.092.075a.11.11 0 0 1-.023.117l-7.606 8.08c-3.084 2.024-6.149 4.04-9.222 6.05-.078.051-.17.082-.211-.028a.11.11 0 0 1 .023-.118l7.594-8.08a8381 8381 0 0 1 9.234-6.049.25.25 0 0 1 .12-.046zm-16.824.045a.1.1 0 0 1 .08.026l1.416 1.187a.11.11 0 0 1 .014.157l-.006.005a.11.11 0 0 1-.156.014L3.549 5.057a.11.11 0 0 1-.014-.155l.006-.007a.1.1 0 0 1 .074-.04m17.336.756c.036 0 .072.017.094.05l.004.003a.114.114 0 0 1-.028.158l-.753.53a.11.11 0 0 1-.157-.028l-.004-.004a.114.114 0 0 1 .028-.158l.754-.53a.1.1 0 0 1 .062-.02zm-17.904.002q.031 0 .06.02l.76.531c.05.035.06.103.026.152l-.006.01a.11.11 0 0 1-.153.026l-.76-.532a.11.11 0 0 1-.025-.152l.006-.01a.11.11 0 0 1 .092-.045m-.512.803q.027 0 .053.016l1.596.923a.11.11 0 0 1 .04.153l-.003.006a.11.11 0 0 1-.153.04L2.473 6.63a.11.11 0 0 1-.041-.152l.004-.006a.11.11 0 0 1 .1-.055zm18.932 0a.11.11 0 0 1 .1.055l.001.004a.113.113 0 0 1-.04.154l-1.596.926a.113.113 0 0 1-.155-.041l-.002-.004a.113.113 0 0 1 .041-.155l1.596-.925a.1.1 0 0 1 .055-.014m-19.373.846q.021 0 .043.01l.838.392a.11.11 0 0 1 .052.147l-.004.01a.11.11 0 0 1-.146.052l-.838-.393a.11.11 0 0 1-.053-.146l.004-.01a.11.11 0 0 1 .104-.062m19.81.002a.11.11 0 0 1 .106.062l.002.008a.11.11 0 0 1-.053.146l-.838.393a.11.11 0 0 1-.146-.053l-.004-.008a.11.11 0 0 1 .052-.146l.838-.393a.1.1 0 0 1 .043-.01zm-20.183.88q.02 0 .043.006l1.732.631a.11.11 0 0 1 .067.145l-.002.006a.11.11 0 0 1-.143.066l-1.732-.63a.113.113 0 0 1-.069-.145l.002-.004a.12.12 0 0 1 .102-.074zm20.549 0a.11.11 0 0 1 .11.075l.003.004a.115.115 0 0 1-.069.146l-1.732.629a.11.11 0 0 1-.145-.066l-.001-.006a.113.113 0 0 1 .068-.145l1.732-.63a.1.1 0 0 1 .034-.006zm-20.836.909a.1.1 0 0 1 .033.004l.892.24c.06.016.096.077.08.137l-.002.007a.11.11 0 0 1-.136.079l-.895-.239a.113.113 0 0 1-.078-.138l.002-.006a.11.11 0 0 1 .104-.084m21.13.002a.115.115 0 0 1 .106.084v.004a.11.11 0 0 1-.078.138l-.893.239a.11.11 0 0 1-.138-.079v-.005a.11.11 0 0 1 .078-.14l.892-.237a.1.1 0 0 1 .033-.004m-21.335.93.023.001 1.814.323a.11.11 0 0 1 .09.13v.006a.11.11 0 0 1-.13.09l-1.815-.322a.113.113 0 0 1-.092-.131l.002-.006a.11.11 0 0 1 .108-.092zm21.519.001h.022c.052.002.1.038.109.092v.006c.01.062-.03.12-.092.13l-1.814.321a.113.113 0 0 1-.131-.092v-.005a.113.113 0 0 1 .092-.131zm-21.644.944h.011l.922.084a.11.11 0 0 1 .102.119l-.002.01a.11.11 0 0 1-.121.1l-.922-.083a.11.11 0 0 1-.1-.12v-.009a.11.11 0 0 1 .11-.101m21.779.002h.012a.11.11 0 0 1 .11.101v.008a.11.11 0 0 1-.1.121l-.923.08a.11.11 0 0 1-.12-.101v-.008a.11.11 0 0 1 .1-.121l.92-.08zm-11.82.73L6.091 16.95c2.02-1.324 4.039-2.646 6.066-3.976l-1.095-1.31zm11.87.219c.063 0 .114.05.114.113v.004c0 .063-.05.113-.113.113l-1.844.004a.113.113 0 0 1-.113-.113v-.004c0-.063.05-.113.113-.113zm-21.869.002h1.844c.062 0 .112.05.112.111v.008c0 .062-.05.111-.112.111H1.064a.11.11 0 0 1-.11-.111v-.008a.11.11 0 0 1 .11-.111m.952.875h.011a.11.11 0 0 1 .11.101v.006a.11.11 0 0 1-.102.121l-.922.08a.11.11 0 0 1-.119-.101l-.002-.006a.11.11 0 0 1 .102-.121zm19.955 0h.011l.922.08a.11.11 0 0 1 .102.119v.008a.11.11 0 0 1-.121.101l-.922-.08a.11.11 0 0 1-.102-.119v-.008a.11.11 0 0 1 .11-.101m-18.924.705c.053.001.098.04.107.094l.002.004a.11.11 0 0 1-.092.13l-1.812.32a.113.113 0 0 1-.13-.091v-.004a.115.115 0 0 1 .09-.133l1.811-.318zm17.902 0q.012 0 .024.002l1.816.32c.061.011.1.07.09.131v.004a.113.113 0 0 1-.131.092l-1.816-.32a.11.11 0 0 1-.09-.131v-.004a.11.11 0 0 1 .107-.094M2.332 14.477a.11.11 0 0 1 .104.082l.002.005a.11.11 0 0 1-.08.137l-.891.24a.11.11 0 0 1-.137-.08l-.002-.006a.11.11 0 0 1 .08-.136l.89-.239a.1.1 0 0 1 .034-.003m19.332 0q.018 0 .035.003l.893.239c.06.016.096.077.08.136l-.002.006a.11.11 0 0 1-.137.078l-.894-.238a.11.11 0 0 1-.078-.137l.002-.005a.11.11 0 0 1 .101-.082m-18.213.517a.11.11 0 0 1 .11.074l.002.004a.11.11 0 0 1-.067.145l-1.732.63a.113.113 0 0 1-.145-.068l-.002-.004a.113.113 0 0 1 .069-.144L3.418 15a.1.1 0 0 1 .033-.006m17.086 0q.022-.002.043.006l1.734.63a.11.11 0 0 1 .067.143l-.002.008a.11.11 0 0 1-.143.067l-1.734-.631a.11.11 0 0 1-.066-.143l.002-.008a.11.11 0 0 1 .1-.072zM2.92 16.117a.11.11 0 0 1 .103.063l.004.01a.11.11 0 0 1-.052.144l-.838.393a.11.11 0 0 1-.147-.055l-.004-.008a.11.11 0 0 1 .053-.146l.838-.391a.1.1 0 0 1 .043-.01m18.158 0a.1.1 0 0 1 .043.01l.838.39c.056.027.08.093.055.149l-.002.004a.11.11 0 0 1-.149.055l-.838-.391a.11.11 0 0 1-.054-.148l.002-.004a.11.11 0 0 1 .105-.065m-16.957.315c.04-.001.078.02.1.056l.004.004a.11.11 0 0 1-.041.153l-1.596.921a.113.113 0 0 1-.154-.04l-.002-.005a.113.113 0 0 1 .04-.154l1.596-.922a.1.1 0 0 1 .053-.013m15.756 0q.027 0 .053.013l1.597.924a.11.11 0 0 1 .041.152l-.002.004a.11.11 0 0 1-.152.041l-1.598-.921a.113.113 0 0 1-.04-.155l.001-.002a.11.11 0 0 1 .1-.056m.328 1.193a.1.1 0 0 1 .06.021l.758.534c.05.035.061.102.026.152l-.004.008a.11.11 0 0 1-.154.027l-.756-.535a.11.11 0 0 1-.028-.152l.006-.008a.11.11 0 0 1 .092-.047m-16.412.002c.035 0 .072.016.094.047l.004.008a.11.11 0 0 1-.028.152l-.756.531a.11.11 0 0 1-.152-.025l-.006-.008a.11.11 0 0 1 .028-.152l.755-.534a.1.1 0 0 1 .061-.019m15.162.102a.11.11 0 0 1 .082.025l1.414 1.187a.11.11 0 0 1 .014.157l-.004.004a.113.113 0 0 1-.158.013L18.89 17.93a.11.11 0 0 1-.014-.157l.004-.005a.1.1 0 0 1 .074-.04zm-12.812 1.12a.1.1 0 0 1 .08.026l.007.008a.11.11 0 0 1 .014.154L5.06 20.451a.11.11 0 0 1-.155.012l-.008-.006a.11.11 0 0 1-.013-.154l1.185-1.414a.1.1 0 0 1 .075-.04zm11.703 0c.032 0 .065.015.088.042l1.181 1.41c.04.048.035.12-.013.16l-.002.002a.114.114 0 0 1-.16-.014l-1.182-1.41a.114.114 0 0 1 .013-.16l.002-.002a.12.12 0 0 1 .073-.027zm-12.928.114q.042 0 .074.031l.014.012a.107.107 0 0 1 0 .15l-.662.66a.105.105 0 0 1-.149 0l-.011-.011a.105.105 0 0 1 0-.149l.66-.662a.1.1 0 0 1 .074-.031m14.164 0q.041 0 .074.031l.66.662a.106.106 0 0 1 0 .15l-.011.012a.106.106 0 0 1-.15-.002l-.66-.66a.106.106 0 0 1 .001-.15l.01-.012a.1.1 0 0 1 .076-.031m-11.627.797a.1.1 0 0 1 .05.015l.007.004a.11.11 0 0 1 .04.15l-.921 1.598a.11.11 0 0 1-.15.041l-.008-.004a.11.11 0 0 1-.04-.152l.922-1.596a.11.11 0 0 1 .1-.056m9.088.002a.11.11 0 0 1 .1.054l.925 1.596a.113.113 0 0 1-.04.154h-.005a.11.11 0 0 1-.152-.039l-.926-1.595a.113.113 0 0 1 .041-.155l.004-.002a.1.1 0 0 1 .053-.013m-10.285.324q.032 0 .062.021l.004.002a.113.113 0 0 1 .028.157l-.53.755a.11.11 0 0 1-.156.028l-.004-.002a.11.11 0 0 1-.027-.156l.53-.756a.11.11 0 0 1 .093-.05zm11.484.002c.036 0 .072.015.094.047l.53.756c.035.05.023.12-.028.156l-.004.002a.11.11 0 0 1-.156-.028l-.53-.755a.11.11 0 0 1 .028-.157l.004-.002a.1.1 0 0 1 .062-.02zm-8.863.342a.1.1 0 0 1 .043.006l.012.005c.056.02.084.081.064.137l-.633 1.74a.105.105 0 0 1-.136.063l-.014-.004a.106.106 0 0 1-.065-.137l.633-1.74a.11.11 0 0 1 .096-.07m6.232 0a.11.11 0 0 1 .106.07l.633 1.738a.107.107 0 0 1-.065.137l-.015.006a.107.107 0 0 1-.137-.065L15 20.578a.107.107 0 0 1 .064-.137l.014-.005a.1.1 0 0 1 .033-.006m-4.695.41q.011 0 .021.002l.006.002c.062.01.101.067.09.129l-.318 1.812a.113.113 0 0 1-.131.092l-.004-.002a.11.11 0 0 1-.092-.129l.32-1.812a.11.11 0 0 1 .108-.094m3.146.002q.012-.001.022 0a.11.11 0 0 1 .107.092l.32 1.812a.11.11 0 0 1-.091.131l-.004.002a.113.113 0 0 1-.13-.092l-.321-1.812a.113.113 0 0 1 .092-.131zm-5.79.119a.1.1 0 0 1 .042.01l.004.002a.114.114 0 0 1 .055.15l-.393.834a.11.11 0 0 1-.148.055l-.004-.002a.11.11 0 0 1-.055-.149l.393-.836a.11.11 0 0 1 .105-.064zm8.458 0a.11.11 0 0 1 .104.062l.39.84a.11.11 0 0 1-.052.147l-.008.004a.11.11 0 0 1-.146-.055l-.391-.838a.11.11 0 0 1 .053-.146l.008-.004a.1.1 0 0 1 .042-.01m-4.236.018H12c.063 0 .115.05.115.113l.002 1.84c0 .063-.05.113-.113.113h-.006a.113.113 0 0 1-.113-.113l-.004-1.838c0-.063.05-.115.113-.115m-2.592.578q.016-.001.034.004l.005.002a.11.11 0 0 1 .079.136l-.24.893a.11.11 0 0 1-.137.078l-.006-.002a.11.11 0 0 1-.078-.137l.24-.89a.11.11 0 0 1 .103-.084m5.196.002a.11.11 0 0 1 .103.082l.24.89a.11.11 0 0 1-.078.137l-.006.002a.11.11 0 0 1-.136-.078l-.24-.89a.11.11 0 0 1 .078-.138l.005-.002a.1.1 0 0 1 .034-.003m-3.475.302h.01l.008.002c.061.006.107.06.101.121l-.08.92a.11.11 0 0 1-.121.102h-.008a.11.11 0 0 1-.1-.121l.08-.922a.11.11 0 0 1 .11-.102m1.736 0h.02a.11.11 0 0 1 .107.102l.08.924a.11.11 0 0 1-.101.119l-.008.002a.11.11 0 0 1-.12-.102l-.08-.924a.11.11 0 0 1 .102-.12z"/></svg></span> Safari 的 <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.06 13c-1.86 0-3.42 1.33-3.82 3.1-.95-.41-1.82-.3-2.48-.01C10.35 14.31 8.79 13 6.94 13 4.77 13 3 14.79 3 17s1.77 4 3.94 4c2.06 0 3.74-1.62 3.9-3.68.34-.24 1.23-.69 2.32.02.18 2.05 1.84 3.66 3.9 3.66 2.17 0 3.94-1.79 3.94-4s-1.77-4-3.94-4M6.94 19.86c-1.56 0-2.81-1.28-2.81-2.86s1.26-2.86 2.81-2.86c1.56 0 2.81 1.28 2.81 2.86s-1.25 2.86-2.81 2.86m10.12 0c-1.56 0-2.81-1.28-2.81-2.86s1.25-2.86 2.81-2.86 2.82 1.28 2.82 2.86-1.27 2.86-2.82 2.86M22 10.5H2V12h20zm-6.47-7.87c-.22-.49-.78-.75-1.31-.58L12 2.79l-2.23-.74-.05-.01c-.53-.15-1.09.13-1.29.64L6 9h12l-2.44-6.32z"/></svg></span> 無痕瀏覽（Incognito Mode）或隱私瀏覽模式（Private Browsing）目的是提高用戶的隱私性。</p>
+<h4 id="_6">主要特點和其限制</h4>
+<ol>
+<li><strong>本地歷史不保存</strong>：瀏覽器不會記錄您的瀏覽歷史、下載記錄、Cookies 和網站資料。</li>
+<li><strong>暫時性資料清理</strong>：在無痕瀏覽模式中，您所訪問的網站數據資料和表單填寫的資訊會在關閉窗口後自動清除。</li>
+<li><strong>分離瀏覽階段（Session）</strong>：每次開啟無痕瀏覽模式都是一個新的瀏覽階段，與一般模式互不影響。</li>
+</ol>
+<h4 id="_7">不足與限制</h4>
+<ol>
+<li><strong>不匿名</strong>：<mark class="critic">無痕瀏覽模式並不是匿名模式</mark>。您的網路行為仍可被網路服務供應商（<abbr title="ISP（網際網路服務提供商）是提供你上網連線的公司，例如中華電信或遠傳電信。">ISP</abbr>）、公司網路管理員、網站及追蹤器監視。</li>
+<li><strong>未加密</strong>：無痕瀏覽模式不會加密您的網路流量，因此仍易受網路攻擊，例如中間人攻擊（Man-in-the-Middle Attack）。</li>
+<li><strong>附加元件</strong>：某些瀏覽器附加元件或插件可能仍能辨識和記錄您的活動。</li>
+<li><strong>下載文件</strong>：通過無痕瀏覽模式下載的文件仍會保留在您的電腦上，它不會自動刪除已下載的內容。</li>
+<li><strong>帳戶登錄</strong>：<mark class="critic">如果您在無痕模式下登錄您的帳戶，該網站仍然可以記錄您的活動，只是不會保存在本地瀏覽器的歷史記錄中。</mark></li>
+<li><strong>惡意軟件防護</strong>：無痕模式並不能保護您免受惡意軟件攻擊或釣魚詐騙。</li>
+</ol>
+<h3 id="tor_1"><abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 瀏覽器</h3>
+<p>當使用 <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 瀏覽器作為隱私瀏覽模式時，使用者的網路流量會經過多層次的加密，並通過一系列全球志工運營的中繼點（Relays），使監視、追蹤或篡改使用者的流量變得極為困難。</p>
+<h4 id="_8">主要特點和優點</h4>
+<ol>
+<li><strong>匿名性強</strong>：<abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 隨機選擇多個中繼點，使得追蹤數據來源非常困難。</li>
+<li><strong>防止流量分析</strong>：<abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 可以防止第三方觀察您正在訪問哪些網站，即使他們可以查看您的網路流量。</li>
+<li><strong>穿透審查</strong>：能夠繞過某些國家或網路管理者的網路封鎖和審查措施。</li>
+</ol>
+<h4 id="_9">不足和限制</h4>
+<ol>
+<li><strong>速度較慢</strong>：由於數據封包資料需要通過多個中繼點，網路速度通常會比一般瀏覽器慢。</li>
+<li><strong>有限的隱私</strong>：<abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 無法完全隱藏使用者的身份，尤其是在使用不安全的網站或者安裝了非官方插件的情況下。</li>
+<li><strong>不適用於所有用途</strong>：例如，使用 <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 進行大型文件下載或串流媒體服務可能不那麼實用，而且網站可能會禁止來自 <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 節點的訪問。</li>
+<li><strong>法律風險</strong>：在部分國家或地區，使用 <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 可能會引起法律問題，甚至遭遇政府監控。</li>
+</ol>
+<h4 id="_10">適用情境</h4>
+<ul>
+<li><strong>保護個人隱私</strong>：例如，記者與信息來源保持聯繫時可避免被追蹤。</li>
+<li><strong>繞過審查</strong>：在言論受限的國家，使用者可藉此訪問被封鎖的網站。</li>
+<li><strong>隱藏 <abbr title="IP（網際協定）是用來識別和定位網路上設備的唯一地址，就像你的數位住址。">IP</abbr> 地址</strong>：對於一些對 <abbr title="IP（網際協定）是用來識別和定位網路上設備的唯一地址，就像你的數位住址。">IP</abbr> 地址限制機敏的活動，使用者可以利用 <abbr title="Tor 是一個用來匿名上網的網路服務，通過多層加密來保護用戶的隱私。">Tor</abbr> 隱藏真實 <abbr title="IP（網際協定）是用來識別和定位網路上設備的唯一地址，就像你的數位住址。">IP</abbr>。</li>
+</ul>
+<h2 id="_11">搜尋引擎</h2>
+<p>這些搜尋引擎都能夠在不同程度上保護使用者的隱私並提供良好的搜尋體驗，公民團體可以根據實際需要選擇最適合的搜尋引擎，尤其對於公民團體來說，使用注重隱私的搜尋引擎可以有效保護成員的個人資料及搜尋活動。除了使用隱私友善的搜尋引擎，也可結合其他安全措施，如使用加密通訊工具和維護良好的數位使用習慣。</p>
+<ol>
+<li>
+<p><strong>DuckDuckGo</strong></p>
+<ul>
+<li><strong>特點</strong>：DuckDuckGo 不儲存任何可識別用戶身份的資料，不追蹤你的搜尋歷史，而且使用加密技術來保護搜尋查詢。</li>
+<li><strong>優勢</strong>：簡單易用，適合大部分用戶，是注重隱私搜尋的首選之一。</li>
+<li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l2.97-2.97H3.75a.75.75 0 0 1 0-1.5h7.44L8.22 4.03a.75.75 0 0 1 0-1.06"/></svg></span> <a href="https://duckduckgo.com/">https://duckduckgo.com/</a></li>
+</ul>
+</li>
+<li>
+<p><strong>Startpage</strong></p>
+<ul>
+<li><strong>特點</strong>：Startpage 使用 Google 的搜尋結果，但不儲存任何個人資料或搜尋歷史。它還會隱藏使用者的IP地址，提供匿名的搜尋體驗。</li>
+<li><strong>優勢</strong>：提供高質量的搜尋結果，同時確保用戶的隱私不被泄露。</li>
+<li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l2.97-2.97H3.75a.75.75 0 0 1 0-1.5h7.44L8.22 4.03a.75.75 0 0 1 0-1.06"/></svg></span> <a href="https://www.startpage.com/">https://www.startpage.com/</a></li>
+</ul>
+</li>
+<li>
+<p><strong>Qwant</strong></p>
+<ul>
+<li><strong>特點</strong>：Qwant 是一家總部位於歐洲的隱私友好型搜尋引擎，不會追蹤用戶或個人化搜尋結果。</li>
+<li><strong>優勢</strong>：符合歐盟的隱私法律，是值得信賴的搜尋工具。</li>
+<li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l2.97-2.97H3.75a.75.75 0 0 1 0-1.5h7.44L8.22 4.03a.75.75 0 0 1 0-1.06"/></svg></span> <a href="https://www.qwant.com/">https://www.qwant.com/</a> （目前臺灣、日本、新加坡無法使用）</li>
+</ul>
+</li>
+<li>
+<p><strong>Searx</strong></p>
+<ul>
+<li><strong>特點</strong>：Searx 是一個開源的隱私搜尋引擎，允許用戶自己設置並管理其服務，避免集中式搜尋引擎的資料收集問題。</li>
+<li><strong>優勢</strong>：高度可配置，適合技術能力較強的用戶或需要自主持續引擎的團體。</li>
+<li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l2.97-2.97H3.75a.75.75 0 0 1 0-1.5h7.44L8.22 4.03a.75.75 0 0 1 0-1.06"/></svg></span> <a href="https://searx.thegpm.org/">https://searx.thegpm.org/</a></li>
+</ul>
+</li>
+<li>
+<p><strong>Brave Search</strong></p>
+<ul>
+<li><strong>特點</strong>：Brave Search 是由 Brave 瀏覽器團隊開發的，強調隱私和去中心化，不會追蹤用戶的搜尋歷史。</li>
+<li><strong>優勢</strong>：無廣告追蹤，提供自主生成的搜尋結果。</li>
+<li><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.042-.018.75.75 0 0 1-.018-1.042l2.97-2.97H3.75a.75.75 0 0 1 0-1.5h7.44L8.22 4.03a.75.75 0 0 1 0-1.06"/></svg></span> <a href="https://search.brave.com/">https://search.brave.com/</a></li>
+</ul>
+</li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">調整預設瀏覽器</p>
+<ul>
+<li>可在瀏覽器設定將以上推薦的瀏覽器設定為預設搜尋項目來使用。</li>
+</ul>
+</div>
+<h2 id="_12">定期更新</h2>
+<p>瀏覽器現在都會在背景中自動更新到最新版本，但是某些情況下是需要<mark class="critic">重新啟動瀏覽器</mark>才算是完整安裝到最新版本。當瀏覽器提醒需要重新啟動時，請儘快完成，避免暴露在危險的網路環境中。</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最後更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 30, 2024</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到頂端
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="頁腳" >
+        
+          
+          <a href="index.html" class="md-footer__link md-footer__link--prev" aria-label="上一頁: 網路使用行為">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一頁
+              </span>
+              <div class="md-ellipsis">
+                網路使用行為
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="phishing.html" class="md-footer__link md-footer__link--next" aria-label="下一頁: 釣魚、詐騙">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一頁
+              </span>
+              <div class="md-ellipsis">
+                釣魚、詐騙
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  <div class="md-copyright__highlight">
+    <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/deed.zh-hant">CC-BY 4.0 姓名標示</a
+    >
+    （<a href="/support/copyright.html">如何引用？</a>） |
+    <a href="https://ocf.tw/">財團法人開放文化基金會 (Open Culture Foundation, OCF)</a>
+  </div>
+  <div>
+    教材網址 (Tor)：<a href="http://ssdocftwvq6csls7gnjubyrmar7no7ww3gmgodhznxgsoor6ot42lrad.onion/chapter/network/browser_privacy.html">http://ssdocftwvq6csls7gnjubyrmar7no7ww3gmgodhznxgsoor6ot42lrad.onion/chapter/network/browser_privacy.html</a
+    >
+  </div>
+    Made with
+  <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+    Material for MkDocs
+  </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://ssd.ocf.tw/" target="_blank" rel="noopener" title="ssd.ocf.tw" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/ocftw/ssd" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["search.suggest", "search.highlight", "search.share", "header.autohide", "navigation.indexes", "navigation.top", "navigation.tabs", "navigation.tabs.sticky", "navigation.footer", "content.tooltips"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>
+      
+    
+  </body>
+</html>

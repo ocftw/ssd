@@ -1,0 +1,50 @@
+@media screen and (min-width: 76.25em) {
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item:not(:last-child) {
+    border-bottom: 1px solid #ababab;
+    padding: 10px 0 20px;
+  }
+
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item:last-child {
+    padding: 10px 0 20px;
+  }
+
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--nested > nav.md-nav {
+    padding-left: 17px;
+  }
+
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--nested > nav.md-nav > ul > li.md-nav__item {
+    padding: 5px 0;
+  }
+
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--active > div.md-nav__link.md-nav__container {
+    background-color: #E5E0FF;
+    padding: 10px;
+    border-radius: 5px;
+    color: #000000;
+  }
+
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--active > div.md-nav__link.md-nav__container > a {
+    color: #000000;
+  }
+
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--active > a.md-nav__link.md-nav__link--active  {
+    background-color: #E5E0FF;
+    padding: 10px;
+    border-radius: 5px;
+    color: #000000;
+  }
+
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > div.md-nav__link.md-nav__container {
+    display: none;
+  }
+}
+
+div.grid.cards > ul > li {
+  border-radius: 12px !important;
+  border: 2px solid #eae8f6 !important;
+}
+
+div.grid.cards > ul > li > p:first-child {
+  color: var(--md-typeset-a-color);
+  font-size: larger;
+}
