@@ -1,6 +1,10 @@
 {% extends "base.html" %} {% block site_meta %}
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta
+  http-equiv="onion-location"
+  content="http://ssdocftwvq6csls7gnjubyrmar7no7ww3gmgodhznxgsoor6ot42lrad.onion/{{page.url}}"
+/>
 
 <!-- Page description -->
 {% if page.meta and page.meta.description %}
