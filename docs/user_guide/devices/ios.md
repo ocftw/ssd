@@ -4,44 +4,47 @@ title: iOS 裝置設定
 
 # :material-cellphone-information: iOS 裝置設定
 
-本章節針對 iPhone（iOS）、iPad（iPadOS）產品的作業系統。如果您使用 Apple 的裝置，可以透過停用一些功能來強化系統內建與隱私或安全設定來增強保護。
+如果你的裝置是 Apple 品牌的行動裝置，像是 iPhone（iOS）、iPad（iPadOS）等，那你的作業系統就是 iOS。本章節是針對 iOS 作業系統的 Apple 裝置，透過以下功能的管理可以進一步強化系統內建設定與隱私，且建立更好的安全設定來增強保護。
 
-!!! question "Apple 的隱私表現"
+!!! question "用 Apple 產品，會比 Andriod 更能保護我的隱私嗎？"
 
-    Apple 裝置通常因其出色的資料保護功能而受到青睞，也較符合現代的安全最佳做法。但是，Apple 的系統有時候過於封閉，這可能在某些方面限制了隱私。iOS、iPadOS 在隱私和安全保護上比大多數普通 Android 裝置表現好。但如果你不想依賴 Apple 或 Google 的服務，選擇一個自定義的 Android 系統，比如 [GrapheneOS](https://grapheneos.org/)，能提供更高階的隱私保護，但這比較屬於進階的操作！
+    Apple 裝置通常因其出色的資料保護功能而受到青睞，也較符合現代的安全最佳做法。但是，Apple 的系統有時候過於封閉，這可能在某些方面限制了隱私。iOS、iPadOS 在隱私和安全保護上比大多數普通 Android 裝置表現好。但如果你不想依賴 Apple 或 Google 的服務，選擇一個自定義的 Android 系統，比如 [GrapheneOS](https://grapheneos.org/){target="_blank"}，能提供更高階的隱私保護，但這比較屬於進階的操作！
 
 ## 建議的操作設定
 
+拿好你的 Apple 手機、iPad，我們要開始把你的 Apple 行動裝置內裡的設定調整為更安全的軟體環境囉！以下，會針對你手機中的兩個部分：「iCloud」和「設定 setting」，來開始動手作！
+
 ### iCloud
 
-Apple 服務中最具隱私安全爭議的服務即為 iCloud，當您使用 Apple 服務時，與您有關的資訊都將儲存在 Apple 的資料中心。您可以透過[文件](https://support.apple.com/zh-tw/102651)查看哪些服務是所謂具備**端到端加密**是在「傳輸過程中」或是「儲存在伺服器中」，且 Apple 承諾沒有你的允許是不會存取您的資料。當然，有時也會屈服於法律的規定，直接透過伺服器提供資訊給相關單位，也無可避免 Appple 服務也可能發生資料外洩的疑慮。
+#### iCloud 進階資料保護
+Apple 服務中最具隱私安全爭議的服務即為 iCloud，當您使用 Apple 服務時，與您有關的資訊都將儲存在 Apple 的資料中心。您可以透過[文件](https://support.apple.com/zh-tw/102651){target="_blank"}查看哪些服務是所謂具備**端到端加密**是在「傳輸過程中」或是「儲存在伺服器中」，且 Apple 承諾沒有你的允許是不會存取您的資料。當然，有時也會屈服於法律的規定，直接透過伺服器提供資訊給相關單位，也無可避免 Appple 服務也可能發生資料外洩的疑慮。
 
-因此，如果您充分衡量後確定使用 iCloud，也請開啟「[iCloud 進階資料保護](https://support.apple.com/zh-tw/108756)」
+因此，如果您充分衡量後確定使用 iCloud，也請開啟「[iCloud 進階資料保護](https://support.apple.com/zh-tw/108756){target="_blank"}」
 
 !!! note "資料保護模式"
 
     Apple 針對帳號提供兩種不同程度的資料保護模式：「標準資料保護」、「iCloud 進階資料保護」，以上兩種方式差異在於各服務是否有**端到端加密**且**加密金鑰**是否儲存在您的裝置中。相關的說明可以參考以下說明文件：
 
-    - [如何開啟「iCloud 進階資料保護」](https://support.apple.com/zh-tw/108756)
-    - [iCloud 資料安全性概覽](https://support.apple.com/zh-tw/102651)
+    - [如何開啟「iCloud 進階資料保護」](https://support.apple.com/zh-tw/108756){target="_blank"}
+    - [iCloud 資料安全性概覽](https://support.apple.com/zh-tw/102651){target="_blank"}
 
 #### iCloud+
 
-如果您有訂購 iCloud+，有兩項服務也可以使用，雖然 Apple 提供的這兩項服務都僅僅是很基礎款抵禦隱私的功能，但已付費了，就請記得開啟使用。
+如果您有訂閱 iCloud+，則可以使用「iCloud 私密轉送」及「隱藏我的電子郵件」這兩項服務。雖然 Apple 提供的這兩項服務僅僅提供基礎的抵禦隱私功能，如果已經付費訂閱 iCloud+，不妨啟用這兩項服務。
 
-**iCloud 私密轉送**：這是可以在您使用 safari 瀏覽網頁時，第一段的連線先連結到 Apple 提供的服務主機，再由 Apple 專送到第二台主機連線到目的地網站，這樣效果是目的地網站不能確切知道您實際的連線 IP 位置。
+**iCloud 私密轉送**：這是可以在您使用 Safari 瀏覽網頁時，第一段的連線先連結到 Apple 提供的服務主機，再由 Apple 專送到第二台主機連線到目的地網站，這樣效果是目的地網站不能確切知道您實際的連線 IP 位置。
 
 !!! note "與 Tor 不同的地方"
 
-    Tor 網路是透過三台主機轉送的方式達到無法朔原，且「iCloud 私密轉送」只有透過 safari 與「郵件」其功能才可使用。詳細的說明與解釋可以參考：
+    Tor 網路是透過三台主機轉送的方式達到無法溯源，且「iCloud 私密轉送」只有透過 Safari 與「郵件」其功能才可使用。詳細的說明與解釋可以參考：
 
-    - [關於「iCloud 私密轉送」](https://support.apple.com/zh-tw/102602)
+    - [關於「iCloud 私密轉送」](https://support.apple.com/zh-tw/102602){target="_blank"}
 
-**隱藏我的電子郵件**：透過產生隨機的電子郵件信箱，可用於應用程式登入註冊、填寫聯絡方式時使用，Apple 將轉寄到您真正的信箱中。但請記得，這裡僅僅提供電子郵件信箱轉寄的服務，關於電子郵件內容的保密與加密方式並不屬於此服務可以支援的功能。
+**隱藏我的電子郵件**：產生隨機的電子郵件信箱，來註冊登入應用程式或填寫聯絡方式，Apple 再將相關信件轉寄到您真正的信箱。但請記得，這裡僅僅提供電子郵件信箱轉寄的服務，關於電子郵件內容的保密與加密方式並不屬於此服務可以支援的功能。
 
 !!! info "說明"
 
-    相關的說明可參考：[什麼是「隱藏我的電子郵件」？](https://support.apple.com/zh-tw/105078)
+    相關的說明可參考：[什麼是「隱藏我的電子郵件」？](https://support.apple.com/zh-tw/105078){target="_blank"}
 
 #### 媒體與購買項目
 
@@ -168,3 +171,6 @@ Apple 服務中最具隱私安全爭議的服務即為 iCloud，當您使用 App
 !!! danger "「封閉模式」操作項目"
 
     「**封閉模式**」可為裝置提供極端的保護措施，但請注意，某些 App 在此模式下可能無法使用，啟用後請衡量評估其可用性。
+
+以上，2 大單元：「icloud」和「設定 setting」，您都完成了嗎？
+恭喜您！初步設定已經完畢了！

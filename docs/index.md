@@ -3,68 +3,68 @@ icon: octicons/home-16
 title: 資安防護基礎教材
 ---
 
-# :material-security: 資安防護基礎教材
+# :material-security: 為公民團體設計的資安防護手冊
 
-本教材協助您與您的組織在資訊安全的增進，課程收錄九大部分，各部分依序提供基本的教材、課程章節中提及的安全參作手冊、組織內政策制定範本、組織狀態評估。
+這份「資安防護基礎教材」專為台灣的公民團體設計，以中文撰寫而成，適用於各領域議題工作者，幫助使用者瞭解台灣公民團體常見的資安議題，建立安全的數位環境。
 
-陪伴教材各章節以可自主學習、由淺入深、手把手的原則方式進行編寫，如有課程上的疑問，也可透過關懷時間詢問與解答。
+面臨與日俱增的數位威脅，台灣公民團體缺乏相關知識與應對措施，許多人權工作者的設備受到攻擊，甚至導致帳號及資料遺失。然而在有限的預算及資安知識下，公民團體只能採用臨時拼裝的數位基礎設施，反而因此暴露於更多數位安全風險。
 
-<div class="grid cards" markdown>
+如果你是不諳英語的 NGO 工作者，正在尋找適合你或你的組織的資安提升方案，這將是一份為你設計的資安防護學習資源！
 
-- :octicons-unverified-16: __[如何使用線上教材]__
+## 你可以獲得什麼？
 
-    專案目的與目標說明，各單元使用說明。
+### 簡單易懂的操作方法，提升組織的數位安全狀態
 
-</div>
+我們提供一套從大型至小型公民團體，都能夠簡單操作的導入流程，這個過程也會幫助你思考以下問題：
 
-<div class="grid cards" markdown>
+- What：我的組織有哪些資產？
+- Who：我想要保護資產免於誰的攻擊？他們的動機是什麼？有多大能耐？
+- Likeliwood：我真的受到攻擊的機率有多少？
+- Impact：我如果真的受到攻擊了，可能會產生哪些後果？
 
-- :material-book-heart: __[關懷組]__
+[建立組織的威脅模型](chapter/threat_modeling_class.md){ .md-button target="_blank"}
 
-    由專案導入團隊協助手把手的方式推動組織資訊安全的提昇。
+### 各種資安主題政策範本，量身打造數位安全政策
 
-- :material-book-account: __[自學組]__
+在技術專家的協助下，我們整理出八個資安主題的工作行為指引。你可以依照組織人數與數位安全需求，挑選「基礎版」或「進階版」，為你的組織打造長期穩定的數位安全政策。
 
-    透過線上網站提供的教材、檢查清單自學完成資安知識提昇。
-
-</div>
-
-## 資訊安全教材
-
-<figure markdown="span">
-  ![Image title](./asserts/index_flow.svg)
-  <figcaption><small>線上教材使用與閱讀順序</small></figcaption>
-</figure>
+## 我們提供哪些幫助？
 
 <div class="grid cards" markdown>
 
-- :octicons-book-16: __[章節內容]__
+- :octicons-book-16: __[課程主題]__
 
-    資訊安全基本教材。
+    收錄公民團體所需的數位安全主題課程，提供容易學習、循序漸進的內容教學。
 
-- :octicons-gear-16: __[操作手冊]__
+- :octicons-gear-16: __[操作指南]__
 
-    工具、軟體、裝置安全設定操作指引。
+    明確的操作指引，帶領你一步步完成裝置、作業系統、軟體安裝與設定。
 
-- :octicons-log-16: __[政策制定]__
+- :octicons-log-16: __[制定資安政策]__
 
-    政策範本、制定與落實。
+    到這裡尋找適合你的數位安全政策範本，納入組織規範，使倡議工作更安全。
 
-- :octicons-graph-16: __[狀態評估]__
+- :octicons-graph-16: __[進度追蹤]__
 
-    個人或組織內資安意識、抵禦能力評估。
+    使用場勘紀錄表與課後任務清單，搭配操作指南，檢視你的課後練習完成進度。
 
-- :octicons-heart-16: __[關懷與諮詢]__
+- :octicons-bookmark-16: __[學習資源]__
 
-    定期關懷、諮詢、常見問題、意見回饋。
+    這裡還有更多數位安全學習資源，幫助你不斷進步！
+
+- :octicons-heart-16: __[疑問諮詢]__
+
+    需要專業諮詢嗎？專家團隊隨時準備回答你的疑問，支援你的學習旅程。
 
 </div>
 
-  [如何使用線上教材]: howtouse/index.md
-  [章節內容]: chapter/index.md
-  [操作手冊]: user_guide/index.md
-  [政策制定]: policy/index.md
-  [關懷與諮詢]: support/index.md
-  [狀態評估]: assessment/index.md
-  [關懷組]: howtouse/a_team.md
-  [自學組]: howtouse/self.md
+  [課程主題]: chapter/index.md
+  [操作指南]: user_guide/index.md
+  [制定資安政策]: policy/index.md
+  [進度追蹤]: assessment/index.md
+  [學習資源]: resource/index.md
+  [疑問諮詢]: support/index.md
+
+你可以做更多來提升數位安全環境、保護你的倡議工作。馬上啟動專屬於你的資安提升計畫！
+
+[開始你的資安提升計劃！](https://drive.google.com/file/d/19Z56gFAW0fsM7ndNjfNZwYE86N9FxVBp/view?usp=sharing){ .md-button target="_blank"}

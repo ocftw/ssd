@@ -8,7 +8,7 @@ title: 網路與 Wi-Fi
 
 !!! tip "個人裝置的網路設定"
 
-    - 個人裝置安全建議設定可以參考「[裝置安全](../devices/index.md)」章節的說明。可依裝置類型子分類查閱詳細的操作方式。
+    - 個人裝置安全建議設定可以參考「[裝置安全](../devices/index.md){target="_blank"}」章節的說明。可依裝置類型子分類查閱詳細的操作方式。
         - :material-cellphone-information: [iOS]、:material-microsoft-windows: [Windows]、:material-apple-finder: [macOS]、:simple-android: [Android]。
     [iOS]: ../devices/ios.md
     [Windows]: ../devices/windows.md

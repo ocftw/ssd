@@ -8,15 +8,13 @@ title: 釣魚、詐騙
 
     網路詐騙知多少？可先完成以下的測驗，快速了解對於現實中的案例如何去判斷。
 
-    - [Jigsaw | 網路詐騙知多少](https://phishingquiz.withgoogle.com/)
+    - [Jigsaw | 網路詐騙知多少](https://phishingquiz.withgoogle.com/?hl=zh-TW){target="_blank"}
 
-    由 Google 資安團隊 [Jigsaw] 製作的線上測驗，每一題透過實際的範例檢測是否為「網路詐騙內容」或「正常內容」。開始測驗後，名稱與電子郵件可不為真實資訊，資訊提供是否為真實資料不影響測試過程與結果。
+    由 Google 資安團隊 [Jigsaw]{target="_blank"} 製作的線上測驗，每一題透過實際的範例檢測是否為「網路詐騙內容」或「正常內容」。開始測驗後，名稱與電子郵件可不為真實資訊，資訊提供是否為真實資料不影響測試過程與結果。
 
     [Jigsaw]: https://jigsaw.google.com/
 
-## 辨別
-
-## 一步一步辨識釣魚信件
+## 辨別：一步一步辨識釣魚信件
 
 1. **檢查寄件人**：確保寄件人地址是可信的且熟悉的，詐騙者常利用相似的域名迷惑使用者。
 2. **看清主題和內容**：釣魚信件常會用**威脅性**、**緊急性**或**誘惑性**的語言來誘使你開啟連結或下載附件。
@@ -28,13 +26,13 @@ title: 釣魚、詐騙
 
 ### Email Header Analyzer
 
-- [MxToolbox Email Header Analyzer](https://mxtoolbox.com/EmailHeaders.aspx)
+- [MxToolbox Email Header Analyzer](https://mxtoolbox.com/EmailHeaders.aspx){target="_blank"}
 - 用於解析電子郵件標頭（Email Headers），幫助你了解郵件的來源和路徑，從而確認其真實性。
 - 使用方法：將電子郵件的完整標頭複製到工具中進行解析。
 
 ### Have I Been Pwned
 
-- [Have I Been Pwned](https://haveibeenpwned.com/)
+- [Have I Been Pwned](https://haveibeenpwned.com/){target="_blank"}
 - 提供一個簡單的方法來檢查你的電子郵件地址或帳號是否出現在已外洩事件的資料庫中，進而判斷是否可能成為釣魚攻擊的目標。
 - 使用方法：在網站中輸入你的電子郵件地址或帳號，即可查詢相關外洩事件記錄。
 
@@ -75,12 +73,10 @@ title: 釣魚、詐騙
 
 ## 其他資源
 
-!!! tip "其他資源"
-
-    - [Google 安全瀏覽 – Google 資訊公開報告](https://transparencyreport.google.com/safe-browsing/search)
-    - [Jigsaw | 網路詐騙知多少](https://phishingquiz.withgoogle.com/)
-    - [Protect Your Democracy](https://protectyourdemocracy.withgoogle.com/)
-    - [Safe Browsing – Google Safe Browsing](https://safebrowsing.google.com/)
-    - [社交工程 (網路詐騙和詐欺網站) | Google 搜尋中心](https://developers.google.com/search/docs/monitor-debug/security/social-engineering?hl=zh-tw)
-    - [什麼是網路釣魚攻擊？ | Cloudflare](https://www.cloudflare.com/zh-tw/learning/access-management/phishing-attack/)
-    - [什麼是魚叉式網路釣魚？| 防止魚叉式網路釣魚和網路捕鯨 | Cloudflare](https://www.cloudflare.com/zh-tw/learning/access-management/spear-phishing/)
+- [Google 安全瀏覽 – Google 資訊公開報告](https://transparencyreport.google.com/safe-browsing/search){target="_blank"}
+- [Jigsaw | 網路詐騙知多少](https://phishingquiz.withgoogle.com/?hl=zh-TW){target="_blank"}
+- [Protect Your Democracy](https://protectyourdemocracy.withgoogle.com/){target="_blank"}
+- [Safe Browsing – Google Safe Browsing](https://safebrowsing.google.com/){target="_blank"}
+- [社交工程 (網路詐騙和詐欺網站) | Google 搜尋中心](https://developers.google.com/search/docs/monitor-debug/security/social-engineering?hl=zh-tw){target="_blank"}
+- [什麼是網路釣魚攻擊？ | Cloudflare](https://www.cloudflare.com/zh-tw/learning/access-management/phishing-attack/){target="_blank"}
+- [什麼是魚叉式網路釣魚？| 防止魚叉式網路釣魚和網路捕鯨 | Cloudflare](https://www.cloudflare.com/zh-tw/learning/access-management/spear-phishing/){target="_blank"}

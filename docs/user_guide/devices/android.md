@@ -4,40 +4,45 @@ title: Android
 
 # :simple-android: Android
 
-Android 系統是由 Google 開發的一個開源行動操作系統，主要用於智慧手機和平板電腦。Android 系統基於 Linux 核心，並設計支援觸控螢幕，提供使用者友好的介面和各種應用程式（App）。該系統經常由不同的製造商定制，以包含各自的使用者界面和應用程式，但核心功能基本一致。
+Android 系統是由 Google 開發的一個開源行動操作系統，主要用於智慧手機和平板電腦。除了 Apple 系列產品，目前市面上大多數的行動裝置、手機都是 Android 系統的！Android 系統基於 Linux 核心，並設計支援觸控螢幕，提供使用者友好的介面和各種應用程式（App）。該系統經常由不同的製造商定制，以包含各自的使用者界面和應用程式，但核心功能基本一致。 Android 系統普及的另一個原因，是開發者可以透過 Google Play 商店或其他平台發佈應用程式之外，其開源的特性提供了廣泛的自訂和開發可能性。但更大的可能性也帶來更多植入不知名事物的風險，也因此需要在資訊安全上特別注意，以保護個人和組織的資料安全。
 
-Android 系統普及，開發者可以透過 Google Play 商店或其他平台發佈應用程式。由於其開源的特性，Android 提供廣泛的自訂和開發可能性，但也因此需要在資訊安全上特別注意，以保護個人和組織的資料安全。
+以下分成 8 個部分，帶您逐一調整您手中的 Android 行動裝置（包括：平板、手機等）：最新版本、檢查安全防護、應用程式權限、移除無用的應用程式、定位資訊、帳號管理、螢幕鎖定、語音控制。
 
 ## 建議的操作設定
 
 ### 更新到最新版本
 
-如同其他作業系統的建議，請檢查使用裝置是否更新到最新的作業系統版本，如果您的裝置已經無法更新到最新的作業系統，建議請汰換到較近生產的裝置。
+如同我們在其他作業系統調整中提到的建議，更新至最新版本狀態能防止有心人士利用系統漏洞入侵。請檢查使用裝置是否更新到最新的作業系統版本！
+
+- 如果裝置已經無法更新到最新的作業系統，怎麼辦？
+  我們建議汰換掉舊有裝置，將其更新為較新的裝置，以確保裝置系統能一直保持在最新狀態，防止漏洞產生。
 
 ??? question "如何查看版本"
 
-    - [檢查及更新 Android 版本 - Android 說明](https://support.google.com/android/answer/7680439)
+    - [檢查及更新 Android 版本 - Android 說明](https://support.google.com/android/answer/7680439){target="_blank"}
 
 ??? tip "Android 支援列表"
 
-    - [Android 版本列表 - 維基百科，自由的百科全書](https://zh.wikipedia.org/wiki/Android%E7%89%88%E6%9C%AC%E5%88%97%E8%A1%A8)
+    - [Android 版本列表 - 維基百科，自由的百科全書](https://zh.wikipedia.org/wiki/Android%E7%89%88%E6%9C%AC%E5%88%97%E8%A1%A8){target="_blank"}
 
 ### 受信任的來源下載應用程式
 
-建議在受信任的來源下載 Android 應用程式的原因有以下幾點：
+有時他人轉貼程式下載連結或是第三方網站引導進入程式下載，無意識之下，我們就下載和安裝了。但是！不知名來源的應用程式可能是陷阱！因此，在受信任的來源下載 Android 應用程式是非常重要。我們強烈建議，應用程式一律在裝置中的官方應用程式商店（如： Google Play 商店、Samsung Galaxy Store 等）下載。主要原因有以下 4 點：
 
 1. **防止惡意軟體**：從受信任的應用商店（如 Google Play 商店）下載應用程式，可以減少下載到惡意軟體的風險。這些應用商店有專門的安全措施和審核機制，可以過濾掉帶有惡意代碼的應用程式。（即使還是有可能下載到惡意程式，但應用商店能遠端移除有問題的應用程式。）
 2. **應用程式安全性更新**：受信任的來源通常會定期推送安全性更新和軟體修補，修正已知漏洞，確保應用程式的安全性。如果從不受信任的來源下載，可能無法獲得及時更新，留下資安隱患。
 3. **維護隱私和數據安全**：受信任的應用商店對應用程式的隱私政策和資料使用進行監控，確保應用程式不會非法收集或濫用用戶的個人信息。在不受信任的來源下載，可能會遭遇到隱私泄露和數據濫用的風險。
 4. **減少兼容性問題**：受信任的應用商店中的應用程式通常經過多方面的測試，保障與不同 Android 裝置的兼容性，從而減少安裝和使用過程中的問題。
 
+在了解受信任來源的重要性後，現在，請您打開裝置，進行以下動作：
+
 !!! success "檢查安全防護"
 
-    - [使用 Google Play 安全防護檢查應用程式和裝置是否出現有害行為。](https://support.google.com/accounts/answer/2812853)
+    - [使用 Google Play 安全防護檢查應用程式和裝置是否出現有害行為。](https://support.google.com/accounts/answer/2812853){target="_blank"}
 
 ### 應用程式權限
 
-請逐一檢視給予應用程式相關的權限，以下列舉的權限請斟酌應用程式是否必要取得此項目的權限。
+為防止應用程式在下載時就預設好的權限開放，此步驟將請您逐一檢視給予應用程式相關的權限。以下列舉的權限 （下方列表點擊展開），請斟酌應用程式是否必要取得此項目的權限：
 
 ??? success "需確認的權限"
 
@@ -64,18 +69,19 @@ Android 系統普及，開發者可以透過 Google Play 商店或其他平台�
 
 !!! question "變更應用程式權限"
 
-    - 如何變更權限，請參考「[在 Android 手機上變更應用程式權限](https://support.google.com/android/answer/9431959?hl=zh-Hant)」。
+    - 如何變更權限，請參考「[在 Android 手機上變更應用程式權限](https://support.google.com/android/answer/9431959?hl=zh-Hant){target="_blank"}」。
 
 ### 移除無用的應用程式
 
-逐一檢視少用與無用的應用程式，如何操作可以參考「[刪除、停用及管理 Android 上未使用的應用程式](https://support.google.com/googleplay/topic/13627086?hl=zh-Hant)」。
+不用的程式除了佔空間，更重要的是，有可能成為有心人士攻擊、突破的漏洞。這部份，請您逐一檢視少用與無用的應用程式。
+如何操作請參考「[刪除、停用及管理 Android 上未使用的應用程式](https://support.google.com/googleplay/topic/13627086?hl=zh-Hant){target="_blank"}」。
 
 ### 定位資訊
 
 關閉定位資訊與移除歷史定位資訊，請衡量安全性與便利性，建議在處理到工作事務使用嚴格的設定。如何調整可以參考說明：
 
-- [管理 Android 裝置的位置資訊設定](https://support.google.com/android/answer/3467281)
-- [管理定位記錄](https://support.google.com/android/answer/3118687)
+- [管理 Android 裝置的位置資訊設定](https://support.google.com/android/answer/3467281){target="_blank"}
+- [管理定位記錄](https://support.google.com/android/answer/3118687){target="_blank"}
 
 ### 帳號管理
 
@@ -83,7 +89,7 @@ Android 系統普及，開發者可以透過 Google Play 商店或其他平台�
 
 !!! question "變更使用者"
 
-    - 如何[刪除、切換或新增使用者](https://support.google.com/android/answer/2865483)
+    - 如何[刪除、切換或新增使用者](https://support.google.com/android/answer/2865483){target="_blank"}
 
 ### 螢幕鎖定
 
@@ -91,7 +97,7 @@ Android 系統普及，開發者可以透過 Google Play 商店或其他平台�
 
 !!! question "設定螢幕鎖定"
 
-    - 如何[在 Android 裝置上設定螢幕鎖定功能](https://support.google.com/android/answer/9079129)
+    - 如何[在 Android 裝置上設定螢幕鎖定功能](https://support.google.com/android/answer/9079129){target="_blank"}
 
 ### 語音控制
 
@@ -106,8 +112,11 @@ Android 系統普及，開發者可以透過 Google Play 商店或其他平台�
     5. 點擊一般
     6. 關閉 Google 語音助理
 
-    :material-account-question: 其他關於語音助理的設定調整，請參考「[透過語音指令使用 Google 助理](https://support.google.com/assistant/answer/7394306?hl=zh-Hant)」。
+    :material-account-question: 其他關於語音助理的設定調整，請參考「[透過語音指令使用 Google 助理](https://support.google.com/assistant/answer/7394306?hl=zh-Hant){target="_blank"}」。
+
+以上，總共 8 個部分：最新版本、檢查安全防護、應用程式權限、移除無用的應用程式、定位資訊、帳號管理、螢幕鎖定、語音控制，您都完成了嗎？
+恭喜您！初步設定已經完畢了！
 
 ## 參考資料
 
-- [Android Security and Update Bulletins  |  Android Open Source Project](https://source.android.com/docs/security/bulletin)
+- [Android Security and Update Bulletins  |  Android Open Source Project](https://source.android.com/docs/security/bulletin){target="_blank"}

@@ -4,7 +4,8 @@ title: 密碼管理器
 
 # :material-safe-square-outline: 密碼管理器
 
-密碼管理器是一種數位工具，專門設計用來儲存和管理用戶各種線上帳號的密碼。它通常會以一個強而唯一的「{==主密碼==}」來保護所有儲存在其中的密碼，讓使用者無需記住所有的密碼，只需記住這一個主密碼即可。這些工具可以自動生成強而不易破解的密碼，並在用戶登入各種網站和應用程式時自動填入相關資料。
+在眾多密碼保存方式（如：默記、共同文件紀錄、文字紀錄等）中，密碼管理器是我們最推薦的工具來儲存和管理你的密碼。
+密碼管理器是一種數位工具，專門設計用來儲存和管理用戶各種線上帳號的密碼。它通常會以一個強而唯一的「{==主密碼==}」來保護所有儲存在其中的密碼，讓使用者無需記住所有的密碼，只需記住這一個主密碼即可。這些工具可以自動生成強而不易破解的密碼，並在用戶登入各種網站和應用程式時自動填入相關資料。也由於此，本章將更深入的介紹密碼管理器的特點和如何挑選。
 
 密碼管理器的重要性主要體現在以下幾個方面：
 
@@ -36,6 +37,8 @@ title: 密碼管理器
 
 ## 推薦的密碼管理器
 
+密碼管理器是一種數位工具，在使用時，你的密碼們會被保護在一個數位的存放空間。這個存放空間可能是架設在雲端服務上或是自己本地儲存，其優缺點和特性都不同 （想了解更多嗎？請見下方的藍色資訊欄喔！）。以下分別就「雲端服務」和「本地儲存」兩種形式，分別介紹我們推薦的密碼管理器：
+
 ### :material-cloud-sync: 雲端服務
 
 雲端服務的密碼管理器則是在網路上運作，允許你在不同裝置間同步和存取你的密碼。以下是幾個常見且評價良好的雲端密碼管理器：
@@ -44,27 +47,27 @@ title: 密碼管理器
 
 是一款免費且開源的密碼和通行密鑰管理工具。它旨在為個人、團隊和企業組織解決密碼管理問題。Bitwarden 是目前存儲所有登入資訊和密碼的最佳和最安全解決方案之一，且能方便地在所有設備間同步。
 
-[前往 Bitwarden 首頁](https://bitwarden.com/){ .md-button }
+[前往 Bitwarden 首頁](https://bitwarden.com/){ .md-button target="_blank"}
 
 #### Proton Pass
 
 是由 Proton 團隊（Proton Mail 的開發者）所開發的開源端到端加密的密碼管理工具。它能安全地存儲您的登入憑證、生成獨特的電郵別名、支持和存儲通行密鑰，並提供由社區資助、在瑞士設立且受到嚴格數據隱私法保護的服務。
 
-[前往 Proton Pass 首頁](https://proton.me/pass){ .md-button }
+[前往 Proton Pass 首頁](https://proton.me/pass){ .md-button target="_blank"}
 
 #### Psono
 
 是一款來自德國的免費開源密碼管理工具，專注於團隊的密碼管理。Psono 支持安全共享密碼、文件、書籤和電子郵件。所有機密資訊均由主密碼保護。
 
-[前往 Psono 首頁](https://psono.com/){ .md-button }
+[前往 Psono 首頁](https://psono.com/){ .md-button target="_blank"}
 
 ### :material-harddisk: 本地儲存
 
 #### KeePassXC
 
-KeePassXC 是 [KeePassX](https://www.keepassx.org/) 的社群分支，而 KeePassX 是 KeePass Password Safe 的原生跨平台移植版本。KeePassXC 的目標是透過新增功能和修復漏洞來擴展和改進這個密碼管理工具，為使用者提供一個功能豐富、跨平台且現代化的開源密碼管理器。
+KeePassXC 是 [KeePassX](https://www.keepassx.org/){target="_blank"} 的社群分支，而 KeePassX 是 KeePass Password Safe 的原生跨平台移植版本。KeePassXC 的目標是透過新增功能和修復漏洞來擴展和改進這個密碼管理工具，為使用者提供一個功能豐富、跨平台且現代化的開源密碼管理器。
 
-[前往 KeePassXC 首頁](https://keepassxc.org/){ .md-button }
+[前往 KeePassXC 首頁](https://keepassxc.org/){ .md-button target="_blank"}
 
 !!! info "「:material-cloud-sync: 雲端服務」與 「:material-harddisk: 本地儲存」的差異"
 

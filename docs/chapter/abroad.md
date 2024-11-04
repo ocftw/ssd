@@ -12,17 +12,18 @@ title: 海外出差
 ## 出發前的準備
 
 ### 旅遊警示燈號
-出發前往的國家、地區可以參考外交部提供的「[國外旅遊警示分級表](https://www.boca.gov.tw/sp-trwa-list-1.html)」所提供的警示燈號確認該國家是否建議前往，即使不宜前往，也能了解其狀況做相對應的準備工作。
 
-另外也可參考外交部[此頁面](https://www.boca.gov.tw/np-52-1.html)的分類，關於[食品](https://consumer.fda.gov.tw/Pages/List.aspx?nodeID=-1)、[疫情](https://www.cdc.gov.tw/CountryEpidLevel/Index/NlUwZUNvckRWQ09CbDJkRVFjaExjUT09)、[其他國家的警示](https://www.boca.gov.tw/lp-95-1.html)公告資訊。
+出發前往的國家、地區可以參考外交部提供的「[國外旅遊警示分級表](https://www.boca.gov.tw/sp-trwa-list-1.html){target="_blank"}」所提供的警示燈號確認該國家是否建議前往，即使不宜前往，也能了解其狀況做相對應的準備工作。
+
+另外也可參考外交部[此頁面](https://www.boca.gov.tw/np-52-1.html){target="_blank"}的分類，關於[食品](https://consumer.fda.gov.tw/Pages/List.aspx?nodeID=-1){target="_blank"}、[疫情](https://www.cdc.gov.tw/CountryEpidLevel/Index/NlUwZUNvckRWQ09CbDJkRVFjaExjUT09){target="_blank"}、[其他國家的警示](https://www.boca.gov.tw/lp-95-1.html){target="_blank"}公告資訊。
 
 #### 中港澳地區
 
-中國、香港、澳門地區由大陸委員會負責[公告](https://www.mac.gov.tw/News.aspx?n=E0243AD02975213D)其旅遊警示資訊。
+中國、香港、澳門地區由大陸委員會負責[公告](https://www.mac.gov.tw/News.aspx?n=E0243AD02975213D){target="_blank"}其旅遊警示資訊。
 
 !!! warning "警示升級注意"
 
-    2024 年 6 月 27 日起，大陸委員會針對中共近期於「國家安全法」、「境外非政府組織境內活動管理法」、「網路安全法」、「反間諜安全防範工作規定」…等修法項目內容評估，提昇赴陸港澳之人身安全風險，因此目前提升到「橙色」燈號，應避免非必要旅行。【[完整公告](https://www.mac.gov.tw/News_Content.aspx?n=E0243AD02975213D&sms=EF1DC35EB9749B36&s=CA568B3D88264221)】
+    2024 年 6 月 27 日起，大陸委員會針對中共近期於「國家安全法」、「境外非政府組織境內活動管理法」、「網路安全法」、「反間諜安全防範工作規定」…等修法項目內容評估，提昇赴陸港澳之人身安全風險，因此目前提升到「橙色」燈號，應避免非必要旅行。【[完整公告](https://www.mac.gov.tw/News_Content.aspx?n=E0243AD02975213D&sms=EF1DC35EB9749B36&s=CA568B3D88264221){target="_blank"}】
 
 ### 器材準備
 
@@ -34,7 +35,7 @@ title: 海外出差
 
 !!! info "完成順序"
 
-    - 「設備加密」相關的操作可以參考「[操作手冊：裝置安全](../user_guide/devices/index.md)」。
+    - 「設備加密」相關的操作可以參考「[操作指南：裝置安全](../user_guide/devices/index.md){target="_blank"}」。
     - 「設備更新」的步驟或許會在「設備加密」之前，但不影響「設備加密」的問題，只需要都有完成即可。
 
 ### 備份、加密資料
@@ -46,8 +47,8 @@ title: 海外出差
 
 !!! info "「備份」、「檔案加密」參考章節"
 
-    - 備份相關的介紹可以參考「[資料管理與備份](./files_management/index.md)」。
-    - 檔案加密的操作需要了解其原理與限制，可以參考「[加密通訊](./e2ee/index.md)」章節的介紹。
+    - 備份相關的介紹可以參考「[資料管理與備份](./files_management/index.md){target="_blank"}」。
+    - 檔案加密的操作需要了解其原理與限制，可以參考「[加密通訊](./e2ee/index.md){target="_blank"}」章節的介紹。
 
 ### 通訊安全
 
@@ -71,7 +72,7 @@ title: 海外出差
 
 !!! note "關於「通訊安全」相關的章節"
 
-    可參考「[VPN](./network/vpn.md)」、「[網路與 Wi-Fi](./network/wifi.md)」、「[加密通訊](./e2ee/index.md)」內容補充更多細節。
+    可參考「[VPN](./network/vpn.md){target="_blank"}」、「[網路與 Wi-Fi](./network/wifi.md){target="_blank"}」、「[加密通訊](./e2ee/index.md){target="_blank"}」內容補充更多細節。
 
 #### 緊急聯絡與應變
 
@@ -79,7 +80,7 @@ title: 海外出差
 
 1. 出發前將出差規劃提供給組織內同仁，確認行程與回報方式。
 2. 回報方式可以是直接通訊或是其他約定的間接方式呈現，依前往的地區與行程安全性質來衡量。
-3. 外交部提供「[出國登錄](https://www.boca.gov.tw/sp-abre-main-1.html)」，前往中港澳地區可使用「[國人赴大陸地區動態登錄網頁](https://www.mac.gov.tw/cp.aspx?n=E2367C5B8C7C3AE1)」或「[國人赴港澳動態登錄網頁](https://www.mac.gov.tw/cp.aspx?n=DB5CA7E8ABA7E5DC&s=DF4CCC975F20A2A1)」，評估是否登錄提供給駐外館處能立即聯繫提供協助方式。
+3. 外交部提供「[出國登錄](https://www.boca.gov.tw/sp-abre-main-1.html){target="_blank"}」，前往中港澳地區可使用「[國人赴大陸地區動態登錄網頁](https://www.mac.gov.tw/cp.aspx?n=E2367C5B8C7C3AE1){target="_blank"}」或「[國人赴港澳動態登錄網頁](https://www.mac.gov.tw/cp.aspx?n=DB5CA7E8ABA7E5DC&s=DF4CCC975F20A2A1){target="_blank"}」，評估是否登錄提供給駐外館處能立即聯繫提供協助方式。
 4. 事前風險評估：在出發前，進行詳細的風險評估，識別可能的風險來源，並制定相應的應變計劃。
 5. 撤離路線：在目的地設置多條應急撤離路線，確保在不同情況下都能迅速撤離至安全地點。
 6. 集合點：設定團隊成員在突發狀況下的集合點，並且所有成員都熟知如何前往集合點。

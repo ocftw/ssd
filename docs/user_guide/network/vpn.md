@@ -8,9 +8,9 @@ title: VPN
 
 目前推薦公民團體使用的 VPN 為：ProtonVPN、IVPN、Mullvad。其差異與特色可參考以下的表格：
 
-- ProtonVPN：<https://protonvpn.com/>
-- IVPN：<https://www.ivpn.net/>
-- Mullvad：<https://mullvad.net/zh-hant>
+- ProtonVPN：<https://protonvpn.com/>{target="_blank"}
+- IVPN：<https://www.ivpn.net/>{target="_blank"}
+- Mullvad：<https://mullvad.net/zh-hant>{target="_blank"}
 
 |              | ProtonVPN                        | IVPN                                     | Mullvad                           |
 | ------------ | -------------------------------- | ---------------------------------------- | --------------------------------- |
@@ -25,23 +25,23 @@ title: VPN
 | 臺灣主機     | 20 台（台北、台中）              | 1 台（台北）                             | 無                                |
 | Tor 洋蔥路由 | 支援，部分國家                   | 不支援                                   | 透過 Mullvad 為出口[^13]          |
 
-[^1]: Proton VPN servers & locations. <https://protonvpn.com/vpn-servers>
-[^2]: Security experts declare all Proton apps secure after they pass their security audit. <https://proton.me/blog/security-audit-all-proton-apps>
-[^3]: All Proton VPN apps are now open source and audited. <https://protonvpn.com/vpn-servers>
-[^4]: Payment options - Proton VPN Support. <https://protonvpn.com/support/payment-options/>
-[^5]: IVPN Servers. <https://www.ivpn.net/status/>
-[^6]: IVPN Posts about Audit. <https://www.ivpn.net/blog/tags/audit/>
-[^7]: IVPN applications are now open source. <https://www.ivpn.net/blog/ivpn-applications-are-now-open-source/>
-[^8]: IVPN What payment methods do you accept?. <https://www.ivpn.net/knowledgebase/general/what-payment-methods-do-you-accept/>
-[^9]: Mullvad Servers. <https://mullvad.net/en/servers>
-[^10]: Mullvad Audits. <https://mullvad.net/en/blog/tag/audits>
-[^11]: Mullvad - We value open source. <https://mullvad.net/en/open-source>
-[^12]: Mullvad Pricing. <https://mullvad.net/en/pricing>
-[^13]: Tor and Mullvad VPN. <https://mullvad.net/zh-hant/help/tor-and-mullvad-vpn>
+[^1]: Proton VPN servers & locations. <https://protonvpn.com/vpn-servers>{target="_blank"}
+[^2]: Security experts declare all Proton apps secure after they pass their security audit. <https://proton.me/blog/security-audit-all-proton-apps>{target="_blank"}
+[^3]: All Proton VPN apps are now open source and audited. <https://protonvpn.com/vpn-servers>{target="_blank"}
+[^4]: Payment options - Proton VPN Support. <https://protonvpn.com/support/payment-options/>{target="_blank"}
+[^5]: IVPN Servers. <https://www.ivpn.net/status/>{target="_blank"}
+[^6]: IVPN Posts about Audit. <https://www.ivpn.net/blog/tags/audit/>{target="_blank"}
+[^7]: IVPN applications are now open source. <https://www.ivpn.net/blog/ivpn-applications-are-now-open-source/>{target="_blank"}
+[^8]: IVPN What payment methods do you accept?. <https://www.ivpn.net/knowledgebase/general/what-payment-methods-do-you-accept/>{target="_blank"}
+[^9]: Mullvad Servers. <https://mullvad.net/en/servers>{target="_blank"}
+[^10]: Mullvad Audits. <https://mullvad.net/en/blog/tag/audits>{target="_blank"}
+[^11]: Mullvad - We value open source. <https://mullvad.net/en/open-source>{target="_blank"}
+[^12]: Mullvad Pricing. <https://mullvad.net/en/pricing>{target="_blank"}
+[^13]: Tor and Mullvad VPN. <https://mullvad.net/zh-hant/help/tor-and-mullvad-vpn>{target="_blank"}
 
 ## Outline 自行架設
 
-[Outline VPN](https://getoutline.org/zh-TW/) 是一款免費且開源的 VPN 軟體，由 Jigsaw（Google 旗下的資安團隊）開發。它主要為新聞記者、議題行動者和公民團體設計，目的是提供簡單、安全和隱私的網路連線。
+[Outline VPN](https://getoutline.org/zh-TW/){target="_blank"} 是一款免費且開源的 VPN 軟體，由 Jigsaw（Google 旗下的資安團隊）開發。它主要為新聞記者、議題行動者和公民團體設計，目的是提供簡單、安全和隱私的網路連線。
 
 Outline VPN 由兩個主要組件組成：
 
@@ -51,7 +51,7 @@ Outline VPN 由兩個主要組件組成：
 
 ### 伺服器
 
-Outline 內建的雲端伺服器為 [Digital Ocean]、[AWS] 與 [Google Cloud]。透過 AWS、Google Cloud 需要一些連線遠端服務的基礎能力，建議透過 Digital Ocean 來設定與建立。
+Outline 內建的雲端伺服器為 [Digital Ocean]{target="_blank"}、[AWS]{target="_blank"} 與 [Google Cloud]{target="_blank"}。透過 AWS、Google Cloud 需要一些連線遠端服務的基礎能力，建議透過 Digital Ocean 來設定與建立。
 
 [Digital Ocean]: https://www.digitalocean.com/
 [AWS]: https://aws.amazon.com/
@@ -64,7 +64,7 @@ Outline 內建的雲端伺服器為 [Digital Ocean]、[AWS] 與 [Google Cloud]�
 ??? success "建立 Digital Ocean 帳號"
 
     1. **Digital Ocean 官方網站**
-          - 打開瀏覽器，進入 Digital Ocean 的官方網站：[https://www.digitalocean.com](https://www.digitalocean.com)。
+          - 打開瀏覽器，進入 Digital Ocean 的官方網站：[https://www.digitalocean.com](https://www.digitalocean.com){target="_blank"}。
 
     2. **註冊帳號**
           - 點擊首頁右上角的「Sign Up」按鈕，進入註冊頁面。
@@ -99,7 +99,7 @@ Outline 內建的雲端伺服器為 [Digital Ocean]、[AWS] 與 [Google Cloud]�
 
 ### 下載和安裝 Outline Manager
 
-1. **下載 Outline Manager**：前往 [Outline 官網](https://getoutline.org/zh-TW/get-started/)，下載適用於你的操作系統（Windows、macOS 或 Linux）的 **Outline Manager**。
+1. **下載 Outline Manager**：前往 [Outline 官網](https://getoutline.org/zh-TW/get-started/){target="_blank"}，下載適用於你的操作系統（Windows、macOS 或 Linux）的 **Outline Manager**。
 2. **安裝 Outline Manager**：根據下載後的安裝指引，完成安裝過程。
 
 ### 建立 VPN 伺服器
@@ -114,7 +114,7 @@ Outline 內建的雲端伺服器為 [Digital Ocean]、[AWS] 與 [Google Cloud]�
 ### 設定使用者連線金鑰
 
 1. **分享連線金鑰**：在 Outline Manager 中，點擊「新增金鑰」，為你的使用者建立新的連線金鑰。你可以通過複製連結或 QR Code 分享給使用者。
-2. **下載 Outline 用戶端t**：讓所有需要使用 VPN 的使用者前往 [Outline 官網下載](https://getoutline.org/zh-TW/get-started/ 從第三步驟開始)，並安裝 Outline 用戶端應用程式（iOS、Android、Windows、macOS）。
+2. **下載 Outline 用戶端t**：讓所有需要使用 VPN 的使用者前往 [Outline 官網下載](https://getoutline.org/zh-TW/get-started/){target="_blank"}從第三步驟開始  ，並安裝 Outline 用戶端應用程式（iOS、Android、Windows、macOS）。
 
 ### 連接至 VPN
 

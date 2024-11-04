@@ -1,6 +1,6 @@
 # 版權宣告
 
-此線上教材內容以「[CC-BY 4.0 姓名標示](https://creativecommons.org/licenses/by/4.0/deed.zh-hant){:target="_blank"}」釋出。
+此線上教材內容以「[CC-BY 4.0 姓名標示](https://creativecommons.org/licenses/by/4.0/deed.zh-hant){target="_blank"}」釋出。
 
 建議引用的完整名稱可參考一下範例。
 
@@ -21,4 +21,4 @@
 
 ## 教材網址
 
-- [https://ssd.ocf.tw](https://ssd.ocf.tw){:target="_blank"}
+- [https://ssd.ocf.tw](https://ssd.ocf.tw){target="_blank"}

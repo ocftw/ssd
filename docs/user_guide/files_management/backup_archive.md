@@ -4,7 +4,7 @@ title: 資料備份與封存
 
 # :material-archive-lock: 資料備份與封存
 
-以下是關於規劃辦公室內的 NAS（網路儲存設備）備份設施的詳細操作手冊，包括不斷電設備、外網連入方式以及整合 [Tailscale](https://tailscale.com/) 的規劃範本：
+以下是關於規劃辦公室內的 NAS（網路儲存設備）備份設施的詳細操作指南，包括不斷電設備、外網連入方式以及整合 [Tailscale](https://tailscale.com/){target="_blank"} 的規劃範本：
 
 ## 1. 選擇和設定 NAS
 
@@ -83,7 +83,7 @@ title: 資料備份與封存
 
 ## 5. 網路設置與外網連入
 
-!!! danger ""
+!!! danger "省慎評估"
 
     建議衡量組織可承受之風險與網路設備掌握程度，建立對外網路連線存在一定的高度風險。
 
@@ -109,7 +109,7 @@ title: 資料備份與封存
 
 ## 8. 整合 Tailscale 連線
 
-!!! note ""
+!!! tip "提示"
 
     可參考使用，透過建立類似大內網的方式連線到登記的網路設備中。
 
@@ -117,7 +117,7 @@ Tailscale 是一種基於 WireGuard 的 VPN 服務，它使得設備之間形成
 
 ### 設置 Tailscale
 
-1. **註冊和安裝 Tailscale**：連線到 [Tailscale 官方網站](https://tailscale.com/)，建立一個帳戶並依指引安裝 Tailscale 用戶端在 NAS、工作電腦及其他需要連線的設備上。
+1. **註冊和安裝 Tailscale**：連線到 [Tailscale 官方網站](https://tailscale.com/){target="_blank"}，建立一個帳戶並依指引安裝 Tailscale 用戶端在 NAS、工作電腦及其他需要連線的設備上。
 2. **設置 Tailscale 網路**：登入 Tailscale 控制台，將所有需要連接的設備加入到你的 Tailscale 網路中。
 3. **確認連線狀態**：確認在 Tailscale 控制台中顯示所有設備已成功連線。
 4. **測試 NAS 連接**：從外網通過安裝有 Tailscale 的設備，測試連接辦公室內的 NAS 確認連線順暢。

@@ -48,3 +48,68 @@ div.grid.cards > ul > li > p:first-child {
   color: var(--md-typeset-a-color);
   font-size: larger;
 }
+
+.md-typeset__table table:not([class]) {
+  font-size: .8rem;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  font-size: .7rem;
+}
+
+.md-typeset > p > .md-button {
+  margin-bottom: 24px;
+}
+
+[data-md-color-scheme="default"] .md-typeset h1 {
+  color: #000000;
+}
+
+[data-md-color-scheme="default"] .md-typeset h2 {
+  border: 2px solid #000000;
+  border-left-width: 10px;
+  border-radius: 8px;
+  padding: 8px;
+  font-weight: bold;
+  box-shadow: 0 0 0 6px #eee;
+}
+
+[data-md-color-scheme="default"] .md-typeset h3 {
+  font-weight: bold;
+  font-size: 1.40em;
+  background-color: #eeeeee;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-typeset-color: #ffffff;
+  --md-admonition-fg-color: #ffffff;
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1 {
+  color: #ffffff;
+}
+
+[data-md-color-scheme="slate"] .md-typeset h2 {
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  background-color: #555;
+  font-weight: bold;
+  box-shadow: 0 0 0 6px #555;
+  color:#eee;
+}
+
+[data-md-color-scheme="slate"] .md-typeset h3 {
+  font-weight: bold;
+  font-size: 1.40em;
+  background-color: #555;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  display: inline;
+  color: #eee;
+}

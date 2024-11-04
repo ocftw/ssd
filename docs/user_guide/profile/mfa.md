@@ -4,7 +4,7 @@ title: 多因子驗證
 
 # :material-card-account-details-star: 多因子驗證
 
-本章節的操作會以 OTP/TOTP、備份碼（Backup Code）、密碼金鑰（Passkey）、安全金鑰（Security Key）來進行基本的使用操作說明。
+本章節的操作會以 OTP/TOTP、備份碼（Backup Code）、密碼金鑰（Passkey）、安全金鑰（Security Key）此四種現行的多因子驗證方式，分別進行介紹和基本的使用操作說明。
 
 !!! note "翻譯差異"
 
@@ -23,32 +23,32 @@ title: 多因子驗證
 
 Google Authenticator 是一款免費的手機應用程式，生成一次性密碼（OTP）來加強帳號安全。
 
-- [:simple-googleplay: Google Play 下載](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=zh-tw)
-- [:simple-apple: Apple Store 下載](https://apps.apple.com/tw/app/google-authenticator/id388497605)
+- [:simple-googleplay: Google Play 下載](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=zh-tw){target="_blank"}
+- [:simple-apple: Apple Store 下載](https://apps.apple.com/tw/app/google-authenticator/id388497605){target="_blank"}
 
-#### 操作步驟
+!!! info "操作步驟"
 
-1. 到應用商店下載並安裝 Google Authenticator。
-2. 登入要啟用多因子認證的服務，找到安全設定中的多因子認證選項。
-3. 選擇「使用 Google Authenticator」或相關選項。
-4. 使用 Google Authenticator 掃描服務提供的 QRCode。
-5. 或透過輸入應用程式產生的驗證碼完成設定。
+    1. 到應用商店下載並安裝 Google Authenticator。
+    2. 登入要啟用多因子認證的服務，找到安全設定中的多因子認證選項。
+    3. 選擇「使用 Google Authenticator」或相關選項。
+    4. 使用 Google Authenticator 掃描服務提供的 QRCode。
+    5. 或透過輸入應用程式產生的驗證碼完成設定。
 
 ### Authy
 
 Authy 提供了多平台支援，不僅僅限於手機，還可以在電腦端使用，對於需要更高靈活度的團體非常有用。
 
-- [:simple-googleplay: Google Play 下載](https://play.google.com/store/apps/details?id=com.authy.authy&hl=zh-tw)
-- [:simple-apple: Apple Store 下載](https://itunes.apple.com/us/app/authy/id494168017)
+- [:simple-googleplay: Google Play 下載](https://play.google.com/store/apps/details?id=com.authy.authy&hl=zh-tw){target="_blank"}
+- [:simple-apple: Apple Store 下載](https://itunes.apple.com/us/app/authy/id494168017){target="_blank"}
 
-#### 操作步驟
+!!! info "操作步驟"
 
-1. 到應用商店下載並安裝 Authy。
-2. 註冊帳號並完成基本設置（如手機號碼驗證）。
-3. 登入要啟用多因子認證的服務，找到安全設置中的多因子認證選項。
-4. 選擇「使用 Authy」或「使用 TOTP 應用」.
-5. 使用 Authy 掃描 QRCode 或手動輸入金鑰。
-6. 或使用輸入應用程式生成的驗證碼完成配置。
+    1. 到應用商店下載並安裝 Authy。
+    2. 註冊帳號並完成基本設置（如手機號碼驗證）。
+    3. 登入要啟用多因子認證的服務，找到安全設置中的多因子認證選項。
+    4. 選擇「使用 Authy」或「使用 TOTP 應用」.
+    5. 使用 Authy 掃描 QRCode 或手動輸入金鑰。
+    6. 或使用輸入應用程式生成的驗證碼完成配置。
 
 ## 備份碼 Backup Code
 
@@ -69,15 +69,15 @@ Authy 提供了多平台支援，不僅僅限於手機，還可以在電腦端�
 
 ## 密碼金鑰 Passkey
 
-Passkey 是一種新的身份驗證技術，旨在取代傳統的密碼，提供更安全和便捷的登入方式。它利用公共金鑰加密技術來保護使用者的帳號，不僅增強了安全性，還大幅降低了被駭風險。
+Passkey 是一種新的身分驗證技術，旨在取代傳統的密碼，提供更安全和便捷的登入方式。它利用公共金鑰加密技術來保護使用者的帳號，不僅增強了安全性，還大幅降低了被駭風險。
 
 Passkey的核心概念是使用設備（例如手機）來產生和儲存一對加密密鑰：公鑰和私鑰。當使用者需要登入某個服務或網站時，該服務會要求使用者的手機發送公鑰進行驗證。如果公鑰匹配，設備會使用私鑰簽署一個驗證訊息，完成登入過程。
 
 !!! tip "Passkey 服務說明"
 
-    - [改用密碼金鑰代替密碼登入帳戶 - Google 帳戶說明](https://support.google.com/accounts/answer/13548313?hl=zh-Hant)
-    - [使用密碼登入 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/account-billing/%E4%BD%BF%E7%94%A8%E5%AF%86%E7%A2%BC%E7%99%BB%E5%85%A5-09a49a86-ca47-406c-8acc-ed0e3c852c6d)
-    - [目前有哪些網路服務已支援 Passkeys？ - Passkeys.io by HANKO](https://www.passkeys.io/who-supports-passkeys)
+    - [改用密碼金鑰代替密碼登入帳戶 - Google 帳戶說明](https://support.google.com/accounts/answer/13548313?hl=zh-Hant){target="_blank"}
+    - [使用密碼登入 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/account-billing/%E4%BD%BF%E7%94%A8%E5%AF%86%E7%A2%BC%E7%99%BB%E5%85%A5-09a49a86-ca47-406c-8acc-ed0e3c852c6d){target="_blank"}
+    - [目前有哪些網路服務已支援 Passkeys？ - Passkeys.io by HANKO](https://www.passkeys.io/who-supports-passkeys){target="_blank"}
 
 以下是 Passkey 的主要優點：
 
@@ -96,13 +96,13 @@ Passkey的核心概念是使用設備（例如手機）來產生和儲存一對�
 1. **雙重驗證（2FA）**：搭配傳統密碼使用，提供雙重驗證，提高帳戶的安全性。
 2. **抗盜用**：由於需要實體裝置才能登入，即使駭客獲取了您的帳戶密碼，若沒有這個安全金鑰，他們仍無法登入您的帳號。
 3. **簡便使用**：操作簡單，使用者只需插入安全金鑰並按一下按鈕即可完成驗證。
-4. **普遍兼容**：許多支持 [FIDO U2F (通用第二因素) ](https://zh.wikipedia.org/wiki/%E9%80%9A%E7%94%A8%E7%AC%AC%E4%BA%8C%E5%9B%A0%E7%B4%A0)和 [FIDO2](https://zh.wikipedia.org/wiki/FIDO2) 標準的平台和服務都可使用，例如 Google、Facebook 和 Microsoft 等。
+4. **普遍兼容**：許多支持 [FIDO U2F (通用第二因素)](https://zh.wikipedia.org/wiki/%E9%80%9A%E7%94%A8%E7%AC%AC%E4%BA%8C%E5%9B%A0%E7%B4%A0){target="_blank"}和 [FIDO2](https://zh.wikipedia.org/wiki/FIDO2){target="_blank"} 標準的平台和服務都可使用，例如 Google、Facebook 和 Microsoft 等。
 
 ### 基本操作流程
 
 #### 初始設定
 
-1. **購買與取得：**選擇並購買符合 FIDO U2F 或 FIDO2 標準的安全金鑰。如：[YubiKey]、[Nitrokey]。
+1. **購買與取得：**選擇並購買符合 FIDO U2F 或 FIDO2 標準的安全金鑰。如：[YubiKey]{target="_blank"}、[Nitrokey]{target="_blank"}。
 2. **註冊金鑰：** 登入您想保護的帳號（例如 Google 帳號），找到安全設定選項，選擇新增安全金鑰。
 3. **插入金鑰：** 根據指示將安全金鑰插入電腦的 USB 埠，或利用 NFC 與手機連接。
 4. **完成驗證：** 按下金鑰上的按鈕，完成初始設定。

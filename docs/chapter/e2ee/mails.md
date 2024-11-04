@@ -8,7 +8,7 @@ title: 加密電子郵件
 
 !!! note "補充資料"
 
-    關於 **E2EE（端對端加密）**、 **PGP** 與**驗證數位簽章**的關係，可以參考「[:material-shield-lock: 加密通訊](./index.md)」章節的介紹。
+    關於 **E2EE（端對端加密）**、 **PGP** 與**驗證數位簽章**的關係，可以參考「[:material-shield-lock: 加密通訊](./index.md){target="_blank"}」章節的介紹。
 
 ## 常見的加密電子郵件服務和軟體
 
@@ -16,25 +16,25 @@ title: 加密電子郵件
     - **描述**：ProtonMail 是一個以隱私保護為主要目標的電子郵件服務，總部位於瑞士，提供端對端加密功能。
     - **特點**：使用者不需技術背景即可使用，加密過程自動進行。
 
-    [:material-card-account-mail: ProtonMail 官方網站](https://proton.me/mail){ .md-button }
+    [:material-card-account-mail: ProtonMail 官方網站](https://proton.me/mail){ .md-button target="_blank"}
 
 2. **Tuta Mail**
     - **描述**：Tuta Mail 是一個提供端對端加密與私人郵箱服務的德國公司，強調隱私保護和無廣告體驗。
     - **特點**：內建加密、快捷簡單、良好的使用者體驗。
 
-    [:material-card-account-mail: Tuta Mail 官方網站](https://tuta.com/){ .md-button }
+    [:material-card-account-mail: Tuta Mail 官方網站](https://tuta.com/){ .md-button target="_blank"}
 
 3. **Mailvelope**
     - **描述**：Mailvelope 是一種瀏覽器擴充套件，允許使用公開密鑰加密技術來保護電子郵件的內容。
     - **特點**：與多數電子郵件服務提供者兼容，操作簡單。
 
-    [:material-card-account-mail: Mailvelope 官方網站](https://mailvelope.com/){ .md-button }
+    [:material-card-account-mail: Mailvelope 官方網站](https://mailvelope.com/){ .md-button target="_blank"}
 
 4. **GnuPG (GPG)**
     - **描述**：GnuPG 是一個開放原始碼的加密工具，支援公開密鑰加密技術，用來加密和簽署文件及電子郵件。
     - **特點**：高度靈活但需要一定的技術背景。
 
-    [:material-card-account-mail: GnuPG 官方網站](https://www.gnupg.org/){ .md-button }
+    [:material-card-account-mail: GnuPG 官方網站](https://www.gnupg.org/){ .md-button target="_blank"}
 
 ## 技術門檻與操作指南
 
@@ -55,6 +55,6 @@ title: 加密電子郵件
 4. **驗證對方身份**
     - 使用數位簽章技術來驗證電子郵件發件人的身份，以防止中間人攻擊。
 
-!!! note ""
+!!! note "筆記"
 
     加密電子郵件是保護公民團體在數位溝通中訊息安全的重要手段。即使技術門檻可能看似較高，但隨著越來越多用戶友好的服務推出，這些工具變得越來越容易使用。建議各公民團體根據自身需求，選擇合適的加密方案，以有效提升資安防範能力。

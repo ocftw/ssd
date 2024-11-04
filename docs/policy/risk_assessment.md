@@ -1,10 +1,10 @@
 ---
 icon: material/order-bool-descending-variant
-title: 政策制定：威脅建模
+title: 制定資安政策：威脅建模
 ---
-# 政策制定：威脅建模
+# 制定資安政策：威脅建模
 
-## 政策制定建議
+## 制定資安政策建議
 
 將威脅建模制定到組織中的政策是確保組織有效應對安全威脅的關鍵一環。以下將說明如何撰寫「威脅建模」政策內容於組織中：
 
@@ -20,9 +20,9 @@ title: 政策制定：威脅建模
 
 ## 相關章節
 
-[:material-arrow-right-bold: 章節內容：威脅建模](../chapter/threat_modeling_class.md){ .md-button .md-button--primary }
-[:material-arrow-right-bold: 操作手冊：風險評估表](../user_guide/risk_assessment.md){ .md-button .md-button--primary }
+[:material-arrow-right-bold: 課程主題：威脅建模](../chapter/threat_modeling_class.md){ .md-button .md-button--primary }
+[:material-arrow-right-bold: 操作指南：風險評估表](../user_guide/risk_assessment.md){ .md-button .md-button--primary }
 
 ## 參考資料
 
-- <https://www.knowledgeleader.com/blog/organizational-risk-assessment-performed-right-way>
+- <https://www.knowledgeleader.com/blog/organizational-risk-assessment-performed-right-way>{target="_blank"}

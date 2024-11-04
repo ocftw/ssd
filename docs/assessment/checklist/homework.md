@@ -11,4 +11,4 @@ title: 檢查清單
 
 ## 表單
 
-[課後任務清單](https://docs.google.com/spreadsheets/d/1ACdisZ2Ct0a2FfAhu62_2fR47K_fhzwBylJEUS6O_4o/edit){ .md-button }
+[課後任務清單](https://docs.google.com/spreadsheets/d/1evMsr-tlNH2grt8AxVlHgQvlEiPmk8MFsUQqtRtiths/edit?usp=sharing){ .md-button target="_blank"}

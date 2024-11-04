@@ -1,13 +1,13 @@
 ---
 icon: material/order-bool-descending-variant
 ---
-# 風險評估表
+# 威脅建模-風險評估
 
-!!! note "風險評估表（正體中文版）"
+!!! note "威脅建模 - 資安風險 評估表（正體中文版）"
 
-    - :open_file_folder: [表格下載](https://drive.google.com/file/d/1z70BFEZ64b99-MGoEY43Z5StHMoJLOJA/view)[^1]。
+    - :open_file_folder: [表格下載](https://drive.google.com/file/d/1z70BFEZ64b99-MGoEY43Z5StHMoJLOJA/view){target="_blank"}[^1]。
 
-    [^1]: 表格原始參考「[Security Education Companion](https://www.securityeducationcompanion.org/materials/threat-modeling-activity-handout-english-spanish)」。
+    [^1]: 表格原始參考「[Security Education Companion](https://www.securityeducationcompanion.org/materials/threat-modeling-activity-handout-english-spanish){target="_blank"}」。
 
 ## 名詞定義
 
@@ -16,16 +16,20 @@ icon: material/order-bool-descending-variant
 - 威脅：如果失敗了，潛在的後果是什麼？
 - 風險：特定威脅發生的可能性。
 - 攻擊者的能耐：攻擊者為了達成目的，有能力作些什麼？
+- 我會在＿＿＿＿回故我的威脅模型：科技和威脅會隨著時間變動，最後一步，擬定一個重新評估風險的時間。
 
-!!! success ""
+!!! tip "提示"
 
-    - 不確定各項目如何進行，可以先參考「[章節內容：風險評估](../chapter/threat_modeling_class.md)」
+    - 不確定各項目如何進行，可以先參考「[課程主題：風險評估](../chapter/threat_modeling_class.md){target="_blank"}」
 
 ## 威脅模型範例
 
-### 範例：珠寶店商人
+了解定義和下載表格後，還是有些不確定每個部分該填寫什麼嗎？以下提供三個範例，作為在建制組織威脅建模時的參考。
 
-請開啟「風險評估表」並從第一頁開始，範例是以「珠寶店商人的威脅建模」。
+### 練習範例：珠寶店商人
+
+當你開啟「風險評估表」檔案，第一頁即是以「珠寶店商人」作為範例來進行威脅建模，建議先用這題進行練習。
+以下每個評估項目都是一個下拉式對話框，看著標題先想一下，再點擊箭頭向下開展看答案。你所想的答案是否與標準答案一致呢？
 
 ??? abstract "1. 你要保護哪些資產？"
 
@@ -56,7 +60,15 @@ icon: material/order-bool-descending-variant
 
     - 員工離職時更換密碼。
 
+??? time "6. 多久回顧一次這個威脅模型？"
+
+    - 每六個月，回顧一次。
+
 ### 範例：公民團體的風險評估
+
+在用「珠寶店商人」進行練習之後，想必現在已經知道如何操作這個威脅建模了吧！現在請以您自身組織為主角，依據同樣的評估項目，為個人組織量身打造威脅模型吧！
+
+以下每個對話框中，有一些參考答案，這些僅供參考。最主要的，是要回到你自己組織實際的狀況喔！
 
 ??? abstract "1. 你要保護哪些資產？"
 
@@ -89,7 +101,9 @@ icon: material/order-bool-descending-variant
     - 提供資安意識培訓，讓成員了解如何保護自己或他人的個人資訊。
     - 與法律專家合作，確保團體的活動符合相關法律法規，並了解其權利和義務。
 
-### 範例：公民團體上街抗議的風險評估
+### 範例：公民團體上街抗爭的風險評估
+
+這樣的威脅模型，也可以用於組織內的個別專案和行動進行建置。畢竟有些時候，因應行動而帶來的風險是與組織在一般狀況不同的。因此，我們這邊也另外針對行動和個別專案，提供範例。以下以「街頭抗爭」作為範例：
 
 ??? abstract "1. 你要保護哪些資產？"
 
@@ -158,6 +172,6 @@ icon: material/order-bool-descending-variant
     - 提供安全培訓，提高員工和成員對安全風險的認識，教導如何辨識和應對安全威脅。
     - 定期進行安全檢查和稽查，確保辦公環境的安全措施得到有效實施並及時更新。
 
-## 政策制定
+## 制定資安政策
 
-[:material-arrow-right-bold: 政策制定：威脅建模](../policy/risk_assessment.md){ .md-button .md-button--primary }
+[:material-arrow-right-bold: 制定資安政策：威脅建模](../policy/risk_assessment.md){ .md-button .md-button--primary }

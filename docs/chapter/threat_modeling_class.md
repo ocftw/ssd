@@ -6,7 +6,7 @@ title: 威脅建模
 
 !!! inline end info "課程教材"
 
-    - :open_file_folder: [課程簡報（CSCS, v.3 _ 1. 開場 - 風險在哪_ (威脅建模)_, Google Slides）](https://docs.google.com/presentation/d/1GrlsB6EycQr3RspUhhfBHPwJXT5Hnmhr/)
+    - :open_file_folder: [課程簡報（CSCS, v.3 _ 1. 開場 - 風險在哪_ (威脅建模)_, Google Slides）](https://docs.google.com/presentation/d/1GrlsB6EycQr3RspUhhfBHPwJXT5Hnmhr/){target="_blank"}
 
 威脅建模是一種資訊安全方法，旨在評估和理解系統或應用程式所面臨的潛在威脅和風險。透過威脅建模，我們可以分析系統的設計、功能和資源，以識別可能的攻擊向量和弱點。這個過程有助於組織建立有效的防禦策略，減少可能的攻擊和風險。威脅建模通常包括收集資訊、進行威脅分析、評估風險並提出改善建議的步驟。透過威脅建模，組織可以更好地保護其資訊資產，提高安全性和應變能力。
 
@@ -44,6 +44,7 @@ title: 威脅建模
 3. 如果失敗了，後果是甚麼？這後果是可承受的嗎？
 4. 這發生的機率有多大？我有多大的必要主動保護資產？
 5. 我願意承擔多少「麻煩」來預防潛在後果呢？
+6. 我會在＿＿＿＿＿（多久時間）回顧我的威脅模型？
 
 ### 我想要保護什麼？
 
@@ -83,15 +84,19 @@ title: 威脅建模
 
 在記下您能使用的選項來幫助您降低面臨獨特威脅時，注意是否有任何財務限制、技術限制或是社會限制。
 
+### 我會在＿＿＿＿＿（多久時間）回顧我的威脅模型？
+
+科技和威脅會隨著時間變動，擬定一個重新評估風險的時間能使得你的策略和防禦緊跟於當下現實的狀況。
+
 ## 風險評估表
 
-!!! info ""
+!!! info "資訊"
 
     如何使用與執行「風險評估表」，請參考此章節。
 
-    [:material-arrow-right-bold: 操作手冊：風險評估表](../user_guide/risk_assessment.md){ .md-button .md-button--primary }
+    [:material-arrow-right-bold: 操作指南：風險評估表](../user_guide/risk_assessment.md){ .md-button .md-button--primary }
 
 ## 參考資料
 
-- [EFF Surveillance Self Defense: Your Security Plan](https://ssd.eff.org/en/module/your-security-plan)
-- [Threat Modeling: The First Step on Your Privacy Journey - Privacy Guides](https://www.privacyguides.org/en/basics/threat-modeling/)
+- [EFF Surveillance Self Defense: Your Security Plan](https://ssd.eff.org/en/module/your-security-plan){target="_blank"}
+- [Threat Modeling: The First Step on Your Privacy Journey - Privacy Guides](https://www.privacyguides.org/en/basics/threat-modeling/){target="_blank"}

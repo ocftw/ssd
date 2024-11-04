@@ -14,7 +14,7 @@ title: 隱私瀏覽行為
 
 {++:first_place: 擴充彈性最高++}
 
-- **隱私保護級別**：高。Firefox 預設啟用了「[加強型追蹤保護功能]」，可以阻擋廣告追踪和第三方 Cookie。
+- **隱私保護級別**：高。Firefox 預設啟用了「[加強型追蹤保護功能]{target="_blank"}」，可以阻擋廣告追踪和第三方 Cookie。
 - **附加元件與擴充功能**：Firefox 支持多種隱私保護附加元件（如 uBlock Origin、Privacy Badger 等），用戶可以根據需要進一步加強隱私保護。
 - **透明及開放源碼**：作為一個開放源碼的瀏覽器，社群和安全專家可以檢查和審核其源碼，確保沒有惡意或隱私侵害的功能。
 - **隱身模式**：提供標準的隱身模式，不保存瀏覽歷史、 Cookie 和搜尋紀錄。
@@ -28,7 +28,7 @@ title: 隱私瀏覽行為
 - **內建廣告阻擋**：自帶廣告阻擋功能，防止追踪並提高頁面加載速度。
 - **隱私保護級別**：非常高。Brave 專注於隱私保護和去中心化技術，避免第三方追踪。
 - **Tor 整合**：內建能夠使用 Tor 網路的隱私視窗，進一步提升匿名性。
-- **IPFS 星際檔案**：整合 [IPFS]（[星際檔案系統]），提供去中心化的檔案分享與存取，提升網路安全性與資料持久性。
+- **IPFS 星際檔案**：整合 [IPFS]{target="_blank"}（[星際檔案系統]{target="_blank"}），提供去中心化的檔案分享與存取，提升網路安全性與資料持久性。
 
 [IPFS]: https://ipfs.tech/
 [星際檔案系統]: https://zh.wikipedia.org/zh-tw/%E6%98%9F%E9%99%85%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F
@@ -45,7 +45,7 @@ title: 隱私瀏覽行為
 
 瀏覽器附加元件（Browser Extensions），這些附加元件可以防止網站和第三方追踪使用者的瀏覽行為，從而保護個人資料隱私。此外有效的廣告阻擋工具不僅能提升網頁瀏覽速度，還能減少惡意廣告軟體的風險。
 
-!!! note ""
+!!! note "筆記"
 
     :simple-brave: Breve 與 :simple-googlechrome: Chrome 是同一架構的瀏覽器，可以直接取用 :simple-googlechrome: Chrome 的附加元件使用。
 
@@ -53,25 +53,25 @@ title: 隱私瀏覽行為
 
 這是一款高效的廣告阻擋器，可以阻止惡意網頁、釣魚網站和跟踪器。
 
-[:simple-googlechrome: Chrome](https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm) | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/ublock-origin/)
+[:simple-googlechrome: Chrome](https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm){target="_blank"} | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/ublock-origin/){target="_blank"}
 
 ### Privacy Badger
 
 由電子前哨基金會（EFF）開發，它可自動學習並阻止跟踪機制，以保護您的隱私。
 
-[:simple-googlechrome: Chrome](https://chromewebstore.google.com/detail/privacy-badger/pkehgijcmpdhfbdbbnkijodmdjhbjlgp) | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/privacy-badger17/)
+[:simple-googlechrome: Chrome](https://chromewebstore.google.com/detail/privacy-badger/pkehgijcmpdhfbdbbnkijodmdjhbjlgp){target="_blank"} | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/privacy-badger17/){target="_blank"}
 
 ### Cookie AutoDelete
 
 自動刪除不必要的 Cookie，只有您信任且在白名單中的網站才能保存 Cookie，有效保護隱私。
 
-[:simple-googlechrome: Chrome](https://chromewebstore.google.com/detail/cookie-autodelete/fhcgjolkccmbidfldomjliifgaodjagh) | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/cookie-autodelete/)
+[:simple-googlechrome: Chrome](https://chromewebstore.google.com/detail/cookie-autodelete/fhcgjolkccmbidfldomjliifgaodjagh){target="_blank"} | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/cookie-autodelete/){target="_blank"}
 
 ### ClearURLs
 
 此附加元件功能將自動移除網址中的追蹤元素，以幫助保護您在瀏覽網路時的隱私。
 
-[:simple-googlechrome: Chrome](https://chromewebstore.google.com/detail/clearurls/lckanjgmijmafbedllaakclkaicjfmnk) | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/clearurls/)
+[:simple-googlechrome: Chrome](https://chromewebstore.google.com/detail/clearurls/lckanjgmijmafbedllaakclkaicjfmnk){target="_blank"} | [:simple-firefoxbrowser: Firefox](https://addons.mozilla.org/zh-TW/firefox/addon/clearurls/){target="_blank"}
 
 ## 瀏覽模式
 
@@ -124,27 +124,27 @@ title: 隱私瀏覽行為
 1. **DuckDuckGo**
       - **特點**：DuckDuckGo 不儲存任何可識別用戶身份的資料，不追蹤你的搜尋歷史，而且使用加密技術來保護搜尋查詢。
       - **優勢**：簡單易用，適合大部分用戶，是注重隱私搜尋的首選之一。
-      - :octicons-arrow-right-16: <https://duckduckgo.com/>
+      - :octicons-arrow-right-16: <https://duckduckgo.com/>{target="_blank"}
 
 2. **Startpage**
       - **特點**：Startpage 使用 Google 的搜尋結果，但不儲存任何個人資料或搜尋歷史。它還會隱藏使用者的IP地址，提供匿名的搜尋體驗。
       - **優勢**：提供高質量的搜尋結果，同時確保用戶的隱私不被泄露。
-      - :octicons-arrow-right-16: <https://www.startpage.com/>
+      - :octicons-arrow-right-16: <https://www.startpage.com/>{target="_blank"}
 
 3. **Qwant**
       - **特點**：Qwant 是一家總部位於歐洲的隱私友好型搜尋引擎，不會追蹤用戶或個人化搜尋結果。
       - **優勢**：符合歐盟的隱私法律，是值得信賴的搜尋工具。
-      - :octicons-arrow-right-16: <https://www.qwant.com/> （目前臺灣、日本、新加坡無法使用）
+      - :octicons-arrow-right-16: <https://www.qwant.com/>{target="_blank"} （目前臺灣、日本、新加坡無法使用）
 
 4. **Searx**
       - **特點**：Searx 是一個開源的隱私搜尋引擎，允許用戶自己設置並管理其服務，避免集中式搜尋引擎的資料收集問題。
       - **優勢**：高度可配置，適合技術能力較強的用戶或需要自主持續引擎的團體。
-      - :octicons-arrow-right-16: <https://searx.thegpm.org/>
+      - :octicons-arrow-right-16: <https://searx.thegpm.org/>{target="_blank"}
 
 5. **Brave Search**
       - **特點**：Brave Search 是由 Brave 瀏覽器團隊開發的，強調隱私和去中心化，不會追蹤用戶的搜尋歷史。
       - **優勢**：無廣告追蹤，提供自主生成的搜尋結果。
-      - :octicons-arrow-right-16: <https://search.brave.com/>
+      - :octicons-arrow-right-16: <https://search.brave.com/>{target="_blank"}
 
 !!! tip "調整預設瀏覽器"
 

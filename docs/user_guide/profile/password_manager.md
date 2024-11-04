@@ -4,7 +4,7 @@ title: 密碼管理器
 
 # :material-safe-square-outline: 密碼管理器
 
-本章節的操作會以 Bitwarden、1Password、KeePassXC 來進行基本的使用操作說明。
+本子章節部分，提供三個現行推薦的密碼管理器工具： Bitwarden、1Password、KeePassXC，它們分別該如何安裝和使用的操作指引。您可以選擇適合個別組織需求的工具來進行密碼管理。
 
 !!! note "翻譯差異"
 
@@ -15,12 +15,12 @@ title: 密碼管理器
 ### 註冊與安裝
 
 1. **註冊帳號**：
-    - 前往 [Bitwarden 官方網站](https://bitwarden.com/)。
+    - 前往 [Bitwarden 官方網站](https://bitwarden.com/){target="_blank"}。
     - 點擊「開始使用」或「註冊」。
     - 填寫電子郵件、姓名，設定一個**主密碼**，並確認主密碼。
 
 2. **下載與安裝應用程式**：
-    - 移至「[下載](https://bitwarden.com/download/)」頁面，根據您的裝置選擇相應的版本（Windows、Mac、Linux、iOS、Android）。
+    - 移至「[下載](https://bitwarden.com/download/){target="_blank"}」頁面，根據您的裝置選擇相應的版本（Windows、Mac、Linux、iOS、Android）。
     - 下載並安裝 Bitwarden 客戶端應用程式和瀏覽器擴充功能（Chrome、Brave、Firefox、Safari）。
 
 ### 基本使用操作流程
@@ -43,20 +43,20 @@ title: 密碼管理器
 
 !!! tip "官方使用手冊"
 
-    - [Help Center | Bitwarden](https://bitwarden.com/help/)
-    - [Bitwarden Learning | Bitwarden](https://bitwarden.com/learning/)
+    - [Help Center | Bitwarden](https://bitwarden.com/help/){target="_blank"}
+    - [Bitwarden Learning | Bitwarden](https://bitwarden.com/learning/){target="_blank"}
 
 ## 1Password
 
 ### 註冊與安裝
 
 1. **註冊帳號**：
-    - 前往 [1Password 官方網站](https://1password.com/)。
+    - 前往 [1Password 官方網站](https://1password.com/){target="_blank"}。
     - 點擊「開始使用」或「註冊」。
     - 填寫電子郵件、姓名，並設定主密碼。
 
 2. **下載與安裝應用程式**：
-    - 前往「[下載](https://1password.com/zh-tw/downloads/)」頁面，選擇適合您的裝置系統（Windows、Mac、iOS、Android）。
+    - 前往「[下載](https://1password.com/zh-tw/downloads/){target="_blank"}」頁面，選擇適合您的裝置系統（Windows、Mac、iOS、Android）。
     - 下載並安裝 1Password 客戶端應用程式和瀏覽器擴充功能。
 
 ### 基本使用操作流程
@@ -77,18 +77,17 @@ title: 密碼管理器
     - 當新增或編輯項目時，點擊密碼欄旁邊的密碼產生器圖標。
     - 設定負荷標準，例如長度和類型，點擊「建立」。
 
-
 !!! tip "官方使用手冊"
 
-    - [瞭解我們如何保護你的資訊 | 1Password](https://1password.com/zh-tw/tour/)
-    - [Resources to keep your passwords safe | 1Password](https://1password.com/resources/)
+    - [瞭解我們如何保護你的資訊 | 1Password](https://1password.com/zh-tw/tour/){target="_blank"}
+    - [Resources to keep your passwords safe | 1Password](https://1password.com/resources/){target="_blank"}
 
 ## KeePassXC
 
 ### 安裝
 
 1. **下載與安裝應用程式**：
-    - 前往 [KeePassXC 官方網站](https://keepassxc.org/)。
+    - 前往 [KeePassXC 官方網站](https://keepassxc.org/){target="_blank"}。
     - 根據您的作業系統（Windows、Mac、Linux）選擇對應版本進行下載並安裝。
 
 ### 基本使用操作流程
@@ -112,5 +111,5 @@ title: 密碼管理器
 
 !!! tip "官方使用手冊"
 
-    - [KeePassXC: Getting Started Guide](https://keepassxc.org/docs/KeePassXC_GettingStarted)
-    - [KeePassXC: User Guide](https://keepassxc.org/docs/KeePassXC_UserGuide)
+    - [KeePassXC: Getting Started Guide](https://keepassxc.org/docs/KeePassXC_GettingStarted){target="_blank"}
+    - [KeePassXC: User Guide](https://keepassxc.org/docs/KeePassXC_UserGuide){target="_blank"}

@@ -32,4 +32,4 @@ title: 更新軟體
 
 !!! tip "科技濃湯"
 
-    - 如果因為預算問題，可以考慮洽詢「[科技濃湯](https://www.techsouptaiwan.org/)」給非營利組織的捐贈和折扣方案。
+    - 如果因為預算問題，可以考慮洽詢「[科技濃湯](https://www.techsouptaiwan.org/){target="_blank"}」給非營利組織的捐贈和折扣方案。

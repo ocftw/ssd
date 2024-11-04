@@ -39,7 +39,7 @@ title: 加密通訊
 
 !!! note "補充教材"
 
-    - [什麼是端對端加密 (E2EE)？ | Cloudflare](https://www.cloudflare.com/zh-tw/learning/privacy/what-is-end-to-end-encryption/)
+    - [什麼是端對端加密 (E2EE)？ | Cloudflare](https://www.cloudflare.com/zh-tw/learning/privacy/what-is-end-to-end-encryption/){target="_blank"}
 
 ## PGP 介紹
 
@@ -77,13 +77,12 @@ Bob 接收到來自 Alice 的加密資料後：
 
     E2EE 是一種加密通訊的方法，旨在確保訊息僅能由通訊的兩端讀取。這種方法需要配合具體的加密技術來實現，例如 PGP（Pretty Good Privacy）就是一種常見的加密技術，經常用於電子郵件加密。端對端加密可以使用 PGP 作為其中一種實作技術，但並不局限於 PGP。其他技術如 **Signal Protocol** 也是常見的 E2EE 實作方式。
 
-    ??? note "補充資料"
+!!! note "補充資料"
 
-        - Signal Protocol
-            - [Signal 協定 - 維基百科，自由的百科全書](https://zh.wikipedia.org/wiki/Signal%E5%8D%8F%E8%AE%AE)
-            - [Signal 採用新加密協定 PQXDH，因應量子電腦時代的安全威脅 | iThome](https://www.ithome.com.tw/news/158852)
-            - [Signal >> Blog >> Quantum Resistance and the Signal Protocol](https://signal.org/blog/pqxdh/)
-
+      - Signal Protocol
+         - [Signal 協定 - 維基百科，自由的百科全書](https://zh.wikipedia.org/wiki/Signal%E5%8D%8F%E8%AE%AE){target="_blank"}
+         - [Signal 採用新加密協定 PQXDH，因應量子電腦時代的安全威脅 | iThome](https://www.ithome.com.tw/news/158852){target="_blank"}
+         - [Signal >> Blog >> Quantum Resistance and the Signal Protocol](https://signal.org/blog/pqxdh/){target="_blank"}
 
 ### 驗證數位簽章
 
@@ -101,4 +100,4 @@ PGP 也提供數位簽章功能，以確保訊息來源和內容的完整性。�
 
 !!! note "補充資料"
 
-    - [What is PGP encryption and how does it work? | Proton](https://proton.me/blog/what-is-pgp-encryption)
+    - [What is PGP encryption and how does it work? | Proton](https://proton.me/blog/what-is-pgp-encryption){target="_blank"}

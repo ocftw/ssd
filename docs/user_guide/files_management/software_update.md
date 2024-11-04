@@ -25,34 +25,34 @@ title: 更新軟體
 1. **Tor（洋蔥路由器）**
       - **用途：** 保護上網隱私，匿名訪問網路。
       - **優點：** 隱匿你的實際IP位置，難以追踪。
-      - **網站：** [torproject.org](https://www.torproject.org)
+      - **網站：** [torproject.org](https://www.torproject.org){target="_blank"}
 
 2. **Signal（端到端加密通訊）**
       - **用途：** 安全的即時通訊軟體。
       - **優點：** 端到端加密，保護對話內容不被攔截。
-      - **網站：** [signal.org](https://signal.org)
+      - **網站：** [signal.org](https://signal.org){target="_blank"}
 
 3. **VeraCrypt（加密軟體）**
       - **用途：** 加密硬碟和 USB 隨身碟。
       - **優點：** 保護機敏資料，防止未經授權的存取。
-      - **網站：** [veracrypt.fr](https://www.veracrypt.fr)
+      - **網站：** [veracrypt.fr](https://www.veracrypt.fr){target="_blank"}
 
 4. **KeePassXC（密碼管理工具）**
       - **用途：** 安全管理各種密碼。
       - **優點：** 集中管理所有帳號密碼，使用加密技術保護。
-      - **網站：** [keepassxc.org](https://keepassxc.org)
+      - **網站：** [keepassxc.org](https://keepassxc.org){target="_blank"}
 
 5. **Tails（安全操作系統）**
       - **用途：** 基於USB或DVD運行的操作系統，專為隱私和匿名設計。
       - **優點：** 離開電腦後無痕跡，內建多種安全工具。
-      - **網站：** [tails.boum.org](https://tails.boum.org)
+      - **網站：** [tails.boum.org](https://tails.boum.org){target="_blank"}
 
 6. **Jitsi Meet**
       - **用途：** 安全的視訊會議軟體。
       - **優點：** 不需帳號，點對點加密視訊會議。
-      - **網站：** [jitsi.org](https://jitsi.org)
+      - **網站：** [jitsi.org](https://jitsi.org){target="_blank"}
 
 7. **MAT（Metadata Anonymisation Toolkit）**
       - **用途：** 移除檔案的隱私相關後設資料（Metadata）。
       - **優點：** 保護文件中可能洩露的隱私訊息。
-      - **網站：** [mat.boum.org](https://mat.boum.org)
+      - **網站：** [mat.boum.org](https://mat.boum.org){target="_blank"}

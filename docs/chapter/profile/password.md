@@ -4,7 +4,7 @@ title: 密碼強度
 
 # :material-shield-key: 密碼強度
 
-在資訊安全中，密碼強度是指密碼抗破解能力的高低。強密碼能有效防止未經授權的使用者進入系統，降低保護資料被盜取或篡改的風險。這一章節將介紹**密碼（password）**和**密碼短語（密碼片語、助記詞，passphrase）**的重要性及如何選擇強密碼。
+在身分驗證主題中，首先要先介紹的概念即是「密碼強度」。密碼強度是指密碼抗破解能力的高低，強密碼能有效防止未經授權的使用者進入系統，降低保護資料被盜取或篡改的風險。因此，了解如何組成強密碼來讓你在網路世界出入更加平安，是本子章節的重點。這一子章節將介紹**密碼（password）**和**密碼短語（密碼片語、助記詞，passphrase）**的重要性及如何選擇強密碼。
 
 ## 密碼 Password
 
@@ -18,15 +18,15 @@ title: 密碼強度
 - 不要使用常見詞彙或模式，如 `123456`、`password`、`qwerty`。
 - 避免使用個人相關資訊，如姓名、生日、電話號碼等。
 
-!!! note "經常更新密碼"
+!!! note "我多久應該更新密碼？"
 
     - 最好定期更換密碼，如每三到六個月。
     - 確保不同帳戶使用不同的密碼，這樣即使一個帳號被破解，其他帳號仍然安全。
-        - 請搭配「[密碼管理器](./password_manager.md)」來達成此建議。
+        - 請搭配「[密碼管理器](./password_manager.md){target="_blank"}」來達成此建議。
 
 ## 密碼短語 Passphrase
 
-密碼短語是一組隨機的單詞組合，相較於傳統密碼更長且更容易記憶。例如：`Sunlight!Dances@Midnight`、`Rewrite8-Neuter-Showoff-Backboned-Surviving`。
+另一個創造強密碼的方式，即是使用「密碼短語」。密碼短語是一組隨機被你創造出來的單詞組合，相較於傳統密碼更長且更容易記憶。例如：`Sunlight!Dances@Midnight`、`Rewrite8-Neuter-Showoff-Backboned-Surviving`。
 
 ### 密碼短語的優點
 
@@ -38,6 +38,8 @@ title: 密碼強度
 - 包含多個無關的單詞，避免常見語法或詞組。
 - 可以結合特殊符號或數字，如：`Cats&Mountains4Ever!`。
 
+好了！相信您現在應該有辦法為自己的每個帳號創造出強而有力的密碼，進一步的保護您的資訊安全！除了密碼強度之下，以下有一些小撇步，能讓你建立更好的身分驗證習慣喔！
+
 !!! tip "養成良好習慣"
 
     - 使用密碼管理器，工具能幫助記住複雜且唯一的密碼，並能自動完成填寫密碼。
@@ -47,14 +49,14 @@ title: 密碼強度
 
 !!! note "密碼策略：密碼與密碼短語差異"
 
-    ![https://xkcd.com/936/](https://imgs.xkcd.com/comics/password_strength_2x.png){ loading=lazy }
+    ![https://xkcd.com/936/](https://imgs.xkcd.com/comics/password_strength_2x.png){ loading=lazy target="_blank"}
 
     - 密碼：亂數密碼對於電腦運算來說非常容易，但是對於人類很難記憶。
     - 密碼短語：反而對於電腦運算非常困難，一段句子短語對人來來說很好記憶。
-    - 圖片來源：[xkcd: Password Strength - https://xkcd.com/936/](https://xkcd.com/936/)
+    - 圖片來源：[xkcd: Password Strength - https://xkcd.com/936/](https://xkcd.com/936/){target="_blank"}
 
 !!! info "2024 年破解密碼的時間"
 
-    ![Are Your Passwords in the Green?](https://images.squarespace-cdn.com/content/v1/5ffe234606e5ec7bfc57a7a3/c8c21f1a-ac0a-4dd5-97bf-51a2e4fa63e4/Hive+Systems+Password+Table+-+2024+Square.png){ loading=lazy }
+    ![Are Your Passwords in the Green?](https://images.squarespace-cdn.com/content/v1/5ffe234606e5ec7bfc57a7a3/c8c21f1a-ac0a-4dd5-97bf-51a2e4fa63e4/Hive+Systems+Password+Table+-+2024+Square.png){ loading=lazy target="_blank"}
 
-    - 參考資料：[Are Your Passwords in the Green? - Hive Systems](https://www.hivesystems.com/blog/are-your-passwords-in-the-green)
+    - 參考資料：[Are Your Passwords in the Green? - Hive Systems](https://www.hivesystems.com/blog/are-your-passwords-in-the-green){target="_blank"}

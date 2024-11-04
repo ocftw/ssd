@@ -1,9 +1,8 @@
 ---
-icon: material/bookmark-check
-title: 參考資源
+icon: octicons/bookmark-16
+title: 學習資源
 ---
-
-# :material-bookmark-check: 參考資源
+# :bookmark: 學習資源
 
 ## 參考資料
 
@@ -18,9 +17,9 @@ title: 參考資源
 <figcaption><small>Screenshot on Securityinabox</small></figcaption>
 </figure>
 
-由 [Front Line Defenders](https://www.frontlinedefenders.org/) 提供關於裝置、作業系統相關的操作設定。
+由 [Front Line Defenders](https://www.frontlinedefenders.org/){target="_blank"} 提供關於裝置、作業系統相關的操作設定。
 
-[:octicons-shield-check-16: Security in-a-box](https://securityinabox.org/en/){ .md-button }
+[:octicons-shield-check-16: Security in-a-box](https://securityinabox.org/en/){ .md-button target="_blank"}
 
 ### Privacy Guides
 
@@ -36,7 +35,7 @@ title: 參考資源
 Privacy Guides 致力提供個人資料隱私保護的教學內容，網站由志工群協助貢獻內容。
 
 
-[:octicons-shield-check-16: Privacy Guides](https://www.privacyguides.org/){ .md-button }
+[:octicons-shield-check-16: Privacy Guides](https://www.privacyguides.org/){ .md-button target="_blank"}
 
 ### Surveillance Self-Defense
 
@@ -49,6 +48,6 @@ Privacy Guides 致力提供個人資料隱私保護的教學內容，網站由�
 <figcaption><small>Screenshot on Surveillance Self-Defense (eff.org)</small></figcaption>
 </figure>
 
-由[電子前哨基金會](https://www.eff.org/)（Electronic Frontier Foundation, eff）發起的專案，提供各項關於網路隱私、規避審查的自我防護抵禦工具與實踐守則。
+由[電子前哨基金會](https://www.eff.org/){target="_blank"}（Electronic Frontier Foundation, eff）發起的專案，提供各項關於網路隱私、規避審查的自我防護抵禦工具與實踐守則。
 
-[:octicons-shield-check-16: Surveillance Self-Defense](https://ssd.eff.org/){ .md-button }
+[:octicons-shield-check-16: Surveillance Self-Defense](https://ssd.eff.org/){ .md-button target="_blank"}

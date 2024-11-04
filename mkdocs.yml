@@ -4,24 +4,11 @@ site_description: "給公民團體 CSOs 的資安防護基礎教材"
 site_author: "財團法人開放文化基金會 (Open Culture Foundation, OCF)"
 copyright: "CC-BY 4.0 姓名標示"
 nav:
-  - 首頁:
-      - index.md
-      - 如何使用線上教材:
-          - howtouse/index.md
-          - 關懷組: howtouse/a_team.md
-          - 自學組: howtouse/self.md
-          - 教材資源:
-              - course/index.md
-              - 章節內容: chapter/index.md
-              - 操作手冊: user_guide/index.md
-          - 政策制定: policy/index.md
-          - 狀態評估: assessment/index.md
-          - 關懷與諮詢: support/index.md
-  - 章節內容:
+  - 課程主題:
       - chapter/index.md
       - 威脅建模: chapter/threat_modeling_class.md
       - 裝置安全: chapter/devices.md
-      - 身份驗證:
+      - 身分驗證:
           - chapter/profile/index.md
           - 密碼管理器: chapter/profile/password_manager.md
           - 密碼強度: chapter/profile/password.md
@@ -45,7 +32,7 @@ nav:
           - 資料備份與封存: chapter/files_management/backup_archive.md
           - 更新軟體: chapter/files_management/software_update.md
       - 海外出差: chapter/abroad.md
-  - 操作手冊:
+  - 操作指南:
       - user_guide/index.md
       - 風險評估表: user_guide/risk_assessment.md
       - 裝置安全:
@@ -54,7 +41,7 @@ nav:
           - MacOS: user_guide/devices/macOS.md
           - Windows: user_guide/devices/windows.md
           - Android: user_guide/devices/android.md
-      - 身份驗證:
+      - 身分驗證:
           - user_guide/profile/index.md
           - 密碼管理器: user_guide/profile/password_manager.md
           - 多因子驗證: user_guide/profile/mfa.md
@@ -73,7 +60,7 @@ nav:
           - 資料備份與封存: user_guide/files_management/backup_archive.md
           - 更新軟體: user_guide/files_management/software_update.md
       - 海外出差: user_guide/abroad.md
-  - 政策制定:
+  - 制定資安政策:
       - policy/index.md
       - 威脅建模: ./policy/risk_assessment.md
       - 裝置安全: ./policy/devices.md
@@ -83,15 +70,16 @@ nav:
       - 帳號管理: ./policy/account_management.md
       - 資料管理與備份: ./policy/files_management.md
       - 海外出差: policy/abroad.md
-  - 狀態評估:
+  - 進度追蹤:
       - assessment/index.md
       - 檢查清單:
           - assessment/checklist/index.md
           - 場勘紀錄表: assessment/checklist/site_survey.md
           - 課後任務清單: assessment/checklist/homework.md
-  - 關懷與諮詢:
+  - 學習資源:
+      - resource/index.md
+  - 疑問諮詢:
       - support/index.md
-      - 參考資源: ./support/resource.md
 theme:
   name: material
   icon:
@@ -167,7 +155,7 @@ markdown_extensions:
   - pymdownx.tilde
   - pymdownx.tasklist:
       custom_checkbox: true
-      clickable_checkbox: true
+      clickable_checkbox: false
   - pymdownx.tabbed:
       alternate_style: true
 extra:
@@ -179,5 +167,7 @@ extra:
       link: https://ssd.ocf.tw/
     - icon: fontawesome/brands/github
       link: https://github.com/ocftw/ssd
+    - icon: simple/torbrowser
+      link: http://ssdocftwvq6csls7gnjubyrmar7no7ww3gmgodhznxgsoor6ot42lrad.onion/
 extra_css:
   - stylesheets/extra.css
