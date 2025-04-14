@@ -80,6 +80,7 @@ nav:
       - resource/index.md
   - 疑問諮詢:
       - support/index.md
+      - support/help.md
 theme:
   name: material
   icon:

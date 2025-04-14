@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "security-guides"
-version = "202409.23"
+version = "202504.14"
 description = "For CSO guidebook in security."
 authors = ["Shield of Self-Defense (ocf.tw) <ssd@ocf.tw>"]
 readme = "README.md"
