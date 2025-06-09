@@ -1,3 +1,7 @@
+---
+icon: material/security
+title: 資安通報流程
+---
 # 資安通報流程
 
 此流程適用於一般日常，如發現疑似或是確認為資安事件，都可以遵循以下的事件處理方式。
@@ -28,7 +32,7 @@
 
         **郵件寄件者名稱**是可以隨意修改的，想起來了嗎？郵件名稱在設定的時候沒有任何的驗證方式，只需要輸入隨意的名稱即可，當「有人」看起來像是你所認識的朋友所寄送來的信件，都要仔細檢查其郵件地址來自哪裡。
 
-<center>:material-arrow-down-bold:</center>
+<center>⬇️</center>
 
 !!! note "第一步：保存信件"
 
@@ -46,7 +50,7 @@
 
             - macOS 可以在檔案上點擊右鍵找到壓縮檔案的操作。
 
-<center>:material-arrow-down-bold:</center>
+<center>⬇️</center>
 
 !!! success "第二步：通報"
 
@@ -55,7 +59,7 @@
         - 透過 <ssd@ocf.tw> 專案群組信箱。
         - 透過已建立聯繫管道的群組 Signal 頻道。
 
-<center>:material-arrow-down-bold:</center>
+<center>⬇️</center>
 
 !!! warning "第三步：組織內告知"
 
