@@ -12,7 +12,7 @@
     padding-left: 17px;
   }
 
-  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--nested > nav.md-nav > ul > li.md-nav__item {
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--nested > nav.md-nav ul li.md-nav__item {
     padding: 5px 0;
   }
 
@@ -23,7 +23,7 @@
     color: #000000;
   }
 
-  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--active > div.md-nav__link.md-nav__container > a {
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item.md-nav__item--active > div.md-nav__link.md-nav__container a {
     color: #000000;
   }
 
