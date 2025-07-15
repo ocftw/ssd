@@ -94,6 +94,8 @@ nav:
       - support/index.md
   - 資安通報:
       - help/index.md
+  - 如何貢獻:
+      - contribute/index.md
 theme:
   name: material
   icon:
