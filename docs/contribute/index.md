@@ -60,3 +60,15 @@ title: 如何貢獻
 教材網站的修正請先 Fork 一份到自己的 Github 專案中，新增專案後，不論是透過建立新的分支或是在 `main` 的分支上進行修改、增補，每一次的提交（`git commit`）請記得附上簽署、署名（`git commit -s`）。
 
 所有的修正、增補完成後，請透過 Pull Requests（PR）的方式提出合併，等待團隊確認無誤後，即將內容合併到教材網站的主要分支中。
+
+!!! info "參考資訊"
+
+    - 如何簽署提交，[請參考 Github 說明](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits){target="_blank"}。
+    - 如何建立 Pull Requests（PR），[請參考 Github 說明](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request){target="_blank"}。
+        - 或參考「[與其它開發者的互動 - 使用 Pull Request（PR）](https://gitbook.tw/chapters/github/pull-request){target="_blank"}」。
+
+### 透過 Github 線上編輯
+
+如果您不熟悉程式相關的建立或佈署，僅針對教材內容文字的部分編輯，也可透過 Github 上的線上編輯方式進行內容編修、增補。
+
+在欲編輯的[檔案頁面](https://github.com/ocftw/ssd/blob/shield/README.md){target="_blank"}中，上方的編輯列找到 :octicons-pencil-24:，點擊後進入到編輯模式。編輯完成後，右上方 "**Commit changes...**" 送出修改。
