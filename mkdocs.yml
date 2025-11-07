@@ -70,8 +70,6 @@ nav:
           - 操作建議:
               - user_guide/abroad/index.md
           - 政策規範: chapter/abroad/policy.md
-  - 操作指南:
-      - user_guide/index.md
   - 制定資安政策:
       - policy/index.md
       - 威脅建模: ./policy/risk_assessment.md
@@ -96,6 +94,20 @@ nav:
       - help/index.md
   - 如何貢獻:
       - contribute/index.md
+  - 陪伴模式:
+      - guide/index.md
+      - guide/status.md
+      - guide/assessment.md
+      - guide/initial-improvement.md
+      - 裝置安全:
+          - guide/devices/index.md
+          - guide/devices/checklists.md
+      - guide/profile.md
+      - guide/network.md
+      - guide/e2ee.md
+      - guide/account.md
+      - guide/files-management.md
+      - guide/abroad.md
 theme:
   name: material
   icon:
@@ -147,15 +159,17 @@ plugins:
       cards_layout_options:
         font_family: Noto Sans TC
   - git-revision-date-localized:
-      locale: en
+      type: iso_datetime
       timezone: Asia/Taipei
+      enable_creation_date: true
+      enable_parallel_processing: true
 markdown_extensions:
   - abbr
   - attr_list
+  - md_in_html
   - pymdownx.snippets:
       auto_append:
         - includes/abbreviations.md
-  - md_in_html
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
