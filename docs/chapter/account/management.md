@@ -1,8 +1,8 @@
 ---
-title: 帳號權限管理與追蹤
+title: 帳號管理原則
 ---
 
-# :material-account-key: 帳號權限管理與追蹤
+# :material-account-key: 帳號管理原則
 
 目前以 Google Workspace 和 Microsoft 365 這兩個常見的線上協作工具作為範例。
 

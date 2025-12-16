@@ -1,5 +1,5 @@
 ---
-icon: material/book-check
+icon: material/account-box
 title: 帳號管理政策規範
 ---
 

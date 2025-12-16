@@ -1,5 +1,5 @@
 ---
-icon: material/book-check
+icon: material/smart-card
 title: 身分驗證政策規範
 ---
 

@@ -12,10 +12,9 @@ title: 疑問諮詢
     <figcaption><small>「疑問諮詢」階段</small></figcaption>
     </figure>
 
-    您目前在「[疑問諮詢]」，服務導入團隊將定期關懷，並協助提供在專案推進與問題協助。（完整流程：「[課程主題]{target="_blank"}」、「[操作指南]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
+    您目前在「[疑問諮詢]」，服務導入團隊將定期關懷，並協助提供在專案推進與問題協助。（完整流程：「[課程主題]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
 
     [課程主題]: ../chapter/index.md
-    [操作指南]: ../user_guide/index.md
     [制定資安政策]: ../policy/index.md
     [進度追蹤]: ../assessment/index.md
     [疑問諮詢]: ../support/index.md
@@ -59,6 +58,8 @@ title: 疑問諮詢
 <figcaption><small>Open Culture Foundation</small></figcaption>
 </figure>
 
-財團法人開放文化基金會（Open Culture Foundation, OCF）是一個致力於推動開放科技（開放源碼、開放資料及開放政府）並關注網路自由與數位人權的非營利組織。基金會成立於 2014 年，旨在促進資訊的自由流通促成一個開放、安全、涵融且眾人參與的數位公民社會，並推動社會各界透過開放的方式進行創新和合作、以開放科技和跨界合作來應對數位時代的各項威脅並健全數位社會的發展。
+[財團法人開放文化基金會](https://ocf.tw){target="_blank"}（Open Culture Foundation, OCF）是一個致力於推動開放科技（開放源碼、開放資料及開放政府）並關注網路自由與數位人權的非營利組織。基金會成立於 2014 年，旨在促進資訊的自由流通促成一個開放、安全、涵融且眾人參與的數位公民社會，並推動社會各界透過開放的方式進行創新和合作、以開放科技和跨界合作來應對數位時代的各項威脅並健全數位社會的發展。
 
-[:octicons-people-16: 開放文化基金會](https://ocf.tw/){ .md-button target="_blank"}
+針對組織、個人、培訓資源、網路安全防護、研究報告、緊急通報機制 ... 等與資訊安全相關的資源與報告，可以參考本會所整理的資源指引。
+
+[:octicons-people-16: 資訊安全資源指引](https://security.ocf.tw/){ .md-button target="_blank"}

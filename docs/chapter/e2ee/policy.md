@@ -1,5 +1,5 @@
 ---
-icon: material/book-check
+icon: material/shield-lock
 title: 加密通訊政策規範
 ---
 

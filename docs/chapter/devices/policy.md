@@ -1,5 +1,5 @@
 ---
-icon: material/book-check
+icon: octicons/devices-24
 title: 裝置安全政策規範
 ---
 

@@ -35,7 +35,7 @@ title: 海外出差
 
 !!! info "完成順序"
 
-    - 「設備加密」相關的操作可以參考「[操作指南：裝置安全](../user_guide/devices/index.md){target="_blank"}」。
+    - 「設備加密」相關的操作可以參考「[操作指南：裝置安全](../../user_guide/devices/index.md){target="_blank"}」。
     - 「設備更新」的步驟或許會在「設備加密」之前，但不影響「設備加密」的問題，只需要都有完成即可。
 
 ### 備份、加密資料
@@ -47,8 +47,8 @@ title: 海外出差
 
 !!! info "「備份」、「檔案加密」參考章節"
 
-    - 備份相關的介紹可以參考「[資料管理與備份](./files_management/index.md){target="_blank"}」。
-    - 檔案加密的操作需要了解其原理與限制，可以參考「[加密通訊](./e2ee/index.md){target="_blank"}」章節的介紹。
+    - 備份相關的介紹可以參考「[資料管理與備份](../files_management/index.md){target="_blank"}」。
+    - 檔案加密的操作需要了解其原理與限制，可以參考「[加密通訊](../e2ee/index.md){target="_blank"}」章節的介紹。
 
 ### 通訊安全
 
@@ -72,7 +72,7 @@ title: 海外出差
 
 !!! note "關於「通訊安全」相關的章節"
 
-    可參考「[VPN](./network/vpn.md){target="_blank"}」、「[網路與 Wi-Fi](./network/wifi.md){target="_blank"}」、「[加密通訊](./e2ee/index.md){target="_blank"}」內容補充更多細節。
+    可參考「[VPN](../network/vpn.md){target="_blank"}」、「[網路與 Wi-Fi](../network/wifi.md){target="_blank"}」、「[加密通訊](../e2ee/index.md){target="_blank"}」內容補充更多細節。
 
 #### 緊急聯絡與應變
 

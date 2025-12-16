@@ -12,10 +12,9 @@ title: 進度追蹤
     <figcaption><small>「進度追蹤」階段</small></figcaption>
     </figure>
 
-    您目前在「[進度追蹤]」，服務導入團隊將定期關懷，並協助提供在專案推進與問題協助。（完整流程：「[課程主題]{target="_blank"}」、「[操作指南]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
+    您目前在「[進度追蹤]」，服務導入團隊將定期關懷，並協助提供在專案推進與問題協助。（完整流程：「[課程主題]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
 
     [課程主題]: ../chapter/index.md
-    [操作指南]: ../user_guide/index.md
     [制定資安政策]: ../policy/index.md
     [進度追蹤]: ../assessment/index.md
     [疑問諮詢]: ../support/index.md

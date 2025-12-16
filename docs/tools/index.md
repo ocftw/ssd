@@ -1,8 +1,9 @@
 ---
-title: 更新軟體
+icon: material/toolbox
+title: 工具推薦
 ---
 
-# :material-update: 更新軟體
+# :material-toolbox: 工具推薦
 
 ## 適合公民團體使用的開源軟體
 

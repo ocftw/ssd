@@ -1,8 +1,8 @@
 ---
-title: 帳號權限管理與追蹤
+title: Google Workspace 管理
 ---
 
-# :material-account-key: 帳號權限管理與追蹤
+# :material-account-key: Google Workspace 管理
 
 ## 流程簡介
 

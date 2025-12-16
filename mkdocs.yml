@@ -8,84 +8,61 @@ nav:
       - chapter/index.md
       - 威脅建模:
           - chapter/threat/index.md
-          - 風險評估表: user_guide/risk_assessment.md
-          - 政策規範: chapter/threat/policy.md
+          - 建立威脅模型: user_guide/risk_assessment.md
       - 裝置安全:
           - chapter/devices/index.md
-          - 操作建議:
-              - user_guide/devices/index.md
-              - iOS 裝置設定: user_guide/devices/ios.md
-              - MacOS: user_guide/devices/macOS.md
-              - Windows: user_guide/devices/windows.md
-              - Android: user_guide/devices/android.md
-          - 政策規範: chapter/devices/policy.md
+          - 裝置物理防護: user_guide/devices/index.md
+          - iOS 裝置設定: user_guide/devices/ios.md
+          - MacOS: user_guide/devices/macOS.md
+          - Windows: user_guide/devices/windows.md
+          - Android: user_guide/devices/android.md
       - 身分驗證:
           - chapter/profile/index.md
           - 密碼管理器: chapter/profile/password_manager.md
           - 密碼強度: chapter/profile/password.md
           - 多因子驗證: chapter/profile/mfa.md
-          - 操作建議:
-              - user_guide/profile/index.md
-              - 密碼管理器: user_guide/profile/password_manager.md
-              - 多因子驗證: user_guide/profile/mfa.md
-          - 政策規範: chapter/profile/policy.md
       - 網路使用行為:
           - chapter/network/index.md
           - 隱私瀏覽行為: chapter/network/browser_privacy.md
           - 釣魚、詐騙: chapter/network/phishing.md
           - VPN: chapter/network/vpn.md
           - 網路與 Wi-Fi: chapter/network/wifi.md
-          - 操作建議:
-              - user_guide/network/index.md
-              - 隱私瀏覽行為: user_guide/network/browser_privacy.md
-              - 釣魚、詐騙: user_guide/network/phishing.md
-              - VPN: user_guide/network/vpn.md
-              - 網路與 Wi-Fi: user_guide/network/wifi.md
-          - 政策規範: chapter/network/policy.md
       - 加密通訊:
           - chapter/e2ee/index.md
           - 加密即時通訊: chapter/e2ee/im.md
           - 加密電子郵件: chapter/e2ee/mails.md
-          - 政策規範: chapter/e2ee/policy.md
       - 帳號管理:
           - chapter/account/index.md
-          - 帳號權限管理與追蹤: chapter/account/management.md
-          - 操作建議:
-              - user_guide/account/index.md
-              - 帳號權限管理與追蹤: user_guide/account/management.md
-          - 政策規範: chapter/account/policy.md
+          - 帳號管理原則: chapter/account/management.md
+          - Google Workspace 管理: user_guide/account/management.md
       - 資料管理與備份:
           - chapter/files_management/index.md
           - 檔案存取權限: chapter/files_management/files_access.md
           - 資料備份與封存: chapter/files_management/backup_archive.md
+          - NAS 安裝與設定: user_guide/files_management/backup_archive.md
           - 更新軟體: chapter/files_management/software_update.md
-          - 操作建議:
-              - user_guide/files_management/index.md
-              - 檔案存取權限: user_guide/files_management/files_access.md
-              - 資料備份與封存: user_guide/files_management/backup_archive.md
-              - 更新軟體: user_guide/files_management/software_update.md
-          - 政策規範: chapter/files_management/policy.md
       - 海外出差:
           - chapter/abroad/index.md
-          - 操作建議:
+          - 如何評估出差風險:
               - user_guide/abroad/index.md
-          - 政策規範: chapter/abroad/policy.md
-  - 制定資安政策:
+  - 資安工作守則:
       - policy/index.md
-      - 威脅建模: ./policy/risk_assessment.md
-      - 裝置安全: ./policy/devices.md
-      - 身分驗證: ./policy/profile.md
-      - 網路使用行為: ./policy/network.md
-      - 加密通訊: ./policy/e2ee.md
-      - 帳號管理: ./policy/account_management.md
-      - 資料管理與備份: ./policy/files_management.md
-      - 海外出差: policy/abroad.md
+      - 威脅建模: chapter/threat/policy.md
+      - 裝置安全: chapter/devices/policy.md
+      - 身分驗證: chapter/profile/policy.md
+      - 網路使用行為: chapter/network/policy.md
+      - 加密通訊: chapter/e2ee/policy.md
+      - 帳號管理: chapter/account/policy.md
+      - 資料管理與備份: chapter/files_management/policy.md
+      - 海外出差: chapter/abroad/policy.md
   - 進度追蹤:
       - assessment/index.md
       - 檢查清單:
           - assessment/checklist/index.md
           - 場勘紀錄表: assessment/checklist/site_survey.md
           - 課後任務清單: assessment/checklist/homework.md
+  - 工具推薦:
+      - tools/index.md
   - 學習資源:
       - resource/index.md
   - 疑問諮詢:
@@ -94,7 +71,7 @@ nav:
       - help/index.md
   - 如何貢獻:
       - contribute/index.md
-  - 陪伴模式:
+  - 資安提升計畫:
       - guide/index.md
       - guide/status.md
       - guide/assessment.md
@@ -142,6 +119,7 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.footer
+    - navigation.path
     - content.tooltips
   custom_dir: overrides
 plugins:

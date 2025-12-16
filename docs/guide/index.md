@@ -6,7 +6,7 @@ hide:
   - toc
 ---
 
-# :material-home-heart: 陪伴模式
+# :material-home-heart: 資安提升計畫
 
 <div class="grid cards" markdown>
 
@@ -24,7 +24,7 @@ hide:
 
 -   裝置安全
 
-    逐一檢測、調整會存取到公務資料的設備、裝置。[了解更多 :octicons-link-external-16:](./devices.md)
+    逐一檢測、調整會存取到公務資料的設備、裝置。[了解更多 :octicons-link-external-16:](./devices/index.md)
 
 -   身分驗證
 

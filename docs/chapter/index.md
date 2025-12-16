@@ -14,10 +14,9 @@ icon: octicons/book-16
     <figcaption><small>「課程主題」階段</small></figcaption>
     </figure>
 
-    您目前在「[課程主題]{target="_blank"}」，這裡收錄基本資訊安全相關的課程與教材。（完整流程：「[課程主題]{target="_blank"}」、「[操作指南]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
+    您目前在「[課程主題]{target="_blank"}」，這裡收錄基本資訊安全相關的課程與教材。（完整流程：「[課程主題]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
 
     [課程主題]: ../chapter/index.md
-    [操作指南]: ../user_guide/index.md
     [制定資安政策]: ../policy/index.md
     [進度追蹤]: ../assessment/index.md
     [疑問諮詢]: ../support/index.md
@@ -28,8 +27,8 @@ icon: octicons/book-16
 
 ## 主題簡介
 
-1. [威脅建模](./threat_modeling_class.md){target="_blank"}（Threat modeling）：這門課程將教學員如何識別與評估資訊安全威脅，並制定有效的防禦策略。
-2. [裝置安全](./devices.md){target="_blank"}：這門課程專注於如何保護硬體裝置，包括防止硬體被竊取以及避免硬體級別的攻擊。
+1. [威脅建模](./threat/index.md){target="_blank"}（Threat modeling）：這門課程將教學員如何識別與評估資訊安全威脅，並制定有效的防禦策略。
+2. [裝置安全](./devices/index.md){target="_blank"}：這門課程專注於如何保護硬體裝置，包括防止硬體被竊取以及避免硬體級別的攻擊。
 3. [身分驗證](./profile/index.md){target="_blank"}：學員將學習如何使用密碼管理器、建立強密碼，以及實施雙重或多因子身分驗證，以提高身份識別的安全性。
 4. [網路使用行為](./network/index.md){target="_blank"}：這門課程探討如何在網路上安全行事，包括隱私瀏覽技巧和防範釣魚攻擊的方法。學員將學會使用 VPN 和瞭解網路安全原則，以便安全地使用公共 Wi-Fi 和其他網路連線。
 5. [加密通訊與電子郵件](./e2ee/index.md){target="_blank"}：這門課程將教導學員如何運用加密技術來保護通訊和電子郵件，防止未經授權的訪問。

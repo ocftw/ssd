@@ -94,7 +94,7 @@ title: 威脅建模
 
     如何使用與執行「風險評估表」，請參考此章節。
 
-    [:material-arrow-right-bold: 操作指南：風險評估表](../user_guide/risk_assessment.md){ .md-button .md-button--primary }
+    [:material-arrow-right-bold: 操作指南：風險評估表](../threat/index.md){ .md-button .md-button--primary }
 
 ## 參考資料
 

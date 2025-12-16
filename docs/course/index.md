@@ -12,10 +12,9 @@ title: 教材資源
     <figcaption><small>此階段專注在「課程主題」、「操作指南」</small></figcaption>
     </figure>
 
-    此頁面將針對「[課程主題]{target="_blank"}」、「[操作指南]{target="_blank"}」的使用說明。（完整流程：「[課程主題]{target="_blank"}」、「[操作指南]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
+    此頁面將針對「[課程主題]{target="_blank"}」、「[操作指南]{target="_blank"}」的使用說明。（完整流程：「[課程主題]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
 
     [課程主題]: ../chapter/index.md
-    [操作指南]: ../user_guide/index.md
     [制定資安政策]: ../policy/index.md
     [進度追蹤]: ../assessment/index.md
     [疑問諮詢]: ../support/index.md

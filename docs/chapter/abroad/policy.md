@@ -1,5 +1,5 @@
 ---
-icon: material/book-check
+icon: material/airplane
 title: 海外出差政策規範
 ---
 

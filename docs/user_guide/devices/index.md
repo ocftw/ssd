@@ -1,5 +1,4 @@
 ---
-icon: octicons/devices-24
 title: 裝置安全
 ---
 # :octicons-devices-24: 裝置安全

@@ -1,9 +1,9 @@
 ---
 icon: material/airplane
-title: 海外出差
+title: 如何評估出差風險
 ---
 
-# :material-airplane: 海外出差
+# :material-airplane: 如何評估出差風險
 
 ## 風險評估因素
 
@@ -79,8 +79,8 @@ title: 海外出差
 
 以下章節請勿必再次複習：
 
-1. [裝置安全](./devices/index.md){target="_blank"}：確認裝置基本的安全防護調整。
-2. [身分驗證](./profile/index.md){target="_blank"}：密碼管理器使用、2FA 的啟用，或是此趟出差任務是否僅需要使用離線類型的密碼管理器。
-3. [網路使用行為](./network/index.md){target="_blank"}：如何隱私瀏覽、VPN 建立使用（遇到不能使用 VPN 的國家，其替代的網路連線方式）、Wi-Fi 基本的抵禦作為。
-4. [加密通訊](../chapter/e2ee/index.md){target="_blank"}：如何使用加密軟體或雲端加密儲存保護重要資料。如果能力允許，如何使用 PGP 加密方式。
-5. [帳號管理](./account/index.md){target="_blank"}：可考慮暫時停用個人在組織的帳號，避免未知的狀況造成組織帳號被接管或遭強制揭露組織內部資訊。
+1. [裝置安全](../devices/index.md){target="_blank"}：確認裝置基本的安全防護調整。
+2. [身分驗證](../../chapter/profile/index.md){target="_blank"}：密碼管理器使用、2FA 的啟用，或是此趟出差任務是否僅需要使用離線類型的密碼管理器。
+3. [網路使用行為](../../chapter/network/index.md){target="_blank"}：如何隱私瀏覽、VPN 建立使用（遇到不能使用 VPN 的國家，其替代的網路連線方式）、Wi-Fi 基本的抵禦作為。
+4. [加密通訊](../../chapter/e2ee/index.md){target="_blank"}：如何使用加密軟體或雲端加密儲存保護重要資料。如果能力允許，如何使用 PGP 加密方式。
+5. [帳號管理](../../chapter/account/index.md){target="_blank"}：可考慮暫時停用個人在組織的帳號，避免未知的狀況造成組織帳號被接管或遭強制揭露組織內部資訊。

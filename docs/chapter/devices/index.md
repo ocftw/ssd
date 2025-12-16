@@ -35,7 +35,7 @@ title: 裝置安全
 
             與裝置安全相關的操作指南，請參考此章節。
 
-            [:material-arrow-right-bold: 操作指南：裝置安全](../user_guide/devices/index.md){ .md-button .md-button--primary }
+            [:material-arrow-right-bold: 操作指南：裝置安全](../../user_guide/devices/index.md){ .md-button .md-button--primary }
 
 3. 裝置安全的在職培訓與教育
 
@@ -51,4 +51,4 @@ title: 裝置安全
 
             與裝置安全相關的制定政策範本，請參考此章節。
 
-            [:material-arrow-right-bold: 制定政策：裝置安全](../policy/devices.md){ .md-button .md-button--primary }
+            [:material-arrow-right-bold: 制定政策：裝置安全](../devices/policy.md){ .md-button .md-button--primary }

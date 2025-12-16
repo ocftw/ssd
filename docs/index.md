@@ -22,7 +22,7 @@ title: 資安防護基礎教材
 - Likeliwood：我真的受到攻擊的機率有多少？
 - Impact：我如果真的受到攻擊了，可能會產生哪些後果？
 
-[建立組織的威脅模型](chapter/threat_modeling_class.md){ .md-button target="_blank"}
+[建立組織的威脅模型](chapter/threat/index.md){ .md-button target="_blank"}
 
 ### 各種資安主題政策範本，量身打造數位安全政策
 
@@ -35,10 +35,6 @@ title: 資安防護基礎教材
 - :octicons-book-16: __[課程主題]__
 
     收錄公民團體所需的數位安全主題課程，提供容易學習、循序漸進的內容教學。
-
-- :octicons-gear-16: __[操作指南]__
-
-    明確的操作指引，帶領你一步步完成裝置、作業系統、軟體安裝與設定。
 
 - :octicons-log-16: __[制定資安政策]__
 
@@ -59,7 +55,6 @@ title: 資安防護基礎教材
 </div>
 
   [課程主題]: chapter/index.md
-  [操作指南]: user_guide/index.md
   [制定資安政策]: policy/index.md
   [進度追蹤]: assessment/index.md
   [學習資源]: resource/index.md

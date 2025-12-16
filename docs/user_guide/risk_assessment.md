@@ -20,7 +20,7 @@ icon: material/order-bool-descending-variant
 
 !!! tip "提示"
 
-    - 不確定各項目如何進行，可以先參考「[課程主題：風險評估](../chapter/threat_modeling_class.md){target="_blank"}」
+    - 不確定各項目如何進行，可以先參考「[課程主題：風險評估](../chapter/threat/index.md){target="_blank"}」
 
 ## 威脅模型範例
 
@@ -174,4 +174,4 @@ icon: material/order-bool-descending-variant
 
 ## 制定資安政策
 
-[:material-arrow-right-bold: 制定資安政策：威脅建模](../policy/risk_assessment.md){ .md-button .md-button--primary }
+[:material-arrow-right-bold: 制定資安政策：威脅建模](../user_guide/risk_assessment.md){ .md-button .md-button--primary }
