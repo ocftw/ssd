@@ -55,18 +55,10 @@ nav:
       - 帳號管理: chapter/account/policy.md
       - 資料管理與備份: chapter/files_management/policy.md
       - 海外出差: chapter/abroad/policy.md
-  - 進度追蹤:
-      - assessment/index.md
-      - 檢查清單:
-          - assessment/checklist/index.md
-          - 場勘紀錄表: assessment/checklist/site_survey.md
-          - 課後任務清單: assessment/checklist/homework.md
-  - 工具推薦:
-      - tools/index.md
-  - 學習資源:
-      - resource/index.md
-  - 疑問諮詢:
-      - support/index.md
+  - 資源、諮詢:
+      - 疑問諮詢: support/index.md
+      - 工具推薦: tools/index.md
+      - 學習資源: resource/index.md
   - 資安通報:
       - help/index.md
   - 如何貢獻:
@@ -85,6 +77,12 @@ nav:
       - guide/account.md
       - guide/files-management.md
       - guide/abroad.md
+      - 進度追蹤:
+          - assessment/index.md
+          - 檢查清單:
+              - assessment/checklist/index.md
+              - 場勘紀錄表: assessment/checklist/site_survey.md
+              - 課後任務清單: assessment/checklist/homework.md
 theme:
   name: material
   icon:
