@@ -1,0 +1,478 @@
+---
+title: CSCS 社群自製教材總覽
+---
+
+# CSCS 社群自製教材總覽
+
+[CSCS（Civil Society Cyber Shield）](https://cscs.asia/){target="_blank"}社群自 2017 年起，依台灣公民團體的實務需求陸續編製、修訂教材。目前公開網路版共有 14 份簡報，主題涵蓋資安觀念建立、設備與帳號防護、網路通訊與雲端服務、資料備份、海外出差等。
+
+下方先以「[總覽](#overview)」呈現 11 個主題的卡片摘要，可點卡片跳到對應的詳細介紹；若想在「資安升級工具包」的某個步驟情境下使用，也可以從 [資安提升計畫](../guide/index.md) 各章節的「**參考文件**」段落直接連到對應素材。
+
+- 公開資料夾：[CSCS 社群自製教材（公開網路版）](https://drive.google.com/drive/folders/1CXMlw9jHtBKbt8WfKWG2xZt01rmOgm3f){target="_blank"}
+- 授權：所有教材以 [CC BY 4.0「姓名標示 4.0 國際」](https://creativecommons.org/licenses/by/4.0/deed.zh-hant){target="_blank"} 授權，自由下載使用，引用請標註作者為「CSCS 社群」。
+- 同主題若有多份檔案（例如：威脅建模、網路釣魚、網路雲端服務），代表不同次教材編輯松更新後留下來的版本。本頁主推較新版本，舊版 v.3 收進每份簡報的「舊版 v.3」摺疊區，可依內容偏好擇一使用。
+
+## 總覽 { #overview }
+
+<div class="grid cards" markdown>
+
+-   :material-book-open-variant:{ .lg .middle } __0. 培訓課程簡介__
+
+    ---
+
+    CSCS 整套培訓的開場簡報，介紹計畫緣起、運作模式與三個資安心理建設。
+
+    **適用**：培訓場次開場 · 9 張投影片
+
+    [:octicons-arrow-right-24: 查看詳情](#intro-course)
+
+-   :material-target-account:{ .lg .middle } __1. 組織資安 威脅建模__
+
+    ---
+
+    用「珠寶店繼承遺產」情境，帶學員實際跑一次威脅建模五個核心問題。
+
+    **適用**：NGO 決策者、剛開始規劃組織資安者 · 22 張 · v.5
+
+    [:octicons-arrow-right-24: 查看詳情](#threat-modeling)
+
+-   :material-flag-checkered:{ .lg .middle } __13. 結尾 - 資訊安全概念總結__
+
+    ---
+
+    整套培訓的收尾，串起前面所有模組，請學員寫下優先執行的 action items。
+
+    **適用**：完成整套培訓的學員、講師收尾用 · 12 張
+
+    [:octicons-arrow-right-24: 查看詳情](#conclusion)
+
+-   :material-account-eye:{ .lg .middle } __3. 個人隱私保護__
+
+    ---
+
+    談資安與隱私的差別，介紹上網的隱私風險與防護工具，含 Facebook 設定示範。
+
+    **適用**：日常使用社群媒體的一般使用者 · 9 張
+
+    [:octicons-arrow-right-24: 查看詳情](#personal-privacy)
+
+-   :material-laptop:{ .lg .middle } __4. 電腦和手機安全__
+
+    ---
+
+    從防窺片、鏡頭遮片講起，延伸到硬碟加密、防毒軟體、備份觀念。
+
+    **適用**：使用電腦或手機處理組織資料的工作者 · 13 張
+
+    [:octicons-arrow-right-24: 查看詳情](#device-security)
+
+-   :material-email-fast:{ .lg .middle } __5. 網路通訊__
+
+    ---
+
+    用「包裹投遞」比喻講到端到端加密，比較五大通訊軟體的安全程度。
+
+    **適用**：與敏感對象通訊的工作者、跨國協作者 · 19 張
+
+    [:octicons-arrow-right-24: 查看詳情](#network-comms)
+
+-   :material-fish:{ .lg .middle } __6. 網路釣魚__
+
+    ---
+
+    比對「相對有效」與「相對無效」的判斷方式，含 .zip / .mov 偽裝與危機處理 SOP。
+
+    **適用**：所有使用 Email、LINE、簡訊的工作者 · 27 張 · v.5
+
+    [:octicons-arrow-right-24: 查看詳情](#phishing)
+
+-   :material-vpn:{ .lg .middle } __10. VPN 的使用時機和迷思__
+
+    ---
+
+    用「高速公路」比喻講 VPN，釐清能與不能做的事，並列出挑選五指標。
+
+    **適用**：跨境連線、出差到網路審查地區的人員 · 12 張
+
+    [:octicons-arrow-right-24: 查看詳情](#vpn)
+
+-   :material-cloud-lock:{ .lg .middle } __8. 網路雲端服務__
+
+    ---
+
+    雲端服務選擇拆成「選擇前」與「決定後」兩階段，新增整章 AI 服務章節。
+
+    **適用**：使用 Google Workspace、Microsoft 365 的 NGO、評估 AI 工具的組織 · 56 張 · v.5
+
+    [:octicons-arrow-right-24: 查看詳情](#cloud-services)
+
+-   :material-database-arrow-down:{ .lg .middle } __11. 資料備份__
+
+    ---
+
+    以 3-2-1 備份原則為核心，比較 USB、雲端、NAS、外接硬碟並含 NGO 真實案例。
+
+    **適用**：所有負責組織資料的窗口、IT 管理者 · 32 張
+
+    [:octicons-arrow-right-24: 查看詳情](#backup)
+
+-   :material-airplane:{ .lg .middle } __12. 境外差旅安全__
+
+    ---
+
+    以「旅行前 / 出入境 / 旅行中 / 旅行後」時間軸組織，含 ESIM 與邊境檢查說明。
+
+    **適用**：跨國工作者、會出差到威權地區的人員 · 23 張
+
+    [:octicons-arrow-right-24: 查看詳情](#travel-security)
+
+</div>
+
+## 入門／心態
+
+### :material-book-open-variant: 0. 培訓課程簡介 { #intro-course }
+
+**版本** V.3 · 2020.08.27 · 9 張投影片  
+[:material-file-powerpoint: 下載 v.3 _ 0. 培訓課程簡介_.pptx](https://docs.google.com/presentation/d/1W8YW5_Ta3PuOcoK8gEP8SSWj3JWx13Qr/edit?usp=drive_link){target="_blank"}
+
+CSCS（Civil Society Cyber Shield）整套培訓的開場簡報。介紹 CSCS 計畫的緣起（2017 年由 OCF、華人民主書院、HITCON、TAHR 共同發起）、四大組織夥伴、運作模式（教育訓練、環境健檢、事件處理三大方案），並先建立三個必要的資安心理建設：沒有 100% 安全的方案、不必追求最完美而要找最合適的方案、資安人人有責不能外包。最後安排講師與學員的自我介紹環節。
+
+!!! info "適用對象"
+    所有 CSCS 培訓場次的開場、第一次接觸 CSCS 計畫的 NGO 工作者、想了解計畫背景的支持者。
+
+??? abstract "章節大綱"
+    - CSCS 計畫的成立背景與歷年進展（2017 工作坊 → 2018 種子講師 → 2019 NGO 服務 → 2020 教材標準化）
+    - CSCS 的服務目標：教育訓練、環境健檢、事件處理
+    - 運作機制：OCF 作為秘書處、志工形式運作、三步驟接洽流程
+    - 三大資安常見誤解的破除
+    - 講師／學員自我介紹
+    - 教材使用須知（CC BY 4.0 授權）
+
+`關鍵字` `CSCS` `公民團體` `NGO 資安` `培訓課程` `開放文化基金會` `資安心態` `課程簡介`
+
+### :material-target-account: 1. 組織資安 威脅建模 { #threat-modeling }
+
+**版本** V.4 · 2024.11.24（檔名標 v.5） · 22 張投影片  
+[:material-file-powerpoint: 下載 V.5 組織資安 威脅建模.pptx](https://docs.google.com/presentation/d/1xWyWZi49QNK5ipk3LUYtw9T7DpijWtxiN2KyUaP6SYQ/edit?usp=drive_link){target="_blank"}
+
+用「珠寶店繼承遺產」的具體情境，帶學員實際跑一次威脅建模的五個核心問題：要保護什麼資產、防誰、失敗後果、發生機率、如何應對。比起 v.3，這份強化了情境演練的步驟感，每個問題都搭配同一個情境，學員容易跟著操作。最後補充 STRIDE、DREAD、Cyber Kill Chain、Diamond Model、Cattle and Pet Model 等進階威脅模型作為延伸閱讀。
+
+!!! info "適用對象"
+    剛開始規劃組織資安的 NGO 決策者、想學會「先評估再防禦」思維的工作者、想自學威脅建模的個人。
+
+??? abstract "章節大綱"
+    - 暖身活動：用日常生活（停車、選鎖、選路線）類比威脅建模
+    - 威脅建模 5 核心：資產、攻擊者、威脅、風險、衡量
+    - 珠寶店情境演練（5 個問題逐題帶過）
+    - EFF SEC 教材的完整 6 步驟表（含「重新評估」）與 NGO 跨國研究案範例
+    - 威脅建模的目的總結
+    - 補充：STRIDE、DREAD 模型對照表
+    - 補充：辦公室／出門在外的資安威脅、Cyber Kill Chain、Diamond Model、Cattle and Pet Model、Mapping to Critical Data
+
+??? note "舊版 v.3：開場 - 風險在哪？（威脅建模）"
+    **版本** V.3 · 2020.08.27 · 21 張投影片  
+    [:material-file-powerpoint: 下載 v.3 _ 1. 開場 - 風險在哪_ (威脅建模)_.pptx](https://docs.google.com/presentation/d/1GrlsB6EycQr3RspUhhfBHPwJXT5Hnmhr/edit?usp=drive_link){target="_blank"}
+
+    v.3 時期的威脅建模章節，內容架構與 v.5 接近但情境演練較簡略。多了一段「暖身活動：聽到資訊安全會聯想到什麼」，以及辦公室／工廠／家裡 IoT／出門在外等多種場景的資安威脅案例（含 Stuxnet、Amazon Echo、勒索軟體 IoT 等）。後段補充進階模型（Kill Chain、Diamond、Cattle and Pet、Mapping to critical data）的內容與 v.5 大致相同。
+
+    **章節大綱**：
+
+    - 暖身：聯想「資訊安全」
+    - 暖身：日常生活中的威脅建模類比
+    - 威脅建模 5 核心
+    - EFF SEC 教材表格（中英對照）
+    - 心理建設：術業有專攻，要互相發問
+    - 各場景資安威脅案例（辦公室、工廠 Stuxnet、家裡 Echo / IoT、街頭攝影機）
+    - Cyber Kill Chain / Diamond Model / Cattle and Pet Model / Mapping to critical data
+
+    **適用對象**：想對照新舊版本內容的讀者、需要更多「場景案例」素材的講師。
+
+`關鍵字` `威脅建模` `threat modeling` `風險評估` `資產盤點` `EFF SEC` `STRIDE` `DREAD` `Cyber Kill Chain` `Diamond Model`
+
+### :material-flag-checkered: 13. 結尾 - 資訊安全概念總結 { #conclusion }
+
+**版本** V.3 · 2020.08.27 · 12 張投影片  
+[:material-file-powerpoint: 下載 v.3 _ 8. 結尾 - 資訊安全概念總結 _.pptx](https://docs.google.com/presentation/d/1aShYKng7hrFiyXRJLdtH9DqTVIqokMJh/edit?usp=drive_link){target="_blank"}
+
+整套培訓的收尾簡報。先用「再問一次：聽到資訊安全會聯想到什麼」回應開場時的同樣問題，看學員的認知有沒有變化。再次釐清「資訊安全」的定義（資通安全管理法 vs NGO 角度），介紹數位資料的三種狀態（Data in use / motion / rest）與對應的防護手法，把前面所有模組串起來。比較資訊安全與隱私保護的差別。重申三個資安常見誤解（沒有 100% 安全、找最合適不找最完美、人人有責），最後請學員寫下最想優先執行的三項 action items。
+
+!!! info "適用對象"
+    完成整套培訓的學員、想要快速複習所有主題的人、講師收尾用。
+
+??? abstract "章節大綱"
+    - 收尾互動：再次聯想「資訊安全」
+    - 什麼是「資訊安全」（呼應威脅建模）
+    - 資訊安全定義（資安管理法 vs NGO 觀點）
+    - 數位資料三狀態與對應防護(Data in use / motion / rest)
+    - 資訊安全 vs 隱私保護
+    - 三個常見誤解的破除（與課程簡介呼應）
+    - 寫下三項最想優先執行的 action items
+
+`關鍵字` `資訊安全定義` `Data in use` `Data in motion` `Data in rest` `CIA 三要素` `資安 vs 隱私` `action items` `課程結尾`
+
+## 個人／設備
+
+### :material-account-eye: 3. 個人隱私保護 { #personal-privacy }
+
+**版本** V.3 · 2020.08.27 · 9 張投影片  
+[:material-file-powerpoint: 下載 v.3 _ 2. 個人隱私保護.pptx](https://docs.google.com/presentation/d/1jtF80DYXCZb6Bsys867DzblZZem37y-D/edit?usp=drive_link){target="_blank"}
+
+把資安與隱私分開來談：資安是「資料受保護」，隱私是「自主決定資料給誰用」。用 Facebook 把 2FA 手機號拿去投放廣告作為案例，凸顯「為了安全而犧牲隱私」的取捨。後半段聚焦在上網的隱私防護工具（uBlock、Ghostery、Privacy Badger、HTTPS Everywhere、DNS over HTTPS、Brave 等），以及社群網站的三類常見風險（打卡曝光行蹤、假消息、孩童照片濫用），最後示範如何修改 Facebook 隱私設定。
+
+!!! info "適用對象"
+    日常使用社群媒體的一般使用者、關心個資被濫用的工作者、想為自己設備裝隱私工具的人。
+
+??? abstract "章節大綱"
+    - 資安 vs 隱私的差別（含 Facebook 2FA 投放廣告案例）
+    - 隱私需要考慮的範圍：資料自主權、廣告追蹤、政府監控、信任基礎
+    - 上網的隱私風險：DNS、廣告追蹤器、URL 參數、瀏覽器外掛
+    - 推薦工具：Ad Blocker、Anti-tracker、URL 參數清理、強制 SSL、隱私瀏覽器
+    - 社群網站三類風險案例（打卡闖空門、假消息、孩童照片）
+    - Facebook 隱私設定操作示範（移除手機號、限制搜尋範圍）
+
+`關鍵字` `個人隱私` `資安 vs 隱私` `追蹤防護` `uBlock` `Ghostery` `Privacy Badger` `Brave` `Facebook 隱私` `社群網站`
+
+### :material-laptop: 4. 電腦和手機安全 { #device-security }
+
+**版本** V.3 · 2020.08.27（部分內容檔案修改日期 2020.10.30） · 13 張投影片  
+[:material-file-powerpoint: 下載 v.3 _ 3. 電腦和手機安全 _.pptx](https://docs.google.com/presentation/d/1jRTSTfHXAfofcpLBFWLYopfd8Nq6vsP4/edit?usp=drive_link){target="_blank"}
+
+聚焦在「設備本身」的物理與軟體層面防護。從最便宜的螢幕防窺片、鏡頭遮片講起，延伸到關機習慣、閒置鎖定、開機密碼、硬碟加密（FileVault / BitLocker / iOS / Android FDE）、隱私權檢查、防毒軟體選擇、備份觀念。最後補充印度禁止 59 款中國 App 的清單作為「使用前評估風險」的案例。
+
+!!! info "適用對象"
+    每一位使用電腦或手機處理組織資料的工作者、想做基本設備硬化的個人、IT 兼任者。
+
+??? abstract "章節大綱"
+    - 物理防護：螢幕防窺片、鏡頭遮片
+    - 設備使用習慣：離開時關機、閒置鎖定
+    - 登入／開機密碼（硬體、軟體、韌體三層）
+    - 硬碟加密（為什麼要做、四大平台怎麼做）
+    - 隱私權檢查
+    - 防毒軟體選擇（含科技濃湯）
+    - 備份概念入門（DR、BCP、頻率、位置、加密）
+    - 補充：印度禁止 59 款中國 App 清單
+
+`關鍵字` `電腦安全` `手機安全` `防窺片` `鏡頭遮片` `硬碟加密` `FileVault` `BitLocker` `防毒軟體` `中國 App`
+
+## 資料傳輸
+
+### :material-email-fast: 5. 網路通訊 { #network-comms }
+
+**版本** V.3 · 2021.04.13 · 19 張投影片  
+[:material-file-powerpoint: 下載 v.3 _ 4. 網路通訊 _.pptx](https://docs.google.com/presentation/d/1vyFvfn-KY8Ret6ZCgquooiwod7UN9oyt/edit?usp=drive_link){target="_blank"}
+
+用「包裹投遞」的比喻一路講到端到端加密。先讓學員理解 Email 與即時通訊在網路上的傳遞原理（包裹會經過多個郵局），再對比「連線加密」與「端到端加密」的差別，補充 PKI 公開金鑰的概念。後段比較五大通訊軟體的安全程度，討論 Email 端到端加密的高難度（ProtonMail、Mailfence），以及群組訊息的端到端加密限制。最後給出安全通訊原則：先想清楚和誰通訊、內容敏感度、雙方的安全定義。
+
+!!! info "適用對象"
+    與敏感對象通訊的工作者、跨國 NGO 協作者、想了解通訊軟體選擇邏輯的個人、新聞工作者。
+
+??? abstract "章節大綱"
+    - 暖身：你目前用哪些通訊軟體、為什麼
+    - 包裹投遞比喻（Email 與 IM 的網路通訊原理）
+    - 網路通訊的基本樣貌：地址公開、包裹未上鎖
+    - 連線加密 vs 端到端加密
+    - PKI 公開金鑰加密（鎖／鑰匙比喻）
+    - Email 的特性與限制（明信片本質）
+    - Email 端到端加密的難度與工具（ProtonMail、Mailfence、人工 PGP）
+    - 五種通訊軟體比較表
+    - 即時通訊軟體：1 對 1 vs 群組訊息的差別
+    - 安全通訊原則總結
+    - 實作活動：畫出一封 Email 的完整路徑
+
+`關鍵字` `網路通訊` `Email 安全` `端到端加密` `E2EE` `連線加密` `PKI` `ProtonMail` `Signal` `Telegram` `LINE` `PGP`
+
+### :material-fish: 6. 網路釣魚 { #phishing }
+
+**版本** V.5 · 2024.11.24 · 27 張投影片  
+[:material-file-powerpoint: 下載 v.5 網路釣魚.pptx](https://docs.google.com/presentation/d/1Pam0PNHfNikEdwuEYvVOxQGIVzQrAXD801p1An2lYbQ/edit?usp=drive_link){target="_blank"}
+
+在 v.3 的基礎上重新整理結構，更聚焦「相對有效」與「相對無效」的判斷方式對比。涵蓋釣魚信、釣魚簡訊、釣魚即時訊息、釣魚網址四種樣貌。新增 2023 年新頂級域名（.zip / .mov）被用作偽裝的最新案例。最後補充「如果已經點了可疑連結會發生什麼」與「點了之後該怎麼辦」兩頁危機處理 SOP，並提供 Google 釣魚測驗、PBS 互動實驗的練習連結。
+
+!!! info "適用對象"
+    所有使用 Email / LINE / 簡訊的工作者（幾乎所有人）、辦公室同事、新進員工教育訓練。
+
+??? abstract "章節大綱"
+    - 開場互動：有被釣魚過嗎
+    - 網路釣魚的定義
+    - 案例：勒索軟體 WannaCry
+    - 防範核心：大膽懷疑、小心求證（5 個禁止動作）
+    - 案例：FB 假 YouTube 連結、麥當勞優惠券
+    - 用現有工具建立基本防護（更新、2FA、網頁版 Email、雲端打開附件、關閉外部圖片）
+    - 釣魚簡訊：相對有效 vs 無效的判斷方式
+    - 釣魚即時訊息：相對有效 vs 無效的判斷方式
+    - 釣魚信：相對有效 vs 無效的判斷方式
+    - 網路釣魚的本質、目的、特質
+    - 釣魚網址：相對有效 vs 無效的判斷方式
+    - 危險域名（.zip / .mov 偽裝檔案）
+    - 範例：COVID-19 釣魚信、165 防騙範例
+    - 收到釣魚信怎麼辦／點了釣魚網址怎麼辦
+    - 提醒：4C 原則（Confirm / Check / Cease / Consult）
+    - 如果已經點了可疑連結／附件會怎樣、該怎麼辦
+    - 驗收互動、釣魚測驗練習（Google、PBS）
+
+??? note "舊版 v.3：網路釣魚"
+    **版本** V.3 · 2020.08.27 · 19 張投影片  
+    [:material-file-powerpoint: 下載 v.3 _ 5. 網路釣魚_.pptx](https://docs.google.com/presentation/d/1LPzGCkjeESGaHGOYOlLKl-Vkisbp6-mO/edit?usp=drive_link){target="_blank"}
+
+    v.3 版本的網路釣魚教材。整體結構與 v.5 接近，但少了 2023 年新域名、危機處理 SOP、165 防騙等較新內容。多了一頁「網路釣魚的核心概念」（本質是詐騙、相對低成本、技術門檻不高）獨立闡述。判斷方式分頁也比較精簡。
+
+    **章節大綱**：
+
+    - 開場互動、定義
+    - 案例：FB 假 YouTube 連結、勒索病毒 WannaCry
+    - 網路釣魚的核心概念（本質、目的、特質）
+    - 防護核心觀念：大膽懷疑、小心求證
+    - 用現有工具建立基本防護
+    - 釣魚簡訊／即時訊息／信／網址 各自的判斷方式
+    - COVID-19 釣魚信範例
+    - 收到釣魚信／打開釣魚網站怎麼辦
+    - 4C 原則
+    - 釣魚測驗練習（Google、PBS）
+
+    **適用對象**：對照版本演進的讀者、講師參考用。
+
+`關鍵字` `網路釣魚` `phishing` `釣魚信` `釣魚簡訊` `釣魚網址` `社交工程` `CEO 詐騙` `勒索軟體` `4C 原則` `二階段驗證`
+
+### :material-vpn: 10. VPN 的使用時機和迷思 { #vpn }
+
+**版本** V.3 · 2020.08.27 · 12 張投影片  
+[:material-file-powerpoint: 下載 v.3 _7. VPN_.pptx](https://docs.google.com/presentation/d/1a1ZLrtUsLBbXHABnDGwCMwFNuMh3hzo1/edit?usp=drive_link){target="_blank"}
+
+用「高速公路」的比喻講 VPN：是廠商提供的專屬道路，但不一定更快也不一定更安全，因為廠商能看到所有資訊。釐清 VPN 能做什麼（解除地區限制、規避審查、遠端連線、避免追蹤、改變路徑）與不能做什麼（無法隱藏正在用 VPN、無法防惡意軟體、無法完全匿名）。給出建議與避免使用的時機，列出挑選 VPN 的五個指標：獲利模式、加密方式、資料蒐集、營運商法規、社群聲譽。最後補充 VPN 設定細節（kill switch、DNS 洩漏）、可替代方案（Tor、SoftEther VPN Gate），以及「全球前百大 VPN 有 28 個是中資」的提醒。
+
+!!! info "適用對象"
+    需要跨境連線的工作者、出差到網路審查地區的人員、新聞工作者、社運人士。
+
+??? abstract "章節大綱"
+    - 開場：被封鎖時怎麼辦
+    - 高速公路比喻
+    - VPN 是什麼
+    - VPN 可以做什麼（5 項）
+    - VPN 無法做什麼（3 項）
+    - 使用 VPN 的時機（建議使用 vs 避免使用）
+    - 挑選 VPN 的 5 個注意事項
+    - FAQ：免費 vs 付費、提供者能否看到紀錄、比較表格能否相信
+    - VPN 軟體設定注意事項(kill switch、DNS 洩漏、Root CA)
+    - 替代方案（Tor、SoftEther VPN Gate、Chrome Data Saver、Puffin、SIM 漫遊）
+    - 中資 VPN 名單提醒
+
+`關鍵字` `VPN` `虛擬私人網路` `翻牆` `規避審查` `kill switch` `DNS 洩漏` `Tor` `SoftEther` `中資 VPN`
+
+## 組織資料管理
+
+### :material-cloud-lock: 8. 網路雲端服務 { #cloud-services }
+
+**版本** V.5 · 2024.11.24 · 56 張投影片（內容份量最重的一份）  
+[:material-file-powerpoint: 下載 v.5 網路雲端服務.pptx](https://docs.google.com/presentation/d/1j3zV2cPdhA2gUMD0Zz8MO1g7Xk8_h4x9GDaYKpTh2ao/edit?usp=drive_link){target="_blank"}
+
+大幅重寫的版本，把整個「雲端服務選擇」拆成兩個階段：選擇服務之前要評估什麼、決定服務之後要注意什麼。前段加入挑選雲端服務的五個面向（資料加密、隱私權限、物理安全、防護能力、安全監控），並用 DuckDuckGo、Chrome、MEGA、Google Drive 做實例對照。中段詳細談雙重要素認證、後設資料 metadata 的重要性、隱私權政策怎麼讀（含 ToS;DR 工具、迪士尼用 Disney+ 條款拒絕過失致死訴訟的案例）。最後新增整章 AI 服務的章節：線上 vs 地端模型、訓練資料退出機制、各家 LLM（Gemini / ChatGPT / Grok / DeepSeek / Qwen）的政府存取風險與資料控制比較。
+
+!!! info "適用對象"
+    使用 Google Workspace / Microsoft 365 的所有 NGO、開始評估 AI 工具的組織、IT 決策者、財務／HR 等處理敏感資料的人員。
+
+??? abstract "章節大綱"
+    - 簡報大綱說明
+    - 暖身：你被洩漏了嗎（haveibeenpwned）
+    - 雲端服務的定義
+    - 選擇服務前：要存什麼、存哪裡（雲端就是別人的電腦）
+    - 如何挑選雲端服務：五大面向（資料加密、隱私權限、物理安全、防護能力、安全監控）
+    - 實例對照：DuckDuckGo / Chrome / MEGA / Google Drive
+    - 強化保護：雙重要素認證的原理與種類
+    - 哪些服務有 2FA（2fa.directory）、台灣常見服務 2FA 狀況
+    - 連線加密 vs 端到端加密
+    - 後設資料 metadata 的隱私重要性（電話、HIV、墮胎案例）
+    - 隱私權政策的兩大重點：放棄的權利、資料的使用
+    - ToS;DR 工具、Facebook 條款摘要、迪士尼 Disney+ 條款案例
+    - 雲端服務使用後：保護自己的帳號（雙重要素、密碼、共用、第三方登入）
+    - 密碼強度（長度比複雜度重要、2023 常見密碼清單）
+    - 密碼管理軟體（Bitwarden、KeePassXC）
+    - 瀏覽器密碼管理的風險
+    - 帳號共用與權限管理、定期盤點
+    - 第三方登入的注意事項
+    - 替代雲端服務的軟體對照表（雲端 / 自架 / NAS）
+    - AI 服務章節（修訂中）：壞消息、隱私政策、線上 vs 地端模型、特別需要留意的使用情境、ChatGPT / Perplexity 資料控管設定、Workspace for Nonprofits 的 Gemini 保障、各家 LLM 訓練資料／政府存取／治理遵循比較表
+
+??? note "舊版 v.3：網路雲端服務"
+    **版本** V.3 · 2020.08.27 · 18 張投影片  
+    [:material-file-powerpoint: 下載 v.3 _ 6. 網路雲端服務_.pptx](https://docs.google.com/presentation/d/1JaJQTQaEqUHLR6bALcaqZLHXMv7dVU0m/edit?usp=drive_link){target="_blank"}
+
+    v.3 版本聚焦在使用網路平台服務的四個基本要素：應該信任誰、連線加密、帳號密碼強度、二階段驗證。用包裹比喻解釋連線加密原理，介紹密碼長度比複雜度重要的概念、密碼管理軟體（1Password、KeePassXC）、二階段驗證的四種方式比較。後段補充第三方登入、帳號共用權限管理、替代雲端服務的軟體對照表。沒有 AI 章節、沒有後設資料章節。
+
+    **章節大綱**：
+
+    - 暖身：haveibeenpwned 查詢
+    - 安全使用網路平台服務的基本要素
+    - 應該信任誰
+    - 網路平台服務通訊原理（包裹比喻）
+    - 連線加密
+    - 帳號密碼強度（長度比複雜度重要）
+    - 密碼管理軟體（1Password、KeePassXC）
+    - 二階段驗證（四種方式比較）
+    - 平台內建安全功能（Google、Facebook）
+    - 第三方登入的注意事項
+    - 帳號共用與權限管理
+    - 替代雲端服務的軟體對照表
+
+    **適用對象**：對照版本演進的讀者、講師參考用、想看精簡版的學員。
+
+`關鍵字` `雲端服務` `雲端硬碟` `Google Drive` `雙重要素認證` `2FA` `密碼管理` `Bitwarden` `KeePassXC` `Metadata` `隱私權政策` `ToS;DR` `第三方登入` `AI` `ChatGPT` `Gemini` `LLM` `地端模型`
+
+### :material-database-arrow-down: 11. 資料備份 { #backup }
+
+**版本** V.5 · 2024.11.24 · 32 張投影片  
+[:material-file-powerpoint: 下載 v.5 資料備份.pptx](https://docs.google.com/presentation/d/1TKyvJ080AJWCZSD7HDpf9_bDoJViS1XBpVeuVWm575M/edit?usp=drive_link){target="_blank"}
+
+以「遺憾是會呼吸的痛」開場，列出五個常見的資料災難（硬碟故障、駭客病毒、意外刪除、自然災害、偷竊遺失）。核心是 3-2-1 備份原則：3 份檔案、2 種媒介、1 個異地。比較 USB / 雲端硬碟 / NAS / 外接硬碟四種儲存方式的容量、耐用、便攜、成本、故障示警。深入談 NAS 的使用注意事項、雲端備份的限制（含 Google Cloud 誤刪 UniSuper 的真實事件）、災後復原與還原測試的重要性。最後分享三個 NGO 真實案例（颱風淹水、虛擬機誤刪、勒索軟體攻擊 NAS），並用 WHAT/WHEN/WHO/WHERE 收尾回到資料管理。
+
+!!! info "適用對象"
+    所有負責組織資料的窗口、IT 管理者、財務人員、捐款管理者、有重要檔案的個人。
+
+??? abstract "章節大綱"
+    - 大綱、講師備忘
+    - 暖身互動：現在備份了什麼、誰負責、多久備份一次
+    - 5 種會讓人「突然覺得備份很重要」的災難情境
+    - 該備份哪些資料：8 種資料類型（捐款、活動、財務、專案、法律、溝通、培訓、重要文件）
+    - 備份 3-2-1 原則（3 份／2 種／1 異地）
+    - 4 種儲存方式比較表（USB、雲端、NAS、外接硬碟）
+    - 外接硬碟／USB 的優缺點
+    - NAS 介紹與使用注意事項
+    - 雲端備份的注意事項（Google Cloud 誤刪 UniSuper 案例）
+    - 災後復原、檔案還原（資料不是你的資料）
+    - 3 個 NGO 真實案例（颱風淹水、虛擬機誤刪、勒索軟體 NAS）
+    - 備份本身也會增加外洩風險的取捨
+    - 完美的備份長怎樣（7 項標準）
+    - 分級檢傷：資源不足從哪步開始
+    - 全系統備份 vs 檔案備份
+    - 內建備份工具（Time Machine、Windows、Android、iOS）
+    - 手動備份的方式
+    - 備份類型（完整／增量／差異）
+    - 結論：WHAT / WHEN / WHO / WHERE
+
+`關鍵字` `資料備份` `3-2-1 原則` `NAS` `雲端備份` `外接硬碟` `災後復原` `勒索軟體` `Time Machine` `BitLocker` `增量備份`
+
+## 高風險情境
+
+### :material-airplane: 12. 境外差旅安全 { #travel-security }
+
+**版本** 2021.02.20 · 23 張投影片  
+[:material-file-powerpoint: 下載 9. 旅遊安全_.pptx](https://docs.google.com/presentation/d/1m1BGfHdTcTOmia5d-LmXUnxNeMC4AA80/edit?usp=drive_link){target="_blank"}
+
+以時間軸組織內容：旅行前、出入境時、旅行中、旅行後。旅行前要評估個人與環境風險、盤點高風險情境、準備拋棄式裝置與破壞袋。出入境前準備好說辭，不對邊境官員說謊但可選擇性透露。旅行中防止裝置遺失、避免使用公共網路與 SMS、慎選通訊軟體、用代碼代稱敏感主題。額外補充 ESIM 的安全考量（很多便宜 ESIM 會把流量導到中國電信商）。旅行後若有疑慮，把不尋常的人事時地物記錄下來請專業人士協助。最後推薦 Umbrella、Front Line Defenders、EFF Border Search Pocket Guide 等延伸資源。
+
+!!! info "適用對象"
+    跨國工作者、會出差到中國／香港／威權地區的人、人權倡議者、新聞工作者、想去敏感地區參訪的學者。
+
+??? abstract "章節大綱"
+    - 大綱：旅行前 / 出入境時 / 旅行中 / 旅行後
+    - 旅行前：了解情勢（個人 + 環境）、資料安全守則、人身安全建議、設備準備
+    - 減少攜出資訊（一次性裝置、雲端轉移、刪除不需要的資料）
+    - 保護攜出資訊（密碼保護、不用生物辨識、磁碟加密、破壞袋、備份）
+    - 邊境檢查、警察使用的專業蒐證工具
+    - 出入境守則：說辭、不對邊境官員說謊
+    - 旅行中：防止裝置遺失、保護網路傳輸、避免 SMS、慎選通訊軟體、敏感主題用代碼
+    - 補充：ESIM 的安全考量（中國電信商風險）
+    - 反思：這些方法是不是必要、會不會反而引起注意
+    - 旅行後：把異常記錄下來請專業人士協助
+    - 推薦資源：Umbrella、Front Line Defenders、EFF Border Search Pocket Guide
+
+`關鍵字` `旅遊安全` `出差安全` `境外差旅` `邊境檢查` `破壞袋` `拋棄式裝置` `ESIM` `VPN` `Umbrella` `Front Line Defenders` `EFF`

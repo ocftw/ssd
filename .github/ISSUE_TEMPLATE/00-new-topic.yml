@@ -1,0 +1,20 @@
+name: 新增主題建議
+description: 對於既有的章節內容提出修正、增補，或是提出建立新的主題。
+title: "[增補主題] "
+labels: ["增補主題"]
+body:
+  - type: markdown
+    attributes:
+      value: 教材內容主要以公民團體日常工作內容為情境，歸納為八個主題分類，不論您對於既有的章節內容提出修正、增補，或是提出建立新的主題，感謝！
+  - type: input
+    attributes:
+      label: 主題名稱
+      placeholder: 既有的主題或建議的新主題名稱
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 說明
+      description: 請說明主題增修的原因。
+    validations:
+      required: true

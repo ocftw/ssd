@@ -1,0 +1,18 @@
+name: 建議學習資源
+description: 如果您發現不錯的資源，不論文字、影片，都可以提供給我們收錄在此教材網站中。
+title: "[學習資源] "
+labels: ["學習資源"]
+body:
+  - type: markdown
+    attributes:
+      value: 如果您發現不錯的資源，不論文字、影片，都可以提供給我們收錄在此教材網站中。
+  - type: textarea
+    attributes:
+      label: 說明
+      description: 學習資源的網站位址、文件、檔案位置，協助說明其關注的主題或特色。
+      value: |
+        - ...
+        - ...
+        - ...
+    validations:
+      required: true

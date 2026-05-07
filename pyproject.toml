@@ -1,0 +1,14 @@
+[project]
+name = "security-guides"
+version = "202409.23"
+description = "For CSO guidebook in security."
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "mkdocs-material[imaging]>=9.5.36,<10",
+    "watchdog>=3.0",
+    "boto3>=1.34.94",
+    "awscli>=1.32.94",
+    "mkdocs-git-revision-date-localized-plugin>=1.2.9",
+    "mkdocs-minify-plugin>=0.8.0",
+]

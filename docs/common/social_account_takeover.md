@@ -1,0 +1,93 @@
+---
+title: 社群帳號被盜（粉專／LINE）
+---
+
+# 社群帳號被盜（粉專／LINE）
+
+對公民團體來說，Facebook 粉絲專頁、LINE 官方帳號、Instagram、X、YouTube 都是與支持者、捐款人、媒體溝通的命脈。一旦這些對外帳號被盜，攻擊者可能在很短的時間內**冒名發出詐騙連結**、**洗版**、**刪除歷史貼文**、**改掉登入信箱**讓你完全找不回來，對組織信任造成的傷害比個人帳號被盜更直接。
+
+社群帳號被盜的常見徵兆：
+
+- 出現自己沒發過的貼文、私訊或廣告投放紀錄
+- 收到「您剛才從某地登入」的安全通知，但不是你
+- 嘗試登入時被提示「密碼錯誤」或「帳號已停用」
+- 粉專管理員列表多了不認識的人
+- 朋友或同事回報「你傳了奇怪的連結給我」
+
+## 處理方式
+
+事件發生時優先處理**止血、找回、清掃**三件事：
+
+=== "一、立刻發公告止血"
+
+    1. **用其他能信任的管道（網站、Email、新聞稿、Signal 群組）**對外公告：「本組織某帳號疑似被盜，請暫時不要點擊近期由該帳號發出的連結，也不要轉帳或提供個人資料。」
+    2. 同時通知**理監事、財務窗口、合作夥伴與媒體聯繫人**，請他們提高警覺，避免假冒指令詐騙（特別是冒名要求轉帳）。
+    3. 如果還能登入帳號，**先撤回或刪除可疑貼文與訊息**，避免支持者繼續被騙。如果已無法登入，跳到下一步走官方申訴。
+
+=== "二、走官方找回流程"
+
+    各平台的找回流程不同，建議由**主要管理員**親自操作（用平時管理該帳號的裝置與信箱）：
+
+    - **Facebook 粉絲專頁**：
+        - 先試 [Facebook 帳號被駭協助頁](https://www.facebook.com/hacked){target="_blank"} 與 [粉絲專頁協助中心](https://www.facebook.com/business/help/164071847909533){target="_blank"}。
+        - 若粉專改了名稱、移除了原管理員，請從個人帳號開啟[支援收件匣](https://www.facebook.com/support){target="_blank"}回報。
+        - 申訴時請準備：粉專完整連結、組織立案文件或統一編號、過去的活動截圖等可證明所有權的資料。
+    - **LINE 官方帳號**：
+        - 從 [LINE Official Account Manager](https://manager.line.biz/){target="_blank"} 嘗試登入；若帳號管理員被替換，請走 [LINE 官方客服表單](https://contact-cc.line.me/serviceId/10729){target="_blank"} 申訴。
+        - 同時通知個人 LINE 上的好友：可能會收到冒名訊息，請勿轉帳或回應。
+    - **Instagram**：
+        - 從 [Instagram 協助中心 — 我認為帳號被盜用了](https://help.instagram.com/368191326593075){target="_blank"} 啟動申訴流程。
+        - 可同時透過綁定的 Facebook 帳號重新取回連動。
+    - **X（Twitter）**：
+        - 透過 [X 帳號被駭協助](https://help.x.com/en/safety-and-security/x-account-compromised){target="_blank"} 表單申訴，並提供原綁定信箱。
+    - **YouTube**：
+        - 從 [Google 協助中心 — 重新取得 YouTube 頻道](https://support.google.com/youtube/answer/76187){target="_blank"} 流程進行；YouTube 帳號掛在 Google 帳號下，先救 Google 帳號才能拿回頻道。
+
+    申訴期間請保留所有來往信件與案件編號，後續可作為法律或保險程序的證據。
+
+=== "三、清掃可能延伸的影響"
+
+    帳號搶回（或暫時止血）後，請**至少做完以下動作**，避免攻擊者只是換個方法回來：
+
+    1. **更改密碼並開啟雙重驗證**：所有與該社群帳號相關的個人帳號（綁定的 Email、Facebook 個人帳號、Google 帳號）都需要做。詳見 [多重驗證](../chapter/profile/mfa.md) 與 [密碼設定](../chapter/profile/password.md)。
+    2. **檢查 Email 收信規則是否被植入**：攻擊者常在被盜信箱裡建立「自動轉寄」或「自動刪除某類郵件」的規則，目的是攔截後續安全通知。請進入 Gmail / Outlook 的「設定 → 篩選器與封鎖的地址 / 規則」逐一檢視。
+    3. **撤銷外部登入授權**：在 [Google 第三方應用程式](https://myaccount.google.com/permissions){target="_blank"}、[Facebook 應用程式與網站](https://www.facebook.com/settings?tab=applications){target="_blank"}、LINE 設定中，移除任何不認識的第三方授權。
+    4. **更新粉專角色清單**：移除離職同事與不認識的管理員，把外部廠商從「管理員」降權為「編輯」或「廣告主」。
+    5. **同步更新組織內共用密碼**：若該帳號的密碼有放在共用文件、Slack、聊天群組裡，請一併輪換並改用密碼管理器分享。詳見 [組織 — 密碼管理](../org/account/password.md)。
+    6. **必要時報案**：若涉及金流詐騙、勒索或對組織造成重大影響，可諮詢 **165 反詐騙專線**或當地警察局，留下案件紀錄。
+
+## 預防方式
+
+社群帳號被盜，往往不是「密碼太弱」這麼單純，而是**權限管理散亂**加上**沒有第二道驗證**。以下幾項是公民團體最值得先做的：
+
+1. **粉專請用「個人帳號授權」管理，不要共用一組登入密碼**：Facebook 粉專本身沒有自己的密碼，而是透過個人 Facebook 帳號被授權為管理員、編輯、廣告主等角色。請**禁止把組織共用 Email + 密碼當粉專登入帳號**，改成每位管理員用自己的 Facebook 帳號接收授權。離職時直接從粉專移除該人，比改共用密碼更乾淨。
+2. **所有管理員都必須開啟雙重驗證**：包含個人 Facebook、Google、LINE、Instagram。對組織管理員可採「不開 MFA 就不給管理員權限」原則。詳見 [組織 — 雙重驗證](../org/account/mfa.md)。
+3. **管理員清單列入定期盤點**：每 3–6 個月對照一次「目前粉專、IG、YouTube、LINE 官方帳號的管理員清單」與「組織實際在職同事」，移除已離職、合作結束的角色。可併入 [數位服務帳號盤點](../org/account/audit.md)。
+4. **對外溝通通道分級**：把「會發布資訊的帳號」（粉專、IG）與「處理金流、客服的帳號」（LINE 官方、Email）分開管理；前者出問題影響聲譽，後者出問題會直接造成詐騙損失。
+5. **演練「冒名指令詐騙」（BEC / Phishing）**：定期對財務、行政同仁提醒，若收到「主管要求臨時轉帳」、「主管要求買禮券」、「主管 LINE 訊息語氣怪怪的」，請務必走另一條管道（例如打電話）再次確認。可搭配 [釣魚、詐騙郵件](phishing.md) 一起演練。
+6. **事件處理 SOP 寫進政策**：在 [組織資安政策](../org/policy/template.md) 第七章「安全事件通報與應變」中，明列社群帳號異常時的通報窗口、發公告的權限與審稿流程，避免事發時亂成一團。
+
+## 參考知識
+
+<div class="sub-category-cards">
+  <div class="sub-category-card">
+    <h3 class="sub-category-card__title">釣魚、詐騙郵件</h3>
+    <p class="sub-category-card__duration">預計閱讀時間：約 10 分</p>
+    <p class="sub-category-card__description">許多社群帳號被盜起點是釣魚連結或冒名訊息。學會辨識可疑訊息與連結，是社群帳號的第一道防線。</p>
+    <a href="phishing.html" class="sub-category-card__cta">› 馬上複習</a>
+  </div>
+
+  <div class="sub-category-card">
+    <h3 class="sub-category-card__title">數位服務帳號盤點</h3>
+    <p class="sub-category-card__duration">首次盤點約 0.5–1 天，其後每 3–6 個月更新約 1–2 小時</p>
+    <p class="sub-category-card__description">把粉專、IG、YouTube、LINE 官方帳號的管理員清單納入定期盤點，及早發現權限失控。</p>
+    <a href="../org/account/audit.html" class="sub-category-card__cta">› 馬上盤點</a>
+  </div>
+
+  <div class="sub-category-card">
+    <h3 class="sub-category-card__title">雙重驗證（組織）</h3>
+    <p class="sub-category-card__duration">規劃並導入約 0.5–1 天</p>
+    <p class="sub-category-card__description">把「管理員未開 MFA 不得授權粉專」寫進組織規則，從源頭降低帳號被盜風險。</p>
+    <a href="../org/account/mfa.html" class="sub-category-card__cta">› 馬上規劃</a>
+  </div>
+</div>

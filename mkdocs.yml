@@ -1,0 +1,207 @@
+site_name: 資安新手村 | Shield of Self-Defense (SSD)
+site_url: https://ssd.ocf.tw/
+site_description: "給公民團體 CSOs 的資安防護基礎教材"
+site_author: "財團法人開放文化基金會 (Open Culture Foundation, OCF)"
+edit_uri: https://github.com/ocftw/ssd/edit/main/docs/
+copyright: "CC-BY 4.0 姓名標示"
+nav:
+  - 首頁:
+      - index.md
+  - 怎麼升級資安？:
+      - how-to/index.md
+  - 個人資安:
+      - personal/index.md
+      - 手機/電腦安全:
+          - chapter/devices/index.md # sub-category
+          - 裝置物理防護: user_guide/devices/index.md
+          - iOS 裝置: user_guide/devices/ios.md
+          - MacOS 裝置: user_guide/devices/macOS.md
+          - Windows 裝置: user_guide/devices/windows.md
+          - Android 裝置: user_guide/devices/android.md
+      - 帳號安全:
+          - chapter/profile/index.md # sub-category
+          - 密碼設定: chapter/profile/password.md
+          - 多重驗證: chapter/profile/mfa.md
+          - 安全金鑰: chapter/profile/security_key.md
+          - 密碼管理器: chapter/profile/password_manager.md
+      - 網路瀏覽環境:
+          - chapter/network/index.md # sub-category
+          - 瀏覽器: chapter/network/browser_privacy.md
+          - VPN: chapter/network/vpn.md
+      - 加密的溝通方式:
+          - chapter/e2ee/index.md # sub-category
+          - 加密訊息對話: chapter/e2ee/im.md
+          - 加密電子郵件: chapter/e2ee/mails.md
+      - 海外出差:
+          - chapter/abroad/index.md # sub-category
+          - 出差安全指南: chapter/abroad/guide.md
+          - 出差風險評估: chapter/abroad/risk.md
+  - 組織資安:
+      - org/index.md
+      - 公務電腦/公務機:
+          - org/devices/index.md # sub-category
+          - 定期檢查裝置符合最低標準: org/devices/baseline.md
+          - 裝置/作業系統盤點: org/devices/audit.md
+      - 網路環境:
+          - org/network/index.md # sub-category
+          - Wi-Fi 設定: org/network/wifi.md
+          - 辦公位置網路建議: org/network/office.md
+      - 組織帳號管理:
+          - org/account/index.md # sub-category
+          - 數位服務帳號盤點: org/account/audit.md
+          - 密碼管理: org/account/password.md
+          - 雙重驗證: org/account/mfa.md
+      - 資料權限管理:
+          - org/data/index.md # sub-category
+          - 角色與權限: org/data/role.md
+          - 定期審查更新權限: org/data/review.md
+          - 雲端分享連結稽查: org/data/sharing-audit.md
+      - 資料備份:
+          - org/backup/index.md # sub-category
+          - 實體備份: org/backup/physical.md
+          - 雲端備份: org/backup/cloud.md
+          - SaaS 設定備份: org/backup/saas.md
+      - 組織資安政策:
+          - org/policy/index.md # sub-category
+          - 資安政策參考範本: org/policy/template.md
+  - 常見資安事件:
+      - 資安事件:
+          - common/index.md
+          - 釣魚、詐騙郵件: common/phishing.md
+          - 勒索軟體: common/ransomware.md
+          - 帳號密碼外洩: common/leaked_password.md
+          - 社群帳號被盜（粉專／LINE）: common/social_account_takeover.md
+          - 官網遭受攻擊: common/website_attack.md
+          - NAS 遭受攻擊: common/nas_attack.md
+  - 資安升級工具包:
+      - 資安提升計畫:
+          - guide/index.md
+          - 確認組織是否準備好迎接資安提升行動？: guide/cooperation-suitability.md
+          - 建立順暢的內部協作: guide/partnership.md
+          - 盤點組織工作帳號: guide/account.md
+          - 幫助組織盤點現況: guide/status.md
+          - 透過「威脅建模」盤點組織風險: guide/assessment.md
+          - 制定屬於組織的資安改善計畫: guide/initial-improvement.md
+          - 盤點組織裝置設備:
+              - guide/devices/index.md
+              - guide/devices/checklists.md
+          - 協助組織制定資安政策: guide/security-policy.md
+          - 評估資安升級的成效: guide/effectiveness-review.md
+          - 延伸顧問協作主題:
+              - guide/profile.md
+              - guide/network.md
+              - guide/e2ee.md
+              - guide/files-management.md
+              - guide/abroad.md
+  - 資源、諮詢:
+      - 疑問諮詢: support/index.md
+      - CSCS 社群自製教材總覽: resources/cscs-materials.md
+      - 工具推薦: tools/index.md
+      - 如何貢獻:
+          - contribute/index.md
+      - 進度追蹤:
+          - assessment/index.md
+          - 檢查清單:
+              - assessment/checklist/index.md
+              - 場勘紀錄表: assessment/checklist/site_survey.md
+              - 課後任務清單: assessment/checklist/homework.md
+  - 延伸閱讀:
+      - blog/index.md
+theme:
+  name: material
+  logo: asserts/logo.svg
+  icon:
+    admonition:
+      benefit: material/thumb-up
+  favicon: asserts/logo.svg
+  palette:
+    - scheme: default
+      primary: white
+      accent: pink
+  language: zh-TW
+  features:
+    - search.suggest
+    - search.highlight
+    - navigation.indexes
+    - navigation.expand
+    - navigation.top
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.path
+    - content.tooltips
+    - content.action.edit
+    - content.action.view
+  custom_dir: overrides
+plugins:
+  - meta
+  - blog:
+      post_date_format: full
+      post_url_date_format: yyyy/MM/dd
+      archive_date_format: yyyy
+  - search:
+      lang:
+        - en
+        - zh
+  - offline
+  - privacy
+  - social:
+      cards_layout_options:
+        font_family: Noto Sans TC
+  - git-revision-date-localized:
+      type: iso_datetime
+      timezone: Asia/Taipei
+      enable_creation_date: true
+  - minify:
+      enabled: !ENV [CI, false]
+      minify_html: true
+      minify_css: true
+      css_files:
+        - stylesheets/extra.css
+      htmlmin_opts:
+        remove_comments: true
+markdown_extensions:
+  - abbr
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.tasklist:
+      custom_checkbox: true
+      clickable_checkbox: false
+  - pymdownx.tabbed:
+      alternate_style: true
+extra:
+  # 頁尾第一列快速連結（overrides/partials/footer.html）
+  footer_primary:
+    - text: 延伸閱讀
+      link: /blog/
+    - text: 資安升級工具包
+      link: /guide/
+    - text: 疑問諮詢
+      link: /support/
+    - text: 貢獻資安知識
+      link: /contribute/
+    - text: CSCS 社群自製教材總覽
+      link: /resources/cscs-materials.html
+  analytics:
+    provider: google
+    property: G-X3DG2E5E3W
+  social:
+    - icon: material/home
+      link: https://ssd.ocf.tw/
+    - icon: fontawesome/brands/github
+      link: https://github.com/ocftw/ssd
+    - icon: simple/torbrowser
+      link: http://ssdocftwvq6csls7gnjubyrmar7no7ww3gmgodhznxgsoor6ot42lrad.onion/
+extra_css:
+  - stylesheets/extra.css

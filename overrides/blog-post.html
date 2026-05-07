@@ -1,0 +1,36 @@
+{#-
+  Blog post 樣板覆寫：拿掉預設左側 post 元數據 sidebar，並補上麵包屑（首頁 > 延伸閱讀）。
+  其餘 header / tabs / footer / right TOC 由 main.html → base.html 繼承。
+
+  關鍵設計決定：
+  1. .md-path 必須放在 .md-content__inner 之外，否則會被 md-typeset 規則蓋掉樣式。
+  2. 不沿用 .md-content--post（Material 給該類加了 display:flex 是為配合左側 sidebar 排版），
+     拔掉 sidebar 後保留該類會讓 .md-path 與 article 同列、麵包屑被擠變窄。
+     直接用 .md-content 與 base.html 一般頁面結構一致即可。
+-#}
+{% extends "main.html" %}
+{% block container %}
+  <div class="md-content md-content--blog" data-md-component="content">
+    {% set created_at = page.meta.date.created if page.meta and page.meta.date and page.meta.date.created else none %}
+    {% set created_at_display = created_at.strftime("%Y-%m-%d") if created_at and created_at.strftime else (created_at | string).split(" ")[0] if created_at else none %}
+    {% set cover_image = page.meta.cover_image if page.meta and page.meta.cover_image else none %}
+    {% if cover_image %}
+      <div class="blog-post-cover">
+        <img src="{{ cover_image | url }}" alt="" loading="eager" decoding="async" />
+      </div>
+    {% endif %}
+    {% if "navigation.path" in features %}
+      {% include "partials/path.html" %}
+    {% endif %}
+    <article class="md-content__inner md-typeset md-content__inner--blog-post">
+      {% if created_at_display %}
+        <p class="blog-post-date" aria-label="文章發布日期">{{ created_at_display }}</p>
+      {% endif %}
+      {% block content %}
+        {% include "partials/content.html" %}
+      {% endblock %}
+      {% include "partials/donation-cta.html" %}
+      {% include "partials/source-file.html" %}
+    </article>
+  </div>
+{% endblock %}

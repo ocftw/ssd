@@ -1,0 +1,86 @@
+{% include "partials/tags.html" %}
+{% include "partials/actions.html" %}
+
+<article class="md-content__inner md-typeset">
+  {% if "navigation.path" in features %}
+    {% if page.meta and page.meta.breadcrumb %}
+      {% set crumb_items = page.meta.breadcrumb %}
+    {% else %}
+      {% set crumb_items = [] %}
+    {% endif %}
+    {% if not crumb_items %}
+      {% set depth = page.ancestors | length %}
+      {% if nav.homepage %}{% set depth = depth + 1 %}{% endif %}
+    {% endif %}
+    {% if crumb_items or depth > 1 %}
+      <nav class="sub-category-breadcrumb{% if crumb_items %} sub-category-breadcrumb--custom{% endif %}" aria-label="{{ lang.t('nav') }}">
+        <ol class="sub-category-breadcrumb__list">
+          <li class="sub-category-breadcrumb__item sub-category-breadcrumb__item--home">
+            <a
+              href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}"
+              class="sub-category-breadcrumb__link"
+              aria-label="首頁"
+            >
+              {% include ".icons/material/home.svg" %}
+            </a>
+          </li>
+          {% if crumb_items %}
+            {% for crumb in crumb_items %}
+              <li class="sub-category-breadcrumb__item">
+                <a href="{{ crumb.url }}" class="sub-category-breadcrumb__link">{{ crumb.title }}</a>
+              </li>
+            {% endfor %}
+          {% else %}
+            {% for nav_item in page.ancestors | reverse %}
+              <li class="sub-category-breadcrumb__item">
+                <a href="{{ nav_item.url | url }}" class="sub-category-breadcrumb__link">{{ nav_item.title }}</a>
+              </li>
+            {% endfor %}
+          {% endif %}
+        </ol>
+      </nav>
+    {% endif %}
+  {% endif %}
+  <div class="sub-category-hero"{% if page.meta and page.meta.hero_bg_color %} style="border-bottom-color: {{ page.meta.hero_bg_color }};"{% endif %}>
+    <div class="sub-category-hero__inner">
+
+      <h1 class="sub-category-hero__title">{{ page.meta.title if page.meta and page.meta.title else page.title }}</h1>
+    </div>
+  </div>
+
+  <div class="sub-category-intro">
+    <div class="sub-category-intro__image">
+      {% if page.meta and page.meta.image %}
+      <img src="{{ page.meta.image | url }}" alt="" />
+      {% else %}
+      <span class="sub-category-intro__placeholder">[illustration]</span>
+      {% endif %}
+    </div>
+    <div class="sub-category-intro__text">
+      {% if page.meta and (page.meta.description or page.meta.intro) %}
+      <p class="sub-category-intro__paragraph">{{ page.meta.description or page.meta.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% set cards = page.meta.cards if page.meta and page.meta.cards else [
+    {"title": "知識 A", "duration": "00分", "description": "簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹簡單介紹簡單介紹。", "url": "#"},
+    {"title": "知識 B", "duration": "00分", "description": "簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹簡單介紹簡單介紹。", "url": "#"},
+    {"title": "知識 C", "duration": "00分", "description": "簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹簡單介紹簡單介紹。", "url": "#"},
+    {"title": "知識 D", "duration": "00分", "description": "簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹，簡單介紹簡單介紹簡單介紹簡單介紹簡單介紹。", "url": "#"}
+  ] %}
+  <div class="sub-category-cards">
+    {% for card in cards %}
+    <div class="sub-category-card">
+      <h3 class="sub-category-card__title">{{ card.title }}</h3>
+      <p class="sub-category-card__duration">預計操作時間：{{ card.duration | default("-") }}</p>
+      <p class="sub-category-card__description">{{ card.description | default("") }}</p>
+      <a href="{{ card.url | url if card.url else '#' }}" class="sub-category-card__cta">› 馬上升級</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="sub-category-body md-typeset">
+    {{ page.content }}
+  </div>
+</article>
