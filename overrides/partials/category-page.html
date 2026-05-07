@@ -1,0 +1,49 @@
+{% include "partials/tags.html" %}
+{% include "partials/actions.html" %}
+
+<article class="md-content__inner md-typeset">
+  <div class="category-hero">
+    <div class="category-hero__text">
+      <h1 class="category-hero__title">{{ page.meta.title if page.meta and page.meta.title else page.title }}</h1>
+      {% if page.meta and page.meta.tagline %}
+      <p class="category-hero__tagline">{{ page.meta.tagline }}</p>
+      {% endif %}
+      {% if page.meta and page.meta.description %}
+      <p class="category-hero__description">{{ page.meta.description }}</p>
+      {% endif %}
+    </div>
+    <div class="category-hero__image{% if not (page.meta and page.meta.image) %} category-hero__image--empty{% endif %}">
+      {% if page.meta and page.meta.image %}
+      <img src="{{ page.meta.image | url }}" alt="" />
+      {% endif %}
+    </div>
+  </div>
+
+  {% set cards = page.meta.cards if page.meta and page.meta.cards else [
+    {"title": "Device Safety", "url": "chapter/devices/", "image": ""},
+    {"title": "Account Safety", "url": "chapter/account/", "image": ""},
+    {"title": "Network/browsing Safety", "url": "chapter/network/", "image": ""},
+    {"title": "Messaging/email Safety", "url": "chapter/e2ee/", "image": ""}
+  ] %}
+  <div class="category-cards{% if page.meta and page.meta.card_image_aspect == 'square' %} category-cards--image-square{% endif %}{% if page.meta and page.meta.card_title_style == 'plain' %} category-cards--title-plain{% endif %}">
+    {% for card in cards %}
+    <div class="category-card">
+      <a href="{{ card.url | url if card.url else '#' }}" class="category-card__link">
+        <div class="category-card__image">
+          {% if card.image %}
+          <img src="{{ card.image | url }}" alt="" />
+          {% else %}
+          <span class="category-card__placeholder">[illustration]</span>
+          {% endif %}
+        </div>
+        {% if card.action %}<p class="category-card__label">{{ card.title }}</p>{% endif %}
+        <h3 class="category-card__title">{{ card.action if card.action else card.title }}</h3>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="category-body md-typeset">
+    {{ page.content }}
+  </div>
+</article>

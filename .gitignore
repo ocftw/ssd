@@ -1,3 +1,9 @@
 /site
 .cache
 .DS_Store
+.python-version
+design/
+contexts/
+.cursor/
+scripts/
+CLAUDE.md

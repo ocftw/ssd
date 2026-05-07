@@ -1,0 +1,40 @@
+{#-
+  麵包屑：最前加首頁圖示連結，其餘與主題相同（樣式沿用 Material .md-path，僅見 extra.css 微調圖示尺寸）
+  sub-category layout 由 sub_category-page.html 在 hero 前內嵌，此處跳過以避免重複
+  Blog post：page.ancestors 為空，改以 blog index 作為唯一上層；標題沿用「延伸閱讀」對應 nav 設定。
+-#}
+{% if not (page.meta and page.meta.layout == "sub-category") %}
+{% import "partials/path-item.html" as item with context %}
+{% if page.meta and page.meta.hide %}
+  {% set hidden = "hidden" if "path" in page.meta.hide %}
+{% endif %}
+{% set is_blog_post = page and page.url and page.url.startswith("blog/") and page.url != "blog/" %}
+{% set depth = page.ancestors | length %}
+{% if nav.homepage %}
+  {% set depth = depth + 1 %}
+{% endif %}
+{% if depth > 1 or is_blog_post %}
+  <nav class="md-path" aria-label="{{ lang.t('nav') }}" {{ hidden }}>
+    <ol class="md-path__list">
+      <li class="md-path__item md-path__item--home">
+        <a
+          href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}"
+          class="md-path__link md-path__link--home"
+          aria-label="首頁"
+        >
+          {% include ".icons/material/home.svg" %}
+        </a>
+      </li>
+      {% if is_blog_post %}
+        <li class="md-path__item">
+          <a href="{{ 'blog/' | url }}" class="md-path__link">延伸閱讀</a>
+        </li>
+      {% else %}
+        {% for nav_item in page.ancestors | reverse %}
+          {{ item.render(nav_item) }}
+        {% endfor %}
+      {% endif %}
+    </ol>
+  </nav>
+{% endif %}
+{% endif %}

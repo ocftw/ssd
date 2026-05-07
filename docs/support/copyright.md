@@ -1,3 +1,7 @@
+---
+title: 版權宣告
+---
+
 # 版權宣告
 
 此線上教材內容以「[CC-BY 4.0 姓名標示](https://creativecommons.org/licenses/by/4.0/deed.zh-hant){target="_blank"}」釋出。

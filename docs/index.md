@@ -1,133 +1,114 @@
 ---
 icon: octicons/home-16
-title: 資安防護基礎教材
+title: 新手村首頁
+hide:
+  - navigation
+  - toc
 ---
 
-# :material-security: 為公民團體設計的資安防護手冊
+<!-- Hero：全寬左右對切；左黑底文與 CTA、右白底主視覺 -->
+<div class="home-hero">
+  <div class="home-hero__panel home-hero__panel--text">
+    <div class="home-hero__content">
+      <h1 class="home-hero__title">開始搭建資安防護，<br>成為村裡的希望。</h1>
+      <p class="home-hero__tagline"><strong>資安不只是大型企業才需要面對的問題。</strong>隨著工作越來越依賴數位工具、雲端服務與即時溝通，風險其實每天都在累積。資安的升級，其實沒有想像中的困難，讓我們一起提升資安防護力，保護我們的村落吧！</p>
+      <div class="home-hero__actions">
+        <a href="how-to/" class="md-button md-button--primary home-hero__cta">怎麼升級資安？ ›</a>
+      </div>
+    </div>
+  </div>
+  <div class="home-hero__panel home-hero__panel--art">
+    <img class="home-hero__image" src="asserts/index.svg" alt="資安防護新手村主視覺插圖" width="735" height="719" decoding="async" />
+  </div>
+</div>
 
-這份「資安防護基礎教材」**專為台灣的公民團體與非營利組織情境所設計**，以正體中文撰寫，適用於**組織規模約 3～50 人**、可能設有**一個或多個、分散於台灣不同城市的辦公室之團體使用**。教材內容貼近台灣在地實務，協助各領域議題工作者在有限資源下，逐步建立基本且可行的資訊安全能力。
+<!-- 「在這裡你可以找到」：依設計稿，淺灰背景、三欄卡片與按鈕 -->
+<div class="home-section home-section--gray home-section--features">
+  <h2>在這個新手村，你可以找到</h2>
 
-面對與日俱增的數位威脅，許多台灣公民團體缺乏專職人力與系統化的資安規劃，人權工作者與倡議團體成員的設備與帳號屢遭攻擊，甚至導致資料遺失或服務中斷。在預算與技術能力有限的情況下，組織往往只能採用臨時拼裝的數位工具與工作流程，反而暴露於更多數位安全風險。
+  <div class="home-feature-grid">
+    <article class="home-feature-card">
+      <div class="home-feature-card__icon-wrap">
+        <img src="asserts/index_books.svg" alt="" class="home-feature-card__icon" loading="lazy" decoding="async" />
+      </div>
+      <h3 class="home-feature-card__title">新手友善的資安操作教學</h3>
+      <div class="home-feature-card__actions">
+        <a href="personal/" class="md-button home-feature-card__button">升級個人資安 ›</a>
+        <a href="org/" class="md-button home-feature-card__button">升級組織資安 ›</a>
+      </div>
+    </article>
 
-本教材正是為**沒有專職資安團隊、沒有企業級 IT 架構**的台灣公民團體所設計，內容不假設讀者具備工程或資安背景，而是從實際工作場景出發，協助組織與成員建立共同的資安基礎。
+    <article class="home-feature-card">
+      <div class="home-feature-card__icon-wrap">
+        <img src="asserts/index_incident.svg" alt="" class="home-feature-card__icon" loading="lazy" decoding="async" />
+      </div>
+      <h3 class="home-feature-card__title">資安事件的應對方式</h3>
+      <div class="home-feature-card__actions">
+        <a href="common/" class="md-button home-feature-card__button">常見資安事件 ›</a>
+      </div>
+    </article>
 
-如果你是在**台灣工作的 NGO 或公民團體成員**，正在尋找**不需要英文能力、可直接套用於日常工作的資安提升學習資源**，這將是一份為你與你的組織量身打造的資安防護教材。
+    <article class="home-feature-card">
+      <div class="home-feature-card__icon-wrap">
+        <img src="asserts/index_guide.svg" alt="" class="home-feature-card__icon" loading="lazy" decoding="async" />
+      </div>
+      <h3 class="home-feature-card__title">資安升級工具包</h3>
+      <div class="home-feature-card__actions">
+        <a href="guide/" class="md-button home-feature-card__button">資安升級工具包 ›</a>
+      </div>
+    </article>
+  </div>
+</div>
 
-## 你是哪一種角色？從這裡開始
+<!-- 文章預覽：白底、三張寫死卡片 -->
+<div class="home-section home-section--white" markdown="1">
 
-### :woman_raising_hand: 我是組織的一般成員
+## 最新內容
 
-如果你是：
+<div class="home-article-cards">
 
-- 組織的工作者、志工或倡議成員
-- 平常會使用 Email、通訊軟體、雲端文件、社群帳號
-- 擔心帳號被盜、資料外洩，但不知道能做什麼
+<div class="home-article-card">
+  <a href="blog/2026/04/17/mfa-basics.html"><img src="./asserts/blog-mfa-basics.webp" alt="placeholder" /></a>
+  <p class="home-article-card__title"><a href="blog/2026/04/17/mfa-basics.html">一次性密碼、驗證器、備份碼：MFA 核心機制入門</a></p>
+  <p class="home-article-card__date">2026/04/17</p>
+  <p>開啟多重驗證（MFA）之後，面對驗證應用程式、簡訊驗證碼、備份碼這幾個選項，該怎麼選？當手機遺失、換機時，還能不能進得了自己的帳號？</p>
+  <a href="blog/2026/04/17/mfa-basics.html" class="md-button md-button--primary">閱讀更多 ›</a>
+</div>
 
-:point_right: 建議你從 「[:octicons-book-16: 課程主題](./chapter/index.md)」 開始，學習日常工作中最重要、也最容易做到的資安習慣。
+<div class="home-article-card">
+  <a href="blog/2026/04/24/password-strength.html"><img src="./asserts/blog-passwork-strength.webp" alt="placeholder" /></a>
+  <p class="home-article-card__title"><a href="blog/2026/04/24/password-strength.html">密碼強度與破解成本：長度、複雜度、密碼短語</a></p>
+  <p class="home-article-card__date">2026/04/24</p>
+  <p>密碼到底要設多長、要加什麼字元、為什麼光是「定期更換」不夠，以及當你不想靠密碼管理器時，怎麼設計一組記得住又真的難破的密碼。</p>
+  <a href="blog/2026/04/24/password-strength.html" class="md-button md-button--primary">閱讀更多 ›</a>
+</div>
 
-### :tools: 我是資安、IT 的推動人
-
-如果你是：
-
-- 組織內負責 IT、資訊管理或資安相關工作的成員
-- 被指派來「**想辦法提升組織資安**」，但資源有限
-- 想建立基本規範、流程或內部共識
-
-:point_right: 建議你從 「[:material-home-heart: 資安提升計畫](./guide/index.md)」 開始，了解如何在現有條件下，逐步改善組織的數位安全。
-
-## 你可以獲得什麼？
-
-### 簡單易懂的操作方法，提升組織的數位安全狀態
-
-我們提供一套從大型至小型公民團體，都能夠簡單操作的導入流程，這個過程也會幫助你思考以下問題：
-
-- What：我的組織有哪些資產？
-- Who：我想要保護資產免於誰的攻擊？他們的動機是什麼？有多大能耐？
-- Likeliwood：我真的受到攻擊的機率有多少？
-- Impact：我如果真的受到攻擊了，可能會產生哪些後果？
-
-[建立組織的威脅模型](chapter/threat/index.md){ .md-button target="_blank"}
-
-### 各種資安主題政策範本，量身打造數位安全政策
-
-在技術專家的協助下，我們整理出八個資安主題的工作行為指引。你可以依照組織人數與數位安全需求，挑選「基礎版」或「進階版」，為你的組織打造長期穩定的數位安全政策。
-
-## 我們提供哪些幫助？
-
-<div class="grid cards" markdown>
-
-- :octicons-book-16: __[課程主題]__
-
-    收錄公民團體所需的數位安全主題課程，提供容易學習、循序漸進的內容教學。
-
-- :octicons-log-16: __[制定資安政策]__
-
-    到這裡尋找適合你的數位安全政策範本，納入組織規範，使倡議工作更安全。
-
-- :octicons-graph-16: __[進度追蹤]__
-
-    使用場勘紀錄表與課後任務清單，搭配操作指南，檢視你的課後練習完成進度。
-
-- :octicons-bookmark-16: __[學習資源]__
-
-    這裡還有更多數位安全學習資源，幫助你不斷進步！
-
-- :octicons-heart-16: __[疑問諮詢]__
-
-    需要專業諮詢嗎？專家團隊隨時準備回答你的疑問，支援你的學習旅程。
+<div class="home-article-card">
+  <a href="blog/2026/05/01/vpn-tor-proxy.html"><img src="./asserts/blog-vpn-tor-proxy.webp" alt="placeholder" /></a>
+  <p class="home-article-card__title"><a href="blog/2026/05/01/vpn-tor-proxy.html">VPN、Tor、Proxy：工具差異與使用時機</a></p>
+  <p class="home-article-card__date">2026/05/01</p>
+  <p>當你需要保護網路連線時，VPN、Tor、Proxy 各自能做到什麼、不能做到什麼，以及在不同威脅情境下該優先選哪一種。</p>
+  <a href="blog/2026/05/01/vpn-tor-proxy.html" class="md-button md-button--primary">閱讀更多 ›</a>
+</div>
 
 </div>
 
-  [課程主題]: chapter/index.md
-  [制定資安政策]: policy/index.md
-  [進度追蹤]: assessment/index.md
-  [學習資源]: resource/index.md
-  [疑問諮詢]: support/index.md
+[更多文章  ›](blog/){ .md-button .md-button--outline }
 
-## 提升計畫
+</div>
 
-們建議所有⼈搭配「資安防護基礎教材」使⽤這份公⺠團體資安提升計畫執⾏⼿冊，仔細閱讀⼿冊指⽰，學習如何運⽤我們提供的豐富資源，提升你的數位安全環境。
+<!-- Let knowledge spread：淺灰、左文右按鈕 -->
+<div class="home-section home-section--gray home-section--cta" markdown="1">
 
-### :material-shield-half-full: 第 1 步：全⾯盤點＋威脅建模
+## 讓科技知識普及到每個角落
 
-想知道如何防禦，須從⾃我了解開始。透過盤點和威脅建模，幫助組織辨識⾃⼰需要保護的重要實體資產（如主機、裝置、成員安全）及數位資產（如⽂件、檔案等）。
+此網站及內容由「財團法人開放文化基金會（Open Culture Foundation, OCF）」編輯維護。我們長期投入知識共享與人才培育，推廣開放科技在各場域中的應用，同時致力於建立跨領域的信任與合作，讓科技不再只是少數人的工具，而是屬於所有人的資源。
 
-完成這些項目：
+<div class="home-cta-buttons" markdown="1">
 
-- [x] 演練：瀏覽「進度追蹤」使⽤場勘紀錄表紀錄辦公室環境。
-- [x] 閱讀：瀏覽「課程主題」進⼊[威脅建模](./chapter/threat/index.md)閱讀內容
-- [x] 閱讀：瀏覽「操作指南」進⼊[⾵險評估表](./user_guide/risk_assessment.md)閱讀內容
-- [x] 演練：使⽤⾵險評估表，和夥伴開始威脅建模！
+[關於 OCF  ›](https://ocf.tw/){ .md-button .home-cta-button .home-cta-button--outline target="_blank" }
+[捐款支持  ›](https://ocf.tw/donate/){ .md-button .md-button--primary target="_blank" }
 
-### :fontawesome-solid-users: 第 2 步：建⽴執⾏⼩組
+</div>
 
-沒有⼈是局外⼈，提升數位安全需要組織全員的努⼒！為了提升組織的數位安全，你需要多少⼈⼒？誰有能⼒擔任以下⾓⾊？如何溝通確保組織全員的⽀持與參與？
-
-- [x] 指定計畫執⾏⼈員，負責和組織全員⼀起學習資安主題並追蹤進度，可以是熟悉 IT 業務或資安議題的夥伴。
-- [x] 指定政策執⾏⼈員，負責制定與落實數位安全政策，可以是組織管理者或管理者授權的夥伴。
-
-### :octicons-light-bulb-24: 第 3 步：探索資安主題，並完成課後任務
-
-除了最開始的威脅建模，「資安防護基礎教材」也提供常⾒資安主題教學與辦公室⾏為指引建議。每個主題包含兩個部分：「課程主題」提供基礎概念、「操作指南」提供實作指引和⼯具介紹。
-
-- [x] 安排學習時程：計畫執⾏⼈員安排學習進度，並確保組織全員依照時程學習教材，建議定期（1-2 個⽉）學習⼀個資安主題。
-- [x] 學習與演練：瀏覽『課程主題』以主題為單位了解該相關概念，並進⼊『操作指南』進⾏演練。
-- [x] 確認學習成果：使⽤課後任務清單，確認每個項⽬皆執⾏完畢。
-
-### :fontawesome-solid-file-shield: 第 4 步：制定數位安全政策
-
-⻑期有效的資安提升離不開數位安全政策落實。在了解概念和實作後，更重要的是，清晰定義各種操作的安全標準，為群體制定統⼀的規範，來確保加密、存取權限、定期備份等⼀致落實。
-
-- [x] 盤點現有政策：政策制定⼈員整理既有數位安全規範，包含不成⽂但已經落實在⼯作中的規定，了解組織已有哪些政策、落實情形、還需要哪些政策。
-- [x] 學習與演練：瀏覽『制定資安政策』，使⽤政策範本制定組織的數位安全政策。
-
-### :octicons-star-24: 最後：持續改進與更新
-
-數位安全應該隨著技術和威脅的變化持續改進，建⽴定期的數位安全查核機制，定期回顧威脅模型，或是蒐集組織成員的回饋，持續更新數位安全政策。
-
-- [x] 設定下⼀次威脅建模時間：＿＿＿年＿＿＿⽉＿＿＿⽇。（註：我們建議每六個⽉回顧威脅模型，適時新增或調整內容。）
-- [x] 設定下⼀次檢視數位安全政策時間：＿＿＿年＿＿＿⽉＿＿＿⽇。（註：我們建議每年檢視數位安全政策，定期審核內容，確保資安政策的有效性。）
-
-你可以做更多來提升數位安全環境、保護你的倡議工作。馬上啟動專屬於你的資安提升計畫！
-
-[開始你的資安提升計劃！](https://drive.google.com/file/d/19Z56gFAW0fsM7ndNjfNZwYE86N9FxVBp/view?usp=sharing){ .md-button target="_blank"}
+</div>

@@ -1,138 +1,96 @@
 ---
-title: Windows 系統
+title: Windows 裝置
 ---
 
-# :material-microsoft-windows: Windows 系統
+# Windows 裝置
 
-Windows 系統是由微軟公司開發的操作系統系列，使用廣泛，涵蓋 PC、筆記型電腦、平板電腦及伺服器等多種設備。其圖形化用戶界面和廣泛的應用軟體支持而聞名，尤其許多自架系統、應用程式無法運作在 Apple 電腦，也讓 Windows 系統的使用者還是佔大多數。
-以下針對 Windows 作業系統的。6個部分：版本更新、我的位置活動、應用程式權限、移除無用的應用程式、設定螢幕保護裝置、防火牆，來進行系統設定調整以建置初步防禦。
+<small>預計操作時間：30–40 分鐘</small><br><small>所需預算：無（基本設定皆免費）</small>
 
-## 版本更新
+若您常用 Windows 電腦或筆電處理工作或敏感資料，先把基本設定做好，就像出門前把裝備升級、盾牌帶好，能顯著提升防護力。以下設定皆不需花錢，約半小時即可完成。
 
-系統版本更新是重要的，因為每次更新都可能有系統針對舊有漏洞進行改善，來防止有心人士伺機從系統漏洞入侵。目前最新的版本為 Windows 11，於 2021 年發布。
-值得注意的是，Windows 7、Windows 8 版本已於 2023 年 1 月 10 日結束維護與安全更新。如果您的作業系統不為 **Windows 10 或之後的版本**，請儘速更新到*最新的系統版本*。
+!!! benefit "可以增強的防護力"
 
-??? question "如何確認我所使用的 Windows 版本號為何？"
+    - 降低系統漏洞被利用的風險
+    - 減少位置與隱私外洩
+    - 增加網路連線時的防護
+    - 離開座位時降低被他人直接使用電腦的風險（雖然說盡量別把電腦丟著？）
 
-    請按 ++windows+r++ 在**開啟**中輸入 **winver**，按下**確定**即可。其他的操作方式可以參考說明文件：
 
-    - [我正在執行哪個版本的 Windows 作業系統？ - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E6%88%91%E6%AD%A3%E5%9C%A8%E5%9F%B7%E8%A1%8C%E5%93%AA%E5%80%8B%E7%89%88%E6%9C%AC%E7%9A%84-windows-%E4%BD%9C%E6%A5%AD%E7%B3%BB%E7%B5%B1-628bec99-476a-2c13-5296-9dd081cdd808){target="_blank"}
+## 定期更新系統版本 {#updates}
 
-??? question "如何開始更新作業系統？"
+定期更新可修補資安漏洞，降低被惡意程式利用的風險。請使用 **Windows 11**，並保持自動更新開啟。Windows 10 的安全更新已於 2025 年 10 月終止，若仍使用 Windows 10 或更舊版本（如 Windows 7、Windows 8），建議盡快升級到 Windows 11，以繼續獲得安全修補。
 
-    由於 Windows 10、Windows 11 的操作方式不同，可以參考官方的說明文件來完成更新作業。
+1. **確認版本**：<br>按 ++windows+r++，在「開啟」中輸入 **winver** 後按確定。
+2. **安裝最新更新**：<br>開啟「設定」>「更新與安全性」>「Windows Update」（Windows 11 為「設定」>「Windows Update」），確認並安裝最新更新。
+3. 設定方式可能因系統版本不同而有所差異，更多說明可參考[官方「我正在執行哪個版本的 Windows？」](https://support.microsoft.com/zh-tw/windows/%E6%88%91%E6%AD%A3%E5%9C%A8%E5%9F%B7%E8%A1%8C%E5%93%AA%E5%80%8B%E7%89%88%E6%9C%AC%E7%9A%84-windows-%E4%BD%9C%E6%A5%AD%E7%B3%BB%E7%B5%B1-628bec99-476a-2c13-5296-9dd081cdd808){target="_blank"}與[「Windows Update 常見問題集」](https://support.microsoft.com/zh-tw/windows/windows-update-%E5%B8%B8%E8%A6%8B%E5%95%8F%E9%A1%8C%E9%9B%86-8a903416-6f45-0718-f5c7-375e92dddeb2){target="_blank"}。
 
-    - [Windows Update：常見問題集 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/windows-update-%E5%B8%B8%E8%A6%8B%E5%95%8F%E9%A1%8C%E9%9B%86-8a903416-6f45-0718-f5c7-375e92dddeb2#WindowsVersion=Windows_11){target="_blank"}
+## 管理位置與尋找我的裝置
 
-??? info "Windows 版本更新公告"
+避免行蹤與位置資料外洩，建議關閉或清除不需要的定位設定，並檢查哪些 App 能存取位置。
 
-    詳細的版本更新說明，可以定期參考微軟臺灣公告：
+1. **關閉並清除定位**：<br>開啟「設定」>「隱私權」>「位置」，關閉「位置」後，在「位置歷程記錄」中清除已儲存的定位資料。
+2. **檢查 App 位置存取**：<br>同上路徑「設定」>「隱私權」>「位置」，檢視「允許應用程式存取您的位置」清單，關閉不需要的 App。
+3. **關閉尋找我的裝置：**<br>開啟「設定」>「更新與安全性」>「尋找我的裝置」（Windows 11 為「設定」>「隱私權與安全性」>「尋找我的裝置」），將此功能關閉。
+4. 設定方式可能因系統版本不同而有所差異，更多說明可參考[隱私權儀表板上的位置活動](https://support.microsoft.com/zh-tw/windows/%E9%9A%B1%E7%A7%81%E6%AC%8A%E5%84%80%E8%A1%A8%E6%9D%BF%E4%B8%8A%E7%9A%84%E4%BD%8D%E7%BD%AE%E6%B4%BB%E5%8B%95-cb8cde37-2569-1ca9-f011-2d07554912e8){target="_blank"}。
 
-    - [終止支援 Windows 10、Windows 8.1 和 Windows 7 | Microsoft Windows](https://www.microsoft.com/zh-tw/windows/end-of-support){target="_blank"}
+## 管理應用程式權限 {#permissions}
 
-## 我的位置活動
+許多應用程式在安裝時會要求各種權限，若沒有細看就全部同意，可能把過多隱私交給 App。建議在「隱私」設定中逐一檢視，只開放真正需要的權限；不需要的項目請關閉或設為「僅必要時允許」。
 
-避免自己的行蹤曝光，其中一環即是管理你的位置活動。以下 3 個動作可以完整的重新設定位置活動的分享範圍。
+1. **找到隱私設定：**<br>Windows 10 為「設定」>「隱私」；Windows 11 為「設定」>「隱私與安全性」。
+2. **檢查並關閉或限制隱私：**<br>建議優先調整位置、麥克風、網路攝影機、檔案系統（檔案與資料夾存取）、聯絡人、日曆、電子郵件。
+3. 設定方式可能因系統版本不同而有所差異，更多說明可參考[App 權限](https://support.microsoft.com/zh-tw/windows/app-%E6%AC%8A%E9%99%90-aea98a7c-b61a-1930-6ed0-47f0ed2ee15c){target="_blank"}。
 
-- 請**關閉或停用**關於定位位置活動，按下「開始 :fontawesome-brands-windows:」、「設定」、「隱私權、位置」，**清除**已儲存在裝置上的定位資料。
-- 檢查應用程式或裝置要求存取我的位置：「設定」、「隱私權」、「位置」。
-- 關閉尋找我的裝置：「設定」、「更新與安全性」、「尋找我的裝置」或「尋找我的電話」
 
-??? info "參考資料"
+## 移除未使用的應用程式 {#uninstall}
 
-    其他詳細的參考文件：
+少用或已不使用的應用程式可能含有未修補的漏洞，增加風險。建議定期檢視並解除安裝不需要的 App。
 
-    - [隱私權儀表板上的位置活動 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E9%9A%B1%E7%A7%81%E6%AC%8A%E5%84%80%E8%A1%A8%E6%9D%BF%E4%B8%8A%E7%9A%84%E4%BD%8D%E7%BD%AE%E6%B4%BB%E5%8B%95-cb8cde37-2569-1ca9-f011-2d07554912e8){target="_blank"}
+1. 開啟「設定」>「應用程式」>「已安裝的應用程式」（Windows 11 為「設定」>「應用程式」>「已安裝的應用程式」），找到要移除的項目後點選「解除安裝」。
+2. 設定方式可能因系統版本不同而有所差異，更多說明可參考[在 Windows 中卸載或移除應用程式和程式](https://support.microsoft.com/zh-tw/windows/%E5%9C%A8-windows-%E4%B8%AD%E5%8D%B8%E8%BC%89%E6%88%96%E7%A7%BB%E9%99%A4%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%92%8C%E7%A8%8B%E5%BC%8F-4b55f974-2cc6-2d2b-d092-5905080eaf98){target="_blank"}。
 
-## 應用程式權限
+## 設定螢幕保護與登入鎖定 {#screen-lock}
 
-許多應用程式在安裝同時，也包含了同意使用者隱私權交給應用程式的選項，有時我們沒有細看就全部同意了！因此，回過頭來逐一檢查應用程式的權限是重要的，可以再次確認是否想要將個人隱私和資料同步分享給每個應用程式。
+離開座位時若未鎖定螢幕，他人可能直接使用或窺視電腦。建議設定螢幕保護程式，並在恢復時要求登入；兩者需一併設定才有效。
 
-因此，請逐一檢視給予應用程式相關的權限！根據不同版本，你可以在以下路徑找到「隱私」相關選項來進行檢視和調整。
+1. **螢幕保護程式**：<br>開啟「設定」>「個人化」>「鎖定畫面」>「螢幕保護程式設定」。等候時間建議設為「3–5 分鐘」，並勾選「繼續執行後，顯示登入畫面」。
+2. **登入密碼**：<br>開啟「設定」>「帳戶」>「登入選項」，確認已設定密碼並啟用（若尚未設定，請在此新增密碼）。
+3. 設定方式可能因系統版本不同而有所差異，更多說明可參考[變更您的螢幕保護裝置設定](https://support.microsoft.com/zh-tw/windows/%E8%AE%8A%E6%9B%B4%E6%82%A8%E7%9A%84%E8%9E%A2%E5%B9%95%E4%BF%9D%E8%AD%B7%E8%A3%9D%E7%BD%AE%E8%A8%AD%E5%AE%9A-a9dc2a0c-dc8e-9161-d270-aaccc252082a){target="_blank"}與[Windows 登入選項和帳戶保護](https://support.microsoft.com/zh-tw/windows/windows-%E7%99%BB%E5%85%A5%E9%81%B8%E9%A0%85%E5%92%8C%E5%B8%B3%E6%88%B6%E4%BF%9D%E8%AD%B7-7b34d4cf-794f-f6bd-ddcc-e73cdf1a6fbf){target="_blank"}。
 
-- Windows 10：「開始」、「設定」、「隱私」
-- Windows 11：「開始」、「設定」、「隱私與安全」
 
-本章節列舉了以下項目，請逐一斟酌該應用程式是否必要取得/開通此項目的權限：
+## 關閉藍牙（不使用時）
 
-??? success "需確認的權限"
+不使用藍牙時建議關閉，可避免他人透過藍牙連上電腦或掃描到裝置。
 
-    以下權限名稱可能因為翻譯問題些為差異，請核對功能是否正確。
+1. 開啟「設定」>「藍牙與裝置」，將「藍牙」切換為**關閉**。
+2. 設定方式可能因系統版本不同而有所差異，更多說明可參考[官方「在 Windows 中配對藍牙裝置」](https://support.microsoft.com/zh-tw/windows/pair-a-bluetooth-device-in-windows-2be7b51f-6ae9-b757-a3b9-95ee40c3e242){target="_blank"}。
 
-    - 帳戶資訊：存取您的任何帳戶資訊。
-    - 允許提升權限：允許應用程式在不提示使用者的情況下以管理員特權執行。
-    - 應用診斷：取得其他執行中的應用程式的診斷資訊。
-    - 藍牙：啟用並使用您的設備與其他設備之間的任何藍牙連接。
-    - 日曆：存取您的日曆。
-    - 通話歷史記錄：存取您在設備上、Skype 或其他電話應用程式中進行的通話歷史記錄。
-    - 聯絡人：存取您的聯絡人、通訊錄應用程式。
-    - 自定義安裝操作：安裝額外的軟體。
-    - 電子郵件：存取您的電子郵件和電子郵件帳戶的帳戶資訊。
-    - 人臉識別：啟用並使用任何人臉識別硬體。
-    - 文件系統：存取您有權限訪問的檔案和資料夾，並讀取或寫入所有檔案（包括文件、照片和音樂）。
-    - 指紋讀取器：啟用並使用任何指紋讀取器硬體。
-    - 本地系統服務：在機器上安裝一個具有最高權限的服務。
-    - 位置：啟用並使用設備上的 GPS 或其他位置查找功能。存取地圖和其他位置應用程式中的位置數據。
-    - 訊息：存取您的即時訊息和帳戶資訊。
-    - 麥克風：啟用並使用設備上的麥克風。
-    - 可修改的應用程式：使使用者能夠修改應用程式。
-    - 近距離無線通訊：啟用並使用設備與其他設備之間的任何近距離無線通訊（NFC）連接。
-    - 通知：存取位於操作中心的通知。
-    - 圖片庫：存取設備中圖片庫的任何圖片檔案。
-    - 任務：存取 Outlook 和其他任務跟踪應用程式中的任務列表。
-    - 影片庫：存取設備中影片庫的任何影片檔案。
-    - 語音識別：啟用並使用任何語音識別硬體。
-    - 網路攝影機：啟用並使用設備上的攝像頭。
-    - Wi-Fi：啟用並使用設備、網路和其他設備之間的 Wi-Fi 連接。
-    - 有線連接：啟用並使用包括乙太網、USB 和串行通信在內的任何有線連接，以實現設備、網路和其他設備之間的連接。
+## 修改裝置名稱
 
-??? info "參考資料"
+Windows 預設裝置名稱可能包含使用者帳號名稱，在區域網路與藍牙環境中可見，建議改為不含個人資訊的名稱。
 
-    其他詳細的參考文件：
+1. 開啟「設定」>「系統」>「關於」，點選「重新命名這部電腦」，輸入不含個人資料的名稱後重新啟動。
+2. 設定方式可能因系統版本不同而有所差異，更多說明可參考[官方「重新命名您的 Windows 電腦」](https://support.microsoft.com/zh-tw/windows/rename-your-windows-11-pc-bf1dbe29-01f0-4b09-a4d4-f74d3de04cff){target="_blank"}。
 
-    - [App 權限 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/app-%E6%AC%8A%E9%99%90-aea98a7c-b61a-1930-6ed0-47f0ed2ee15c){target="_blank"}
+## 開啟內建防火牆 {#firewall}
 
-## 移除無用的應用程式
+Windows 內建 Microsoft Defender 防火牆可協助阻擋未授權的網路連線。請將**私人網路**與**公用網路**的防火牆皆設為**開啟**。
 
-逐一檢視少用與無用的應用程式，若已經不再有使用需求，建議卸載或移除。這個動作的目的是為了防止有不知名的應用程式偷偷地在裝置中影響裝置運作或竊取資料。
+1. 開啟「設定」>「隱私權與安全性」>「Windows 安全性」>「防火牆與網路保護」。
+2. 分別點選「私人網路」與「公用網路」，在各自頁面中將「Microsoft Defender 防火牆」設為**開啟**。
+3. 設定方式可能因系統版本不同而有所差異，更多說明可參考[開啟或關閉 Microsoft Defender 防火牆](https://support.microsoft.com/zh-tw/windows/%E9%96%8B%E5%95%9F%E6%88%96%E9%97%9C%E9%96%89-microsoft-defender-%E9%98%B2%E7%81%AB%E7%89%86-ec0844f7-aebd-0583-67fe-601ecf5d774f){target="_blank"}。
 
-如何操作可以參考「[在 Windows 中卸載或移除應用程式和程式 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E5%9C%A8-windows-%E4%B8%AD%E5%8D%B8%E8%BC%89%E6%88%96%E7%A7%BB%E9%99%A4%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%92%8C%E7%A8%8B%E5%BC%8F-4b55f974-2cc6-2d2b-d092-5905080eaf98){target="_blank"}」
+## 完成後做健檢
 
-## 設定螢幕保護裝置
+設定完成後，建議每半年回頭檢視本章各項設定是否仍有效、是否被系統更新改寫。
 
-不論外出或短暫離開座位，人們往往離開時忘記把裝置關上或休眠，這也創造出有心人士藉機直接使用和入侵裝置的風險可能性。因此透過設定螢幕保護裝置，讓裝置在沒人使用情況下自動休息，是一個簡單又很好的防止他人辦法。螢幕保護裝置的設定調整需搭配密碼一起設定，因此需 2 個動作來完成本設定調整。
+## 參考資料
 
-- STEP 1: 螢幕保護裝置設定：「開始」、「設定」、「個人化」、「鎖定畫面」、「螢幕保護程式設定」。等候可設定 3 - 5 分鐘，並勾選 **:white_check_mark: 繼續執行後，顯示登入畫面**。
-
-- STEP 2: 密碼設定或更新：「開始」、「設定」、「帳戶」、「登入選項」，在選項中確認密碼啟用。
-
-!!! tips "鎖定您的裝置"
-
-    如果要即刻暫時離開，可以直接按下 ++windows+l++ 鎖定螢幕。
-
-??? info "參考資料"
-
-    其他詳細的參考文件：
-
-    - [變更您的螢幕保護裝置設定 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E8%AE%8A%E6%9B%B4%E6%82%A8%E7%9A%84%E8%9E%A2%E5%B9%95%E4%BF%9D%E8%AD%B7%E8%A3%9D%E7%BD%AE%E8%A8%AD%E5%AE%9A-a9dc2a0c-dc8e-9161-d270-aaccc252082a){target="_blank"}
-    - [Windows 登入選項和帳戶保護 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/windows-%E7%99%BB%E5%85%A5%E9%81%B8%E9%A0%85%E5%92%8C%E5%B8%B3%E6%88%B6%E4%BF%9D%E8%AD%B7-7b34d4cf-794f-f6bd-ddcc-e73cdf1a6fbf#WindowsVersion=Windows_11){target="_blank"}
-
-## 防火牆
-
-現行 Windows 作業系統都有一個內建的防火牆，來協助每個裝置進行基礎防護。因此，此步驟是引導您將內建的。Microsoft Defender 防火牆服務開啟！
-
-如何開啟 Microsoft Defender 防火牆服務？
-
-1. 進入頁面：請依循此路徑「開始」-「設定」-「隱私權與安全性」-「Windows 安全性」-「防火牆與網路保護」，進入「防火牆與網路保護」頁面。
-2. 選取網路設定檔：在「防火牆與網路保護」中，找到「網域網路」 點擊進入，然後找到「私人網路」或「公用網路」選項，再點擊進去。
-3. 「開啟」防火牆：「私人網路」或「公用網路」的頁面中，您會看到「防火牆」選項，請設定為開啟。
-
-??? info "參考資料"
-
-    其他詳細的參考文件：
-
-    - [開啟或關閉 Microsoft Defender 防火牆 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E9%96%8B%E5%95%9F%E6%88%96%E9%97%9C%E9%96%89-microsoft-defender-%E9%98%B2%E7%81%AB%E7%89%86-ec0844f7-aebd-0583-67fe-601ecf5d774f){target="_blank"}
-
-以上，總共 6 個部分：版本更新、我的位置活動、應用程式權限、移除無用的應用程式、設定螢幕保護裝置、防火牆，您都完成了嗎？
-
-恭喜您！初步設定已經完畢了！
+- [我正在執行哪個版本的 Windows？ - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E6%88%91%E6%AD%A3%E5%9C%A8%E5%9F%B7%E8%A1%8C%E5%93%AA%E5%80%8B%E7%89%88%E6%9C%AC%E7%9A%84-windows-%E4%BD%9C%E6%A5%AD%E7%B3%BB%E7%B5%B1-628bec99-476a-2c13-5296-9dd081cdd808){target="_blank"}
+- [Windows Update 常見問題集 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/windows-update-%E5%B8%B8%E8%A6%8B%E5%95%8F%E9%A1%8C%E9%9B%86-8a903416-6f45-0718-f5c7-375e92dddeb2){target="_blank"}
+- [隱私權儀表板上的位置活動 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E9%9A%B1%E7%A7%81%E6%AC%8A%E5%84%80%E8%A1%A8%E6%9D%BF%E4%B8%8A%E7%9A%84%E4%BD%8D%E7%BD%AE%E6%B4%BB%E5%8B%95-cb8cde37-2569-1ca9-f011-2d07554912e8){target="_blank"}
+- [App 權限 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/app-%E6%AC%8A%E9%99%90-aea98a7c-b61a-1930-6ed0-47f0ed2ee15c){target="_blank"}
+- [在 Windows 中卸載或移除應用程式和程式 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E5%9C%A8-windows-%E4%B8%AD%E5%8D%B8%E8%BC%89%E6%88%96%E7%A7%BB%E9%99%A4%E6%87%89%E7%94%A8%E7%A8%8B%E5%BC%8F%E5%92%8C%E7%A8%8B%E5%BC%8F-4b55f974-2cc6-2d2b-d092-5905080eaf98){target="_blank"}
+- [變更您的螢幕保護裝置設定 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E8%AE%8A%E6%9B%B4%E6%82%A8%E7%9A%84%E8%9E%A2%E5%B9%95%E4%BF%9D%E8%AD%B7%E8%A3%9D%E7%BD%AE%E8%A8%AD%E5%AE%9A-a9dc2a0c-dc8e-9161-d270-aaccc252082a){target="_blank"}
+- [Windows 登入選項和帳戶保護 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/windows-%E7%99%BB%E5%85%A5%E9%81%B8%E9%A0%85%E5%92%8C%E5%B8%B3%E6%88%B6%E4%BF%9D%E8%AD%B7-7b34d4cf-794f-f6bd-ddcc-e73cdf1a6fbf){target="_blank"}
+- [開啟或關閉 Microsoft Defender 防火牆 - Microsoft 支援服務](https://support.microsoft.com/zh-tw/windows/%E9%96%8B%E5%95%9F%E6%88%96%E9%97%9C%E9%96%89-microsoft-defender-%E9%98%B2%E7%81%AB%E7%89%86-ec0844f7-aebd-0583-67fe-601ecf5d774f){target="_blank"}

@@ -1,29 +1,12 @@
 ---
-icon: octicons/heart-16
 title: 疑問諮詢
 ---
 
-# :heart:{.heart} 疑問諮詢
-
-???+ abstract "學習歷程：「疑問諮詢」"
-
-    <figure markdown="span">
-    ![學習歷程流程圖：疑問諮詢](../asserts/index_flow_support.svg)
-    <figcaption><small>「疑問諮詢」階段</small></figcaption>
-    </figure>
-
-    您目前在「[疑問諮詢]」，服務導入團隊將定期關懷，並協助提供在專案推進與問題協助。（完整流程：「[課程主題]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
-
-    [課程主題]: ../chapter/index.md
-    [制定資安政策]: ../policy/index.md
-    [進度追蹤]: ../assessment/index.md
-    [疑問諮詢]: ../support/index.md
-
-## 意見回饋
+# 疑問諮詢
 
 對於專案或是課程有任何意見，可以直接透過表單反應給我們作為未來的調整與改善。
 
-[:octicons-mail-16: 意見回饋表](#){ .md-button }
+[:octicons-mail-16: 意見回饋信箱](mailto:ssd@ocf.tw){ .md-button }
 
 ## 諮詢團隊
 

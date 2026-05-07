@@ -1,10 +1,6 @@
 @media screen and (min-width: 76.25em) {
-  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item:not(:last-child) {
-    border-bottom: 1px solid #ababab;
-    padding: 10px 0 20px;
-  }
-
-  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item:last-child {
+  /* 不在此加 border-bottom：同層後方常有 display:none 的 li，仍會讓 :not(:last-child) 成立，視覺上只剩一區卻多一條底線 */
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item {
     padding: 10px 0 20px;
   }
 
@@ -37,6 +33,88 @@
   nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > div.md-nav__link.md-nav__container {
     display: none;
   }
+
+  /* 與上列同目的：部分頂層區塊（常見資安事件、舊版教材等）用 label.md-nav__link 而非 div.md-nav__container，需一併隱藏，否則會多出一列標題文字 */
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > label.md-nav__link {
+    display: none;
+  }
+
+  /* Prune primary navigation to current branch on wide screens */
+  /* 1) Hide top-level sections that are not on the active path */
+  nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item:not(.md-nav__item--active) {
+    display: none;
+  }
+
+  /* 2) Inside the active top-level item, hide first-level children that are not active
+        (e.g. under「組織資安」只保留目前子區塊如「網路環境」這條 active 分支) */
+  nav.md-nav.md-nav--primary.md-nav--lifted
+    > ul.md-nav__list
+    > li.md-nav__item.md-nav__item--active
+    > nav.md-nav
+    > ul.md-nav__list
+    > li.md-nav__item:not(.md-nav__item--active) {
+    display: none;
+  }
+
+  /* 3) Under the active second-level section, hide only non-active *nested* sibling branches
+        (可摺疊子區塊). 同層葉節點（如「Wi-Fi 設定」與「辦公位置網路建議」、資安事件各篇、裝置各 OS）維持全部顯示。 */
+  nav.md-nav.md-nav--primary.md-nav--lifted
+    > ul.md-nav__list
+    > li.md-nav__item.md-nav__item--active
+    > nav.md-nav
+    > ul.md-nav__list
+    > li.md-nav__item.md-nav__item--active
+    > nav.md-nav
+    > ul.md-nav__list
+    > li.md-nav__item.md-nav__item--nested:not(.md-nav__item--active) {
+    display: none;
+  }
+
+  /*
+    左欄 primary 的捲動區：主題對 .md-sidebar__scrollwrap 使用 overflow-y:auto、scrollbar-gutter:stable（≥60em）、
+    細捲軸與 hover 顯示；並在支援 webkit 時對 .md-sidebar__inner 加 padding-right: calc(100% - 11.5rem) 為捲軸留空。
+    內容未溢出時仍常像有捲軸或右側一条空白。此處僅針對 primary 關閉捲軸槽、捲軸條並還原 inner 補償 padding（不影響右欄 TOC）。
+  */
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    scrollbar-gutter: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .md-sidebar--primary .md-sidebar__scrollwrap::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  [dir="ltr"] .md-sidebar--primary .md-sidebar__inner {
+    padding-right: 0;
+  }
+
+  [dir="rtl"] .md-sidebar--primary .md-sidebar__inner {
+    padding-left: 0;
+  }
+
+}
+
+/* 小螢幕（≤47.99em／768px）：主內文與麵包屑左右各 24px，與設計稿閱讀邊距一致（桌面 ≥76.25em 仍由主題與下文 blog 規則負責） */
+@media screen and (max-width: 47.99em) {
+  .md-content > .md-content__inner {
+    margin-left: 24px !important;
+    margin-right: 24px !important;
+  }
+  .md-content > .md-path {
+    margin-left: 24px !important;
+    margin-right: 24px !important;
+  }
+  /* 與上方 gutter 對齊，避免 Hero／首頁區塊負 margin 把視覺帶比內文更靠外的滿幅感 */
+  .home-hero {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .home-section {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
 }
 
 div.grid.cards > ul > li {
@@ -49,6 +127,93 @@ div.grid.cards > ul > li > p:first-child {
   font-size: larger;
 }
 
+/* 「在這個新手村，你可以找到」：淺灰背景、三欄卡片與按鈕 */
+.home-section--features {
+  background-color: #bfc5d2;
+  padding-top: 8px;
+  padding-bottom: clamp(1.5rem, 2.4vw, 2rem);
+}
+.home-section--features > h2 {
+  text-align: center !important;
+  margin-bottom: clamp(1.3rem, 2.2vw, 1.8rem) !important;
+  font-size: clamp(1.35rem, 1.6vw, 1.75rem) !important;
+  font-weight: 750 !important;
+  color: #11131a !important;
+}
+.home-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 1.8vw, 1.8rem);
+}
+.home-feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.2rem 0.35rem;
+}
+.home-feature-card__icon-wrap {
+  width: 5.8rem;
+  height: 5.8rem;
+  border-radius: 0.45rem;
+  background-color: #635bcb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(28, 26, 74, 0.2);
+  margin-bottom: 0.9rem;
+}
+.home-feature-card__icon {
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+  display: block;
+}
+.home-feature-card__title {
+  margin: 0 0 1rem;
+  font-size: clamp(1.25rem, 1.35vw, 1.5rem);
+  line-height: 1.3;
+  font-weight: 700;
+  color: #11131a;
+  background: none !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  display: block !important;
+}
+.home-feature-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+.home-feature-card__button.md-button {
+  margin: 0;
+  min-width: 10rem;
+  padding: 0.42rem 0.68rem;
+  border: 2px solid #635bcb;
+  border-radius: 0;
+  background-color: #fff;
+  color: #1f2430;
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+.home-feature-card__button.md-button:hover {
+  background-color: #ecefff;
+  border-color: #5345af;
+  color: #11131a;
+}
+@media screen and (max-width: 47.99em) {
+  .home-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+  .home-feature-card__title {
+    font-size: 1.25rem;
+  }
+}
+
 .md-typeset__table table:not([class]) {
   font-size: .8rem;
 }
@@ -56,6 +221,44 @@ div.grid.cards > ul > li > p:first-child {
 .md-typeset .admonition,
 .md-typeset details {
   font-size: .7rem;
+}
+
+/* 自訂 Admonition：可以防範的風險、採用的好處（benefit）- 淺灰底、藍色外框與圖示 #673ab7 */
+/* 大拇指圖示（thumb-up）以 CSS 變數注入，因自訂類型不會自動使用 theme.icon.admonition */
+:root {
+  --md-admonition-icon--benefit: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23 10a2 2 0 0 0-2-2h-6.32l.96-4.57c.02-.1.03-.21.03-.32 0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.58C7.22 7.95 7 8.45 7 9v10a2 2 0 0 0 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73zM1 21h4V9H1z"/></svg>');
+}
+.md-typeset .admonition.benefit,
+.md-typeset details.benefit {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #673ab7;
+  border-radius: 3px;
+  background-color: transparent;
+}
+.md-typeset .benefit > .admonition-title,
+.md-typeset .benefit > summary {
+  background-color: #f5f5f5;
+  color: #333;
+  font-weight: bold;
+  border: none;
+}
+.md-typeset .benefit > .admonition-title::before,
+.md-typeset .benefit > summary::before {
+  background-color: #673ab7;
+  -webkit-mask-image: var(--md-admonition-icon--benefit);
+  mask-image: var(--md-admonition-icon--benefit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.md-typeset .benefit .admonition-content,
+.md-typeset .benefit[open] > summary ~ * {
+  background-color: transparent;
+  color: #333;
 }
 
 .md-typeset > p > .md-button {
@@ -66,13 +269,50 @@ div.grid.cards > ul > li > p:first-child {
   color: #000000;
 }
 
-[data-md-color-scheme="default"] .md-typeset h2 {
-  border: 2px solid #000000;
-  border-left-width: 10px;
-  border-radius: 8px;
-  padding: 8px;
+.md-content__inner.md-typeset:not(:has(.category-hero, .sub-category-hero, .home-hero)) h1 {
+  margin: 0;
+}
+
+/* H2 依 step_by_step 設計稿：左側深藍紫直線（::before）、下方淺灰橫線、無灰底 */
+[data-md-color-scheme="default"] .md-typeset h2,
+[data-md-color-scheme="default"] .md-content__inner.md-typeset h2,
+[data-md-color-scheme="default"] .sub-category-body.md-typeset h2 {
+  position: relative;
+  overflow: visible;
+  border: none !important;
+  border-bottom: 1px solid #ddd !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none;
+  padding: 0.3rem 0 0.3rem calc(5px + 0.75rem) !important;
+  margin-bottom: 0.75rem;
   font-weight: bold;
-  box-shadow: 0 0 0 6px #eee;
+  color: #333;
+  background: none !important;
+  background-color: #eee !important;
+}
+[data-md-color-scheme="default"] .md-typeset h2::before,
+[data-md-color-scheme="default"] .md-content__inner.md-typeset h2::before,
+[data-md-color-scheme="default"] .sub-category-body.md-typeset h2::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 5px !important;
+  background: #673ab7 !important;
+  background-color: #673ab7 !important;
+  border-radius: 0 !important;
+  display: block !important;
+  z-index: 1 !important;
+}
+[data-md-color-scheme="default"] .md-typeset h2::after,
+[data-md-color-scheme="default"] .md-typeset h2 a,
+[data-md-color-scheme="default"] .md-content__inner.md-typeset h2::after,
+[data-md-color-scheme="default"] .sub-category-body.md-typeset h2::after {
+  background: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
 [data-md-color-scheme="default"] .md-typeset h3 {
@@ -84,32 +324,1276 @@ div.grid.cards > ul > li > p:first-child {
   display: inline;
 }
 
-[data-md-color-scheme="slate"] {
-  --md-typeset-color: #ffffff;
-  --md-admonition-fg-color: #ffffff;
+
+/* ========== 首頁設計稿版型 ========== */
+
+/* 首頁隱藏主題產生的 h1，僅顯示 hero 標題 */
+.md-content__inner:has(.home-hero) > h1:first-child {
+  display: none;
 }
 
-[data-md-color-scheme="slate"] .md-typeset h1 {
-  color: #ffffff;
+/* 首頁：移除導覽列、tabs 與 Hero 之間空白（Material 預設 .md-main__inner{margin-top:1.5rem}、.md-content__inner{padding-top:.6rem}） */
+.md-main:has(.home-hero) .md-main__inner {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+.md-main:has(.home-hero) .md-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+.md-content:has(.home-hero) {
+  padding-top: 0 !important;
+}
+.md-content__inner:has(.home-hero) {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+.md-content__inner:has(.home-hero)::before {
+  content: none !important;
+  display: none !important;
+}
+.md-content__inner.md-typeset:has(.home-hero) > .home-hero:first-child {
+  margin-top: 0 !important;
 }
 
-[data-md-color-scheme="slate"] .md-typeset h2 {
-  border: 2px solid #ccc;
+/* 首頁：編輯、檢視按鈕預設 float:right，會把 hero 區塊往下擠；改為貼上角絕對定位，讓 hero 與圖貼齊 article 頂緣 */
+.md-content__inner.md-typeset:has(.home-hero) {
+  position: relative;
+}
+.md-content__inner.md-typeset:has(.home-hero) > .md-content__button {
+  position: absolute;
+  top: 0.5rem;
+  float: none !important;
+  margin: 0 !important;
+  z-index: 2;
+}
+.md-content__inner.md-typeset:has(.home-hero) > .md-content__button:nth-child(1) {
+  right: 0;
+}
+.md-content__inner.md-typeset:has(.home-hero) > .md-content__button:nth-child(2) {
+  right: 2.75rem;
+}
+
+
+/* Hero：與 home-section 等寬
+   ≤63.99em：設計稿為「標題 → 文案 → CTA → 插圖」縱向堆疊（文件流，非底圖疊字）
+   ≥64em：左文右圖，插圖層絕對定位靠右 contain */
+.home-hero {
+  --home-hero-accent: #5345af;
+  --home-hero-title: #5345af;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  position: relative;
+  margin: 0 -0.5rem;
+  padding: 0;
+  box-sizing: border-box;
+  min-height: 0;
+  text-align: left;
+  overflow: visible;
+  isolation: isolate;
+}
+/* 首頁首個 section 緊貼 hero，下方區塊不留縫 */
+.md-content__inner.md-typeset:has(.home-hero) .home-hero + .home-section {
+  margin-top: 0 !important;
+}
+@media screen and (min-width: 64em) {
+  .home-hero {
+    display: block;
+    min-height: min(72vh, 40rem);
+    overflow: clip;
+  }
+}
+.home-hero__panel--text {
+  background-color: transparent;
+  color: #1f2430;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 2rem clamp(1.25rem, 4vw, 3rem) 2.5rem 0;
+  position: relative;
+  z-index: 2;
+}
+.home-hero__panel--art {
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+}
+@media screen and (min-width: 64em) {
+  .home-hero__panel--text {
+    width: min(44vw, 40rem);
+    min-height: min(72vh, 40rem);
+  }
+  .home-hero__panel--art {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-color: transparent;
+    align-items: flex-start;
+    justify-content: flex-end;
+    pointer-events: none;
+  }
+}
+.home-hero__content {
+  max-width: 23rem;
+  margin: 0;
+  padding: 0.75rem 0.9rem 0.75rem 0;
+  background-color: rgba(255, 255, 255, 0.56);
+  border-radius: 0.5rem;
+}
+.home-hero__title {
+  margin: 0 0 1rem;
+  font-size: clamp(1.5rem, 2.5vw + 0.85rem, 2.125rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--home-hero-title);
+}
+
+.home-hero__tagline {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(31, 36, 48, 0.86);
+}
+.home-hero__actions {
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+.home-hero__actions .md-button {
+  margin: 0;
+}
+/* 主 CTA：與主視覺區塊的紫色系一致 */
+.home-hero__panel--text .home-hero__cta.md-button--primary {
+  background-color: var(--home-hero-accent);
+  border-color: var(--home-hero-accent);
+  color: #fff;
+}
+.home-hero__panel--text .home-hero__cta.md-button--primary:hover {
+  background-color: #5a3f82;
+  border-color: #5a3f82;
+  color: #fff;
+}
+.home-hero__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+@media screen and (min-width: 64em) {
+  .home-hero__image {
+    width: 60rem;
+    max-width: none;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: right top;
+  }
+}
+
+/* 中窄螢幕：與設計稿一致，插圖在文案與 CTA 之下、置中，不使用全幅底圖疊加 */
+@media screen and (max-width: 63.99em) {
+  .home-hero {
+    min-height: 0;
+  }
+  .home-hero__panel--text {
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: 0;
+    padding: 1.5rem 0 1rem;
+    background-color: transparent;
+    backdrop-filter: none;
+  }
+  .home-hero__content {
+    max-width: min(28rem, 100%);
+    padding-left: 0;
+    padding-right: 0;
+    background-color: transparent;
+    border-radius: 0;
+  }
+  .home-hero__title {
+    font-size: clamp(1.15rem, 2.2vw + 0.7rem, 1.75rem);
+    margin-bottom: 0.75rem;
+  }
+  .home-hero__tagline {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .home-hero__actions {
+    margin-top: 1.25rem;
+  }
+  .home-hero__panel--art {
+    position: static;
+    flex: 0 0 auto;
+    z-index: auto;
+    overflow: visible;
+    /* 置頂對齊，避免少數裝置在 flex 下出現垂直裁切感知 */
+    align-items: flex-start;
+    justify-content: center;
+    pointer-events: auto;
+    background-color: transparent;
+    padding: 0.75rem 0 0;
+    min-height: 0;
+    max-height: none;
+  }
+  .home-hero__image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    margin-left: auto;
+    margin-right: auto;
+    flex-shrink: 0;
+    object-fit: contain;
+    object-position: center top;
+  }
+}
+
+
+/* 首頁專用 H2 樣式（僅 index 頁，依設計稿；提高優先級覆蓋全域 h2）
+   blog post CTA h2 也共用同一份重置；selector 需含 md-content__inner.md-typeset
+   才能匹敵全域 [data-md-color-scheme=default] .md-content__inner.md-typeset h2 的特異度 */
+.md-content__inner.md-typeset:has(.home-hero) h2,
+.md-content--blog .md-content__inner.md-typeset .home-section--cta > h2 {
+  border: none !important;
+  border-left-width: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+}
+/* 第一個 H2：較大、粗體、深色、左對齊、上下留白 */
+.md-content__inner.md-typeset:has(.home-hero) h2:first-of-type {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  color: #333 !important;
+  text-align: left !important;
+  margin-top: 0 !important;
+  margin-bottom: 1rem !important;
+}
+/* 「在這裡你可以找到」區塊 H2：中等字級、置中 */
+.md-content__inner.md-typeset:has(.home-hero) .home-section--gray > h2 {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #333 !important;
+  text-align: center !important;
+  margin-top: 0 !important;
+  margin-bottom: 1.5rem !important;
+}
+/* 其他首頁區塊 H2（最新內容、讓知識傳播出去）：中等字級、左對齊
+   blog post CTA h2 共用同一字級設定 */
+.md-content__inner.md-typeset:has(.home-hero) .home-section--white > h2,
+.md-content__inner.md-typeset:has(.home-hero) .home-section--cta > h2,
+.md-content--blog .md-content__inner.md-typeset .home-section--cta > h2 {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #333 !important;
+  text-align: left !important;
+  margin-top: 0 !important;
+  margin-bottom: 1rem !important;
+}
+
+/* 首頁 H2 移除左側色條（覆蓋全域 ::before）；blog post CTA h2 同樣移除 */
+.md-content__inner.md-typeset:has(.home-hero) h2::before,
+.md-content--blog .md-content__inner.md-typeset .home-section--cta > h2::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 首頁區塊：白 / 淺灰交錯 */
+.home-section {
+  padding: 2rem 1.5rem;
+  margin: 0 -0.5rem;
+}
+.home-section--white {
+  background-color: #fff;
+}
+.home-section--white > p:last-child {
+  padding-top: 40px;
+  margin-top: 0;
+  margin-bottom: 0;
+  text-align: center;
+}
+.home-section--gray {
+  background-color: #E5E5E5;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* 主按鈕紫色 CTA (#5345AF) */
+.home-section .md-button--primary,
+.md-content__inner .home-section .md-typeset a.md-button--primary {
+  background-color: #5345AF !important;
+  border-color: #5345AF !important;
+  color: #fff !important;
+}
+.home-section .md-button--primary:hover {
+  background-color: #4335a0 !important;
+  border-color: #4335a0 !important;
+  color: #fff !important;
+}
+
+/* More posts：白底紫框 */
+.md-button--outline,
+.home-section a.md-button[href]:not(.md-button--primary) {
+  background-color: #fff !important;
+  border: 2px solid #5345AF !important;
+  color: #5345AF !important;
+}
+.md-button--outline:hover,
+.home-section a.md-button[href]:not(.md-button--primary):hover {
+  background-color: #f5f3ff !important;
+  color: #4335a0 !important;
+  border-color: #4335a0 !important;
+}
+
+/* 文章預覽三卡 */
+.home-article-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+@media screen and (max-width: 768px) {
+  .home-article-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.home-article-card {
+  background: #fff;
   border-radius: 8px;
-  padding: 8px;
-  background-color: #555;
-  font-weight: bold;
-  box-shadow: 0 0 0 6px #555;
-  color:#eee;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+.home-article-card img {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+  margin-bottom: 0.75rem;
+  border-radius: 4px;
+}
+.home-article-card p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+.home-article-card__title {
+  margin: 0.5rem 0 0.25rem !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+.home-article-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+.home-article-card__title a:hover {
+  color: var(--md-typeset-a-color);
+  text-decoration: underline;
+}
+.home-article-card__date {
+  margin: 0 0 0.5rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 400 !important;
+  color: inherit !important;
+  line-height: 1.3 !important;
+}
+.home-article-card a.md-button {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
 }
 
-[data-md-color-scheme="slate"] .md-typeset h3 {
+/* ========== 延伸閱讀區塊（可重用） ========== */
+.further-reading__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin: 1rem 0;
+}
+@media screen and (max-width: 768px) {
+  .further-reading__grid {
+    grid-template-columns: 1fr;
+  }
+}
+.further-reading__card {
+  background-color: #fff;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+.further-reading__image {
+  aspect-ratio: 16 / 9;
+  background-color: #e0e0e0;
+  min-height: 120px;
+}
+.further-reading__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.further-reading__title {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1rem;
   font-weight: bold;
-  font-size: 1.40em;
-  background-color: #555;
-  padding: 6px;
-  border: 1px solid #ccc;
+  color: #333;
+}
+.further-reading__date {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: #666;
+}
+.further-reading__description {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+/* Let knowledge spread：左文右按鈕，與設計稿一致的邊緣留白 */
+.home-section--cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 2rem;
+  row-gap: 0.15rem;
+  align-items: start;
+  padding: 28px 30px 24px;
+  background-color: #ffffff !important;
+  border: 2px solid #5345af;
+  border-radius: 10px;
+}
+.home-section--cta h2 {
+  grid-column: 1;
+  margin-top: 0;
+  margin-bottom: 0.05rem !important;
+  font-size: 1.85rem !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  color: #1a1d23 !important;
+}
+/* 覆寫通用 h2 規則，縮小 CTA 標題與內文間距 */
+.md-content__inner.md-typeset:has(.home-hero) .home-section--cta > h2,
+.md-content--blog .md-content__inner.md-typeset .home-section--cta > h2 {
+  margin-bottom: 0.05rem !important;
+}
+.home-section--cta > p {
+  grid-column: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #1f2430;
+}
+.home-cta-buttons {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0;
+}
+/* 按鈕被 Markdown 包成單一 <p>，讓 p 內兩顆按鈕上下排列 */
+.home-cta-buttons > p {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+}
+.home-cta-button--outline {
+  background-color: #fff !important;
+  border: 2px solid #5345af !important;
+  color: #11131a !important;
+}
+.home-cta-button--outline:hover {
+  background-color: #f4f1ff !important;
+  border-color: #5345af !important;
+  color: #11131a !important;
+}
+@media screen and (max-width: 47.99em) {
+  .home-section--cta {
+    grid-template-columns: 1fr;
+    row-gap: 0.85rem;
+    padding: 20px 18px 18px;
+  }
+  .home-section--cta h2,
+  .home-section--cta > p,
+  .home-cta-buttons {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .home-cta-buttons {
+    width: 100%;
+    align-self: start;
+  }
+  .home-cta-buttons > p {
+    align-items: stretch;
+  }
+  /* 小螢幕：按鈕滿版，與單欄文字寬度齊平 */
+  .home-cta-buttons .md-button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Blog post CTA：版型與首頁完全一致（白底紫框、寬螢幕兩欄左文右按鈕、h2 共用上方
+   首頁 CTA h2 規則），此處僅將段落字級回退為繼承自內文。 */
+.md-content--blog .home-section--cta > p {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Footer 深灰（與設計稿一致） */
+.md-footer {
+  background-color: #454545 !important;
+}
+.md-footer-meta {
+  background-color: #3a3a3a !important;
+  --footer-meta-font-size: 0.8125rem;
+  --footer-meta-line-height: 1.55;
+}
+.md-footer a,
+.md-footer-meta a,
+.md-footer .md-copyright__highlight {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.md-footer a:hover {
+  color: #fff !important;
+}
+.md-footer-meta .md-social a {
+  color: rgba(255, 255, 255, 0.7);
+}
+.md-footer-meta > .md-footer-meta__inner.md-grid:nth-of-type(2) {
+  height: 20px;
+  padding: 10px;
+  font-size: var(--footer-meta-font-size);
+  line-height: var(--footer-meta-line-height);
+}
+.md-footer-meta > .md-footer-meta__inner.md-grid:nth-of-type(2) > hr {
+  display: block;
+  width: 100%;
+  min-width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.32);
+  opacity: 1;
+}
+.md-footer-meta > .md-footer-meta__inner.md-grid:nth-of-type(3) {
+  padding: 0 10px;
+  font-size: var(--footer-meta-font-size);
+  line-height: var(--footer-meta-line-height);
+}
+.md-footer-meta > .md-footer-meta__inner.md-grid:first-of-type {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 40px 10px 0.5rem;
+  font-size: var(--footer-meta-font-size);
+  line-height: var(--footer-meta-line-height);
+}
+.md-footer-meta .md-copyright {
+  font-size: var(--footer-meta-font-size);
+  line-height: var(--footer-meta-line-height);
+  margin: 0 !important;
+}
+.md-footer-meta > .md-footer-meta__inner.md-grid:first-of-type > a {
+  display: inline-block;
+  width: fit-content;
+  color: rgba(255, 255, 255, 0.88) !important;
+  text-decoration: none;
+  font-size: var(--footer-meta-font-size);
+  line-height: var(--footer-meta-line-height);
+  font-weight: 400;
+}
+.md-footer-meta > .md-footer-meta__inner.md-grid:first-of-type > a:hover {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
+
+/* Header 站名顏色 */
+.md-header__title .md-header__topic .md-ellipsis {
+  color: #5345af !important;
+}
+
+/* 始終顯示網站標題，不隨捲動切換為頁面標題 */
+.md-header__title--active .md-header__topic:first-child {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateX(0) !important;
+}
+.md-header__topic + .md-header__topic {
+  display: none !important;
+}
+
+/* Header 搜尋框色系（與主視覺紫色一致） */
+.md-search__form {
+  border: 1.5px solid rgba(83, 69, 175, 0.45);
   border-radius: 8px;
+  background-color: #fff;
+}
+.md-search__input {
+  color: #2b255f !important;
+}
+.md-search__input::placeholder {
+  color: rgba(83, 69, 175, 0.75) !important;
+}
+.md-search__form:focus-within {
+  border-color: #5345af;
+  box-shadow: 0 0 0 2px rgba(83, 69, 175, 0.15);
+}
+
+/* Header 主題切換按鈕色系 */
+.md-header__option[data-md-component="palette"] .md-header__button {
+  color: #5345af !important;
+}
+.md-header__option[data-md-component="palette"] .md-header__button:hover {
+  color: #4335a0 !important;
+  background-color: rgba(83, 69, 175, 0.08);
+  border-radius: 999px;
+}
+
+/* Header tabs：隱藏指定頂層 tab（對應 mkdocs nav 順序：首頁、資安升級工具包、資源諮詢、延伸閱讀） */
+.md-tabs .md-tabs__item:nth-child(1),
+.md-tabs .md-tabs__item:nth-child(6),
+.md-tabs .md-tabs__item:nth-child(7),
+.md-tabs .md-tabs__item:nth-child(8) {
+  display: none;
+}
+
+/* Primary 側欄（≤76.234375em，抽屜／窄版）：隱藏與上方 tabs 相同序號之頂層項目（mkdocs nav：首頁、資安升級工具包、資源諮詢、延伸閱讀）。若該頂層為目前路徑（md-nav__item--active）則保留，避免抽屜內無法切換同章節。 */
+@media screen and (max-width: 76.234375em) {
+  .md-nav--primary > .md-nav__list > .md-nav__item:nth-child(1):not(.md-nav__item--active),
+  .md-nav--primary > .md-nav__list > .md-nav__item:nth-child(6):not(.md-nav__item--active),
+  .md-nav--primary > .md-nav__list > .md-nav__item:nth-child(7):not(.md-nav__item--active),
+  .md-nav--primary > .md-nav__list > .md-nav__item:nth-child(8):not(.md-nav__item--active) {
+    display: none;
+  }
+}
+
+/* ========== Category 版面樣板 ========== */
+
+.category-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 2rem;
+  max-width: 60rem;
+}
+@media screen and (min-width: 768px) {
+  .category-hero {
+    grid-template-columns: 1fr auto;
+  }
+}
+.category-hero__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.category-hero__tagline {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.category-hero__description {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #555;
+}
+.category-hero__image {
+  width: 100%;
+  max-width: 100%;
+}
+/* 有圖時預留與站內 SVG hero（多為 240×240 或相近）一致的比例，避免載入前高度為 0 造成版面跳動 */
+.category-hero__image:has(> img) {
+  aspect-ratio: 1 / 1;
+  align-self: start;
+}
+@media screen and (min-width: 768px) {
+  .category-hero__image {
+    width: auto;
+    max-width: 320px;
+    justify-self: auto;
+  }
+  .category-hero__image:has(> img) {
+    width: 320px;
+    max-width: 320px;
+    flex-shrink: 0;
+  }
+}
+.category-hero__image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 8px;
+  object-fit: contain;
+}
+/* 未指定 hero 圖時仍保留右欄寬度，避免左欄文字因單欄而變寬 */
+@media screen and (max-width: 767px) {
+  .category-hero__image--empty {
+    display: none;
+  }
+}
+@media screen and (min-width: 768px) {
+  .category-hero__image--empty {
+    flex-shrink: 0;
+    width: 320px;
+    max-width: 320px;
+    min-height: 240px;
+    aspect-ratio: 4 / 3;
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+}
+
+.category-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media screen and (min-width: 600px) {
+  .category-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media screen and (min-width: 960px) {
+  .category-cards {
+    /* Auto-fit so 3 cards won't "stick left" with an empty 4th column */
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  }
+}
+.category-card {
+  background: #fff;
+  border-radius: 8px;
+  border: none;
+  overflow: hidden;
+  box-shadow: none;
+}
+.category-card__link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 0;
+}
+.category-card__link:hover {
+  color: inherit;
+}
+.category-card__image {
+  background: #c8cfdb;
+  display: block;
+  line-height: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+/* Placeholder-only cards: keep a visible gray area without fixed crop box */
+.category-card__image:not(:has(> img)) {
+  min-height: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+}
+/* 預設：與站內多數分類卡片 SVG（216×139）一致 */
+.category-card__image:has(> img) {
+  aspect-ratio: 216 / 139;
+  background: #c8cfdb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* front matter `card_image_aspect: square`（例：how-to 卡片 240×240）：圖塊白底，不套用預設 #c8cfdb */
+.category-cards--image-square .category-card__image {
+  background: #fff;
+}
+.category-cards--image-square .category-card__image:has(> img) {
+  aspect-ratio: 1 / 1;
+}
+.category-card__image img {
+  width: 70%;
+  height: 70%;
+  display: block;
+  object-fit: contain;
+  margin: auto;
+}
+.category-card__placeholder {
+  font-size: 0.875rem;
+  color: #888;
+}
+.md-content__inner .category-cards .category-card__label {
+  margin: 0 1rem 2rem !important;
+  font-size: 1.40em !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+  text-align: center !important;
+}
+/* Title as outline CTA（設計稿：直角紫框、透明底、黑字、尾端箭頭） */
+.md-content__inner .category-cards .category-card__title {
+  margin: 0.75rem 1rem 1rem !important;
+  padding: 0.625rem 1.25rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #1a1a1a !important;
+  background-color: transparent !important;
+  border: 1px solid #5345af !important;
+  border-radius: 0 !important;
+  text-align: center !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.md-content__inner .category-cards .category-card__title::after {
+  content: " ›";
+  font-weight: 500;
+}
+.md-content__inner .category-cards .category-card__link:hover .category-card__title {
+  background-color: #f5f3ff !important;
+  border-color: #4335a0 !important;
+  color: #4335a0 !important;
+}
+
+/* 僅 personal/org hub（front matter card_title_style: plain）：標題一般文字、靠左，與圖塊左緣對齊 */
+.md-content__inner .category-cards.category-cards--title-plain .category-card__title {
+  margin: 0.75rem 0 0.5rem !important;
+  padding: 0 !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+  background-color: transparent !important;
+  border: none !important;
+  text-align: left !important;
+  transition: color 0.15s ease;
+}
+.md-content__inner .category-cards.category-cards--title-plain .category-card__title::after {
+  content: none !important;
+}
+.md-content__inner .category-cards.category-cards--title-plain .category-card__link:hover .category-card__title {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--md-typeset-a-color) !important;
+}
+
+.category-body {
+  margin-top: 1.5rem;
+}
+.category-body:empty {
+  display: none;
+}
+
+/* Category 變體：文字卡（標題、分隔線、說明、→ 查看更多），2 欄網格 */
+.category-text-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 60rem;
+}
+@media screen and (min-width: 600px) {
+  .category-text-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.category-text-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 1.25rem 1.25rem 1rem;
+  text-decoration: none;
+  color: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.category-text-card:hover {
+  border-color: #c4b8e8;
+  box-shadow: 0 2px 8px rgba(83, 69, 175, 0.08);
+}
+.md-content__inner .category-text-cards .category-text-card__title {
+  margin: 0 0 0.75rem !important;
+  padding: 0 !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #1a1a1a !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  line-height: 1.35 !important;
+}
+.category-text-card__rule {
+  width: 100%;
+  height: 0;
+  margin: 0 0 0.75rem;
+  border: 0;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+.category-text-card__body {
+  margin: 0 0 1rem !important;
+  font-size: 0.9rem !important;
+  font-weight: normal !important;
+  line-height: 1.65 !important;
+  color: #333 !important;
+  white-space: pre-line;
+  flex: 1 1 auto;
+}
+.category-text-card__cta {
+  margin-top: auto;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #5345af;
+}
+.category-text-card:hover .category-text-card__cta {
+  color: #4335a0;
+  text-decoration: underline;
+}
+
+/* ========== Sub-category 版面樣板 ========== */
+
+.sub-category-hero {
+  border-bottom: 3px solid #6b4c9a;
+  padding: 1.25rem 0 1rem;
+  margin: 0 0 2rem;
+  box-sizing: border-box;
+}
+.sub-category-hero__inner {
+  max-width: 60rem;
+  margin: 0 auto;
+}
+.sub-category-breadcrumb {
+  font-size: .7rem;
+  margin-bottom: -20px;
+}
+.sub-category-breadcrumb ol.sub-category-breadcrumb__list {
+  align-items: center;
+  display: flex;
+  gap: .2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sub-category-breadcrumb ol.sub-category-breadcrumb__list li {
+  margin: 0;
+}
+.sub-category-breadcrumb__item:not(:first-child) {
+  display: inline-flex;
+  gap: .2rem;
+  white-space: nowrap;
+}
+.sub-category-breadcrumb__item:not(:first-child)::before {
+  background-color: var(--md-default-fg-color--lighter);
+  content: "";
   display: inline;
-  color: #eee;
+  height: .8rem;
+  -webkit-mask-image: var(--md-path-icon);
+  mask-image: var(--md-path-icon);
+  width: .8rem;
+}
+.sub-category-breadcrumb .sub-category-breadcrumb__link {
+  align-items: center;
+  color: var(--md-default-fg-color--light);
+  display: flex;
+}
+.sub-category-breadcrumb .sub-category-breadcrumb__link:hover {
+  color: var(--md-accent-fg-color);
+}
+.sub-category-breadcrumb:not(.sub-category-breadcrumb--custom) ol.sub-category-breadcrumb__list li:last-child {
+  display: none;
+}
+.sub-category-breadcrumb__item--home .sub-category-breadcrumb__link svg {
+  width: .9rem;
+  height: .9rem;
+  fill: #5345af;
+}
+
+.md-content__inner .sub-category-hero .sub-category-hero__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+/* 引言：單欄時順序依 DOM（圖 → 文），標題在 .sub-category-hero 內；勿用 order 交換，以免窄螢幕變成文在圖上 */
+.sub-category-intro {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 2rem;
+  max-width: 60rem;
+}
+/* 寬螢幕：圖左文右（與設計稿一致） */
+@media screen and (min-width: 768px) {
+  .sub-category-intro {
+    grid-template-columns: auto 1fr;
+  }
+  .sub-category-intro__image {
+    justify-self: start;
+  }
+}
+.sub-category-intro__image {
+  min-width: 0;
+  width: 100%;
+  max-width: 320px;
+  background: #fff;
+  display: block;
+  line-height: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sub-category-intro__image:not(:has(> img)) {
+  aspect-ratio: 16 / 10;
+  min-height: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+}
+/* 與站內 sub-category 插圖（多為 216×139）比例一致，避免載入前後位移 */
+.sub-category-intro__image:has(> img) {
+  aspect-ratio: 216 / 139;
+}
+.sub-category-intro__image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+.sub-category-intro__placeholder {
+  font-size: 0.875rem;
+  color: #888;
+}
+.sub-category-intro__text {
+  min-width: 0;
+}
+.sub-category-intro__paragraph {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.sub-category-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media screen and (min-width: 600px) {
+  .sub-category-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.sub-category-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.sub-category-card__title {
+  margin: 0 0 0.5rem !important;
+  padding: 6px 6px 6px 0 !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #333;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+}
+.sub-category-card__duration {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: #666;
+}
+.sub-category-card__description {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #555;
+}
+.sub-category-card__cta {
+  font-size: 0.9375rem;
+  color: var(--md-typeset-a-color);
+  text-decoration: none;
+}
+.sub-category-card__cta:hover {
+  text-decoration: underline;
+}
+
+.sub-category-body {
+  margin-top: 1.5rem;
+}
+.sub-category-body:empty {
+  display: none;
+}
+
+/* 麵包屑：文字、首頁圖示、項目間分隔符（mask）一律主色 #5345af；字級與邊距仍沿用 Material .md-path */
+.md-path .md-path__item:not(:first-child)::before {
+  background-color: #5345af;
+}
+
+.md-path .md-path__link--home svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: #5345af;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.md-path .md-path__link--home:hover svg,
+.md-path .md-path__link--home:focus-visible svg {
+  opacity: 0.85;
+}
+
+/* 首頁圖示以外的麵包屑連結（含多層 ancestor、延伸閱讀等） */
+.md-path .md-path__item:not(.md-path__item--home) .md-path__link {
+  color: #5345af;
+}
+
+.md-path .md-path__item:not(.md-path__item--home) .md-path__link:hover,
+.md-path .md-path__item:not(.md-path__item--home) .md-path__link:focus,
+.md-path .md-path__item:not(.md-path__item--home) .md-path__link:focus-visible {
+  color: #5345af;
+  opacity: 0.85;
+}
+
+/* Blog post：非手機模式下先採 80% 寬，超寬螢幕回到與 nav 同寬。 */
+@media screen and (min-width: 76.25em) {
+  .md-content--blog > .md-content__inner,
+  .md-content--blog > .md-path {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media screen and (min-width: 100em) {
+  .md-content--blog > .md-content__inner,
+  .md-content--blog > .md-path {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Blog post：首圖由 frontmatter 的 cover_image 控制，顯示在麵包屑上方。 */
+.md-content--blog .blog-post-cover {
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0 calc(50% - 50vw);
+}
+
+/* Blog 首圖貼齊上方：移除主題預設的主區塊上緣留白。 */
+.md-main:has(.md-content--blog .blog-post-cover) .md-main__inner {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.md-main:has(.md-content--blog .blog-post-cover) .md-content {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.md-main:has(.md-content--blog .blog-post-cover) .md-content--blog {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.md-content--blog .blog-post-cover img {
+  display: block;
+  width: 100%;
+  border-radius: 0;
+}
+
+.md-content--blog > .md-path {
+  margin-top: 0;
+}
+
+.md-content--blog .md-content__inner--blog-post {
+  display: flex;
+  flex-direction: column;
+}
+
+.md-content--blog .md-content__inner--blog-post > * {
+  order: 3;
+}
+
+.md-content--blog .md-content__inner--blog-post > h1 {
+  order: 1;
+}
+
+.md-content--blog .md-content__inner--blog-post > .blog-post-date {
+  order: 2;
+  margin: 0.4rem 0 1rem;
+  font-size: 0.75rem;
+  color: #000000;
+}
+
+/* Blog 文章正文段落：比全域預設更緊湊，避免段間留白過大。 */
+.md-content--blog .md-content__inner--blog-post > p:not(.blog-post-date) {
+  margin: 0 0 0.8rem !important;
+}
+
+/* Blog 文章內文 H2：移除裝飾，僅保留主題色標題。 */
+[data-md-color-scheme="default"] .md-content--blog .md-content__inner.md-typeset.md-content__inner--blog-post h2 {
+  position: static !important;
+  overflow: visible !important;
+  border: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-bottom: 0.75rem;
+  font-weight: 700 !important;
+  color: var(--md-typeset-a-color) !important;
+  background: none !important;
+  background-color: transparent !important;
+}
+
+[data-md-color-scheme="default"] .md-content--blog .md-content__inner.md-typeset.md-content__inner--blog-post h2::before,
+[data-md-color-scheme="default"] .md-content--blog .md-content__inner.md-typeset.md-content__inner--blog-post h2::after {
+  content: none !important;
+  display: none !important;
+}
+
+[data-md-color-scheme="default"] .md-content--blog .md-content__inner.md-typeset.md-content__inner--blog-post h2 a {
+  color: inherit !important;
+  background: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.md-content--blog .md-source-file {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.md-content--blog .md-source-file__fact--edit-link {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.md-content--blog .md-source-file__fact--edit-link a {
+  display: inline-flex;
+  align-items: center;
+  color: #5345af;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.md-content--blog .md-source-file__fact--edit-link a:hover,
+.md-content--blog .md-source-file__fact--edit-link a:focus-visible {
+  text-decoration: underline;
 }

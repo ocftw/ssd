@@ -1,9 +1,8 @@
 ---
-icon: octicons/checklist-16
 title: 檢查清單
 ---
 
-# :octicons-checklist-16: 檢查清單
+# 檢查清單
 
 !!! info "使用說明"
 

@@ -1,24 +1,21 @@
 ---
-icon: octicons/graph-16
 title: 進度追蹤
 ---
 
-# :octicons-graph-16: 進度追蹤
+# 進度追蹤
 
-???+ abstract "學習歷程：「進度追蹤」"
+當組織或個人開始導入資安改善時，需要一些工具把「目前做到哪裡」「下一步要做什麼」記錄下來。本區提供共用的檢查清單與紀錄表，幫助你或顧問彙整進度，避免單靠記憶追蹤。
 
-    <figure markdown="span">
-    ![學習歷程流程圖：進度追蹤](../asserts/index_flow_assessment.svg)
-    <figcaption><small>「進度追蹤」階段</small></figcaption>
-    </figure>
+## 適合在這裡看的人
 
-    您目前在「[進度追蹤]」，服務導入團隊將定期關懷，並協助提供在專案推進與問題協助。（完整流程：「[課程主題]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
+- **組織管理者或行政窗口**：想了解組織整體導入進度、要跟理監事會報告。
+- **資安顧問或 CSCS 種子**：與服務對象協作時需要可重複使用的盤點與紀錄表單。
+- **個人讀者**：完成一段學習後，想記錄自己已經調整哪些設定、還有哪些待辦。
 
-    [課程主題]: ../chapter/index.md
-    [制定資安政策]: ../policy/index.md
-    [進度追蹤]: ../assessment/index.md
-    [疑問諮詢]: ../support/index.md
+## 提供的工具
 
-## 說明
+- **[檢查清單](checklist/index.md)**：場勘紀錄表、課後任務清單，可在工作坊或自學時直接使用。
+- **[場勘紀錄表](checklist/site_survey.md)**：到組織據點實地了解辦公空間、網路與設備時填寫。
+- **[課後任務清單](checklist/homework.md)**：把每次討論或閱讀後的待辦記下來，方便之後追蹤完成度。
 
-透過相關的進度追蹤表評估、評量目前組織內夥伴在資安抵禦知識與技能的成長程度。
+完整的學習路徑說明請見 [教材資源](../course/index.md)，事件發生時的應變請見 [常見資安事件](../common/index.md)，遇到問題想諮詢請見 [疑問諮詢](../support/index.md)。

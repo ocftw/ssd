@@ -1,9 +1,8 @@
 ---
-icon: octicons/checklist-16
 title: 場勘紀錄表
 ---
 
-# :octicons-checklist-16: 場勘紀錄表
+# 場勘紀錄表
 
 !!! note "使用時機點"
 

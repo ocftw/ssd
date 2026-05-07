@@ -1,40 +1,37 @@
 ---
-icon: octicons/file-directory-open-fill-16
 title: 教材資源
 ---
 
-# :octicons-file-directory-open-fill-16: 教材資源
+# 教材資源
 
-???+ abstract "學習歷程：「課程主題」、「操作說明」"
+本頁說明教材整體架構，協助讀者依自己的角色找到合適的入口。
 
-    <figure markdown="span">
-    ![學習歷程流程圖：課程主題、操作說明](../asserts/index_flow_1.svg)
-    <figcaption><small>此階段專注在「課程主題」、「操作指南」</small></figcaption>
-    </figure>
+## 教材的兩條主軸
 
-    此頁面將針對「[課程主題]{target="_blank"}」、「[操作指南]{target="_blank"}」的使用說明。（完整流程：「[課程主題]{target="_blank"}」、「[制定資安政策]{target="_blank"}」、「[進度追蹤]{target="_blank"}」、「[疑問諮詢]{target="_blank"}」）
+教材依讀者角色拆成兩條主軸，可以擇一深入，也可以交替閱讀：
 
-    [課程主題]: ../chapter/index.md
-    [制定資安政策]: ../policy/index.md
-    [進度追蹤]: ../assessment/index.md
-    [疑問諮詢]: ../support/index.md
+- **[個人資安](../personal/index.md)**：每位成員自己的裝置、帳號、網路、加密通訊與出差安全。從手機與電腦的設定，到密碼、雙重驗證、加密訊息、VPN，照著步驟即可完成。
+- **[組織資安](../org/index.md)**：寫給組織管理者與行政窗口，從公務裝置、Wi-Fi、組織帳號、資料權限、備份到資安政策範本，把「制度面」的功課一併納入。
 
-## 課程主題說明
+## 事件處理與應變
 
-<figure markdown="span">
-  ![「課程主題」主題與課程](../asserts/course_intro.svg)
-  <figcaption><small>「課程主題」的主題與課程</small></figcaption>
-</figure>
+當已經發生疑似資安事件（釣魚信、勒索軟體、帳號外洩、官網被攻擊、NAS 異常等）時，可直接前往：
 
-「課程主題」的制定涵蓋組織分險評估、個人設備裝置安全、身分驗證、網路使用行為、加密通訊、帳號管理、資料管理與備份、海外出差。以上主題部份將拆分更細的課程來完整主題課程內涵。
+- **[常見資安事件](../common/index.md)**：每一種事件都附「處理方式」與「預防方式」，可以在第一時間找到該做什麼、不該做什麼。
 
-其中「威脅建模」會是所有參與組織的起始課程，服務導入團隊將帶領各位一起謹慎省思組織內、外所面臨的風險與威脅，並產出一到數份不同面向的「風險評估表」。
+## 顧問與內部資安推動者
 
-## 操作指南說明
+若你的角色是要帶整個組織做一輪資安升級（內部資安窗口、CSCS 種子、外部顧問），可以從這裡開始：
 
-<figure markdown="span">
-  ![「課程主題」＋「操作指南」](../asserts/course_intro_guide.svg)
-  <figcaption><small>閱讀「課程主題」後透過「操作指南」修正與加強</small></figcaption>
-</figure>
+- **[資安升級工具包](../guide/index.md)**：提供 1～9 步驟的協作流程、延伸主題（身份驗證、網路、加密通訊、檔案管理、海外出差），以及 [CSCS 社群自製教材總覽](../resources/cscs-materials.md) 的 14 份簡報導讀。
 
-各章節的「主題課程」後，再透過搭配相對應課程的「操作指南」調整裝置、作業系統、網路設定服務來修正與增強資安抵禦能力。
+## 學習路徑與進度追蹤
+
+教材本身不規定一定要從哪一頁開始讀，但若你希望有節奏地推進，可以參考：
+
+- **[怎麼升級資安？](../how-to/index.md)**：站在新手村入口，引導讀者依自己當前的角色與時間，選擇最有效的下一步。
+- **[進度追蹤](../assessment/index.md)**：協助組織與個人記錄學習與導入進度，搭配檢查清單一起使用。
+
+## 課程設計與授權
+
+教材以 [CC-BY 4.0 姓名標示](https://creativecommons.org/licenses/by/4.0/deed.zh-hant){target="_blank"} 釋出，歡迎在引用後自由轉載與改寫。引用方式請參考 [版權宣告](../support/copyright.md)；若想協助補強內容，請見 [如何貢獻](../contribute/index.md)。

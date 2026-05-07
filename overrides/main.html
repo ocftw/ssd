@@ -60,3 +60,15 @@
   content="mkdocs-{{ mkdocs_version }}, mkdocs-material"
 />
 {% endblock %}
+
+{% block content %}
+{% if page.meta and page.meta.layout == "category" %}
+{% include "partials/category-page.html" %}
+{% elif page.meta and page.meta.layout == "category-text" %}
+{% include "partials/category-text-page.html" %}
+{% elif page.meta and page.meta.layout == "sub-category" %}
+{% include "partials/sub_category-page.html" %}
+{% else %}
+{% include "partials/content.html" %}
+{% endif %}
+{% endblock %}

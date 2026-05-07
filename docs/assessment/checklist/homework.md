@@ -1,9 +1,8 @@
 ---
-icon: material/home-edit
-title: 檢查清單
+title: 課後任務清單
 ---
 
-# :material-home-edit: 課後任務清單
+# 課後任務清單
 
 ## 說明
 

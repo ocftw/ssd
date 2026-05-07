@@ -1,0 +1,16 @@
+{#-
+  Blog post 會在 blog-post.html 底部再渲染 source-file，
+  因此這裡在 blog 頁先略過，避免重複顯示。
+-#}
+{% include "partials/tags.html" %}
+{% include "partials/actions.html" %}
+{% if "<h1" not in page.content %}
+  <h1>{{ page.title | d(config.site_name, true)}}</h1>
+{% endif %}
+{{ page.content }}
+{% set is_blog_post = page and page.url and page.url.startswith("blog/") and page.url != "blog/" %}
+{% if not is_blog_post %}
+  {% include "partials/source-file.html" %}
+{% endif %}
+{% include "partials/feedback.html" %}
+{% include "partials/comments.html" %}
