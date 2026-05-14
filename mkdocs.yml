@@ -2,7 +2,9 @@ site_name: 資安新手村 | Shield of Self-Defense (SSD)
 site_url: https://ssd.ocf.tw/
 site_description: "給公民團體 CSOs 的資安防護基礎教材"
 site_author: "財團法人開放文化基金會 (Open Culture Foundation, OCF)"
-edit_uri: https://github.com/ocftw/ssd/edit/main/docs/
+repo_url: https://github.com/ocftw/ssd
+repo_name: ocftw/ssd
+edit_uri: edit/shield/docs/
 copyright: "CC-BY 4.0 姓名標示"
 nav:
   - 首頁:
