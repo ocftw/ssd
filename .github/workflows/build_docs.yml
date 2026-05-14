@@ -32,7 +32,9 @@ jobs:
           path: ./.venv
           key: uv-venv-${{ hashFiles('**/uv.lock') }}
       - name: Install imaging dependencies
-        run: sudo apt-get install -y libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
       - name: Install dependencies
         run: uv sync
       - name: Build and Deploy Docs
