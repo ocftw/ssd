@@ -1,3 +1,7 @@
+:root {
+  --ssd-page-gutter: 24px;
+}
+
 @media screen and (min-width: 76.25em) {
   /* 不在此加 border-bottom：同層後方常有 display:none 的 li，仍會讓 :not(:last-child) 成立，視覺上只剩一區卻多一條底線 */
   nav.md-nav.md-nav--primary.md-nav--lifted > ul.md-nav__list > li.md-nav__item.md-nav__item--active > nav.md-nav > ul.md-nav__list > li.md-nav__item {
@@ -96,24 +100,20 @@
 
 }
 
-/* 小螢幕（≤47.99em／768px）：主內文與麵包屑左右各 24px，與設計稿閱讀邊距一致（桌面 ≥76.25em 仍由主題與下文 blog 規則負責） */
-@media screen and (max-width: 47.99em) {
-  .md-content > .md-content__inner {
-    margin-left: 24px !important;
-    margin-right: 24px !important;
-  }
+/* 抽屜模式（≤76.234375em）：主內文、麵包屑、blog 封面左右 gutter；桌面 ≥76.25em 由 md-grid 與側欄負責 */
+@media screen and (max-width: 76.234375em) {
+  .md-content > .md-content__inner,
   .md-content > .md-path {
-    margin-left: 24px !important;
-    margin-right: 24px !important;
+    margin-left: var(--ssd-page-gutter) !important;
+    margin-right: var(--ssd-page-gutter) !important;
   }
-  /* 與上方 gutter 對齊，避免 Hero／首頁區塊負 margin 把視覺帶比內文更靠外的滿幅感 */
-  .home-hero {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-  .home-section {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+
+  .md-content--blog > .blog-post-cover {
+    width: auto;
+    max-width: none;
+    margin-left: var(--ssd-page-gutter) !important;
+    margin-right: var(--ssd-page-gutter) !important;
+    box-sizing: border-box;
   }
 }
 
@@ -388,7 +388,7 @@ div.grid.cards > ul > li > p:first-child {
   flex-direction: column;
   align-items: stretch;
   position: relative;
-  margin: 0 -0.5rem;
+  margin: 0;
   padding: 0;
   box-sizing: border-box;
   min-height: 0;
@@ -613,7 +613,7 @@ div.grid.cards > ul > li > p:first-child {
 .home-section {
   padding-block: 2rem;
   padding-inline: 0;
-  margin: 0 -0.5rem;
+  margin: 0;
 }
 .home-section--white {
   background-color: #fff;
@@ -927,6 +927,23 @@ div.grid.cards > ul > li > p:first-child {
 .md-footer-meta > .md-footer-meta__inner.md-grid:first-of-type > a:hover {
   color: #ffffff !important;
   text-decoration: underline;
+}
+
+@media screen and (max-width: 76.234375em) {
+  .md-footer-meta > .md-footer-meta__inner.md-grid:nth-of-type(2) {
+    padding-left: var(--ssd-page-gutter);
+    padding-right: var(--ssd-page-gutter);
+  }
+
+  .md-footer-meta > .md-footer-meta__inner.md-grid:nth-of-type(3) {
+    padding-left: var(--ssd-page-gutter);
+    padding-right: var(--ssd-page-gutter);
+  }
+
+  .md-footer-meta > .md-footer-meta__inner.md-grid:first-of-type {
+    padding-left: var(--ssd-page-gutter);
+    padding-right: var(--ssd-page-gutter);
+  }
 }
 
 /* Header 站名顏色 */
@@ -1337,7 +1354,7 @@ div.grid.cards > ul > li > p:first-child {
   white-space: nowrap;
 }
 .sub-category-breadcrumb__item:not(:first-child)::before {
-  background-color: var(--md-default-fg-color--lighter);
+  background-color: #5345af;
   content: "";
   display: inline;
   height: .8rem;
@@ -1347,11 +1364,14 @@ div.grid.cards > ul > li > p:first-child {
 }
 .sub-category-breadcrumb .sub-category-breadcrumb__link {
   align-items: center;
-  color: var(--md-default-fg-color--light);
+  color: #5345af;
   display: flex;
 }
-.sub-category-breadcrumb .sub-category-breadcrumb__link:hover {
-  color: var(--md-accent-fg-color);
+.sub-category-breadcrumb .sub-category-breadcrumb__link:hover,
+.sub-category-breadcrumb .sub-category-breadcrumb__link:focus,
+.sub-category-breadcrumb .sub-category-breadcrumb__link:focus-visible {
+  color: #5345af;
+  opacity: 0.85;
 }
 .sub-category-breadcrumb:not(.sub-category-breadcrumb--custom) ol.sub-category-breadcrumb__list li:last-child {
   display: none;
@@ -1360,6 +1380,10 @@ div.grid.cards > ul > li > p:first-child {
   width: .9rem;
   height: .9rem;
   fill: #5345af;
+}
+.sub-category-breadcrumb__item--home .sub-category-breadcrumb__link:hover svg,
+.sub-category-breadcrumb__item--home .sub-category-breadcrumb__link:focus-visible svg {
+  opacity: 0.85;
 }
 
 .md-content__inner .sub-category-hero .sub-category-hero__title {
@@ -1530,11 +1554,13 @@ div.grid.cards > ul > li > p:first-child {
   }
 }
 
-/* Blog post：首圖由 frontmatter 的 cover_image 控制，顯示在麵包屑上方。 */
+/* Blog post：首圖由 frontmatter 的 cover_image 控制，顯示在麵包屑上方（留在內容欄，不突破 viewport）。 */
 .md-content--blog .blog-post-cover {
-  width: 100vw;
-  max-width: 100vw;
-  margin: 0 calc(50% - 50vw);
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
 }
 
 /* Blog 首圖貼齊上方：移除主題預設的主區塊上緣留白。 */
