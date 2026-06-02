@@ -1,6 +1,7 @@
 ---
 icon: octicons/home-16
 title: 新手村首頁
+description: 資安新手村是給臺灣公民團體（CSO）與個人的資安防護入門教材，從個人裝置與帳號、組織制度，到資安事件應變，提供可直接操作的步驟，陪你一步步把防護力升級。
 hide:
   - navigation
   - toc
