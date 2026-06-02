@@ -153,6 +153,39 @@ plugins:
       type: iso_datetime
       timezone: Asia/Taipei
       enable_creation_date: true
+  # 產生 /llms.txt（索引）與 /llms-full.txt（全文），方便 LLM 取用本站教材
+  - llmstxt:
+      markdown_description: >-
+        本站為財團法人開放文化基金會（OCF）製作的開放教材，協助台灣公民團體（CSO）與個人逐步建立資安防護。
+        內容以可直接操作的步驟為主，涵蓋個人裝置與帳號安全、組織資安管理、常見資安事件應變，
+        以及給資安顧問的協作知識庫。全站授權 CC-BY 4.0。
+      full_output: llms-full.txt
+      sections:
+        怎麼升級資安:
+          - how-to/index.md: 升級資安的整體路徑與三大方向（個人／組織／應變）
+        個人資安:
+          - personal/*.md
+          - user_guide/*.md
+          - chapter/*.md
+          - personal/index.md: 個人資安總覽（裝置、帳號、網路、加密通訊、海外出差）
+        組織資安:
+          - org/*.md
+          - org/index.md: 組織資安總覽（裝置、網路、帳號、資料權限、備份、政策）
+        常見資安事件:
+          - common/*.md
+          - common/index.md: 常見資安事件與應變總覽
+        資安升級工具包（顧問知識庫）:
+          - guide/*.md
+          - guide/index.md: 資安提升計畫總覽（給陪伴 CSO 的資安顧問）
+        資源與諮詢:
+          - support/index.md: 疑問諮詢
+          - resources/*.md
+          - tools/*.md
+          - contribute/*.md
+          - assessment/*.md
+        Optional:
+          - blog/index.md: 延伸閱讀部落格
+          - blog/posts/*.md
   - minify:
       enabled: !ENV [CI, false]
       minify_html: true
