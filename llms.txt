@@ -1,0 +1,113 @@
+# 資安新手村 | Shield of Self-Defense (SSD)
+
+> 給公民團體 CSOs 的資安防護基礎教材
+
+本站為財團法人開放文化基金會（OCF）製作的開放教材，協助台灣公民團體（CSO）與個人逐步建立資安防護。 內容以可直接操作的步驟為主，涵蓋個人裝置與帳號安全、組織資安管理、常見資安事件應變， 以及給資安顧問的協作知識庫。全站授權 CC-BY 4.0。
+
+## 怎麼升級資安
+
+- [怎麼升級資安？](https://ssd.ocf.tw/how-to/index.md): 升級資安的整體路徑與三大方向（個人／組織／應變）
+
+## 個人資安
+
+- [個人資安](https://ssd.ocf.tw/personal/index.md): 個人資安總覽（裝置、帳號、網路、加密通訊、海外出差）
+- [裝置物理防護](https://ssd.ocf.tw/user_guide/devices/index.md)
+- [Android 裝置](https://ssd.ocf.tw/user_guide/devices/android.md)
+- [iOS 裝置](https://ssd.ocf.tw/user_guide/devices/ios.md)
+- [MacOS 裝置](https://ssd.ocf.tw/user_guide/devices/macOS.md)
+- [Windows 裝置](https://ssd.ocf.tw/user_guide/devices/windows.md)
+- [海外出差](https://ssd.ocf.tw/chapter/abroad/index.md)
+- [出差安全指南](https://ssd.ocf.tw/chapter/abroad/guide.md)
+- [出差風險評估](https://ssd.ocf.tw/chapter/abroad/risk.md)
+- [手機/電腦安全](https://ssd.ocf.tw/chapter/devices/index.md)
+- [加密的溝通方式](https://ssd.ocf.tw/chapter/e2ee/index.md)
+- [加密訊息對話](https://ssd.ocf.tw/chapter/e2ee/im.md)
+- [加密電子郵件](https://ssd.ocf.tw/chapter/e2ee/mails.md)
+- [網路瀏覽環境](https://ssd.ocf.tw/chapter/network/index.md)
+- [瀏覽器](https://ssd.ocf.tw/chapter/network/browser_privacy.md)
+- [VPN](https://ssd.ocf.tw/chapter/network/vpn.md)
+- [帳號安全](https://ssd.ocf.tw/chapter/profile/index.md)
+- [多重驗證](https://ssd.ocf.tw/chapter/profile/mfa.md)
+- [密碼設定](https://ssd.ocf.tw/chapter/profile/password.md)
+- [密碼管理器](https://ssd.ocf.tw/chapter/profile/password_manager.md)
+- [安全金鑰](https://ssd.ocf.tw/chapter/profile/security_key.md)
+
+## 組織資安
+
+- [組織資安](https://ssd.ocf.tw/org/index.md): 組織資安總覽（裝置、網路、帳號、資料權限、備份、政策）
+- [組織帳號管理](https://ssd.ocf.tw/org/account/index.md)
+- [數位服務帳號盤點](https://ssd.ocf.tw/org/account/audit.md)
+- [雙重驗證](https://ssd.ocf.tw/org/account/mfa.md)
+- [密碼管理](https://ssd.ocf.tw/org/account/password.md)
+- [資料備份](https://ssd.ocf.tw/org/backup/index.md)
+- [雲端備份](https://ssd.ocf.tw/org/backup/cloud.md)
+- [實體備份](https://ssd.ocf.tw/org/backup/physical.md)
+- [SaaS 設定備份](https://ssd.ocf.tw/org/backup/saas.md)
+- [資料權限管理](https://ssd.ocf.tw/org/data/index.md)
+- [定期審查更新權限](https://ssd.ocf.tw/org/data/review.md)
+- [角色與權限](https://ssd.ocf.tw/org/data/role.md)
+- [雲端分享連結稽查](https://ssd.ocf.tw/org/data/sharing-audit.md)
+- [公務電腦/公務機](https://ssd.ocf.tw/org/devices/index.md)
+- [裝置/作業系統盤點](https://ssd.ocf.tw/org/devices/audit.md)
+- [定期檢查裝置符合最低標準](https://ssd.ocf.tw/org/devices/baseline.md)
+- [網路環境](https://ssd.ocf.tw/org/network/index.md)
+- [辦公位置網路建議](https://ssd.ocf.tw/org/network/office.md)
+- [Wi-Fi 設定](https://ssd.ocf.tw/org/network/wifi.md)
+- [組織資安政策](https://ssd.ocf.tw/org/policy/index.md)
+- [資安政策參考範本](https://ssd.ocf.tw/org/policy/template.md)
+
+## 常見資安事件
+
+- [常見資安事件](https://ssd.ocf.tw/common/index.md): 常見資安事件與應變總覽
+- [帳號密碼外洩](https://ssd.ocf.tw/common/leaked_password.md)
+- [NAS 遭受攻擊](https://ssd.ocf.tw/common/nas_attack.md)
+- [釣魚、詐騙郵件](https://ssd.ocf.tw/common/phishing.md)
+- [勒索軟體](https://ssd.ocf.tw/common/ransomware.md)
+- [社群帳號被盜（粉專／LINE）](https://ssd.ocf.tw/common/social_account_takeover.md)
+- [官網遭受攻擊](https://ssd.ocf.tw/common/website_attack.md)
+
+## 資安升級工具包（顧問知識庫）
+
+- [資安升級工具包](https://ssd.ocf.tw/guide/index.md): 資安提升計畫總覽（給陪伴 CSO 的資安顧問）
+- [海外出差](https://ssd.ocf.tw/guide/abroad.md)
+- [盤點組織工作帳號](https://ssd.ocf.tw/guide/account.md)
+- [透過「威脅建模」盤點組織風險](https://ssd.ocf.tw/guide/assessment.md)
+- [確認組織是否準備好迎接資安提升行動？](https://ssd.ocf.tw/guide/cooperation-suitability.md)
+- [加密通訊](https://ssd.ocf.tw/guide/e2ee.md)
+- [評估資安升級的成效](https://ssd.ocf.tw/guide/effectiveness-review.md)
+- [檔案管理與備份](https://ssd.ocf.tw/guide/files-management.md)
+- [制定屬於組織的資安改善計畫](https://ssd.ocf.tw/guide/initial-improvement.md)
+- [網路使用行為](https://ssd.ocf.tw/guide/network.md)
+- [建立順暢的內部協作](https://ssd.ocf.tw/guide/partnership.md)
+- [身份驗證與憑證強化](https://ssd.ocf.tw/guide/profile.md)
+- [協助組織制定資安政策](https://ssd.ocf.tw/guide/security-policy.md)
+- [幫助組織盤點現況](https://ssd.ocf.tw/guide/status.md)
+- [盤點組織裝置設備](https://ssd.ocf.tw/guide/devices/index.md)
+- [裝置檢查活動流程](https://ssd.ocf.tw/guide/devices/checklists.md)
+
+## 資源與諮詢
+
+- [疑問諮詢](https://ssd.ocf.tw/support/index.md): 疑問諮詢
+- [CSCS 社群自製教材總覽](https://ssd.ocf.tw/resources/cscs-materials.md)
+- [工具推薦](https://ssd.ocf.tw/tools/index.md)
+- [如何貢獻](https://ssd.ocf.tw/contribute/index.md)
+- [進度追蹤](https://ssd.ocf.tw/assessment/index.md)
+- [檢查清單](https://ssd.ocf.tw/assessment/checklist/index.md)
+- [課後任務清單](https://ssd.ocf.tw/assessment/checklist/homework.md)
+- [場勘紀錄表](https://ssd.ocf.tw/assessment/checklist/site_survey.md)
+
+## Optional
+
+- [延伸閱讀](https://ssd.ocf.tw/blog/index.md): 延伸閱讀部落格
+- [一次性密碼、驗證器、備份碼：MFA 核心機制入門](https://ssd.ocf.tw/blog/2026/04/17/mfa-basics.md)
+- [歡迎來到資安新手村延伸閱讀](https://ssd.ocf.tw/blog/2026/04/17/welcome.md)
+- [密碼強度與破解成本：長度、複雜度、密碼短語](https://ssd.ocf.tw/blog/2026/04/24/password-strength.md)
+- [VPN、Tor、Proxy：工具差異與使用時機](https://ssd.ocf.tw/blog/2026/05/01/vpn-tor-proxy.md)
+- [組織導入密碼管理器：分階段落地策略](https://ssd.ocf.tw/blog/2026/05/08/org-password-manager.md)
+- [組織 MFA 政策設計：人員差異與風險分級](https://ssd.ocf.tw/blog/2026/05/15/org-mfa-policy.md)
+- [備份不是複製：3-2-1 策略與復原演練](https://ssd.ocf.tw/blog/2026/05/22/backup-321.md)
+- [Passkey、FIDO2、安全金鑰：無密碼與硬體驗證全圖](https://ssd.ocf.tw/blog/2026/05/29/passkey-fido2.md)
+- [帳號生命週期管理：加入、調整、離職的權限閉環](https://ssd.ocf.tw/blog/2026/06/05/account-lifecycle.md)
+- [權限矩陣實作：RBAC 在小型公民團體的落地方法](https://ssd.ocf.tw/blog/2026/06/12/rbac-permission-matrix.md)
+- [備份加密與存取控制：備份也要最小權限](https://ssd.ocf.tw/blog/2026/06/19/backup-encryption.md)
+
