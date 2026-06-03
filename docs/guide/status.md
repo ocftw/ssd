@@ -8,7 +8,7 @@ title: 幫助組織盤點現況
 
 ## 基本步驟
 
-1. **訪談**：依照訪綱（[見參考文件](#reference)）訪談資安負責人，或是熟悉組織數位環境的人員，了解組織規模、資安人力、過去是否受過攻擊、是否有資安訓練經驗，以及目前帳號和檔案的管理方式。
+1. **訪談**：依照訪談大綱（[見參考文件](#reference)）訪談資安負責人，或是熟悉組織數位環境的人員，了解組織規模、資安人力、過去是否受過攻擊、是否有資安訓練經驗，以及目前帳號和檔案的管理方式。
 2. **問卷調查**：利用問卷（[見參考文件](#reference)）了解組織成員對資安的認識，以及平常如何使用帳號、管理檔案與裝置等。
 3. **辦公室勘查**：利用場勘記錄表（[見參考文件](#reference)）了解辦公室環境、機房或網路設備放置位置，以及是否有需要改善的實體安全問題。
 
@@ -25,5 +25,5 @@ title: 幫助組織盤點現況
 ## 參考文件 {#reference}
 
 - [訪談大綱](https://docs.google.com/document/d/1lDnqBAYD14DydWEFneInGTm66or78al1hM8qEAKybtk/edit?usp=sharing)
-- [問卷]
+- [問卷](https://docs.google.com/document/d/1WnIlEiptF6QNMixWXO3YKOktm5fxVdpyygncQaeMozk/edit?usp=drive_link)
 - [場勘紀錄表](https://docs.google.com/spreadsheets/d/1yWGVuZBsKa9ajHBJNhtBYwcDUWt-Bff8_yMYRG8GPjc/edit?gid=0#gid=0)
