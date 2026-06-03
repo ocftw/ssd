@@ -18,9 +18,9 @@ cards:
   - title: "盤點組織工作帳號"
     url: guide/account.html
     description: 服務帳號盤點、負責人、2FA 與共用帳號狀況。
-  - title: "幫助組織盤點現況"
+  - title: "幫助組織了解資安現況"
     url: guide/status.html
-    description: 使用問卷、訪談與辦公、設備勘查，了解組織資安現況。
+    description: 透過訪談、問卷調查與辦公室勘查，了解組織資安現況。
   - title: "透過「威脅建模」盤點組織風險"
     url: guide/assessment.html
     description: 風險評估、威脅剖析與組織威脅模型。
