@@ -24,6 +24,6 @@ title: 幫助組織盤點現況
 
 ## 參考文件 {#reference}
 
-- [訪談大綱]
+- [訪談大綱](https://docs.google.com/document/d/1lDnqBAYD14DydWEFneInGTm66or78al1hM8qEAKybtk/edit?usp=sharing)
 - [問卷]
-- [場勘紀錄表]
+- [場勘紀錄表](https://docs.google.com/spreadsheets/d/1yWGVuZBsKa9ajHBJNhtBYwcDUWt-Bff8_yMYRG8GPjc/edit?gid=0#gid=0)
