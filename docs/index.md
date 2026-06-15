@@ -12,7 +12,7 @@ hide:
   <div class="home-hero__panel home-hero__panel--text">
     <div class="home-hero__content">
       <h1 class="home-hero__title">開始搭建資安防護，<br>成為村裡的希望。</h1>
-      <p class="home-hero__tagline"><strong>資安升級不必追求一步到位，有開始加強防護最重要。</strong>隨著工作越來越依賴數位工具、雲端服務與即時溝通，風險其實每天都在累積。資安的升級，其實沒有想像中的困難，讓我們一起提升資安防護力，保護我們的村落吧！</p>
+      <p class="home-hero__tagline"><strong>資安升級不必一步到位。只要開始升級，就會越來越安全。</strong>隨著工作越來越依賴數位工具、雲端服務與即時溝通，風險其實每天都在累積。資安的升級，其實沒有想像中的困難，讓我們一起提升資安防護力，保護村落！</p>
       <div class="home-hero__actions">
         <a href="how-to/" class="md-button md-button--primary home-hero__cta">怎麼升級資安？ ›</a>
       </div>
