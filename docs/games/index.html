@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>資安防護新手村 · 探險</title>
+  <meta name="description" content="以 Three.js 打造的『資安防護新手村』探險實驗：走出村莊，尋找散落荒野的資安遺跡。素材來自 ssd.ocf.tw，不影響原始文件。" />
+  <style>
+    :root { --ink:#1d2433; --paper:#fbf7ef; --brand:#ff7a45; --shadow:0 18px 40px -18px rgba(20,28,48,.55); }
+    * { box-sizing:border-box; }
+    html,body { margin:0; height:100%; overflow:hidden; background:#cfe6f2; }
+    body {
+      font-family:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+      color:var(--ink); -webkit-font-smoothing:antialiased; user-select:none; touch-action:none;
+    }
+    #app { position:fixed; inset:0; } canvas { display:block; }
+    #vignette { position:fixed; inset:0; pointer-events:none; z-index:5;
+      background:radial-gradient(120% 90% at 50% 38%, transparent 55%, rgba(18,26,46,.28) 100%); }
+
+    .tag { padding:4px 11px; border-radius:999px; font-size:13px; font-weight:700;
+      color:#fff; white-space:nowrap; background:rgba(29,36,51,.78);
+      box-shadow:0 6px 16px -8px rgba(0,0,0,.6); transition:transform .2s ease, background .2s ease; pointer-events:none; }
+    .tag.is-active { background:var(--brand); transform:scale(1.12); }
+
+    /* 村民對話氣泡 */
+    .bubble { max-width:240px; background:rgba(251,247,239,.97); color:var(--ink); border-radius:13px; padding:9px 12px;
+      box-shadow:var(--shadow); font-size:12px; line-height:1.55; pointer-events:none;
+      opacity:0; transform:translateY(5px) scale(.96); transition:opacity .2s ease, transform .2s ease; }
+    .bubble.show { opacity:1; transform:translateY(0) scale(1); }
+    .bubble b { display:block; font-size:12px; color:var(--brand); margin-bottom:3px; }
+    .bubble.petrified { color:#6b7280; font-weight:700; background:rgba(228,228,232,.95); }
+    .bubble.say { max-width:210px; text-align:center; font-weight:700; }
+
+    /* 標題牌 + 進度 */
+    #titlecard { position:fixed; left:16px; top:16px; z-index:10; max-width:min(78vw,360px);
+      background:rgba(251,247,239,.93); border-radius:14px; padding:12px 15px; box-shadow:var(--shadow); }
+    #titlecard h1 { margin:0; font-size:16px; }
+    #titlecard p { margin:5px 0 0; font-size:12px; line-height:1.5; color:#51596b; }
+    #badge { display:inline-block; margin-top:9px; font-size:12px; font-weight:600; color:#3c4356;
+      background:rgba(255,122,69,.12); padding:5px 11px; border-radius:999px; }
+    #badge b { color:var(--brand); }
+
+    /* 任務按鈕 + 清單 */
+    #topright { position:fixed; right:16px; top:16px; z-index:12; display:flex; gap:8px; align-items:flex-start; }
+    #logbtn, #soundbtn { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
+      background:rgba(251,247,239,.93); padding:9px 14px; border-radius:999px; box-shadow:var(--shadow); }
+    #soundbtn { padding:9px 12px; }
+    #questlog { position:fixed; right:16px; top:60px; z-index:12; width:min(86vw,300px);
+      background:rgba(251,247,239,.97); border-radius:16px; box-shadow:var(--shadow); padding:8px;
+      opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .2s ease, transform .2s ease; }
+    #questlog.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+    #questlog .hd { font-size:12px; font-weight:700; color:#6b7488; padding:6px 8px; }
+    .q { display:flex; align-items:center; gap:9px; padding:8px; border-radius:10px; }
+    .q:hover { background:rgba(29,36,51,.05); }
+    .qi { width:26px; text-align:center; font-size:17px; }
+    .qt { flex:1; font-size:13px; font-weight:700; line-height:1.2; }
+    .qt i { display:block; font-style:normal; font-size:11px; font-weight:400; color:#8b93a4; margin-top:2px; }
+    .qp { font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+    .qp.none { color:#8b93a4; background:rgba(29,36,51,.07); }
+    .qp.disc { color:#1d6fb8; background:rgba(29,111,184,.12); }
+    .qp.done { color:#fff; background:#3aa45b; }
+    #resetbtn { width:calc(100% - 16px); margin:6px 8px 4px; border:0; cursor:pointer; font:inherit; font-size:12px; font-weight:700;
+      color:#c0433a; background:rgba(192,67,58,.08); padding:9px; border-radius:10px; }
+    #resetbtn:hover { background:rgba(192,67,58,.16); }
+
+    /* 操作提示 */
+    #hint { position:fixed; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:10;
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:94vw; }
+    #hint kbd { font:inherit; font-size:11px; font-weight:700; background:rgba(251,247,239,.9);
+      color:#51596b; padding:5px 10px; border-radius:999px; box-shadow:var(--shadow); white-space:nowrap; }
+
+    /* 虛擬搖桿（觸控／小螢幕） */
+    #joystick { display:none; position:fixed; left:22px; bottom:calc(84px + env(safe-area-inset-bottom)); width:120px; height:120px; z-index:14;
+      border-radius:50%; background:rgba(251,247,239,.22); border:2px solid rgba(251,247,239,.55);
+      box-shadow:var(--shadow); touch-action:none; }
+    #joystick .knob { position:absolute; left:50%; top:50%; width:54px; height:54px; margin:-27px 0 0 -27px;
+      border-radius:50%; background:rgba(251,247,239,.9); box-shadow:0 4px 12px -4px rgba(20,28,48,.6); }
+    #joystick.hide { display:none !important; }
+    /* 對話框取消鍵（右下，觸控／小螢幕；對話框開啟時取代小地圖位置） */
+    #actbtn { display:none; position:fixed; left:154px; bottom:calc(96px + env(safe-area-inset-bottom)); z-index:15; width:60px; height:60px; border-radius:50%;
+      border:0; cursor:pointer; place-items:center; background:rgba(251,247,239,.96); box-shadow:var(--shadow);
+      color:#c0433a; font-size:24px; font-weight:800; -webkit-tap-highlight-color:transparent; }
+    @media (max-width:820px), (pointer:coarse) {
+      #joystick { display:block; }
+      #actbtn.show { display:grid; }
+    }
+
+    /* 課程卡 */
+    #panel { position:fixed; left:50%; bottom:64px; transform:translate(-50%,16px); z-index:11; width:min(92vw,430px);
+      background:rgba(251,247,239,.97); border-radius:18px; box-shadow:var(--shadow); padding:16px 18px;
+      opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; }
+    #panel.show { opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+    #panel .close { position:absolute; right:12px; top:10px; border:0; background:transparent; cursor:pointer;
+      font-size:18px; color:#9aa1b0; line-height:1; padding:4px; }
+    #panel .head { display:flex; align-items:center; gap:10px; padding-right:20px; }
+    #panel .emoji { width:40px; height:40px; flex:none; display:grid; place-items:center; font-size:22px;
+      border-radius:12px; background:rgba(255,122,69,.14); }
+    #panel h2 { margin:0; font-size:17px; } #panel .sub { margin:2px 0 0; font-size:12px; color:#6b7488; }
+    #panel .desc { margin:11px 0 0; font-size:13px; line-height:1.6; color:#3c4356; }
+    #panel .chips { margin:11px 0 0; display:flex; flex-wrap:wrap; gap:6px; }
+    #panel .chip { font-size:11px; font-weight:600; color:#51596b; background:rgba(29,36,51,.06); padding:4px 9px; border-radius:999px; }
+    #panel .foot { margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    #panel .state { font-size:12px; font-weight:700; color:#6b7488; }
+    #panel .go { display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-size:13px; font-weight:700;
+      color:#fff; background:var(--brand); padding:9px 15px; border-radius:999px; transition:filter .15s ease; }
+    #panel .go:hover { filter:brightness(1.06); }
+    #panel .foot-btns { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    #panel .fight { border:0; cursor:pointer; font:inherit; font-size:13px; font-weight:800; color:#fff;
+      background:linear-gradient(135deg,#ff5d5d,#c0392b); padding:9px 15px; border-radius:999px; box-shadow:0 6px 16px -8px rgba(192,57,43,.8); }
+    #panel .fight:hover { filter:brightness(1.06); }
+
+    /* 戰鬥介面 */
+    #battle { position:fixed; top:0; left:0; right:0; height:100dvh; z-index:25; display:flex; flex-direction:column; justify-content:space-between;
+      opacity:0; pointer-events:none; transition:opacity .35s ease;
+      background:linear-gradient(180deg, rgba(20,12,18,.55) 0%, transparent 30%, transparent 55%, rgba(20,12,18,.78) 100%); }
+    #battle.show { opacity:1; }
+    #battle.show .b-top, #battle.show .b-bottom, #battle.show .flee { pointer-events:auto; }
+    .hit-flash { position:absolute; inset:0; background:radial-gradient(circle, transparent 40%, rgba(220,40,40,.55) 100%); opacity:0; pointer-events:none; }
+    .hit-flash.go { animation:hitflash .45s ease; }
+    @keyframes hitflash { 0%{opacity:0;} 25%{opacity:1;} 100%{opacity:0;} }
+
+    .b-top { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px; }
+    .b-top .mon { display:flex; align-items:center; gap:12px; background:rgba(20,14,20,.55); backdrop-filter:blur(3px);
+      border-radius:14px; padding:10px 16px; min-width:min(70vw,380px); }
+    .b-top .mon-emoji { font-size:30px; }
+    .b-top .mon-name { color:#fff; font-weight:800; font-size:15px; letter-spacing:.02em; }
+    .b-top .mon-hp { margin-top:6px; height:12px; width:min(60vw,300px); background:rgba(0,0,0,.4); border-radius:999px; overflow:hidden; }
+    .b-top .mon-hp i { display:block; height:100%; width:100%; border-radius:999px; transition:width .4s ease;
+      background:linear-gradient(90deg,#ff6b6b,#ff3b3b); }
+    .flee { border:0; cursor:pointer; font:inherit; font-size:13px; font-weight:700; color:#fff;
+      background:rgba(20,14,20,.55); padding:9px 14px; border-radius:999px; }
+
+    .b-bottom { padding:16px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .hearts { display:flex; gap:6px; font-size:22px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+    .b-bottom .q { margin:0; max-width:760px; text-align:center; color:#fff; font-size:17px; font-weight:700; line-height:1.5;
+      text-shadow:0 2px 8px rgba(0,0,0,.6); }
+    .opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:min(94vw,760px); }
+    .opt { border:0; cursor:pointer; font:inherit; font-size:14px; font-weight:600; text-align:left; color:var(--ink);
+      background:rgba(251,247,239,.96); padding:13px 16px; border-radius:14px; box-shadow:var(--shadow); transition:transform .1s ease, filter .1s ease; }
+    .opt:hover:not(:disabled) { filter:brightness(1.04); transform:translateY(-1px); }
+    .opt:disabled { cursor:default; opacity:.85; }
+    .opt.right { background:#d6f5e0; box-shadow:0 0 0 3px #3aa45b inset; opacity:1; }
+    .opt.wrong { background:#fbdcdc; box-shadow:0 0 0 3px #d0433a inset; }
+    .opt.learn { background:#fff6cf; box-shadow:0 0 0 3px #f0a500 inset; cursor:pointer; opacity:1; animation:learnpulse 1s ease infinite; }
+    @keyframes learnpulse { 0%,100%{ filter:brightness(1);} 50%{ filter:brightness(1.1);} }
+
+    .fb { width:min(94vw,760px); background:rgba(251,247,239,.98); border-radius:16px; padding:13px 16px; box-shadow:var(--shadow);
+      display:none; }
+    .fb.show { display:block; }
+    .fb.ok { box-shadow:0 0 0 3px #3aa45b inset, var(--shadow); }
+    .fb.bad { box-shadow:0 0 0 3px #d0433a inset, var(--shadow); }
+    .fb .ic { font-size:14px; font-weight:800; color:var(--ink); }
+    .fb .why { margin:7px 0 0; font-size:13px; line-height:1.6; color:#3c4356; }
+    .fb-actions { margin-top:11px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .fb .lnk { font-size:12px; font-weight:700; color:#1d6fb8; text-decoration:none; }
+    .fb .lnk:hover { text-decoration:underline; }
+    .fb .next { border:0; cursor:pointer; font:inherit; font-size:13px; font-weight:800; color:#fff;
+      background:var(--brand); padding:9px 16px; border-radius:999px; }
+
+    /* 小地圖 */
+    #minimap { position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:10; width:176px; height:176px;
+      filter:drop-shadow(0 10px 22px rgba(20,28,48,.4)); }
+    #minimap canvas { width:176px; height:176px; }
+    #minimap .cap { position:absolute; left:0; bottom:-2px; width:100%; text-align:center;
+      font-size:10px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+
+    /* 發現通知 */
+    #toast { position:fixed; left:50%; top:22px; transform:translateX(-50%) translateY(-20px); z-index:20;
+      background:rgba(29,36,51,.92); color:#fff; border-radius:14px; padding:11px 18px; text-align:center;
+      box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease; }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    #toast .t { font-size:14px; font-weight:800; } #toast .s { font-size:12px; margin-top:2px; opacity:.9; }
+
+    /* 載入 */
+    #loader { position:fixed; inset:0; z-index:30; display:grid; place-items:center;
+      background:linear-gradient(180deg,#bfe0f0 0%,#f6ead7 100%); transition:opacity .6s ease; text-align:center; }
+    #loader.hide { opacity:0; pointer-events:none; }
+    #loader .spin { width:42px; height:42px; margin:0 auto 14px; border-radius:50%;
+      border:4px solid rgba(29,36,51,.18); border-top-color:var(--brand); animation:spin 1s linear infinite; }
+    #loader p { margin:0; font-weight:700; color:#51596b; } @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* 完成（重生）畫面 */
+    #finale { position:fixed; top:0; left:0; right:0; height:100dvh; z-index:40; display:grid; place-items:center; padding:20px;
+      background:radial-gradient(120% 90% at 50% 40%, rgba(28,40,30,.5), rgba(14,20,16,.82));
+      opacity:0; pointer-events:none; transition:opacity .6s ease; }
+    #finale.show { opacity:1; pointer-events:auto; }
+    #finale .card { background:rgba(251,247,239,.98); border-radius:22px; padding:26px 28px; text-align:center;
+      max-width:min(92vw,460px); box-shadow:var(--shadow); transform:translateY(12px) scale(.96); transition:transform .6s cubic-bezier(.2,.9,.3,1.2); }
+    #finale.show .card { transform:translateY(0) scale(1); }
+    #finale .big { font-size:52px; line-height:1; }
+    #finale h2 { margin:8px 0 0; font-size:22px; }
+    #finale p { margin:8px 0 0; font-size:13px; line-height:1.6; color:#51596b; }
+    #finale .badges { margin:16px 0 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; font-size:30px; }
+    #finale .badges span { filter:drop-shadow(0 3px 6px rgba(0,0,0,.2)); }
+    #finale .title-rank { margin:16px 0 0; font-size:14px; font-weight:800; color:var(--brand); }
+    #finale-close { margin-top:18px; border:0; cursor:pointer; font:inherit; font-size:14px; font-weight:800; color:#fff;
+      background:var(--brand); padding:11px 22px; border-radius:999px; }
+
+    /* 小螢幕／觸控：課程卡上移讓開搖桿，並精簡尺寸避免擋住遺跡 */
+    @media (max-width:820px), (pointer:coarse) {
+      #panel { bottom:calc(206px + env(safe-area-inset-bottom)); width:min(94vw,400px); padding:12px 14px; }
+      #panel .emoji { width:34px; height:34px; font-size:18px; }
+      #panel h2 { font-size:15px; } #panel .sub { font-size:11px; }
+      #panel .desc { font-size:12px; line-height:1.5; margin-top:7px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+      #panel .chips { display:none; }
+      #panel .foot { margin-top:10px; }
+    }
+
+    @media (max-width:560px) {
+      #titlecard p { display:none; }
+      #minimap { width:128px; height:128px; } #minimap canvas { width:128px; height:128px; }
+      #hint kbd:nth-child(n+4) { display:none; }
+      .opts { grid-template-columns:1fr; } .b-bottom .q { font-size:15px; }
+    }
+  </style>
+  <script type="importmap">
+  { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+  } }
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="vignette"></div>
+
+  <div id="titlecard">
+    <h1>資安防護新手村 · 探險</h1>
+    <p>走出村莊，尋找散落荒野的「資安遺跡」。靠近就會發現它、打開課程，讀完即點亮。</p>
+    <span id="badge">🗺️ 發現 <b>0/5</b> ・ ✅ 閱讀 <b>0/5</b></span>
+  </div>
+
+  <div id="topright">
+    <button id="soundbtn" title="音效開關" aria-pressed="false">🔊</button>
+    <button id="logbtn">📜 任務</button>
+  </div>
+  <div id="questlog"><div class="hd">遺跡課程</div><div class="list"></div><button id="resetbtn">🔄 重置進度</button></div>
+
+  <div id="joystick"><div class="knob"></div></div>
+
+  <div id="hint">
+    <kbd>WASD / 方向鍵 移動</kbd>
+    <kbd>Shift 奔跑</kbd>
+    <kbd>點地面 走過去</kbd>
+    <kbd>拖曳 轉視角</kbd>
+    <kbd>滾輪 縮放</kbd>
+  </div>
+
+  <div id="panel" aria-live="polite">
+    <button class="close" aria-label="關閉">✕</button>
+    <div class="head">
+      <div class="emoji"></div>
+      <div><h2></h2><p class="sub"></p></div>
+    </div>
+    <p class="desc"></p>
+    <div class="chips"></div>
+    <div class="foot">
+      <span class="state"></span>
+      <span class="foot-btns">
+        <button class="fight">⚔️ 挑戰守關怪物</button>
+        <a class="go" target="_blank" rel="noopener">閱讀此遺跡課程 →</a>
+      </span>
+    </div>
+  </div>
+
+  <div id="minimap"><canvas width="176" height="176"></canvas><span class="cap">新手村地圖</span></div>
+  <button id="actbtn" aria-label="取消對話框">✕</button>
+
+  <div id="toast"><div class="t"></div><div class="s"></div></div>
+
+  <div id="battle">
+    <div class="hit-flash"></div>
+    <div class="b-top">
+      <div class="mon"><span class="mon-emoji"></span><div class="mon-info"><div class="mon-name"></div><div class="mon-hp"><i></i></div></div></div>
+      <button class="flee">逃跑 ✕</button>
+    </div>
+    <div class="b-bottom">
+      <div class="hearts"></div>
+      <p class="q"></p>
+      <div class="opts"></div>
+      <div class="fb">
+        <div class="ic"></div>
+        <p class="why"></p>
+        <div class="fb-actions"><a class="lnk" target="_blank" rel="noopener">讀這個章節 →</a><button class="next"></button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="finale">
+    <div class="card">
+      <div class="big">🎉</div>
+      <h2>新手村重生！</h2>
+      <p>你點亮了所有資安遺跡，中央大水晶綻放光芒，灰暗的村莊重獲生機——被石化的村民也解開了。去找散落各地的維護者聊聊，他們會給你實用的小提醒。</p>
+      <div class="badges"></div>
+      <div class="title-rank">榮銜：資安守護者 🛡️</div>
+      <button id="finale-close">繼續探索 →</button>
+    </div>
+  </div>
+
+  <div id="loader"><div><div class="spin"></div><p>正在生成世界…</p></div></div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

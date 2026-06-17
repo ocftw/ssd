@@ -1,0 +1,4 @@
+# 系統 / 暫存垃圾，勿提交
+.DS_Store
+__pycache__/
+*.pyc
