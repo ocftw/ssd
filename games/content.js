@@ -21,6 +21,14 @@ export const OCF_STATUE = {
   stateText: '感謝支持', goText: '前往 OCF 官網支持 →',
 };
 
+// 英雄紀念碑：首頁主視覺當壁畫 + 一段傳說（非課程、不計進度）
+// story=true → 面板說明不截斷顯示全文；noLink=true → 隱藏前往鍵。
+export const LEGEND = {
+  id: 'legend', title: '英雄紀念碑', sub: '斑駁的古老壁畫', emoji: '🏛️',
+  desc: '很久很久以前，一群英雄曾守護著這座村莊——御龍的勇者、綠袍的法師，與牠們忠誠的夥伴，一次次擊退降臨的威脅。後來，一場巨變奪走了大地的色彩，英雄們也就此下落不明，沒有人知道他們去了哪裡。如今只剩這面斑駁的壁畫，靜靜記著他們的身影。據說，當村裡的水晶重新點亮，他們會再次出現在這片土地上……',
+  chips: [], stateText: '遠古的傳說', story: true, noLink: true,
+};
+
 // 散落在村莊外的遺跡：每一座 = 一個資安主題
 export const RUINS = [
   {
