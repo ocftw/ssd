@@ -28,8 +28,8 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = 4;
   return t;
 };
-// 共用石材貼圖（repeat 1；貼圖密度改由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/stone.webp', 1, 1, true), stoneNor = tex('./tex/stone_n.webp', 1, 1);
+// 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
+const stoneMap = tex('./tex/concrete.webp', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -44,7 +44,7 @@ function boxUV(geo, tile = 2.6) {
   }
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 }
-const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.6, 0.6); m.needsUpdate = true; return m; };
+const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
