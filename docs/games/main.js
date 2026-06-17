@@ -390,7 +390,8 @@ function buildOcf() {
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: true });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
   const logoTex = new THREE.TextureLoader().load('./ocf_logo.png'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), new THREE.MeshBasicMaterial({ map: logoTex })); sign.position.set(0, 3.6, 0.43); g.add(sign);
+  const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
   const globeMat = new THREE.MeshStandardMaterial({ color: col.clone(), emissive: col.clone(), emissiveIntensity: 1.1, roughness: 0.25, metalness: 0.1, flatShading: true });
   const globe = cast(new THREE.Mesh(new THREE.SphereGeometry(0.95, 18, 14), globeMat)); globe.position.y = 6.6; g.add(globe);
@@ -403,7 +404,7 @@ function buildOcf() {
   const beam = new THREE.Mesh(beamGeo, glowMat); beam.position.y = 24; g.add(beam);
   const aura = new THREE.Mesh(new THREE.RingGeometry(1.4, 2.6, 28), glowMat); aura.rotation.x = -Math.PI / 2; aura.position.y = 1.32; g.add(aura);
   scene.add(g);
-  return { group: g, globe };
+  return { group: g, globe, globeMat, ringMat, glowMat, plaqueMat, signMat };
 }
 
 // ── 興趣點（POI）：村莊告示牌 + 各遺跡 ───────────────────────────
@@ -421,13 +422,16 @@ ruinAt.forEach((r) => {
   POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 13, discoverDist: 8, ...built, lift: 0 });
 });
 // OCF 紀念碑 POI（非課程：無戰鬥、不計進度、不影響繁榮度與終局）
-{
+// 每次遊戲載入都從「未點亮」開始，玩家靠近才點燃（本次遊玩內保持點亮）＝給 OCF 添柴火的儀式感
+const ocfMon = (() => {
   const built = buildOcf();
   built.group.position.set(ocfAt.x, ocfAt.y, ocfAt.z);
   built.group.rotation.y = Math.atan2(-ocfAt.x, -ocfAt.z);
   const lab = makeLabel(`${OCF_STATUE.emoji} OCF 紀念碑`); lab.o.position.set(0, 8, 0); built.group.add(lab.o);
   POIS.push({ data: OCF_STATUE, isRuin: false, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, openDist: 12 });
-}
+  return { ...built, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, lit: 0, ignited: false };
+})();
+const OCF_GOLD = new THREE.Color(OCF_STATUE.color);
 // 英雄紀念碑：首頁主視覺壁畫 + 傳說（非課程、不計進度）
 function buildMonument() {
   const g = new THREE.Group();
@@ -1070,6 +1074,25 @@ function animate() {
       else if (want === 1) { k.el.className = 'bubble petrified show'; k.el.textContent = '🗿 一尊石化的村民…'; }
       else { k.el.className = 'bubble show'; k.el.innerHTML = `<b>${k.ruin.emoji} ${k.ruin.title}・維護者</b><span>${k.ruin.tip}</span>`; }
     }
+  }
+  // OCF 紀念碑：每次進來都未點亮，靠近才點燃（本次遊玩保持點亮）＝給 OCF 添柴火
+  {
+    const m = ocfMon, dm = Math.hypot(hero.position.x - m.pos.x, hero.position.z - m.pos.z);
+    if (!m.ignited && !battle.active && !finaleActive && dm < 11) {
+      m.ignited = true;
+      SFX.discover();                                                          // 點燃音
+      ringBurst(m.pos.x, m.pos.y + 1.3, m.pos.z, OCF_STATUE.color, 7, 1.1);    // 添柴火的光波
+    }
+    m.lit += ((m.ignited ? 1 : 0) - m.lit) * Math.min(1, 1.6 * dt);
+    const L = m.lit, k = 0.28 + L * 0.72;
+    m.globeMat.emissiveIntensity = 0.05 + L * 1.15;
+    m.globeMat.color.copy(OCF_GOLD).multiplyScalar(k); m.globeMat.emissive.copy(OCF_GOLD).multiplyScalar(k);
+    m.ringMat.opacity = 0.12 + L * 0.73;
+    m.glowMat.opacity = L * (0.18 + Math.sin(t * 2.5) * 0.05);                  // 光暈/光束/地環點亮後浮現
+    m.plaqueMat.emissiveIntensity = L * 0.5;
+    m.signMat.color.setScalar(0.45 + L * 0.55);                                // logo 銘牌由暗轉亮
+    m.globe.rotation.y += dt * (0.1 + L * 0.6);
+    m.globe.position.y = 6.6 + Math.sin(t * 1.5) * 0.12 * L;
   }
   // 綠袍法師：呼吸擺動 + 法杖球脈動 + 靠近顯示提示
   mage.group.position.y = mage.baseY + Math.sin(t * 1.5) * 0.04;
