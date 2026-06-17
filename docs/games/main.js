@@ -455,6 +455,83 @@ const keepers = ruinAt.map((r) => {
   return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1 };
 });
 
+// ── 首頁角色重塑：友善小龍（載白貓）、綠袍法師嚮導、村裡黃貓 ──────
+// 低多邊形小貓（可重用：白貓帶紅斗篷、黃貓不帶）
+function buildCat(bodyHex, cape) {
+  const g = new THREE.Group();
+  const body = mat(bodyHex);
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CapsuleGeometry(0.26, 0.22, 4, 8), body, 0, 0.34, 0);          // 坐姿圓胖身體
+  add(new THREE.SphereGeometry(0.27, 14, 12), body, 0, 0.74, 0.05);            // 頭
+  for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.2, 5), body); e.position.set(sx * 0.14, 0.97, 0.02); e.castShadow = true; g.add(e); } // 耳
+  for (const sx of [-1, 1]) add(new THREE.SphereGeometry(0.045, 8, 6), mat(0x2a2630), sx * 0.1, 0.77, 0.28); // 眼
+  add(new THREE.SphereGeometry(0.04, 8, 6), mat(0xff9aa2), 0, 0.71, 0.31);     // 鼻
+  const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.42, 3, 6), body); tail.position.set(0, 0.4, -0.28); tail.rotation.x = -1.0; tail.castShadow = true; g.add(tail);
+  if (cape) { const cp = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.62), new THREE.MeshStandardMaterial({ color: 0xe0392f, side: THREE.DoubleSide, roughness: 0.9, flatShading: true })); cp.position.set(0, 0.52, -0.24); cp.rotation.x = 0.4; g.add(cp); }
+  return { group: g, tail };
+}
+// 友善灰龍：白肚、方塊藍眼、藍角、薄翅、會吐藍火
+function buildDragon() {
+  const g = new THREE.Group();
+  const grey = mat(0x9a96a0), white = mat(0xede9e2), blue = mat(0x4aa3e0);
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  const body = add(new THREE.CapsuleGeometry(0.7, 1.1, 6, 12), grey, 0, 0, 0); body.rotation.z = Math.PI / 2;
+  const belly = add(new THREE.CapsuleGeometry(0.5, 1.0, 6, 10), white, 0, -0.3, 0.14); belly.rotation.z = Math.PI / 2;
+  add(new THREE.BoxGeometry(1.05, 0.95, 0.95), grey, 1.2, 0.32, 0);            // 頭（大一點、明顯）
+  add(new THREE.BoxGeometry(0.55, 0.45, 0.58), grey, 1.72, 0.1, 0);            // 吻
+  for (const sx of [-1, 1]) { add(new THREE.BoxGeometry(0.09, 0.4, 0.4), white, 1.12, 0.42, sx * 0.3); add(new THREE.BoxGeometry(0.07, 0.2, 0.2), blue, 1.18, 0.42, sx * 0.3); } // 方塊眼
+  for (const sx of [-1, 1]) { const h = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.45, 6), blue); h.position.set(1.0, 0.82, sx * 0.26); h.castShadow = true; g.add(h); } // 角
+  const wingL = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.7, 4), grey); wingL.scale.set(0.18, 1, 1); wingL.position.set(-0.2, 0.5, 0.2); g.add(wingL);
+  const wingR = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.7, 4), grey); wingR.scale.set(0.18, 1, 1); wingR.position.set(-0.2, 0.5, -0.2); g.add(wingR);
+  const tail = add(new THREE.ConeGeometry(0.34, 1.3, 7), grey, -1.25, 0, 0); tail.rotation.z = Math.PI / 2;
+  for (const sx of [-1, 1]) add(new THREE.CapsuleGeometry(0.12, 0.3, 3, 6), grey, 0.25, -0.6, sx * 0.34); // 垂著的小腿
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0x5ec8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.3, 8), flameMat); flame.position.set(2.05, 0.05, 0); flame.rotation.z = -Math.PI / 2; g.add(flame);
+  return { group: g, wingL, wingR, flame, flameMat };
+}
+// 綠袍法師：深色臉發光眼、尖兜帽、發光法杖
+function buildMage() {
+  const g = new THREE.Group();
+  const green = mat(0x3c9a5f), greenDk = mat(0x2c7a48), darkF = mat(0x24202a), wood = mat(0x6e5230);
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  add(new THREE.ConeGeometry(0.72, 1.7, 12), green, 0, 0.85, 0);               // 長袍
+  add(new THREE.SphereGeometry(0.45, 14, 10), green, 0, 1.55, 0);              // 肩
+  add(new THREE.SphereGeometry(0.3, 14, 12), darkF, 0, 1.8, 0.07);            // 深色臉
+  const eyeMat = new THREE.MeshStandardMaterial({ color: 0xa9f0d0, emissive: 0x6fe6b8, emissiveIntensity: 1.4, roughness: 0.4 });
+  for (const sx of [-1, 1]) add(new THREE.SphereGeometry(0.05, 8, 6), eyeMat, sx * 0.1, 1.82, 0.31); // 發光眼
+  add(new THREE.ConeGeometry(0.44, 0.75, 12), greenDk, 0, 2.1, -0.03);         // 尖兜帽
+  add(new THREE.CapsuleGeometry(0.13, 0.5, 3, 6), green, -0.5, 1.3, 0.1);
+  add(new THREE.CapsuleGeometry(0.13, 0.5, 3, 6), green, 0.5, 1.3, 0.1);
+  const staff = add(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 7), wood, 0.62, 1.35, 0.22);
+  const orbMat = new THREE.MeshStandardMaterial({ color: 0x9a6cff, emissive: 0x7a4cff, emissiveIntensity: 1.6, roughness: 0.2 });
+  const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18, 0), orbMat); orb.position.set(0.62, 2.75, 0.22); g.add(orb);
+  orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 10), new THREE.MeshBasicMaterial({ color: 0x9a6cff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })));
+  return { group: g, orb, orbMat };
+}
+// 綠袍法師（村中嚮導 NPC）
+const mage = (() => {
+  const built = buildMage();
+  const x = 6, z = 3, y = groundY(x, z);
+  built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(0 - x, 14 - z); scene.add(built.group); // 面向玩家入口
+  const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 3.5, 0); built.group.add(o);
+  return { ...built, pos: new THREE.Vector3(x, y, z), baseY: y, el, mode: -1 };
+})();
+const MAGE_TIP = '走出村莊，找回散落各地的「資安遺跡」並點亮水晶。遇到守關怪物時，用課程裡學到的小知識回擊就行！';
+// 灰龍（荒野上空慢慢繞圈）＋ 背上白貓
+const dragon = (() => {
+  const built = buildDragon();
+  const cat = buildCat(0xefe9df, true); cat.group.scale.setScalar(0.8); cat.group.position.set(0.05, 0.62, 0); cat.group.rotation.y = Math.PI / 2; built.group.add(cat.group);
+  scene.add(built.group);
+  return { ...built, ang: 0, fireT: rand(3, 7), fireUntil: 0 };
+})();
+// 黃貓（村裡漫遊）
+const ycat = (() => {
+  const built = buildCat(0xf2b23a, false);
+  const x = -3, z = 5, y = groundY(x, z);
+  built.group.position.set(x, y, z); scene.add(built.group);
+  return { ...built, pos: new THREE.Vector3(x, 0, z), target: new THREE.Vector3(x, 0, z), wait: 0, face: 0 };
+})();
+
 // ── 角色：信使（人類）──────────────────────────────────────────
 const hero = new THREE.Group();
 const skin = mat(0xf2c79b), cloth = mat(0xff7a45), pants = mat(0x37445c), hair = mat(0x4a3528), bag = mat(0x6b4a2f), eyeMat = mat(0x2a2630);
@@ -959,6 +1036,41 @@ function animate() {
       else if (want === 1) { k.el.className = 'bubble petrified show'; k.el.textContent = '🗿 一尊石化的村民…'; }
       else { k.el.className = 'bubble show'; k.el.innerHTML = `<b>${k.ruin.emoji} ${k.ruin.title}・維護者</b><span>${k.ruin.tip}</span>`; }
     }
+  }
+  // 綠袍法師：呼吸擺動 + 法杖球脈動 + 靠近顯示提示
+  mage.group.position.y = mage.baseY + Math.sin(t * 1.5) * 0.04;
+  mage.orbMat.emissiveIntensity = 1.3 + Math.sin(t * 3) * 0.5;
+  {
+    const dm = Math.hypot(hero.position.x - mage.pos.x, hero.position.z - mage.pos.z);
+    const want = (battle.active || finaleActive) ? 0 : (dm < 7 ? 1 : 0);
+    if (want !== mage.mode) { mage.mode = want; if (want) { mage.el.className = 'bubble show'; mage.el.innerHTML = `<b>🧙 村裡的嚮導</b><span>${MAGE_TIP}</span>`; } else mage.el.className = 'bubble'; }
+  }
+  // 灰龍：荒野上空慢慢繞圈 + 拍翅 + 偶爾吐藍火（背上白貓跟著）
+  dragon.ang += dt * 0.12;
+  {
+    const r = 56 + Math.sin(t * 0.3) * 8, x = Math.cos(dragon.ang) * r, z = Math.sin(dragon.ang) * r;
+    dragon.group.position.set(x, terrainHeight(x, z) + 13 + Math.sin(t * 1.4) * 0.5, z);
+    dragon.group.rotation.y = -dragon.ang - Math.PI / 2;
+    const flap = Math.sin(t * 6) * 0.18;
+    dragon.wingL.rotation.set(1.35 + flap, 0, 0);    // 向兩側張開（滑翔感）、輕輕拍動
+    dragon.wingR.rotation.set(-(1.35 + flap), 0, 0);
+    if ((dragon.fireT -= dt) <= 0) { dragon.fireT = rand(5, 9); dragon.fireUntil = t + 1.0; }
+    const firing = t < dragon.fireUntil;
+    dragon.flameMat.opacity += ((firing ? 0.8 : 0) - dragon.flameMat.opacity) * Math.min(1, 6 * dt);
+    dragon.flame.scale.set(1, 0.7 + (firing ? 0.4 + Math.sin(t * 30) * 0.15 : 0), 1);
+  }
+  // 黃貓：村裡漫遊（到點待一會兒再選新目標）
+  {
+    const c = ycat;
+    if (c.wait > 0) { c.wait -= dt; c.tail.rotation.z = Math.sin(t * 3) * 0.15; }
+    else {
+      const dx = c.target.x - c.pos.x, dz = c.target.z - c.pos.z, d = Math.hypot(dx, dz);
+      if (d < 0.5) { c.wait = rand(1.5, 4); const a = rand(0, TAU), rr = rand(7, 26); c.target.set(Math.cos(a) * rr, 0, Math.sin(a) * rr); }
+      else { const inv = 1 / d; c.pos.x += dx * inv * 2.2 * dt; c.pos.z += dz * inv * 2.2 * dt; c.face += ((Math.atan2(dx, dz) - c.face + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 8 * dt); c.tail.rotation.z = Math.sin(t * 9) * 0.35; }
+    }
+    const gy = groundY(c.pos.x, c.pos.z);
+    c.group.position.set(c.pos.x, gy + Math.abs(Math.sin(t * 9)) * 0.05, c.pos.z);
+    c.group.rotation.y = c.face;
   }
   for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; const k = b.t / b.dur; b.ring.scale.setScalar(1 + k * b.mul); b.ring.material.opacity = Math.max(0, 0.85 * (1 - k)); if (k >= 1) { scene.remove(b.ring); b.ring.material.dispose(); b.ring.geometry.dispose(); bursts.splice(i, 1); } }
   // 落地塵土更新
