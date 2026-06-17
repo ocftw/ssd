@@ -28,6 +28,23 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = 4;
   return t;
 };
+// 共用石材貼圖（repeat 1；貼圖密度改由 boxUV 依各物件大小烘進 UV → 大小物件一致）
+const stoneMap = tex('./tex/stone.webp', 1, 1, true), stoneNor = tex('./tex/stone_n.webp', 1, 1);
+// 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
+function boxUV(geo, tile = 2.6) {
+  if (!geo.attributes.normal) geo.computeVertexNormals();
+  const p = geo.attributes.position, n = geo.attributes.normal, uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    let u, v;
+    if (ax >= ay && ax >= az) { u = p.getZ(i); v = p.getY(i); }
+    else if (ay >= az) { u = p.getX(i); v = p.getZ(i); }
+    else { u = p.getX(i); v = p.getY(i); }
+    uv[i * 2] = u / tile; uv[i * 2 + 1] = v / tile;
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
+const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.6, 0.6); m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
@@ -213,9 +230,9 @@ const village = new THREE.Group();
 scene.add(village);
 // 廣場石地（雙色 + 中央紋飾 + 通往村口的步道）
 const plaza = new THREE.Mesh(new THREE.CylinderGeometry(18, 18.5, 0.4, 48), mat(0xb6aa8e));
-plaza.position.y = 0.1; plaza.receiveShadow = true; village.add(plaza);
+plaza.position.y = 0.1; plaza.receiveShadow = true; village.add(plaza); applyStone(plaza.material); boxUV(plaza.geometry);
 const plazaIn = new THREE.Mesh(new THREE.CylinderGeometry(14, 14.2, 0.4, 48), mat(0xd6cbb0));
-plazaIn.position.y = 0.22; plazaIn.receiveShadow = true; village.add(plazaIn);
+plazaIn.position.y = 0.22; plazaIn.receiveShadow = true; village.add(plazaIn); applyStone(plazaIn.material); boxUV(plazaIn.geometry);
 const medallion = new THREE.Mesh(new THREE.RingGeometry(2.4, 3.1, 32), mat(0xa89a7c));
 medallion.rotation.x = -Math.PI / 2; medallion.position.y = 0.46; village.add(medallion);
 const path = new THREE.Mesh(new THREE.BoxGeometry(3, 0.16, 20), mat(0xc9bb98));
@@ -235,7 +252,7 @@ wellRoof.position.set(-5, 0, -3); village.add(wellRoof);
 
 // 低石牆 + 牆上石柱帽 + 村口拱門
 const wall = new THREE.Mesh(new THREE.TorusGeometry(20, 0.6, 10, 64), mat(0xb3a88f));
-wall.rotation.x = Math.PI / 2; wall.position.y = 0.85; wall.castShadow = true; village.add(wall);
+wall.rotation.x = Math.PI / 2; wall.position.y = 0.85; wall.castShadow = true; village.add(wall); applyStone(wall.material); boxUV(wall.geometry);
 for (let i = 0; i < 16; i++) { if (i === 4) continue; const a = i / 16 * TAU; const cap = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.2, 0.9), mat(0xa89a80)); cap.position.set(Math.cos(a) * 20, 1.35, Math.sin(a) * 20); cap.rotation.y = a; cap.castShadow = true; village.add(cap); }
 const gate = new THREE.Group();
 for (const gx of [-2.8, 2.8]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.8, 5.4, 0.8), mat(0x8a5e34)); p.position.set(gx, 2.7, 0); p.castShadow = true; gate.add(p); }
@@ -294,8 +311,8 @@ const roofb = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.5, 1.2), mat(0x9c5b3a)
 board.position.set(0, 0, 7); village.add(board);
 
 // 村莊中央大水晶（全部遺跡進化後才啟動）
-const greatBase = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 1.2, 12), mat(0x9a9080)); greatBase.position.set(0, 0.6, 0); greatBase.castShadow = greatBase.receiveShadow = true; village.add(greatBase);
-const greatBase2 = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.2, 0.8, 12), mat(0xb0a896)); greatBase2.position.set(0, 1.4, 0); greatBase2.castShadow = true; village.add(greatBase2);
+const greatBase = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 1.2, 12), mat(0x9a9080)); greatBase.position.set(0, 0.6, 0); greatBase.castShadow = greatBase.receiveShadow = true; village.add(greatBase); applyStone(greatBase.material); boxUV(greatBase.geometry);
+const greatBase2 = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.2, 0.8, 12), mat(0xb0a896)); greatBase2.position.set(0, 1.4, 0); greatBase2.castShadow = true; village.add(greatBase2); applyStone(greatBase2.material); boxUV(greatBase2.geometry);
 const greatMat = new THREE.MeshStandardMaterial({ color: 0x8a93a0, emissive: 0x20242b, emissiveIntensity: 0.4, roughness: 0.15, metalness: 0.35, flatShading: false });
 const greatCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 1), greatMat); greatCrystal.position.set(0, 5.4, 0); greatCrystal.castShadow = true; village.add(greatCrystal);
 const greatBeamMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -314,6 +331,9 @@ const shards = ruinAt.map((r, i) => {
 // ── 遺跡 ────────────────────────────────────────────────────────
 // 遺跡共用材質與幾何
 const RUIN = { stone: mat(0xb0a896), stoneDk: mat(0x827a6d), stoneIn: mat(0x968d7c), moss: mat(0x6f8f4e), wood: mat(0x8a6a3f), woodDk: mat(0x6e5230), dark: mat(0x2c2a28) };
+applyStone(RUIN.stone); applyStone(RUIN.stoneDk); applyStone(RUIN.stoneIn);   // 遺跡/紀念碑石材貼圖
+const STONE_MATS = new Set([RUIN.stone, RUIN.stoneDk, RUIN.stoneIn]);
+const texturizeStone = (obj) => obj.traverse((o) => { if (o.isMesh && STONE_MATS.has(o.material)) boxUV(o.geometry); }); // 對石材網格烘 boxUV（任意大小密度一致）
 const beamGeo = new THREE.CylinderGeometry(0.6, 1.5, 46, 12, 1, true);
 const rubbleGeo = new THREE.DodecahedronGeometry(0.5, 0);
 function buildRuin(r) {
@@ -442,14 +462,14 @@ function makeLabel(text) { const el = document.createElement('div'); el.classNam
 }
 // 遺跡 POI
 ruinAt.forEach((r) => {
-  const built = buildRuin(r);
+  const built = buildRuin(r); texturizeStone(built.group);
   const lab = makeLabel(`❔ 未知遺跡`); lab.o.position.set(0, 9, 0); built.group.add(lab.o);
   POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 13, discoverDist: 8, ...built, lift: 0 });
 });
 // OCF 紀念碑 POI（非課程：無戰鬥、不計進度、不影響繁榮度與終局）
 // 每次遊戲載入都從「未點亮」開始，玩家靠近才點燃（本次遊玩內保持點亮）＝給 OCF 添柴火的儀式感
 const ocfMon = (() => {
-  const built = buildOcf();
+  const built = buildOcf(); texturizeStone(built.group);
   built.group.position.set(ocfAt.x, ocfAt.y, ocfAt.z);
   built.group.rotation.y = Math.atan2(-ocfAt.x, -ocfAt.z);
   const lab = makeLabel(`${OCF_STATUE.emoji} OCF 紀念碑`); lab.o.position.set(0, 8, 0); built.group.add(lab.o);
@@ -482,7 +502,7 @@ function buildMonument() {
   return { group: g };
 }
 {
-  const built = buildMonument();
+  const built = buildMonument(); texturizeStone(built.group);
   const x = 0, z = -18, y = groundY(x, z);                       // 村莊後方中軸、正對入口大門的開闊處
   built.group.position.set(x, y, z); built.group.rotation.y = 0; scene.add(built.group); // 壁畫面向 +z（玩家由大門進入的方向）
   const lab = makeLabel(`${LEGEND.emoji} ${LEGEND.title}`); lab.o.position.set(0, 7.4, 0); built.group.add(lab.o);
