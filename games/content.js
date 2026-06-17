@@ -11,6 +11,16 @@ export const VILLAGE_BOARD = {
   chips: ['整體路線', '優先順序', '新手友善'],
 };
 
+// OCF 紀念碑（荒野中的隱藏地標，非課程：無戰鬥、不計遺跡進度）
+// stateText / goText 會覆寫面板右下的狀態文字與前往鍵文字。
+export const OCF_STATUE = {
+  id: 'ocf', title: '開放文化基金會 OCF', sub: '荒野中的紀念碑', emoji: '💛',
+  color: 0xffd24b, angle: 150, radius: 48, url: 'https://ocf.tw/',
+  desc: '開放文化基金會（OCF）是支持台灣開源、開放資料與數位人權的非營利組織，也是「資安防護新手村」背後的推手。喜歡這個專案嗎？歡迎到官網支持我們，讓開放與資安教育走得更遠。',
+  chips: ['開源', '開放資料', '數位人權', '非營利'],
+  stateText: '感謝支持', goText: '前往 OCF 官網支持 →',
+};
+
 // 散落在村莊外的遺跡：每一座 = 一個資安主題
 export const RUINS = [
   {

@@ -67,6 +67,7 @@ export const SFX = {
 
   // 探索
   step() { noise({ dur: 0.09, peak: 0.12 + Math.random() * 0.03, type: 'lowpass', freq: 320 + Math.random() * 120 }); },
+  jump() { tone({ freq: 300, type: 'sine', dur: 0.16, peak: 0.3, slideTo: 620 }); }, // 起跳「hop」
   discover() { tone({ freq: 660, type: 'triangle', dur: 0.2, peak: 0.36 }); tone({ freq: 990, type: 'triangle', dur: 0.2, peak: 0.36, at: 0.09 }); tone({ freq: 1320, type: 'triangle', dur: 0.26, peak: 0.36, at: 0.18 }); },
   complete() { tone({ freq: 880, type: 'triangle', dur: 0.18, peak: 0.34 }); tone({ freq: 1320, type: 'triangle', dur: 0.28, peak: 0.34, at: 0.1 }); },
 

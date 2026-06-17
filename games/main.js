@@ -9,7 +9,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { VILLAGE_BOARD, RUINS } from './content.js';
+import { VILLAGE_BOARD, RUINS, OCF_STATUE } from './content.js';
 import { WORLD, terrainHeight, groundY } from './terrain.js';
 import { BATTLES } from './battles.js';
 import { BattleSystem } from './battle.js';
@@ -127,7 +127,10 @@ const ruinAt = RUINS.map((r) => {
   const x = Math.cos(a) * r.radius, z = Math.sin(a) * r.radius;
   return { ...r, x, z, y: groundY(x, z) };
 });
+// OCF 紀念碑座標（先算好，植被才能避開）
+const ocfAt = (() => { const a = OCF_STATUE.angle * Math.PI / 180; const x = Math.cos(a) * OCF_STATUE.radius, z = Math.sin(a) * OCF_STATUE.radius; return { x, z, y: groundY(x, z) }; })();
 function nearAnyRuin(x, z, d) {
+  if (Math.hypot(x - ocfAt.x, z - ocfAt.z) < d) return true;
   for (const r of ruinAt) if (Math.hypot(x - r.x, z - r.z) < d) return true;
   return false;
 }
@@ -370,6 +373,37 @@ function buildRuin(r) {
   return { group: g, crystal, crystalMat, beamMat, motes };
 }
 
+// OCF 紀念碑（金色，與遺跡風格區隔：石基座 + 紀念碑石板 + 發光地球儀）
+function buildOcf() {
+  const g = new THREE.Group();
+  const col = new THREE.Color(OCF_STATUE.color);
+  const cast = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
+  const add = (geo, m, x, y, z, ry) => { const o = cast(new THREE.Mesh(geo, m)); o.position.set(x, y, z); if (ry) o.rotation.y = ry; g.add(o); return o; };
+  // 分層石基座
+  add(new THREE.CylinderGeometry(3.0, 3.4, 0.6, 10), RUIN.stoneDk, 0, 0.3, 0);
+  add(new THREE.CylinderGeometry(2.3, 2.6, 0.5, 10), RUIN.stone, 0, 0.75, 0);
+  add(new THREE.CylinderGeometry(1.7, 1.9, 0.4, 10), RUIN.stoneIn, 0, 1.1, 0);
+  // 直立紀念碑石板 + 頂楣
+  add(new THREE.BoxGeometry(2.6, 4.2, 0.7), RUIN.stone, 0, 3.4, 0);
+  add(new THREE.BoxGeometry(2.9, 0.45, 0.95), RUIN.stoneDk, 0, 5.5, 0);
+  // 金色銘牌（朝向村莊／玩家）
+  const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: true });
+  add(new THREE.BoxGeometry(1.9, 2.6, 0.12), plaqueMat, 0, 3.5, 0.4);
+  // 頂端發光地球儀 + 經緯環（象徵「開放」）
+  const globeMat = new THREE.MeshStandardMaterial({ color: col.clone(), emissive: col.clone(), emissiveIntensity: 1.1, roughness: 0.25, metalness: 0.1, flatShading: true });
+  const globe = cast(new THREE.Mesh(new THREE.SphereGeometry(0.95, 18, 14), globeMat)); globe.position.y = 6.6; g.add(globe);
+  const ringMat = new THREE.MeshBasicMaterial({ color: col.clone(), transparent: true, opacity: 0.85 });
+  const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.06, 8, 28), ringMat); ring1.rotation.x = Math.PI / 2; globe.add(ring1);
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.06, 8, 28), ringMat); ring2.rotation.y = Math.PI / 2.4; globe.add(ring2);
+  // 柔光暈 + 上升光束 + 地面光環（沿用遺跡材質手法）
+  const glowMat = new THREE.MeshBasicMaterial({ color: col.clone(), transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.18, 8, 24), glowMat); halo.rotation.x = Math.PI / 2; halo.position.y = 6.6; g.add(halo);
+  const beam = new THREE.Mesh(beamGeo, glowMat); beam.position.y = 24; g.add(beam);
+  const aura = new THREE.Mesh(new THREE.RingGeometry(1.4, 2.6, 28), glowMat); aura.rotation.x = -Math.PI / 2; aura.position.y = 1.32; g.add(aura);
+  scene.add(g);
+  return { group: g, globe };
+}
+
 // ── 興趣點（POI）：村莊告示牌 + 各遺跡 ───────────────────────────
 const POIS = [];
 function makeLabel(text) { const el = document.createElement('div'); el.className = 'tag'; el.textContent = text; const o = new CSS2DObject(el); return { el, o }; }
@@ -384,6 +418,14 @@ ruinAt.forEach((r) => {
   const lab = makeLabel(`❔ 未知遺跡`); lab.o.position.set(0, 9, 0); built.group.add(lab.o);
   POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 13, discoverDist: 8, ...built, lift: 0 });
 });
+// OCF 紀念碑 POI（非課程：無戰鬥、不計進度、不影響繁榮度與終局）
+{
+  const built = buildOcf();
+  built.group.position.set(ocfAt.x, ocfAt.y, ocfAt.z);
+  built.group.rotation.y = Math.atan2(-ocfAt.x, -ocfAt.z);
+  const lab = makeLabel(`${OCF_STATUE.emoji} OCF 紀念碑`); lab.o.position.set(0, 8, 0); built.group.add(lab.o);
+  POIS.push({ data: OCF_STATUE, isRuin: false, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, openDist: 12 });
+}
 
 // ── 石化村民（遺跡維護者）：大水晶啟動後解除石化、靠近給提醒 ──────
 const STONE = new THREE.Color(0x9a958c);
@@ -430,6 +472,13 @@ const legL = P(new THREE.CapsuleGeometry(0.2, 0.6, 3, 6), pants, -0.26, 0.5, 0);
 const legR = P(new THREE.CapsuleGeometry(0.2, 0.6, 3, 6), pants, 0.26, 0.5, 0);
 const armL = P(new THREE.CapsuleGeometry(0.17, 0.6, 3, 6), cloth, -0.7, 1.6, 0);
 const armR = P(new THREE.CapsuleGeometry(0.17, 0.6, 3, 6), cloth, 0.7, 1.6, 0);
+// 二段跳「空中轉一圈」的速度特效：軀幹周圍的環繞弧線殘影（高速旋轉 + 淡入淡出）
+const spinFX = new THREE.Group(); spinFX.position.y = 1.4; spinFX.visible = false; hero.add(spinFX);
+const spinFXMat = new THREE.MeshBasicMaterial({ color: 0xfff2c4, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+for (let i = 0; i < 3; i++) {
+  const arc = new THREE.Mesh(new THREE.TorusGeometry(0.95 + i * 0.18, 0.05, 6, 24, Math.PI * 0.8), spinFXMat);
+  arc.rotation.x = Math.PI / 2; arc.rotation.z = i * 0.7; arc.position.y = (i - 1) * 0.35; spinFX.add(arc);
+}
 hero.position.set(0, 0, 14);
 // 深連結：網址加 #<遺跡id>（如 #personal）即在該遺跡旁出生，方便分享特定課程
 const startRuin = ruinAt.find((r) => r.id === decodeURIComponent((location.hash || '').slice(1)).trim());
@@ -479,7 +528,7 @@ function heroSay(text, dur = 3) { heroBubbleEl.textContent = text; heroBubbleEl.
 
 // ── 控制 ────────────────────────────────────────────────────────
 const keys = new Set();
-addEventListener('keydown', (e) => { keys.add(e.code); });
+addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); });
 addEventListener('keyup', (e) => { keys.delete(e.code); });
 let yaw = Math.PI, pitch = 0.6, dist = 30;
 const moveTarget = new THREE.Vector3(); let hasTarget = false;
@@ -564,7 +613,7 @@ function showPanel(p) {
   pChips.innerHTML = ''; d.chips.forEach((c) => { const s = document.createElement('span'); s.className = 'chip'; s.textContent = c; pChips.appendChild(s); });
   const hasBattle = p.isRuin && !!BATTLES[d.id];
   pFight.style.display = (hasBattle && !isDone(d.id)) ? '' : 'none';
-  if (!p.isRuin) { pState.textContent = '村莊任務'; pGo.textContent = '了解怎麼開始 →'; }
+  if (!p.isRuin) { pState.textContent = d.stateText || '村莊任務'; pGo.textContent = d.goText || '了解怎麼開始 →'; }
   else if (hasBattle) { pState.textContent = isDone(d.id) ? '✅ 已淨化' : '⚔️ 有守關怪物'; pGo.textContent = '先閱讀章節備戰 →'; }
   else { pState.textContent = isDone(d.id) ? '✅ 已閱讀完成' : '尚未閱讀'; pGo.textContent = isDone(d.id) ? '再讀一次 →' : '閱讀此遺跡課程 →'; }
   panel.classList.add('show');
@@ -574,6 +623,10 @@ pClose.addEventListener('click', () => { if (panelId) suppressed.add(panelId); p
 // 右下角取消鍵（觸控／小螢幕）：等同關閉對話框
 const actbtnEl = document.getElementById('actbtn');
 actbtnEl.addEventListener('click', () => { if (panelId) suppressed.add(panelId); pinnedId = null; hidePanel(); });
+// 手機跳躍鍵：按下時排入一次跳躍（在主迴圈消化）
+let jumpPending = false;
+const jumpBtn = document.getElementById('jumpbtn');
+jumpBtn.addEventListener('pointerdown', (e) => { jumpPending = true; SFX.unlock(); e.preventDefault(); });
 pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); computeVibrancy(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); } });
 
 // 點亮遺跡外觀（水晶、光束、標籤）
@@ -679,6 +732,37 @@ function ringBurst(x, y, z, color, mul, dur) {
 }
 function spawnBurst(p) { ringBurst(p.pos.x, p.pos.y + 1.2, p.pos.z, p.data.color, 6, 0.9); }
 
+// 塵土：受光的塵色小團塊往外噴、上飄後受重力落下並淡出。
+// power≈衝擊力；o 可微調顆數/外擴/上飄/大小/壽命/透明度（走路用很小的揚塵）。
+const dustGeo = new THREE.IcosahedronGeometry(0.22, 0);
+const dusts = [];
+function spawnDust(x, y, z, power, o = {}) {
+  const n = o.n ?? (6 + Math.round(power * 5));
+  const out = o.out ?? (0.7 + power * 0.7), upMin = o.upMin ?? 1.0, upMax = o.upMax ?? 2.2;
+  const sMin = o.sMin ?? 0.4, sMax = o.sMax ?? 0.9, dur = o.dur ?? 0.55, op = o.op ?? 0.7;
+  const mat = new THREE.MeshStandardMaterial({ color: 0xcdbfa0, roughness: 1, metalness: 0, transparent: true, opacity: op, flatShading: true });
+  const parts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * TAU + rand(-0.4, 0.4), sp = out * rand(0.7, 1.3);
+    const m = new THREE.Mesh(dustGeo, mat);
+    m.position.set(x + Math.cos(a) * 0.3, y + 0.12, z + Math.sin(a) * 0.3);
+    m.scale.setScalar(rand(sMin, sMax));
+    parts.push({ m, vel: new THREE.Vector3(Math.cos(a) * sp, rand(upMin, upMax), Math.sin(a) * sp) });
+    scene.add(m);
+  }
+  dusts.push({ parts, mat, t: 0, dur, op });
+}
+
+// 走路腳印：地面上的小暗痕，沿前進方向、隨時間淡出（有數量上限，超過先回收最舊的）
+const printGeo = new THREE.PlaneGeometry(0.32, 0.46);
+const prints = [];
+function spawnFootprint(x, y, z, ry) {
+  const mat = new THREE.MeshBasicMaterial({ color: 0x3a2f26, transparent: true, opacity: 0.3, depthWrite: false });
+  const m = new THREE.Mesh(printGeo, mat); m.position.set(x, y + 0.03, z); m.rotation.set(-Math.PI / 2, 0, -ry); m.renderOrder = 1;
+  scene.add(m); prints.push({ m, mat, t: 0, dur: 4.5, op: 0.3 });
+  if (prints.length > 28) { const old = prints.shift(); scene.remove(old.m); old.mat.dispose(); }
+}
+
 // ── 小地圖 ──────────────────────────────────────────────────────
 const mm = $('#minimap canvas'); const mc = mm.getContext('2d'); const MMR = 76;
 const w2m = (x, z) => { let mx = (x / WORLD.maxR) * MMR, mz = (z / WORLD.maxR) * MMR; const l = Math.hypot(mx, mz); if (l > MMR) { mx *= MMR / l; mz *= MMR / l; } return [88 + mx, 88 + mz]; };
@@ -712,12 +796,16 @@ const timer = new THREE.Timer();
 const up = new THREE.Vector3(0, 1, 0), fwd = new THREE.Vector3(), right = new THREE.Vector3(), moveDir = new THREE.Vector3();
 const camPos = new THREE.Vector3(), lookAt = new THREE.Vector3();
 let walkPhase = 0, mmAcc = 0, lastStepFloor = 0;
+let jumpVel = 0, jumpOff = 0, jumpHeld = false; // 跳躍：地面高度之上的位移
+let doubleJumped = false, spinning = false, spinT = 0, yawBeforeSpin = 0; // 二段跳 + 空中轉一圈
+const SPIN_DUR = 0.55;
 
 function animate() {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
+  jumpBtn.classList.toggle('hide', battle.active || finaleActive);
   if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; battle.update(dt); composer.render(); return; }
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
@@ -743,19 +831,48 @@ function animate() {
     const len = Math.hypot(hero.position.x, hero.position.z);
     if (len > WORLD.maxR) hero.position.multiplyScalar(WORLD.maxR / len);
     const tr = Math.atan2(moveDir.x, moveDir.z);
-    hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
+    if (!spinning) hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
     moving = true;
   }
+
+  // 跳躍：空白鍵或手機跳躍鍵；在地面起跳，空中再按一次＝二段跳並轉一圈；終局運鏡時禁用
+  const grounded = jumpOff <= 0;
+  const spaceDown = keys.has('Space');
+  const launch = (spaceDown && !jumpHeld) || jumpPending;
+  if (launch && !finaleActive) {
+    if (grounded) { jumpVel = 8; doubleJumped = false; SFX.jump(); }
+    else if (!doubleJumped) { jumpVel = 7.2; doubleJumped = true; spinning = true; spinT = 0; yawBeforeSpin = hero.rotation.y; SFX.jump(); }
+  }
+  jumpHeld = spaceDown; jumpPending = false;
+  if (jumpVel !== 0 || jumpOff > 0) { jumpVel -= 23 * dt; jumpOff = Math.max(0, jumpOff + jumpVel * dt); if (jumpOff === 0) { const sp = -jumpVel; jumpVel = 0; doubleJumped = false; spinning = false; spinT = 0; if (sp > 1) spawnDust(hero.position.x, terrainHeight(hero.position.x, hero.position.z), hero.position.z, Math.min(1.4, sp / 8)); } }
+  const airborne = jumpOff > 0.05;
+  // 空中轉一圈（沿垂直軸 360°，緩入緩出，落地前回正）
+  if (spinning) { spinT += dt; const e = Math.min(1, spinT / SPIN_DUR), k = e * e * (3 - 2 * e); hero.rotation.y = yawBeforeSpin + k * TAU; if (e >= 1) { spinning = false; spinT = 0; hero.rotation.y = yawBeforeSpin; } }
+  // 速度特效：轉圈時環繞弧線高速旋轉、淡入淡出
+  if (spinning) { spinFX.visible = true; spinFX.rotation.y += dt * 26; spinFXMat.opacity = Math.sin(Math.min(1, spinT / SPIN_DUR) * Math.PI) * 0.55; }
+  else if (spinFX.visible) { spinFX.rotation.y += dt * 26; spinFXMat.opacity *= 0.82; if (spinFXMat.opacity < 0.02) { spinFX.visible = false; spinFXMat.opacity = 0; } }
+
   const groundH = terrainHeight(hero.position.x, hero.position.z);
   if (moving) {
     walkPhase += dt * (sprint ? 18 : 12); const s = Math.sin(walkPhase);
     legL.rotation.x = s * 0.6; legR.rotation.x = -s * 0.6; armL.rotation.x = -s * 0.5; armR.rotation.x = s * 0.5;
-    hero.position.y = groundH + Math.abs(Math.sin(walkPhase)) * 0.12;
-    const sf = Math.floor(walkPhase / Math.PI); if (sf !== lastStepFloor) { lastStepFloor = sf; SFX.step(); }
+    hero.position.y = groundH + Math.abs(Math.sin(walkPhase)) * 0.12 + jumpOff;
+    const sf = Math.floor(walkPhase / Math.PI);
+    if (sf !== lastStepFloor) {
+      lastStepFloor = sf;
+      if (!airborne) {
+        SFX.step();
+        const ry = hero.rotation.y, side = (sf % 2 === 0) ? 0.26 : -0.26;
+        const fx = hero.position.x + Math.cos(ry) * side, fz = hero.position.z - Math.sin(ry) * side, fy = terrainHeight(fx, fz);
+        spawnFootprint(fx, fy, fz, ry);
+        spawnDust(fx, fy, fz, 0.2, { n: 3, out: 0.5, upMin: 0.3, upMax: 0.8, sMin: 0.2, sMax: 0.42, dur: 0.45, op: 0.45 });
+      }
+    }
   } else {
     legL.rotation.x *= 0.8; legR.rotation.x *= 0.8; armL.rotation.x *= 0.8; armR.rotation.x *= 0.8;
-    hero.position.y = groundH; head.position.y = 2.6 + Math.sin(t * 1.5) * 0.03;
+    hero.position.y = groundH + jumpOff; head.position.y = 2.6 + Math.sin(t * 1.5) * 0.03;
   }
+  if (airborne) { legL.rotation.x = -0.6; legR.rotation.x = -0.9; armL.rotation.x = -1.1; armR.rotation.x = -1.1; } // 滯空收腿擺手
 
   // 對話泡：踩水反應 + 漫步自言自語
   if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
@@ -844,6 +961,15 @@ function animate() {
     }
   }
   for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; const k = b.t / b.dur; b.ring.scale.setScalar(1 + k * b.mul); b.ring.material.opacity = Math.max(0, 0.85 * (1 - k)); if (k >= 1) { scene.remove(b.ring); b.ring.material.dispose(); b.ring.geometry.dispose(); bursts.splice(i, 1); } }
+  // 落地塵土更新
+  for (let i = dusts.length - 1; i >= 0; i--) {
+    const d = dusts[i]; d.t += dt; const k = d.t / d.dur;
+    for (const p of d.parts) { p.vel.y -= 5 * dt; p.m.position.addScaledVector(p.vel, dt); p.m.rotation.x += dt * 2.4; p.m.rotation.y += dt * 1.6; p.m.scale.multiplyScalar(1 + dt * 1.3); }
+    d.mat.opacity = d.op * (1 - k);
+    if (k >= 1) { for (const p of d.parts) scene.remove(p.m); d.mat.dispose(); dusts.splice(i, 1); }
+  }
+  // 腳印淡出
+  for (let i = prints.length - 1; i >= 0; i--) { const f = prints[i]; f.t += dt; const k = f.t / f.dur; f.mat.opacity = f.op * (1 - k); if (k >= 1) { scene.remove(f.m); f.mat.dispose(); prints.splice(i, 1); } }
 
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
   composer.render(); labelRenderer.render(scene, camera);

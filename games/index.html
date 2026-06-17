@@ -80,9 +80,15 @@
     #actbtn { display:none; position:fixed; left:154px; bottom:calc(96px + env(safe-area-inset-bottom)); z-index:15; width:60px; height:60px; border-radius:50%;
       border:0; cursor:pointer; place-items:center; background:rgba(251,247,239,.96); box-shadow:var(--shadow);
       color:#c0433a; font-size:24px; font-weight:800; -webkit-tap-highlight-color:transparent; }
+    /* 跳躍鍵（右下，觸控／小螢幕；桌機用空白鍵） */
+    #jumpbtn { display:none; position:fixed; right:28px; bottom:calc(96px + env(safe-area-inset-bottom)); z-index:15; width:64px; height:64px; border-radius:50%;
+      border:0; cursor:pointer; place-items:center; background:rgba(79,209,168,.96); box-shadow:var(--shadow);
+      color:#0b3b2e; font-size:18px; font-weight:800; touch-action:none; -webkit-tap-highlight-color:transparent; }
+    #jumpbtn.hide { display:none !important; }
     @media (max-width:820px), (pointer:coarse) {
       #joystick { display:block; }
       #actbtn.show { display:grid; }
+      #jumpbtn { display:grid; }
     }
 
     /* 課程卡 */
@@ -265,6 +271,7 @@
 
   <div id="minimap"><canvas width="176" height="176"></canvas><span class="cap">新手村地圖</span></div>
   <button id="actbtn" aria-label="取消對話框">✕</button>
+  <button id="jumpbtn" aria-label="跳躍">跳</button>
 
   <div id="toast"><div class="t"></div><div class="s"></div></div>
 
