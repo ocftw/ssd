@@ -80,8 +80,8 @@
     #actbtn { display:none; position:fixed; left:154px; bottom:calc(96px + env(safe-area-inset-bottom)); z-index:15; width:60px; height:60px; border-radius:50%;
       border:0; cursor:pointer; place-items:center; background:rgba(251,247,239,.96); box-shadow:var(--shadow);
       color:#c0433a; font-size:24px; font-weight:800; -webkit-tap-highlight-color:transparent; }
-    /* 跳躍鍵（右下，觸控／小螢幕；桌機用空白鍵） */
-    #jumpbtn { display:none; position:fixed; right:28px; bottom:calc(96px + env(safe-area-inset-bottom)); z-index:15; width:64px; height:64px; border-radius:50%;
+    /* 跳躍鍵（右下、疊在小地圖正上方，避免擋到小地圖；觸控／小螢幕，桌機用空白鍵） */
+    #jumpbtn { display:none; position:fixed; right:32px; bottom:calc(204px + env(safe-area-inset-bottom)); z-index:15; width:64px; height:64px; border-radius:50%;
       border:0; cursor:pointer; place-items:center; background:rgba(79,209,168,.96); box-shadow:var(--shadow);
       color:#0b3b2e; font-size:18px; font-weight:800; touch-action:none; -webkit-tap-highlight-color:transparent; }
     #jumpbtn.hide { display:none !important; }
@@ -215,6 +215,7 @@
     @media (max-width:560px) {
       #titlecard p { display:none; }
       #minimap { width:128px; height:128px; } #minimap canvas { width:128px; height:128px; }
+      #jumpbtn { bottom:calc(156px + env(safe-area-inset-bottom)); } /* 小地圖縮成 128，跳鍵跟著下移仍在其上方 */
       #hint kbd:nth-child(n+4) { display:none; }
       .opts { grid-template-columns:1fr; } .b-bottom .q { font-size:15px; }
     }

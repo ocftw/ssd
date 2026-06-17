@@ -805,7 +805,7 @@ function animate() {
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
-  jumpBtn.classList.toggle('hide', battle.active || finaleActive);
+  jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
   if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; battle.update(dt); composer.render(); return; }
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
