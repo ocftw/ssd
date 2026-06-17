@@ -3,7 +3,7 @@
 // 純前端、自成一體；不讀取也不修改 docs/ 原始文件。進度存於 localStorage。
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
@@ -217,10 +217,34 @@ const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.transl
 const trees = scatter(170, WORLD.villageR + 8, WORLD.maxR - 4, WORLD.water + 0.8, true);
 instance(foliageGeo, mat(0x4e9d54), trees);
 instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp', 3, 2, true), normalMap: tex('./tex/bark_n.webp', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
-// 岩石
-const rockGeo = new THREE.DodecahedronGeometry(1, 0);
-instance(rockGeo, mat(0xffffff, { map: tex('./tex/stone.webp', 1, 1, true), normalMap: tex('./tex/stone_n.webp', 1, 1), normalScale: new THREE.Vector2(0.8, 0.8), roughness: 0.95 }), scatter(90, WORLD.villageR + 4, WORLD.maxR + 14, WORLD.water + 0.3, true)
-  .map((p) => ({ ...p, sy: p.s * rand(0.6, 1.1) })));
+// 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
+const rockMap = tex('./tex/rock.webp', 1, 1, true), rockNor = tex('./tex/rock_n.webp', 1, 1);
+const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
+function craggyRockGeo(amp) {
+  const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
+  const p = g.attributes.position, v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); v.multiplyScalar((v.length() + rand(-amp, amp)) / v.length()); p.setXYZ(i, v.x, v.y, v.z); }
+  g.computeVertexNormals(); boxUV(g, 1.5); return g;
+}
+const rockGeos = [craggyRockGeo(0.18), craggyRockGeo(0.22), craggyRockGeo(0.13)];
+const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
+{
+  const rockPts = scatter(90, WORLD.villageR + 4, WORLD.maxR + 14, WORLD.water + 0.3, true);
+  const dummy = new THREE.Object3D(), col = new THREE.Color();
+  rockGeos.forEach((geo, gi) => {
+    const pts = rockPts.filter((_, i) => i % rockGeos.length === gi);
+    const im = new THREE.InstancedMesh(geo, rockMat, pts.length); im.castShadow = im.receiveShadow = true;
+    pts.forEach((pt, i) => {
+      dummy.position.set(pt.x, pt.y - 0.1, pt.z);
+      dummy.rotation.set(rand(0, TAU), rand(0, TAU), rand(0, TAU));
+      const s = pt.s * 0.9; dummy.scale.set(s * rand(0.8, 1.4), s * rand(0.6, 1.1), s * rand(0.8, 1.4));
+      dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix);
+      im.setColorAt(i, col.set(rockTints[(Math.random() * rockTints.length) | 0]));
+    });
+    im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+    scene.add(im);
+  });
+}
 // 草叢（不投影，量大）
 const tuftGeo = new THREE.ConeGeometry(0.45, 0.9, 8);
 const tufts = scatter(620, WORLD.villageR + 3, WORLD.maxR - 2, WORLD.water + 0.6, false);
