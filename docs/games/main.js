@@ -18,7 +18,7 @@ import { SFX } from './audio.js';
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
 const mat = (color, opts = {}) =>
-  new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: false, ...opts });
+  new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, ...opts });
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -78,9 +78,24 @@ const SKY_TOP_D = new THREE.Color(0x6d7682), SKY_TOP_A = new THREE.Color(0x4f9fd
 const SKY_BOT_D = new THREE.Color(0x8f8b83), SKY_BOT_A = new THREE.Color(0xfae7cf);
 const FOG_D = new THREE.Color(0x83878d), FOG_A = new THREE.Color(0xcfe4f0);
 
+// ── 環境光（IBL）：用「繁榮天空」產生環境貼圖 → 水面映天、水晶/金屬反光、整體更立體 ──
+// 只在載入時產生一次（靜態）；破敗時由 vibrancy 後製一起灰化，視覺一致、每幀零成本。
+{
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const skyScene = new THREE.Scene();
+  const envSkyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    uniforms: { top: { value: SKY_TOP_A.clone() }, bottom: { value: SKY_BOT_A.clone() } },
+    vertexShader: skyMat.vertexShader, fragmentShader: skyMat.fragmentShader,
+  });
+  skyScene.add(new THREE.Mesh(new THREE.SphereGeometry(560, 32, 16), envSkyMat));
+  scene.environment = pmrem.fromScene(skyScene, 0, 1, 1000).texture;
+  pmrem.dispose(); envSkyMat.dispose();
+}
+
 // ── 燈光（太陽會跟著角色移動，保持大世界陰影清晰）─────────────────
-scene.add(new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.7));
-scene.add(new THREE.AmbientLight(0xffffff, 0.16));
+scene.add(new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.5));
+scene.add(new THREE.AmbientLight(0xffffff, 0.08));
 const sun = new THREE.DirectionalLight(0xfff1d8, 2.2);
 sun.castShadow = true;
 sun.shadow.mapSize.set(4096, 4096);
@@ -117,8 +132,8 @@ scene.add(terrain);
 
 // 水面
 const water = new THREE.Mesh(
-  new THREE.PlaneGeometry(WORLD.half * 2, WORLD.half * 2),
-  new THREE.MeshStandardMaterial({ color: 0x4fa9d6, transparent: true, opacity: 0.8, roughness: 0.15, metalness: 0.2 })
+  new THREE.PlaneGeometry(WORLD.half * 2, WORLD.half * 2, 40, 40),
+  new THREE.MeshStandardMaterial({ color: 0x4fa9d6, transparent: true, opacity: 0.82, roughness: 0.06, metalness: 0.4, envMapIntensity: 1.3 })
 );
 water.rotation.x = -Math.PI / 2; water.position.y = WORLD.water;
 scene.add(water);
@@ -1042,6 +1057,8 @@ function animate() {
 
   // 特效更新
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
+  // 湖面微幅漣漪：讓環境反射有流動感（局部座標 Z = 世界 Y）
+  { const wp = water.geometry.attributes.position; for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), y = wp.getY(i); wp.setZ(i, Math.sin(x * 0.15 + t * 1.3) * 0.12 + Math.sin(y * 0.19 - t * 1.0) * 0.12); } wp.needsUpdate = true; water.geometry.computeVertexNormals(); }
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
