@@ -45,6 +45,9 @@ function boxUV(geo, tile = 2.6) {
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
+// 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
+const woodMap = tex('./tex/wood.webp', 1, 1, true), woodNor = tex('./tex/wood_n.webp', 1, 1);
+const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
@@ -246,7 +249,7 @@ wellRim.rotation.x = Math.PI / 2; wellRim.position.set(-5, 1.3, -3); village.add
 const wellWater = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.2, 16), mat(0x6cc5e0, { roughness: 0.2 }));
 wellWater.position.set(-5, 1.15, -3); village.add(wellWater);
 const wellRoof = new THREE.Group();
-for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 2.6, 10), mat(0x7a5230)); p.position.set(wx, 1.3, 0); p.castShadow = true; wellRoof.add(p); }
+for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 2.6, 10), mat(0x7a5230)); p.position.set(wx, 1.3, 0); p.castShadow = true; wellRoof.add(p); applyWood(p.material); boxUV(p.geometry); }
 const wrf = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.2, 8), mat(0x9c5b3a)); wrf.position.y = 3.2; wrf.rotation.y = Math.PI / 4; wrf.castShadow = true; wellRoof.add(wrf);
 wellRoof.position.set(-5, 0, -3); village.add(wellRoof);
 
@@ -297,16 +300,16 @@ for (const tp of [[-15, -6], [15, -4]]) {
   tg.position.set(tp[0], 0, tp[1]); village.add(tg);
 }
 for (const fp of [[-8, 2, 0x5b9cff], [9, 1, 0xff7a45]]) {
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 5, 10), mat(0x6b5a44)); pole.position.set(fp[0], 2.5, fp[1]); pole.castShadow = true; village.add(pole);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 5, 10), mat(0x6b5a44)); pole.position.set(fp[0], 2.5, fp[1]); pole.castShadow = true; village.add(pole); applyWood(pole.material); boxUV(pole.geometry);
   const flag = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.08), mat(fp[2], { emissive: fp[2], emissiveIntensity: 0.12 })); flag.position.set(fp[0] + 0.95, 4.0, fp[1]); village.add(flag);
 }
 
 // 村長告示牌（任務起點，造型升級）
 const board = new THREE.Group();
 const bplat = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.4, 0.3, 12), mat(0xb8ac90)); bplat.position.y = 0.15; bplat.receiveShadow = true; board.add(bplat);
-for (const bx of [-1.4, 1.4]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 3.4, 12), mat(0x7a5230)); p.position.set(bx, 1.7, 0); p.castShadow = true; board.add(p); }
-const sign = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 0.25), mat(0xe7c884)); sign.position.set(0, 2.9, 0); sign.castShadow = true; board.add(sign);
-const frame = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 0.3), mat(0x9c6b41)); frame.position.set(0, 4.05, 0); board.add(frame);
+for (const bx of [-1.4, 1.4]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 3.4, 12), mat(0x7a5230)); p.position.set(bx, 1.7, 0); p.castShadow = true; board.add(p); applyWood(p.material); boxUV(p.geometry); }
+const sign = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 0.25), mat(0xe7c884)); sign.position.set(0, 2.9, 0); sign.castShadow = true; board.add(sign); applyWood(sign.material); boxUV(sign.geometry);
+const frame = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 0.3), mat(0x9c6b41)); frame.position.set(0, 4.05, 0); board.add(frame); applyWood(frame.material); boxUV(frame.geometry);
 const roofb = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.5, 1.2), mat(0x9c5b3a)); roofb.position.set(0, 4.35, 0); roofb.castShadow = true; board.add(roofb);
 board.position.set(0, 0, 7); village.add(board);
 
@@ -331,8 +334,9 @@ const shards = ruinAt.map((r, i) => {
 // ── 遺跡 ────────────────────────────────────────────────────────
 // 遺跡共用材質與幾何
 const RUIN = { stone: mat(0xb0a896), stoneDk: mat(0x827a6d), stoneIn: mat(0x968d7c), moss: mat(0x6f8f4e), wood: mat(0x8a6a3f), woodDk: mat(0x6e5230), dark: mat(0x2c2a28) };
-applyStone(RUIN.stone); applyStone(RUIN.stoneDk); applyStone(RUIN.stoneIn);   // 遺跡/紀念碑石材貼圖
-const STONE_MATS = new Set([RUIN.stone, RUIN.stoneDk, RUIN.stoneIn]);
+applyStone(RUIN.stone); applyStone(RUIN.stoneDk); applyStone(RUIN.stoneIn);   // 遺跡/紀念碑石材＝水泥
+applyWood(RUIN.wood); applyWood(RUIN.woodDk);                                  // 市集等木造
+const STONE_MATS = new Set([RUIN.stone, RUIN.stoneDk, RUIN.stoneIn, RUIN.wood, RUIN.woodDk]);
 const texturizeStone = (obj) => obj.traverse((o) => { if (o.isMesh && STONE_MATS.has(o.material)) boxUV(o.geometry); }); // 對石材網格烘 boxUV（任意大小密度一致）
 const beamGeo = new THREE.CylinderGeometry(0.6, 1.5, 46, 12, 1, true);
 const rubbleGeo = new THREE.DodecahedronGeometry(0.5, 0);
