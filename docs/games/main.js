@@ -229,8 +229,11 @@ const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
 }));
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
 const trees = scatter(170, WORLD.villageR + 8, WORLD.maxR - 4, WORLD.water + 0.8, true);
-instance(foliageGeo, mat(0x4e9d54), trees);
-instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp', 3, 2, true), normalMap: tex('./tex/bark_n.webp', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
+const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp', 3, 2, true), normalMap: tex('./tex/bark_n.webp', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+// 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
+const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
+const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
 const rockMap = tex('./tex/rock.webp', 1, 1, true), rockNor = tex('./tex/rock_n.webp', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
@@ -1129,6 +1132,28 @@ function animate() {
   // 對話框開啟時：在搖桿旁顯示取消鍵（觸控／小螢幕）
   actbtnEl.classList.toggle('show', panelId !== null);
 
+  // 撞樹擺動（純視覺，非真實碰撞）：玩家進入樹範圍 → 被推離 + 彈簧回擺數次站直
+  {
+    const hx = hero.position.x, hz = hero.position.z; let dirty = false;
+    for (let i = 0; i < trees.length; i++) {
+      const tr = trees[i], sw = treeSway[i];
+      if (!finaleActive) {
+        const dx = tr.x - hx, dz = tr.z - hz, d2 = dx * dx + dz * dz, br = 0.9 + 0.5 * tr.s;
+        if (d2 < br * br) { const inv = 1 / (Math.sqrt(d2) || 1); sw.dx = dx * inv; sw.dz = dz * inv; sw.vel += 14 * dt; }
+      }
+      if (sw.ang !== 0 || sw.vel !== 0) {
+        sw.vel += (-55 * sw.ang - 7 * sw.vel) * dt; sw.ang += sw.vel * dt;
+        if (sw.ang > 0.22) { sw.ang = 0.22; if (sw.vel > 0) sw.vel = 0; }
+        if (Math.abs(sw.ang) < 1e-3 && Math.abs(sw.vel) < 1e-3) { sw.ang = 0; sw.vel = 0; }
+        _tQy.setFromAxisAngle(_tUp, tr.ry || 0);
+        _tAx.set(sw.dz, 0, -sw.dx); if (_tAx.lengthSq() < 1e-6) _tAx.set(1, 0, 0); else _tAx.normalize();
+        _tQ.setFromAxisAngle(_tAx, sw.ang).multiply(_tQy);
+        _tObj.position.set(tr.x, tr.y, tr.z); _tObj.quaternion.copy(_tQ); _tObj.scale.set(tr.s, tr.sy || tr.s, tr.s); _tObj.updateMatrix();
+        treeFoliage.setMatrixAt(i, _tObj.matrix); treeTrunk.setMatrixAt(i, _tObj.matrix); dirty = true;
+      }
+    }
+    if (dirty) { treeFoliage.instanceMatrix.needsUpdate = true; treeTrunk.instanceMatrix.needsUpdate = true; }
+  }
   // 特效更新
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
   // 湖面微幅漣漪：讓環境反射有流動感（局部座標 Z = 世界 Y）
