@@ -259,12 +259,16 @@ const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
     scene.add(im);
   });
 }
-// 草叢（不投影，量大）
-const tuftGeo = new THREE.ConeGeometry(0.45, 0.9, 8);
+// 草叢：交叉貼片 + 草葉 alpha 貼圖（比圓錐像真草）；不投影、量大、每叢隨機朝向/高度/色調
+const bladeQuad = new THREE.PlaneGeometry(1, 0.95); bladeQuad.translate(0, 0.475, 0);
+const bladeQuad2 = bladeQuad.clone(); bladeQuad2.rotateY(Math.PI / 2);
+const tuftGeo = mergeGeometries([bladeQuad, bladeQuad2]);
+const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
 const tufts = scatter(620, WORLD.villageR + 3, WORLD.maxR - 2, WORLD.water + 0.6, false);
-const tuftMesh = new THREE.InstancedMesh(tuftGeo, mat(0x76b85a), tufts.length);
-tufts.forEach((p, i) => { dummy.position.set(p.x, p.y + 0.3, p.z); dummy.rotation.set(0, p.ry, 0); dummy.scale.set(p.s, p.s, p.s); dummy.updateMatrix(); tuftMesh.setMatrixAt(i, dummy.matrix); });
-tuftMesh.instanceMatrix.needsUpdate = true; scene.add(tuftMesh);
+const tuftMesh = new THREE.InstancedMesh(tuftGeo, tuftMat, tufts.length);
+const tuftTints = [0x86c45f, 0x6fae57, 0x95cf6c, 0x5f9c49];
+{ const col = new THREE.Color(); tufts.forEach((p, i) => { dummy.position.set(p.x, p.y - 0.05, p.z); dummy.rotation.set(0, p.ry, 0); const s = p.s * 0.95; dummy.scale.set(s, s * rand(0.8, 1.25), s); dummy.updateMatrix(); tuftMesh.setMatrixAt(i, dummy.matrix); tuftMesh.setColorAt(i, col.set(tuftTints[(Math.random() * tuftTints.length) | 0])); }); }
+tuftMesh.instanceMatrix.needsUpdate = true; if (tuftMesh.instanceColor) tuftMesh.instanceColor.needsUpdate = true; scene.add(tuftMesh);
 
 // ── 村莊 ────────────────────────────────────────────────────────
 const village = new THREE.Group();
