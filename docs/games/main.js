@@ -154,7 +154,21 @@ for (let i = 0; i < tp.count; i++) {
   colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
 }
 tGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-const terrain = new THREE.Mesh(tGeo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) }));
+// 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
+const grassTex = tex('./tex/grass.webp', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) });
+terrainMat.onBeforeCompile = (sh) => {
+  sh.uniforms.grassMap = { value: grassTex };
+  sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
+  sh.fragmentShader = 'uniform sampler2D grassMap;\nvarying vec2 vTerUv;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+  {
+    float gm = smoothstep(0.04, 0.16, vColor.g - vColor.r);                 // 只在草地（綠>紅）混入
+    vec3 grass = mix(texture2D(grassMap, vTerUv * 36.0).rgb, texture2D(grassMap, vTerUv * 9.0).rgb, 0.5); // 雙尺度打散重複
+    float gv = dot(grass, vec3(0.299, 0.587, 0.114));
+    diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * (0.72 + gv * 0.62), gm); // 以草皮明暗調變綠地、保留綠色基調
+  }`);
+};
+const terrain = new THREE.Mesh(tGeo, terrainMat);
 terrain.receiveShadow = true;
 scene.add(terrain);
 
