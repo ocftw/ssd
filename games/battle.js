@@ -2,11 +2,11 @@
 // 答對 → 出招扣怪血；答錯 → 失去一顆防護心、揭曉正解與解說，再點正解學起來反擊。
 // 怪血歸零 = 勝（淨化遺跡）；防護心歸零 = 敗（先去讀章節再來，可重來）。
 import * as THREE from 'three';
-import { groundY } from './terrain.js?v=67aabdb2';
-import { SFX } from './audio.js?v=67aabdb2';
+import { groundY } from './terrain.js?v=d83e1ac6';
+import { SFX } from './audio.js?v=d83e1ac6';
 
 const TAU = Math.PI * 2;
-const sm = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: true, ...o });
+const sm = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, ...o });
 
 function buildMonster(data) {
   const g = new THREE.Group();
@@ -15,7 +15,7 @@ function buildMonster(data) {
   const white = () => reg(sm(0xffffff, { roughness: 0.4 }));
   const dark = () => reg(sm(0x12151c));
   const bodyMat = reg(sm(data.color));
-  const accentMat = reg(new THREE.MeshStandardMaterial({ color: data.accent, emissive: data.accent, emissiveIntensity: 1.1, roughness: 0.5, flatShading: true }));
+  const accentMat = reg(new THREE.MeshStandardMaterial({ color: data.accent, emissive: data.accent, emissiveIntensity: 1.1, roughness: 0.5, flatShading: false }));
   // 一對瞪人的眼睛（含發光瞳孔）
   const eyes = (x, y, z, r, glow) => { for (const sx of [-x, x]) {
     const e = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), white()); e.position.set(sx, y, z); g.add(e);
@@ -25,22 +25,22 @@ function buildMonster(data) {
   const style = data.style || 'angler';
 
   if (style === 'angler') { // 釣魚巨怪
-    body = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 0), bodyMat); g.add(body);
-    const belly = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 0), reg(sm(0x2c3a4a))); belly.position.set(0, -0.5, 1.3); belly.scale.set(1, 0.8, 0.6); g.add(belly);
+    body = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), bodyMat); g.add(body);
+    const belly = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 1), reg(sm(0x2c3a4a))); belly.position.set(0, -0.5, 1.3); belly.scale.set(1, 0.8, 0.6); g.add(belly);
     eyes(0.8, 0.7, 1.7, 0.5);
     for (const sx of [-0.8, 0.8]) { const brow = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.22, 0.2), dark()); brow.position.set(sx, 1.2, 1.9); brow.rotation.z = sx > 0 ? 0.5 : -0.5; g.add(brow); }
     const mouth = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.3), dark()); mouth.position.set(0, -0.6, 2.0); g.add(mouth);
-    for (let i = 0; i < 5; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 4), white()); t.position.set(-0.8 + i * 0.4, -0.4, 2.1); t.rotation.x = Math.PI; g.add(t); }
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 3.4, 6), dark()); arm.position.set(0, 3.2, 0.6); arm.rotation.x = 0.5; g.add(arm);
+    for (let i = 0; i < 5; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 6), white()); t.position.set(-0.8 + i * 0.4, -0.4, 2.1); t.rotation.x = Math.PI; g.add(t); }
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 3.4, 10), dark()); arm.position.set(0, 3.2, 0.6); arm.rotation.x = 0.5; g.add(arm);
     const lure = new THREE.Mesh(new THREE.BoxGeometry(1, 0.7, 0.18), accentMat); lure.position.set(0, 4.4, 1.7); g.add(lure);
-    const fold = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.5, 4), reg(sm(0xfff4cf))); fold.position.set(0, 4.5, 1.8); fold.rotation.x = Math.PI / 2; fold.scale.set(1, 0.6, 1); g.add(fold);
-    for (const fx of [-2.1, 2.1]) { const fin = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.6, 4), reg(sm(data.color))); fin.position.set(fx, 0, 0); fin.rotation.z = fx > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(fin); }
+    const fold = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.5, 8), reg(sm(0xfff4cf))); fold.position.set(0, 4.5, 1.8); fold.rotation.x = Math.PI / 2; fold.scale.set(1, 0.6, 1); g.add(fold);
+    for (const fx of [-2.1, 2.1]) { const fin = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.6, 8), reg(sm(data.color))); fin.position.set(fx, 0, 0); fin.rotation.z = fx > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(fin); }
   } else if (style === 'slime') { // 弱密碼史萊姆
     body = new THREE.Mesh(new THREE.IcosahedronGeometry(2.5, 1), bodyMat); body.scale.set(1, 0.78, 1); g.add(body);
     const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(1.3, 1), bodyMat); blob.position.set(0.4, 1.2, 0.2); blob.scale.set(1, 0.7, 1); g.add(blob);
     eyes(0.75, 0.5, 1.95, 0.55);
-    const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.13, 6, 14, Math.PI), dark()); mouth.position.set(0, -0.3, 2.05); g.add(mouth);
-    const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.7, 0), accentMat); core.position.set(0, 0.2, 0.1); g.add(core);
+    const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.13, 10, 14, Math.PI), dark()); mouth.position.set(0, -0.3, 2.05); g.add(mouth);
+    const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.7, 1), accentMat); core.position.set(0, 0.2, 0.1); g.add(core);
   } else if (style === 'golem') { // 勒索魔像
     body = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.6, 2.6), bodyMat); body.position.y = 0.3; g.add(body);
     const head = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.4, 1.6), bodyMat); head.position.set(0, 2.6, 0); g.add(head);
@@ -49,17 +49,17 @@ function buildMonster(data) {
     for (const sx of [-2.4, 2.4]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.8, 1.0), bodyMat); arm.position.set(sx, 0.3, 0); g.add(arm); }
     for (const sx of [-0.9, 0.9]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 1.2), reg(sm(0x3a63b8))); leg.position.set(sx, -2.4, 0); g.add(leg); }
   } else if (style === 'ghost') { // 迷霧幽靈
-    const ghostMat = reg(new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.8, roughness: 0.6, flatShading: true }));
+    const ghostMat = reg(new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.8, roughness: 0.6, flatShading: false }));
     body = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), ghostMat); body.scale.set(1, 1.2, 1); g.add(body);
-    for (let i = 0; i < 5; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.6, 5), ghostMat); t.position.set(-1.7 + i * 0.85, -2.2, 0); t.rotation.x = Math.PI; g.add(t); }
+    for (let i = 0; i < 5; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.6, 8), ghostMat); t.position.set(-1.7 + i * 0.85, -2.2, 0); t.rotation.x = Math.PI; g.add(t); }
     eyes(0.7, 0.6, 1.7, 0.5, data.accent);
-    const wisp = new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 0), accentMat); wisp.position.set(0, 1.6, 0.6); g.add(wisp);
+    const wisp = new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 1), accentMat); wisp.position.set(0, 1.6, 0.6); g.add(wisp);
   } else { // bug：資料蠹蟲
-    for (let i = 0; i < 3; i++) { const seg = new THREE.Mesh(new THREE.IcosahedronGeometry(1.7 - i * 0.28, 0), bodyMat); seg.position.set(0, 0.2 - i * 0.1, -i * 1.7); g.add(seg); }
-    const head = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 0), bodyMat); head.position.set(0, 0.35, 1.9); g.add(head);
+    for (let i = 0; i < 3; i++) { const seg = new THREE.Mesh(new THREE.IcosahedronGeometry(1.7 - i * 0.28, 1), bodyMat); seg.position.set(0, 0.2 - i * 0.1, -i * 1.7); g.add(seg); }
+    const head = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 1), bodyMat); head.position.set(0, 0.35, 1.9); g.add(head);
     eyes(0.6, 0.7, 2.9, 0.45, data.accent);
-    for (const sx of [-0.7, 0.7]) { const mand = new THREE.Mesh(new THREE.ConeGeometry(0.26, 1.1, 4), dark()); mand.position.set(sx, -0.3, 3.0); mand.rotation.x = -1.3; g.add(mand); }
-    for (const sx of [-0.5, 0.5]) { const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.09, 1.7, 5), accentMat); ant.position.set(sx, 1.5, 2.5); ant.rotation.x = -0.5; ant.rotation.z = sx > 0 ? -0.2 : 0.2; g.add(ant); }
+    for (const sx of [-0.7, 0.7]) { const mand = new THREE.Mesh(new THREE.ConeGeometry(0.26, 1.1, 6), dark()); mand.position.set(sx, -0.3, 3.0); mand.rotation.x = -1.3; g.add(mand); }
+    for (const sx of [-0.5, 0.5]) { const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.09, 1.7, 8), accentMat); ant.position.set(sx, 1.5, 2.5); ant.rotation.x = -0.5; ant.rotation.z = sx > 0 ? -0.2 : 0.2; g.add(ant); }
     body = head;
   }
 
