@@ -9,11 +9,11 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { VILLAGE_BOARD, RUINS, OCF_STATUE } from './content.js';
-import { WORLD, terrainHeight, groundY } from './terrain.js';
-import { BATTLES } from './battles.js';
-import { BattleSystem } from './battle.js';
-import { SFX } from './audio.js';
+import { VILLAGE_BOARD, RUINS, OCF_STATUE } from './content.js?v=16f72976';
+import { WORLD, terrainHeight, groundY } from './terrain.js?v=16f72976';
+import { BATTLES } from './battles.js?v=16f72976';
+import { BattleSystem } from './battle.js?v=16f72976';
+import { SFX } from './audio.js?v=16f72976';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
