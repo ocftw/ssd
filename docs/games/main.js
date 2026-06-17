@@ -439,10 +439,16 @@ function buildMonument() {
   add(new THREE.BoxGeometry(5.4, 0.6, 0.9), RUIN.stoneDk, 0, 5.4, 0);           // 頂楣
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
-  add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板
-  const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef })); canvas.position.set(0, 3.0, 0.18); g.add(canvas); // 米色畫布
+  add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
   const tex = new THREE.TextureLoader().load('./legend.png'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const mural = new THREE.Mesh(new THREE.PlaneGeometry(W * 0.92, H * 0.92), new THREE.MeshBasicMaterial({ map: tex, transparent: true })); mural.position.set(0, 3.0, 0.2); g.add(mural); // 首頁主視覺（去背）
+  const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
+    const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
+    canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
+    const mural = new THREE.Mesh(new THREE.PlaneGeometry(W * 0.92, H * 0.92), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+    if (s < 0) { const uv = mural.geometry.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i)); uv.needsUpdate = true; mural.rotation.y = Math.PI; } // 背面左右翻正，避免鏡像
+    mural.position.set(0, 3.0, s * 0.2); g.add(mural);
+  };
+  face(1); face(-1);
   scene.add(g);
   return { group: g };
 }
