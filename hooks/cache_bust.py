@@ -17,12 +17,20 @@ GAMES = "games"
 MODULES = ["audio.js", "battle.js", "battles.js", "content.js", "main.js", "terrain.js"]
 
 
+IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")
+
+
 def _version(src_games: pathlib.Path) -> str:
     h = hashlib.sha1()
     for name in MODULES:
         p = src_games / name
         if p.exists():
             h.update(name.encode("utf-8"))
+            h.update(p.read_bytes())
+    # 影像（含 tex/ 子目錄）一併納入雜湊：改貼圖/圖檔也會更新版本
+    for p in sorted(src_games.rglob("*")):
+        if p.is_file() and p.suffix.lower() in IMG_EXT:
+            h.update(str(p.relative_to(src_games)).encode("utf-8"))
             h.update(p.read_bytes())
     return h.hexdigest()[:8]
 
@@ -40,12 +48,18 @@ def on_post_build(config, **kwargs):
     def _imp_sub(m):
         return f"{m.group(1)}{m.group(2)}./{m.group(3)}?v={v}{m.group(2)}"
 
+    # JS 內的圖檔字串：'./x.png' / "./tex/x.webp" 等 → 加 ?v=（已帶 ?v= 不會匹配 → 冪等）
+    img = re.compile(r"""(['"])(\./[^'"]*\.(?:png|jpe?g|webp))\1""")
+
+    def _img_sub(m):
+        return f"{m.group(1)}{m.group(2)}?v={v}{m.group(1)}"
+
     for name in MODULES:
         p = site_games / name
         if not p.exists():
             continue
         txt = p.read_text(encoding="utf-8")
-        new = imp.sub(_imp_sub, txt)
+        new = img.sub(_img_sub, imp.sub(_imp_sub, txt))
         if new != txt:
             p.write_text(new, encoding="utf-8")
 

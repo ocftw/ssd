@@ -18,8 +18,16 @@ import { SFX } from './audio.js';
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
 const mat = (color, opts = {}) =>
-  new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, ...opts });
+  new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, envMapIntensity: 0.5, ...opts });
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
+// 貼圖載入（CC0 / Poly Haven）：albedo 用 sRGB、法線用線性；可平鋪
+const _texL = new THREE.TextureLoader();
+const tex = (url, rx = 1, ry = 1, srgb = false) => {
+  const t = _texL.load(url);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry);
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = 4;
+  return t;
+};
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
@@ -94,7 +102,7 @@ const FOG_D = new THREE.Color(0x83878d), FOG_A = new THREE.Color(0xcfe4f0);
 }
 
 // ── 燈光（太陽會跟著角色移動，保持大世界陰影清晰）─────────────────
-scene.add(new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.5));
+scene.add(new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.6));
 scene.add(new THREE.AmbientLight(0xffffff, 0.08));
 const sun = new THREE.DirectionalLight(0xfff1d8, 2.2);
 sun.castShadow = true;
@@ -126,7 +134,7 @@ for (let i = 0; i < tp.count; i++) {
   colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
 }
 tGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-const terrain = new THREE.Mesh(tGeo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1 }));
+const terrain = new THREE.Mesh(tGeo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) }));
 terrain.receiveShadow = true;
 scene.add(terrain);
 
@@ -188,10 +196,10 @@ const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
 const trees = scatter(170, WORLD.villageR + 8, WORLD.maxR - 4, WORLD.water + 0.8, true);
 instance(foliageGeo, mat(0x4e9d54), trees);
-instance(trunkGeo, mat(0x7a4a26), trees);
+instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp', 3, 2, true), normalMap: tex('./tex/bark_n.webp', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
 // 岩石
 const rockGeo = new THREE.DodecahedronGeometry(1, 0);
-instance(rockGeo, mat(0x9a9286), scatter(90, WORLD.villageR + 4, WORLD.maxR + 14, WORLD.water + 0.3, true)
+instance(rockGeo, mat(0xffffff, { map: tex('./tex/stone.webp', 1, 1, true), normalMap: tex('./tex/stone_n.webp', 1, 1), normalScale: new THREE.Vector2(0.8, 0.8), roughness: 0.95 }), scatter(90, WORLD.villageR + 4, WORLD.maxR + 14, WORLD.water + 0.3, true)
   .map((p) => ({ ...p, sy: p.s * rand(0.6, 1.1) })));
 // 草叢（不投影，量大）
 const tuftGeo = new THREE.ConeGeometry(0.45, 0.9, 8);
