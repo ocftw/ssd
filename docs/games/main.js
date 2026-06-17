@@ -9,7 +9,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { VILLAGE_BOARD, RUINS, OCF_STATUE } from './content.js';
+import { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND } from './content.js';
 import { WORLD, terrainHeight, groundY } from './terrain.js';
 import { BATTLES } from './battles.js';
 import { BattleSystem } from './battle.js';
@@ -426,6 +426,31 @@ ruinAt.forEach((r) => {
   const lab = makeLabel(`${OCF_STATUE.emoji} OCF 紀念碑`); lab.o.position.set(0, 8, 0); built.group.add(lab.o);
   POIS.push({ data: OCF_STATUE, isRuin: false, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, openDist: 12 });
 }
+// 英雄紀念碑：首頁主視覺壁畫 + 傳說（非課程、不計進度）
+function buildMonument() {
+  const g = new THREE.Group();
+  const cast = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
+  const add = (geo, m, x, y, z) => { const o = cast(new THREE.Mesh(geo, m)); o.position.set(x, y, z); g.add(o); return o; };
+  add(new THREE.BoxGeometry(5.2, 0.6, 1.6), RUIN.stoneDk, 0, 0.3, 0);           // 基座
+  add(new THREE.BoxGeometry(4.6, 0.4, 1.2), RUIN.stone, 0, 0.7, 0);
+  for (const sx of [-1, 1]) add(new THREE.BoxGeometry(0.5, 4.4, 0.7), RUIN.stone, sx * 2.3, 3.1, 0); // 兩側石柱
+  add(new THREE.BoxGeometry(5.4, 0.6, 0.9), RUIN.stoneDk, 0, 5.4, 0);           // 頂楣
+  const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
+  const W = 4.0, H = W / 1.232;
+  add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板
+  const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef })); canvas.position.set(0, 3.0, 0.18); g.add(canvas); // 米色畫布
+  const tex = new THREE.TextureLoader().load('./legend.png'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const mural = new THREE.Mesh(new THREE.PlaneGeometry(W * 0.92, H * 0.92), new THREE.MeshBasicMaterial({ map: tex, transparent: true })); mural.position.set(0, 3.0, 0.2); g.add(mural); // 首頁主視覺（去背）
+  scene.add(g);
+  return { group: g };
+}
+{
+  const built = buildMonument();
+  const x = 0, z = -18, y = groundY(x, z);                       // 村莊後方中軸、正對入口大門的開闊處
+  built.group.position.set(x, y, z); built.group.rotation.y = 0; scene.add(built.group); // 壁畫面向 +z（玩家由大門進入的方向）
+  const lab = makeLabel(`${LEGEND.emoji} ${LEGEND.title}`); lab.o.position.set(0, 7.4, 0); built.group.add(lab.o);
+  POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 12 });
+}
 
 // ── 石化村民（遺跡維護者）：大水晶啟動後解除石化、靠近給提醒 ──────
 const STONE = new THREE.Color(0x9a958c);
@@ -693,6 +718,7 @@ function showPanel(p) {
   if (!p.isRuin) { pState.textContent = d.stateText || '村莊任務'; pGo.textContent = d.goText || '了解怎麼開始 →'; }
   else if (hasBattle) { pState.textContent = isDone(d.id) ? '✅ 已淨化' : '⚔️ 有守關怪物'; pGo.textContent = '先閱讀章節備戰 →'; }
   else { pState.textContent = isDone(d.id) ? '✅ 已閱讀完成' : '尚未閱讀'; pGo.textContent = isDone(d.id) ? '再讀一次 →' : '閱讀此遺跡課程 →'; }
+  panel.classList.toggle('story', !!d.story); pGo.style.display = d.noLink ? 'none' : ''; // 傳說面板：全文不截斷、隱藏前往鍵
   panel.classList.add('show');
 }
 function hidePanel() { panelId = null; panel.classList.remove('show'); POIS.forEach((x) => x.el.classList.remove('is-active')); }
