@@ -18,7 +18,7 @@ import { SFX } from './audio.js';
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
 const mat = (color, opts = {}) =>
-  new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true, ...opts });
+  new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: false, ...opts });
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -273,7 +273,7 @@ board.position.set(0, 0, 7); village.add(board);
 // 村莊中央大水晶（全部遺跡進化後才啟動）
 const greatBase = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 1.2, 12), mat(0x9a9080)); greatBase.position.set(0, 0.6, 0); greatBase.castShadow = greatBase.receiveShadow = true; village.add(greatBase);
 const greatBase2 = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.2, 0.8, 12), mat(0xb0a896)); greatBase2.position.set(0, 1.4, 0); greatBase2.castShadow = true; village.add(greatBase2);
-const greatMat = new THREE.MeshStandardMaterial({ color: 0x8a93a0, emissive: 0x20242b, emissiveIntensity: 0.4, roughness: 0.15, metalness: 0.35, flatShading: true });
+const greatMat = new THREE.MeshStandardMaterial({ color: 0x8a93a0, emissive: 0x20242b, emissiveIntensity: 0.4, roughness: 0.15, metalness: 0.35, flatShading: false });
 const greatCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 1), greatMat); greatCrystal.position.set(0, 5.4, 0); greatCrystal.castShadow = true; village.add(greatCrystal);
 const greatBeamMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
 const greatBeam = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 3.0, 90, 18, 1, true), greatBeamMat); greatBeam.position.set(0, 46, 0); village.add(greatBeam);
@@ -282,7 +282,7 @@ const GREAT_D = new THREE.Color(0x8a93a0), GREAT_A = new THREE.Color(0xffe6a0);
 const shardGroup = new THREE.Group(); shardGroup.position.set(0, 5.4, 0); village.add(shardGroup);
 const shards = ruinAt.map((r, i) => {
   const a = i / ruinAt.length * TAU;
-  const m = new THREE.MeshStandardMaterial({ color: 0x3a3f48, emissive: 0x000000, emissiveIntensity: 0, roughness: 0.3, metalness: 0.4, flatShading: true });
+  const m = new THREE.MeshStandardMaterial({ color: 0x3a3f48, emissive: 0x000000, emissiveIntensity: 0, roughness: 0.3, metalness: 0.4, flatShading: false });
   const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 1), m);
   s.position.set(Math.cos(a) * 3.0, 0, Math.sin(a) * 3.0); s.castShadow = true; shardGroup.add(s);
   return { mesh: s, mat: m, id: r.id, color: new THREE.Color(r.color), glow: 0, ox: Math.cos(a) * 3.0 };
@@ -360,7 +360,7 @@ function buildRuin(r) {
   add(new THREE.CylinderGeometry(1.5, 1.75, 0.8, 12), RUIN.stoneDk, 0, 1.55, 0, Math.PI / 8);
   add(new THREE.CylinderGeometry(1.05, 1.3, 0.55, 12), RUIN.stone, 0, 2.05, 0, Math.PI / 8);
   // 浮空水晶 + 光環（光環共用 beamMat → 發現後一起變色變亮）
-  const crystalMat = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, emissive: 0x2a2f38, emissiveIntensity: 0.5, roughness: 0.15, metalness: 0.2, flatShading: true });
+  const crystalMat = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, emissive: 0x2a2f38, emissiveIntensity: 0.5, roughness: 0.15, metalness: 0.2, flatShading: false });
   const crystal = cast(new THREE.Mesh(new THREE.OctahedronGeometry(0.95, 1), crystalMat));
   crystal.position.y = 3.4; g.add(crystal);
   const beamMat = new THREE.MeshBasicMaterial({ color: 0xbfc6cf, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -389,13 +389,13 @@ function buildOcf() {
   add(new THREE.BoxGeometry(2.6, 4.2, 0.7), RUIN.stone, 0, 3.4, 0);
   add(new THREE.BoxGeometry(2.9, 0.45, 0.95), RUIN.stoneDk, 0, 5.5, 0);
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
-  const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: true });
+  const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
   const logoTex = new THREE.TextureLoader().load('./ocf_logo.png'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
-  const globeMat = new THREE.MeshStandardMaterial({ color: col.clone(), emissive: col.clone(), emissiveIntensity: 1.1, roughness: 0.25, metalness: 0.1, flatShading: true });
+  const globeMat = new THREE.MeshStandardMaterial({ color: col.clone(), emissive: col.clone(), emissiveIntensity: 1.1, roughness: 0.25, metalness: 0.1, flatShading: false });
   const globe = cast(new THREE.Mesh(new THREE.SphereGeometry(0.95, 18, 14), globeMat)); globe.position.y = 6.6; g.add(globe);
   const ringMat = new THREE.MeshBasicMaterial({ color: col.clone(), transparent: true, opacity: 0.85 });
   const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.06, 8, 28), ringMat); ring1.rotation.x = Math.PI / 2; globe.add(ring1);
@@ -472,7 +472,7 @@ function buildKeeper(r) {
   const g = new THREE.Group();
   const parts = [];
   const part = (geo, aliveHex, x, y, z) => {
-    const m = new THREE.MeshStandardMaterial({ color: STONE.clone(), roughness: 0.9, metalness: 0, flatShading: true });
+    const m = new THREE.MeshStandardMaterial({ color: STONE.clone(), roughness: 0.9, metalness: 0, flatShading: false });
     const mesh = new THREE.Mesh(geo, m); mesh.position.set(x, y, z); mesh.castShadow = true; g.add(mesh);
     parts.push({ m, alive: new THREE.Color(aliveHex) }); return mesh;
   };
@@ -506,7 +506,7 @@ function buildCat(bodyHex, cape) {
   for (const sx of [-1, 1]) add(new THREE.SphereGeometry(0.045, 8, 6), mat(0x2a2630), sx * 0.1, 0.77, 0.28); // 眼
   add(new THREE.SphereGeometry(0.04, 8, 6), mat(0xff9aa2), 0, 0.71, 0.31);     // 鼻
   const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.42, 5, 10), body); tail.position.set(0, 0.4, -0.28); tail.rotation.x = -1.0; tail.castShadow = true; g.add(tail);
-  if (cape) { const cp = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.62), new THREE.MeshStandardMaterial({ color: 0xe0392f, side: THREE.DoubleSide, roughness: 0.9, flatShading: true })); cp.position.set(0, 0.52, -0.24); cp.rotation.x = 0.4; g.add(cp); }
+  if (cape) { const cp = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.62), new THREE.MeshStandardMaterial({ color: 0xe0392f, side: THREE.DoubleSide, roughness: 0.9, flatShading: false })); cp.position.set(0, 0.52, -0.24); cp.rotation.x = 0.4; g.add(cp); }
   return { group: g, tail };
 }
 // 友善灰龍：白肚、方塊藍眼、藍角、薄翅、會吐藍火
@@ -857,7 +857,7 @@ function spawnDust(x, y, z, power, o = {}) {
   const n = o.n ?? (6 + Math.round(power * 5));
   const out = o.out ?? (0.7 + power * 0.7), upMin = o.upMin ?? 1.0, upMax = o.upMax ?? 2.2;
   const sMin = o.sMin ?? 0.4, sMax = o.sMax ?? 0.9, dur = o.dur ?? 0.55, op = o.op ?? 0.7;
-  const mat = new THREE.MeshStandardMaterial({ color: 0xcdbfa0, roughness: 1, metalness: 0, transparent: true, opacity: op, flatShading: true });
+  const mat = new THREE.MeshStandardMaterial({ color: 0xcdbfa0, roughness: 1, metalness: 0, transparent: true, opacity: op, flatShading: false });
   const parts = [];
   for (let i = 0; i < n; i++) {
     const a = (i / n) * TAU + rand(-0.4, 0.4), sp = out * rand(0.7, 1.3);

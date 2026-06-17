@@ -6,7 +6,7 @@ import { groundY } from './terrain.js';
 import { SFX } from './audio.js';
 
 const TAU = Math.PI * 2;
-const sm = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: true, ...o });
+const sm = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, ...o });
 
 function buildMonster(data) {
   const g = new THREE.Group();
@@ -15,7 +15,7 @@ function buildMonster(data) {
   const white = () => reg(sm(0xffffff, { roughness: 0.4 }));
   const dark = () => reg(sm(0x12151c));
   const bodyMat = reg(sm(data.color));
-  const accentMat = reg(new THREE.MeshStandardMaterial({ color: data.accent, emissive: data.accent, emissiveIntensity: 1.1, roughness: 0.5, flatShading: true }));
+  const accentMat = reg(new THREE.MeshStandardMaterial({ color: data.accent, emissive: data.accent, emissiveIntensity: 1.1, roughness: 0.5, flatShading: false }));
   // 一對瞪人的眼睛（含發光瞳孔）
   const eyes = (x, y, z, r, glow) => { for (const sx of [-x, x]) {
     const e = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), white()); e.position.set(sx, y, z); g.add(e);
@@ -49,7 +49,7 @@ function buildMonster(data) {
     for (const sx of [-2.4, 2.4]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.8, 1.0), bodyMat); arm.position.set(sx, 0.3, 0); g.add(arm); }
     for (const sx of [-0.9, 0.9]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 1.2), reg(sm(0x3a63b8))); leg.position.set(sx, -2.4, 0); g.add(leg); }
   } else if (style === 'ghost') { // 迷霧幽靈
-    const ghostMat = reg(new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.8, roughness: 0.6, flatShading: true }));
+    const ghostMat = reg(new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.8, roughness: 0.6, flatShading: false }));
     body = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2, 1), ghostMat); body.scale.set(1, 1.2, 1); g.add(body);
     for (let i = 0; i < 5; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.6, 8), ghostMat); t.position.set(-1.7 + i * 0.85, -2.2, 0); t.rotation.x = Math.PI; g.add(t); }
     eyes(0.7, 0.6, 1.7, 0.5, data.accent);
