@@ -824,6 +824,8 @@ const keys = new Set();
 addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); });
 addEventListener('keyup', (e) => { keys.delete(e.code); });
 let yaw = Math.PI, pitch = 0.6, dist = 30;
+// 開場就把鏡頭擺到跟隨位置，避免從原點 (0,0,0) 起始＝卡在中央水晶光束裡（遺跡全通後光束很亮會洗版）
+{ const sy = groundY(hero.position.x, hero.position.z); camera.position.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, sy + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist); }
 const moveTarget = new THREE.Vector3(); let hasTarget = false;
 const ndc = new THREE.Vector2(); const raycaster = new THREE.Raycaster(); const hitPoint = new THREE.Vector3();
 let pDown = false, dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
