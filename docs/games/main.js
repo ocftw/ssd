@@ -565,8 +565,8 @@ let archiveActive = false, archEnterArmed = true, archExitArmed = true;
 const archFadeEl = document.getElementById('fade');
 const archFade = { on: false, t: 0, dur: 0.7, mid: false, go: null };
 const startArchFade = (go) => { archFade.on = true; archFade.t = 0; archFade.mid = false; archFade.go = go; };
-function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLOOR, 2); hero.rotation.y = Math.PI; archiveActive = true; archiveRoom.visible = true; archExitArmed = false; if (panelId) hidePanel(); camera.position.set(0, ARCHIVE_FLOOR + 3, 8); }); }
-function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
+function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLOOR, 2); hero.rotation.y = Math.PI; archiveActive = true; archiveRoom.visible = true; archExitArmed = false; hero.visible = false; yaw = 0; pitch = 0.15; if (panelId) hidePanel(); }); }
+function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; hero.visible = true; yaw = Math.PI; pitch = 0.6; if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
 // 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
 {
   const g = new THREE.Group(); g.position.copy(ARCHIVE.pos);
@@ -1143,27 +1143,34 @@ function animate() {
   } else if (!archiveActive) {
     if (Math.hypot(hero.position.x - ARCHIVE.enter.x, hero.position.z - ARCHIVE.enter.z) < 1.7) { if (archEnterArmed) { archEnterArmed = false; enterArchive(); } } else archEnterArmed = true;
   } else {
-    if (Math.hypot(hero.position.x - 0, hero.position.z - 5.5) < 1.7) { if (archExitArmed) { archExitArmed = false; exitArchive(); } } else archExitArmed = true;
+    // 牆壁可穿越：第一人稱下走出任一面牆（超出房間範圍）即離開檔案室
+    if (Math.abs(hero.position.x) > 7.6 || Math.abs(hero.position.z) > 6.6) { if (archExitArmed) { archExitArmed = false; exitArchive(); } } else archExitArmed = true;
   }
   if (archiveActive) hero.position.y = ARCHIVE_FLOOR + jumpOff; // 室內地板高度（覆蓋地形跟隨）
 
   // 對話泡：踩水反應 + 漫步自言自語
   if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
   const inWater = groundH < WORLD.water + 0.2;
-  if (!finaleActive) {
+  if (!finaleActive && !archiveActive) {
     if (inWater && !wasInWater && sayTimer <= 0) heroSay(pick(WATER_LINES), 2.6);
     idleTalkTimer -= dt;
     if (idleTalkTimer <= 0) { idleTalkTimer = rand(4, 8); if (sayTimer <= 0 && !inWater && moving) heroSay(pick(IDLE_LINES), 3); }
   }
   wasInWater = inWater;
 
-  // 鏡頭跟隨（避免穿地）
-  const cd = archiveActive ? 5.0 : dist, cp = archiveActive ? Math.min(pitch, 0.3) : pitch, ch = archiveActive ? 1.4 : 2; // 室內用較近/較低的鏡頭，避免穿牆穿天花
-  camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(cp) * cd, hero.position.y + Math.sin(cp) * cd + ch, hero.position.z + Math.cos(yaw) * Math.cos(cp) * cd);
-  const camGround = terrainHeight(camPos.x, camPos.z) + 3;
-  if (!archiveActive && camPos.y < camGround) camPos.y = camGround;
-  camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
-  lookAt.set(hero.position.x, hero.position.y + 2.4, hero.position.z); camera.lookAt(lookAt);
+  // 鏡頭：檔案室內＝第一人稱（鏡頭在頭部、滑動視角看四周）；室外＝第三人稱（避免穿地）
+  if (archiveActive) {
+    const ey = hero.position.y + 1.8;
+    camera.position.set(hero.position.x, ey, hero.position.z);
+    lookAt.set(hero.position.x - Math.sin(yaw) * Math.cos(pitch), ey - Math.sin(pitch), hero.position.z - Math.cos(yaw) * Math.cos(pitch));
+    camera.lookAt(lookAt);
+  } else {
+    camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, hero.position.y + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
+    const camGround = terrainHeight(camPos.x, camPos.z) + 3;
+    if (camPos.y < camGround) camPos.y = camGround;
+    camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
+    lookAt.set(hero.position.x, hero.position.y + 2.4, hero.position.z); camera.lookAt(lookAt);
+  }
   // 終局運鏡：鏡頭飛向村莊中央大水晶，看完噴發動畫後才彈出完成畫面
   if (finaleActive) {
     finaleT += dt;
