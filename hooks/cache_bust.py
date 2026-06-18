@@ -52,8 +52,8 @@ def on_post_build(config, **kwargs):
     def _imp_sub(m):
         return f"{m.group(1)}{m.group(2)}./{m.group(3)}?v={v}{m.group(2)}"
 
-    # JS 內的圖檔字串：'./x.png' / "./tex/x.webp" 等 → 加 ?v=（已帶 ?v= 不會匹配 → 冪等）
-    img = re.compile(r"""(['"])(\./[^'"]*\.(?:png|jpe?g|webp))\1""")
+    # JS 內的圖檔字串：'./x.png' / "./tex/x.webp" / `./cover_en.webp` 等 → 加 ?v=（含反引號；已帶 ?v= 不會匹配 → 冪等）
+    img = re.compile(r"""([`'"])(\./[^`'"]*\.(?:png|jpe?g|webp))\1""")
 
     def _img_sub(m):
         return f"{m.group(1)}{m.group(2)}?v={v}{m.group(1)}"

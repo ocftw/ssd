@@ -260,10 +260,11 @@ const TEXT = {
       chips: [`Org rollout`, `Threat modeling`, `Risk assessment`, `Device audit`, `Impact review`],
       stateText: `Org toolkit`, goText: `Open the toolkit →`,
     },
+    // 英文版有官方英文封面與 PDF（cover／url 覆寫結構層的繁中預設；zh-Hant／zh-Hans 仍用繁中版）
     docs: {
-      doc1: { title: `Digital Threats Facing Taiwan's Rights & Democracy Advocacy Groups`, sub: `Archive · File One`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A summary of a 2024 research report (in Chinese), drawing on 35 questionnaires and 3 in-depth interviews to map the digital threats and security needs faced by rights and democracy advocacy groups in Taiwan.` },
-      doc2: { title: `Guarding the Voice of Advocacy`, sub: `Archive · File Two`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `This project's final report, documenting the service model, hands-on experience, and recommendations of the Security Mentorship Program (SMP) for civil-society groups and human-rights workers.` },
-      doc3: { title: `The Cost of Trust`, sub: `Archive · File Three`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A case-study record of real security-attack incidents experienced by human-rights workers in Taiwan, documenting attack patterns, the defense process, and lessons learned.` },
+      doc1: { title: `Digital Security Mapping for HRDs in Taiwan`, sub: `Archive · File One`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A summary of a 2024 research report, drawing on 35 questionnaires and 3 in-depth interviews to map the digital threats and security needs faced by rights and democracy advocacy groups in Taiwan.`, cover: './cover1_en.webp', url: `https://drive.google.com/file/d/1VV12Rp7IKkWexNTKQRuWIA4Zfd8ztN9X/view?usp=sharing` },
+      doc2: { title: `Safeguarding Advocacy`, sub: `Archive · File Two`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `This project's final report, documenting the service model, hands-on experience, and recommendations of the Security Mentorship Program (SMP) for civil-society groups and human-rights workers.`, cover: './cover2_en.webp', url: `https://drive.google.com/file/d/1ln6__KiGZgf9QSkYhwKo8gm4L9d9tExo/view?usp=drive_link` },
+      doc3: { title: `The Cost of Trust`, sub: `Archive · File Three`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A case-study record of real security-attack incidents experienced by human-rights workers in Taiwan, documenting attack patterns, the defense process, and lessons learned.`, cover: './cover3_en.webp', url: `https://drive.google.com/file/d/1Q3Z2nLJ4dkQpmSqXQcctl4IW3cUhdDkF/view?usp=drive_link` },
     },
     ruins: {
       personal: {
