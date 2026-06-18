@@ -52,9 +52,9 @@ export const GUIDE_KIT = {
 // 檔案室裡的 3 份文件（走進檔案室 → 室內 → 靠近文件台開 PDF 新分頁）
 // cover：文件台上展示的封面圖（依序對應）。
 export const ARCHIVE_DOCS = [
-  { id: 'doc1', title: '台灣人權與民主倡議團體數位威脅概況', sub: '檔案室・卷宗一', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover1.webp?v=fd5cb132', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view', desc: '2024 年研究報告摘要（中文版），整理 35 份問卷與 3 場深度訪談中，在臺人權與民主倡議團體面臨的數位威脅樣態與資安需求。' },
-  { id: 'doc2', title: '守護倡議之聲', sub: '檔案室・卷宗二', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover2.webp?v=fd5cb132', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link', desc: '本專案結案報告，整理「資安陪伴計畫」(SMP) 對公民團體與人權工作者的服務模式、實作經驗與建議。' },
-  { id: 'doc3', title: '信任的代價', sub: '檔案室・卷宗三', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover3.webp?v=fd5cb132', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link', desc: '一份針對臺灣人權工作者實際遭遇資安攻擊事件的個案研究實錄，記錄攻擊樣態、防守過程與經驗教訓。' },
+  { id: 'doc1', title: '台灣人權與民主倡議團體數位威脅概況', sub: '檔案室・卷宗一', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover1.webp?v=d0a761da', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view', desc: '2024 年研究報告摘要（中文版），整理 35 份問卷與 3 場深度訪談中，在臺人權與民主倡議團體面臨的數位威脅樣態與資安需求。' },
+  { id: 'doc2', title: '守護倡議之聲', sub: '檔案室・卷宗二', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover2.webp?v=d0a761da', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link', desc: '本專案結案報告，整理「資安陪伴計畫」(SMP) 對公民團體與人權工作者的服務模式、實作經驗與建議。' },
+  { id: 'doc3', title: '信任的代價', sub: '檔案室・卷宗三', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover3.webp?v=d0a761da', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link', desc: '一份針對臺灣人權工作者實際遭遇資安攻擊事件的個案研究實錄，記錄攻擊樣態、防守過程與經驗教訓。' },
 ];
 
 // 散落在村莊外的遺跡：每一座 = 一個資安主題
