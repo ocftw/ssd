@@ -150,7 +150,7 @@ scene.add(torch);
 // 火把投向前方地面的光錐：照亮腳前的路（讓前方地面也亮起來），夜晚由它投出即時陰影
 const torchGround = new THREE.SpotLight(0xffc079, 0, 32, Math.PI * 0.32, 0.6, 1.5);
 torchGround.shadow.mapSize.set(1024, 1024);          // 1024 為效能考量（可改 2048 提升清晰度）
-torchGround.shadow.camera.near = 1; torchGround.shadow.camera.far = 34;
+torchGround.shadow.camera.near = 1; torchGround.shadow.camera.far = 55;
 torchGround.shadow.bias = -0.0006; torchGround.shadow.normalBias = 0.04;
 scene.add(torchGround); scene.add(torchGround.target);
 
@@ -1215,7 +1215,7 @@ const SPIN_DUR = 0.55;
 const coordsEl = document.getElementById('coords');
 let fpsAvg = 60; // 平滑後的 FPS（座標框內顯示，方便量測效能）
 // 火把「探照」即時可調參數（座標框開啟時：[ ] 選參數、- = 增減）；調好後把數值告訴我即可固定
-const torchTune = { spotInt: 120, spotAng: 0.32, spotPen: 0.6, spotFwd: 6, spotH: 3.4, spotDist: 32, ptInt: 52 };
+const torchTune = { spotInt: 300, spotAng: 0.36, spotPen: 0.5, spotFwd: 25, spotH: 5, spotDist: 200, ptInt: 32 };
 const torchParams = [
   { k: 'spotInt', label: '強度', step: 10, fmt: (v) => v.toFixed(0) },
   { k: 'spotAng', label: '角度', step: 0.02, fmt: (v) => v.toFixed(2) + 'π' },
