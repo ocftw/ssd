@@ -950,9 +950,9 @@ const isDone = (id) => progress.completed.includes(id);
 // 世界繁榮度（0 破敗 → 1 繁榮）：發現各 0.3、進化各 0.7
 let vibrancy = 0, vibrancyTarget = 0, greatGlow = 0;
 function computeVibrancy() {
-  let d = 0, c = 0;
-  for (const r of ruinAt) { if (isDisc(r.id)) d++; if (isDone(r.id)) c++; }
-  vibrancyTarget = (d * 0.3 + c * 0.7) / ruinAt.length;
+  // 世界亮度為二元：全部遺跡完成前維持夜晚(0)，全部完成才切到白天(1)。
+  // 個別遺跡的發現／完成不改變世界亮度（只改變該遺跡自身的水晶／光束）。
+  vibrancyTarget = ruinAt.every((r) => isDone(r.id)) ? 1 : 0;
 }
 
 // ── HUD ─────────────────────────────────────────────────────────
