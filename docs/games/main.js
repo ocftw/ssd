@@ -168,15 +168,17 @@ const fireflyGroup = new THREE.Group(); scene.add(fireflyGroup);
 for (let i = 0; i < 28; i++) {
   const m = new THREE.SpriteMaterial({ map: fireflyTex, color: 0xfff0a0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   const s = new THREE.Sprite(m); s.scale.setScalar(rand(0.5, 1.0)); fireflyGroup.add(s);
-  fireflies.push({ s, m, on: false, cx: 0, cz: 0, cy: 0, ox: rand(-1, 1) * 6, oz: rand(-1, 1) * 6, h: rand(1.0, 4.5),
-    sx: rand(0.12, 0.32), sz: rand(0.12, 0.32), ax: rand(1.2, 3.0), az: rand(1.2, 3.0), ph: rand(0, TAU), bob: rand(0.4, 1.0), tw: rand(1.6, 3.0) });
+  fireflies.push({ s, m, on: false, cx: 0, cz: 0, cy: 0, ox: rand(-1, 1) * 4.5, oz: rand(-1, 1) * 4.5, h: rand(0.5, 3.2),
+    sx: rand(0.12, 0.32), sz: rand(0.12, 0.32), ax: rand(1.0, 2.4), az: rand(1.0, 2.4), ph: rand(0, TAU), bob: rand(0.4, 1.0), tw: rand(1.6, 3.0) });
 }
-// 把 28 顆螢火蟲分配到「已完成」的遺跡周圍（完成數改變時呼叫）；沒有完成的遺跡則全部隱藏
+// 把 28 顆螢火蟲分配到「已完成」遺跡的石化維護者周圍（完成數改變時呼叫）；沒有完成的遺跡則全部隱藏
 function assignFireflies() {
   const done = ruinAt.filter((r) => isDone(r.id));
   fireflies.forEach((f, i) => {
     if (!done.length) { f.on = false; return; }
-    const r = done[i % done.length]; f.cx = r.x; f.cz = r.z; f.cy = r.y; f.on = true;
+    const r = done[i % done.length];
+    const c = (keepers.find((kp) => kp.ruin.id === r.id) || {}).pos || r; // 以維護者為中心（找不到才退回遺跡）
+    f.cx = c.x; f.cz = c.z; f.cy = c.y; f.on = true;
   });
 }
 
