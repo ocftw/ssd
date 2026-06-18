@@ -601,10 +601,13 @@ const archiveRoom = new THREE.Group(); archiveRoom.position.set(0, ARCHIVE.roomY
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0xfff0cf })); bulb.position.set(0, 4.3, 0); g.add(bulb);
   ARCHIVE_DOCS.forEach((d, i) => {
     const dx = (i - 1) * 4.2;
-    const stand = add(new THREE.BoxGeometry(1.4, 1.0, 0.9), woodM, dx, 0.9, -4.7); stand.rotation.x = -0.5;
-    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.1), new THREE.MeshStandardMaterial({ color: 0xfbf7ef, emissive: 0xe9dfb0, emissiveIntensity: 0.55, roughness: 0.7 }));
-    sheet.position.set(dx, 1.55, -4.45); sheet.rotation.x = -0.5; g.add(sheet);
-    const lab = makeLabel(`${d.emoji} ${d.title}`); lab.o.position.set(dx, 2.6, -4.5); g.add(lab.o);
+    add(new THREE.BoxGeometry(1.8, 1.0, 0.7), woodM, dx, 0.5, -5.0);          // 展示基座
+    const cw = 1.5, tilt = -0.12;                                            // 封面（正方形、幾乎直立、略後仰、正面朝玩家 +z）
+    const frame = new THREE.Mesh(new THREE.PlaneGeometry(cw + 0.16, cw + 0.16), new THREE.MeshStandardMaterial({ color: 0x2b2620, roughness: 0.6 }));
+    frame.position.set(dx, 1.88, -4.86); frame.rotation.x = tilt; g.add(frame);
+    const cover = new THREE.Mesh(new THREE.PlaneGeometry(cw, cw), new THREE.MeshBasicMaterial({ map: tex(d.cover, 1, 1, true) }));
+    cover.position.set(dx, 1.88, -4.85); cover.rotation.x = tilt; g.add(cover);
+    const lab = makeLabel(`${d.emoji} ${d.title}`); lab.o.position.set(dx, 3.0, -4.86); g.add(lab.o);
     POIS.push({ data: d, isRuin: false, area: 'archive', pos: new THREE.Vector3(dx, ARCHIVE.roomY, -3.2), el: lab.el, openDist: 3.4 });
   });
 }
