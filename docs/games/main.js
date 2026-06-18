@@ -133,6 +133,9 @@ sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun);
 scene.add(sun.target);
+// 主角隨身火把：照亮周圍一圈暖光（世界越荒蕪越亮、恢復後轉弱），帶輕微火光晃動
+const torch = new THREE.PointLight(0xffb061, 0, 24, 2.0);
+scene.add(torch);
 
 // ── 地形 ────────────────────────────────────────────────────────
 const segs = 240;
@@ -1233,6 +1236,9 @@ function animate() {
   // 太陽跟著角色
   sun.position.set(hero.position.x + 48, hero.position.y + 72, hero.position.z + 32);
   sun.target.position.copy(hero.position); sun.target.updateMatrixWorld();
+  // 隨身火把：跟著主角、略偏視線前方；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
+  torch.position.set(hero.position.x + fwd.x * 2, hero.position.y + 2.4, hero.position.z + fwd.z * 2);
+  torch.intensity = archiveActive ? 0 : 52 * (1 - 0.7 * vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
 
   // POI 鄰近 / 發現 / 面板
   let near = null, nd = Infinity;
