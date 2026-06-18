@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>資安防護新手村 · 探險</title>
   <meta name="description" content="以 Three.js 打造的『資安防護新手村』探險實驗：走出村莊，尋找散落荒野的資安遺跡。素材來自 ssd.ocf.tw，不影響原始文件。" />
+  <script>
+  /* i18n 首屏：偵測語言（判斷邏輯須與 i18n/lang.js 的 detectLang() 一致），先定 <html lang>，
+     結果存 window.__LANG；i18n/lang.js resolveLang() 會優先沿用，避免兩處分歧。標題等文字載入後由 main.js 校正。 */
+  (function () {
+    try {
+      var ids = ['zh-Hant', 'zh-Hans', 'en'], L = null;
+      try { var s = localStorage.getItem('ssd-village-lang'); if (s && ids.indexOf(s) >= 0) L = s; } catch (e) { /* ignore */ }
+      if (!L) {
+        var n = ((navigator.languages && navigator.languages.join(',')) || navigator.language || '').toLowerCase();
+        if (/zh[-_]?(hans|cn|sg|chs)/.test(n)) L = 'zh-Hans';
+        else if (/zh/.test(n)) L = 'zh-Hant';
+        else if (/(^|[,_-])en/.test(n)) L = 'en';
+        else L = 'zh-Hant';
+      }
+      window.__LANG = L;
+      document.documentElement.lang = L;
+    } catch (e) { /* ignore */ }
+  })();
+  </script>
   <style>
     :root { --ink:#1d2433; --paper:#fbf7ef; --brand:#ff7a45; --shadow:0 18px 40px -18px rgba(20,28,48,.55); }
     * { box-sizing:border-box; }
@@ -52,6 +71,11 @@
     #logbtn, #soundbtn { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
       background:rgba(251,247,239,.93); padding:9px 14px; border-radius:999px; box-shadow:var(--shadow); }
     #soundbtn { padding:9px 12px; }
+    /* 語言切換器（由 main.js 動態插入，少於 2 種語言時不顯示） */
+    #langsw { display:flex; gap:3px; background:rgba(251,247,239,.93); padding:4px; border-radius:999px; box-shadow:var(--shadow); }
+    #langsw button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
+      background:transparent; padding:5px 9px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
+    #langsw button.on { color:#fff; background:var(--brand); }
     #questlog { position:fixed; right:16px; top:60px; z-index:12; width:min(86vw,300px);
       background:rgba(251,247,239,.97); border-radius:16px; box-shadow:var(--shadow); padding:8px;
       opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .2s ease, transform .2s ease; }
@@ -121,6 +145,10 @@
     #panel .fight { border:0; cursor:pointer; font:inherit; font-size:13px; font-weight:800; color:#fff;
       background:linear-gradient(135deg,#ff5d5d,#c0392b); padding:9px 15px; border-radius:999px; box-shadow:0 6px 16px -8px rgba(192,57,43,.8); }
     #panel .fight:hover { filter:brightness(1.06); }
+    /* 外連語言提示（en／简体顯示「章節為中文」；正體中文為空字串，:empty 自動隱藏） */
+    .langnote { margin-top:7px; font-size:11px; color:#9aa1b0; line-height:1.3; text-align:right; }
+    .langnote:empty { display:none; }
+    #finale .langnote { text-align:center; margin-top:6px; }
 
     /* 戰鬥介面 */
     #battle { position:fixed; top:0; left:0; right:0; height:100dvh; z-index:25; display:flex; flex-direction:column; justify-content:space-between;
@@ -278,8 +306,20 @@
       #panel .foot { margin-top:10px; }
     }
 
+    /* 中小螢幕：右上控制群換行，讓語言鈕落到第二排靠右、與左側標題牌錯開（避免左右兩側重疊）。
+       上限取 680px：因標題牌展開說明時最寬達 360px，單排的右上群在約 632px 以下會與其相撞。 */
+    @media (min-width:561px) and (max-width:680px) {
+      #topright { flex-wrap:wrap; justify-content:flex-end; max-width:155px; }
+    }
     @media (max-width:560px) {
       #titlecard p { display:none; }
+      /* 很小的螢幕：標題牌與徽章再收窄，右上群以更緊的上限換行（必要時各鈕逐排靠右），確保避開左側標題 */
+      #titlecard { max-width:54vw; }
+      #titlecard h1 { font-size:13px; line-height:1.25; }
+      #badge { font-size:11px; padding:4px 9px; margin-top:7px; }
+      #topright { flex-wrap:wrap; justify-content:flex-end; max-width:44vw; }
+      #langsw { gap:2px; padding:3px; }
+      #langsw button { padding:5px 7px; font-size:11px; }
       #minimap { width:128px; height:128px; } #minimap canvas { width:128px; height:128px; }
       #jumpbtn { bottom:calc(156px + env(safe-area-inset-bottom)); } /* 小地圖縮成 128，跳鍵跟著下移仍在其上方 */
       #hint kbd:nth-child(n+4) { display:none; }
@@ -299,29 +339,29 @@
   <div id="fade"></div>
 
   <div id="titlecard">
-    <h1>資安防護新手村 · 探險</h1>
-    <p>走出村莊，尋找散落荒野的「資安遺跡」。靠近就會發現它、打開課程，讀完即點亮。</p>
+    <h1 data-i18n="titleH1">資安防護新手村 · 探險</h1>
+    <p data-i18n="titleP">走出村莊，尋找散落荒野的「資安遺跡」。靠近就會發現它、打開課程，讀完即點亮。</p>
     <span id="badge">🗺️ 發現 <b>0/5</b> ・ ✅ 閱讀 <b>0/5</b></span>
   </div>
 
   <div id="topright">
-    <button id="soundbtn" title="音效開關" aria-pressed="false">🔊</button>
-    <button id="logbtn">📜 任務</button>
+    <button id="soundbtn" title="音效開關" data-i18n-title="soundToggle" aria-pressed="false">🔊</button>
+    <button id="logbtn" data-i18n="logBtn">📜 任務</button>
   </div>
-  <div id="questlog"><div class="hd">遺跡課程</div><div class="list"></div><button id="resetbtn">🔄 重置進度</button></div>
+  <div id="questlog"><div class="hd" data-i18n="questHd">遺跡課程</div><div class="list"></div><button id="resetbtn" data-i18n="resetBtn">🔄 重置進度</button></div>
 
   <div id="joystick"><div class="knob"></div></div>
 
   <div id="hint">
-    <kbd>WASD / 方向鍵 移動</kbd>
-    <kbd>Shift 奔跑</kbd>
-    <kbd>點地面 走過去</kbd>
-    <kbd>拖曳 轉視角</kbd>
-    <kbd>滾輪 縮放</kbd>
+    <kbd data-i18n="hintMove">WASD / 方向鍵 移動</kbd>
+    <kbd data-i18n="hintRun">Shift 奔跑</kbd>
+    <kbd data-i18n="hintTap">點地面 走過去</kbd>
+    <kbd data-i18n="hintDrag">拖曳 轉視角</kbd>
+    <kbd data-i18n="hintZoom">滾輪 縮放</kbd>
   </div>
 
   <div id="panel" aria-live="polite">
-    <button class="close" aria-label="關閉">✕</button>
+    <button class="close" aria-label="關閉" data-i18n-aria="panelClose">✕</button>
     <div class="head">
       <div class="emoji"></div>
       <div><h2></h2><p class="sub"></p></div>
@@ -331,15 +371,16 @@
     <div class="foot">
       <span class="state"></span>
       <span class="foot-btns">
-        <button class="fight">⚔️ 挑戰守關怪物</button>
-        <a class="go" target="_blank" rel="noopener">閱讀此遺跡課程 →</a>
+        <button class="fight" data-i18n="fightBtn">⚔️ 挑戰守關怪物</button>
+        <a class="go" target="_blank" rel="noopener" data-i18n="goReadCourse">閱讀此遺跡課程 →</a>
       </span>
     </div>
+    <div class="langnote"></div>
   </div>
 
-  <div id="minimap"><canvas width="176" height="176"></canvas><span class="cap">新手村地圖</span></div>
-  <button id="actbtn" aria-label="取消對話框">✕</button>
-  <button id="jumpbtn" aria-label="跳躍">跳</button>
+  <div id="minimap"><canvas width="176" height="176"></canvas><span class="cap" data-i18n="mapCap">新手村地圖</span></div>
+  <button id="actbtn" aria-label="取消對話框" data-i18n-aria="cancelDialog">✕</button>
+  <button id="jumpbtn" aria-label="跳躍" data-i18n-aria="jumpAria" data-i18n="jumpBtn">跳</button>
 
   <div id="toast"><div class="t"></div><div class="s"></div></div>
 
@@ -350,7 +391,7 @@
     <div class="hit-flash"></div>
     <div class="b-top">
       <div class="mon"><span class="mon-emoji"></span><div class="mon-info"><div class="mon-name"></div><div class="mon-hp"><i></i></div></div></div>
-      <button class="flee">逃跑 ✕</button>
+      <button class="flee" data-i18n="flee">逃跑 ✕</button>
     </div>
     <div class="b-bottom">
       <div class="hearts"></div>
@@ -359,7 +400,7 @@
       <div class="fb">
         <div class="ic"></div>
         <p class="why"></p>
-        <div class="fb-actions"><a class="lnk" target="_blank" rel="noopener">讀這個章節 →</a><button class="next"></button></div>
+        <div class="fb-actions"><a class="lnk" target="_blank" rel="noopener" data-i18n="readChapter">讀這個章節 →</a><button class="next"></button></div>
       </div>
     </div>
   </div>
@@ -367,15 +408,16 @@
   <div id="finale">
     <div class="card">
       <div class="big">🎉</div>
-      <h2>新手村重生！</h2>
-      <p>五道防線全部重建，中央大水晶綻放光芒，灰暗的村莊重獲生機——被石化的村民也解開了。這是你這趟旅程練成的「英雄守則」，把它帶回現實世界吧：</p>
+      <h2 data-i18n="finaleH2">新手村重生！</h2>
+      <p data-i18n="finaleP">五道防線全部重建，中央大水晶綻放光芒，灰暗的村莊重獲生機——被石化的村民也解開了。這是你這趟旅程練成的「英雄守則」，把它帶回現實世界吧：</p>
       <div class="badges"></div>
-      <div class="scroll-hd">📜 英雄守則・你的個人行動清單</div>
+      <div class="scroll-hd" data-i18n="finaleScrollHd">📜 英雄守則・你的個人行動清單</div>
       <div class="scroll"></div>
-      <a class="takeaway" target="_blank" rel="noopener" href="https://ssd.ocf.tw/blog/">📚 延伸閱讀：進階文章 →</a>
+      <a class="takeaway" target="_blank" rel="noopener" href="https://ssd.ocf.tw/blog/" data-i18n="finaleTakeaway">📚 延伸閱讀：進階文章 →</a>
+      <div class="langnote" data-i18n="chapterLangNote"></div>
       <div class="confcompare"></div>
-      <div class="title-rank">榮銜：資安守護者 🛡️</div>
-      <button id="finale-close">繼續探索 →</button>
+      <div class="title-rank" data-i18n="finaleRank">榮銜：資安守護者 🛡️</div>
+      <button id="finale-close" data-i18n="finaleClose">繼續探索 →</button>
     </div>
   </div>
 
@@ -388,8 +430,8 @@
     </div>
   </div>
 
-  <div id="loader"><div><div class="spin"></div><p>正在生成世界…</p></div></div>
+  <div id="loader"><div><div class="spin"></div><p data-i18n="loaderText">正在生成世界…</p></div></div>
 
-  <script type="module" src="./main.js?v=11fd2fab"></script>
+  <script type="module" src="./main.js?v=ce46855a"></script>
 </body>
 </html>
