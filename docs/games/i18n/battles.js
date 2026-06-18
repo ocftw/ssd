@@ -371,7 +371,155 @@ const TEXT = {
       ],
     },
   },
-  // 'en':      { ... }  ← Phase 3 補上
+  'en': {
+    common: {
+      monster: { name: `Phishing Behemoth`, emoji: `🎣` },
+      intro: `A behemoth cloaked in an "official" hide blocks the ruin, luring people in with all kinds of fake messages. Strike back with your security know-how!`,
+      questions: [
+        {
+          q: `This email just landed in your inbox — what's your call?`,
+          mail: {
+            from: `"Account Security Center" <security@accournt-verify.com>`,
+            subject: `[URGENT] Suspicious login detected — verify within 24 hours or your account will be permanently disabled`,
+            body: `We detected unusual login activity on your account. To keep it safe, please click the link below to log in and verify your identity, or your account will be permanently disabled within 24 hours.`,
+          },
+          why: `This is a classic phishing email: the sender domain is misspelled (accournt-verify.com is not official), it manufactures urgency with "disabled within 24 hours," and it wants you to log in via a link in the email. The right move is not to click — log in via your own bookmark or the official app to confirm.`,
+        },
+        {
+          q: `You want to log in to your Google account — which of these is the real official URL?`,
+          why: `To read a domain, find the "last main domain": the real official domain is google.com. secure-login.com and verify-id.net are the actual domains of these two fakes — "google" is just stuffed in to confuse you. An https lock, or seeing the word "google," is not proof of trust.`,
+        },
+        {
+          q: `You accidentally entered a service's password on a suspicious site — what's the first thing to do?`,
+          options: [`Wait a few days and see if it gets hacked`, `Log in to the service through official channels, change the password immediately, and check/enable multi-factor authentication`, `Just change the password on this one site`, `Change it to another old password you also use elsewhere`],
+          why: `Change the password immediately through official channels and turn on MFA; if other accounts share the same password, change those too, to avoid a chain breach via "credential stuffing."`,
+        },
+        {
+          q: `Why does enabling "multi-factor authentication (MFA)" protect you when your password is stolen?`,
+          options: [`Because the password gets longer automatically`, `Because logging in still needs a second step (a phone code or a physical key), so a password alone can't get in`, `Because once it's on, the password can't leak`, `Because you no longer need to remember passwords`],
+          why: `MFA adds another gate: even if the password leaks, an attacker without your second factor (a code or a key) still can't log in. It doesn't stop the password from leaking — it makes a leaked password not enough.`,
+        },
+        {
+          q: `You get a message from your manager: "Urgent! Buy gift cards for me right now and send me the serial numbers." What's the safer move?`,
+          options: [`The manager is in a hurry, so do it right away`, `Confirm with them in person or by phone through a different channel first`, `Reply in the same chat asking "is this really you?"`, `Front the money yourself — it's a small amount, should be fine`],
+          why: `Impersonating a manager or acquaintance is a common social-engineering tactic, and since the crook is in the very same chat, asking "is this really you?" there is pointless. For anything involving money, gift cards, or transfers, always confirm with the person directly through a different channel.`,
+        },
+      ],
+    },
+    personal: {
+      monster: { name: `Weak-Password Slime`, emoji: `🦠` },
+      intro: `A slime congealed from weak passwords — its greatest fear is you giving every account a long, unique password.`,
+      questions: [
+        {
+          q: `The Weak-Password Slime fears strong passwords — build a "long and hard-to-guess" password below to strike back!`,
+          why: `A password's "length" and "unpredictability" matter most. String a few unrelated words into a long passphrase (or add upper/lowercase, numbers, and symbols) — easy to remember and hard to crack; avoid birthdays, names, or common passwords.`,
+        },
+        {
+          q: `Why shouldn't you reuse the same password across multiple sites?`,
+          options: [`It just makes them harder to remember`, `If one site leaks, hackers will try the same credentials on your other sites (a credential-stuffing attack)`, `As long as the password is complex, reusing it is fine`, `Only unimportant sites need different passwords`],
+          why: `This is "credential stuffing." One leak anywhere and every reused account falls in a chain — even a complex password can't hold once it's reused. Use a different strong password for each site.`,
+        },
+        {
+          q: `What's the main benefit of a password manager?`,
+          options: [`It saves a different strong password for every site, so you only remember one master password`, `It changes all your passwords to one easy-to-remember password`, `It replaces multi-factor authentication, so you don't need MFA`, `It replaces antivirus software`],
+          why: `A password manager generates and stores a unique strong password for every site — you only need to remember one master password. It doesn't replace MFA; use both together.`,
+        },
+        {
+          q: `How should you set up your phone and computer to be secure?`,
+          options: [`Not setting a lock is more convenient`, `Set a screen lock (PIN/biometrics) and turn on automatic system updates`, `Updates often cause problems, so turning off auto-update is safer`, `A four-digit birthday makes an easy-to-remember lock`],
+          why: `A screen lock and automatic updates are the two most basic protections: the former stops others from operating your device directly, the latter patches security holes promptly — turning off updates leaves known holes open.`,
+        },
+        {
+          q: `After enabling multi-factor authentication (MFA), how do you avoid being locked out if you lose your phone?`,
+          options: [`No need to prepare — deal with it when it happens`, `Save your "backup codes" in advance and set up a second verification method (such as another device or a security key)`, `Just screenshot the backup codes into your phone's photo album`, `Better not turn on MFA at all, to avoid hassle when switching phones`],
+          why: `When you enable MFA, save the backup codes and set up a fallback method right away. If the backup codes only live as a screenshot in your phone's album, they're gone with the phone — and could be peeked at — so store them safely elsewhere.`,
+        },
+      ],
+    },
+    org: {
+      monster: { name: `Ransom Golem`, emoji: `🗿` },
+      intro: `A golem built from poorly-managed systems — it fears solid backups, access controls, and device baselines.`,
+      questions: [
+        {
+          q: `When ransomware has encrypted your files, what gives you the best chance of recovering your data?`,
+          options: [`Quickly pay the ransom to buy the files back`, `The "off-site, offline" backups you made ahead of time`, `An antivirus scan can decrypt the files`, `Reinstall the system and the files will come back on their own`],
+          why: `Paying the ransom doesn't guarantee recovery and may make you a repeat target; neither antivirus nor reinstalling can recover already-encrypted files. Reliable offline/off-site backups (the 3-2-1 rule) are the lifeline.`,
+        },
+        {
+          q: `When an employee leaves, how should the organization handle their accounts?`,
+          options: [`Keep the account for now — it might be needed later`, `Immediately disable or revoke their account and all permissions`, `Just change the password and leave the account active`, `Wait for the system's periodic cleanup`],
+          why: `Permissions must be adjusted promptly on departure or transfer. An un-revoked account is a common entry point for intruders — just changing the password while keeping the account is still risky.`,
+        },
+        {
+          q: `What does the "principle of least privilege" mean?`,
+          options: [`Giving everyone admin rights is the most convenient`, `Give each person only the minimum permissions needed to do their job`, `Always give managers the highest privileges`, `Open everything up first and claw it back if something goes wrong`],
+          why: `Granting only necessary permissions keeps the potential damage to a minimum if an account is compromised or someone makes an internal mistake.`,
+        },
+        {
+          q: `What should a basic security baseline for work computers include?`,
+          options: [`Turning off system updates for compatibility`, `Enabling disk encryption, automatic updates, screen lock, and anti-malware`, `Sharing one admin account company-wide for easier management`, `Turning off anti-malware to avoid hurting performance`],
+          why: `Setting a consistent security baseline for work devices (encryption, updates, locking, anti-malware) is the foundation of organizational protection; shared accounts make incidents impossible to trace.`,
+        },
+        {
+          q: `About organizational backups, which idea is correct?`,
+          options: [`Once backups are set up, you're done for good`, `Rehearse "restoring" regularly to confirm the backups can actually recover data`, `Keeping the backup on the same machine is enough`, `Cloud sync is the same as having a backup`],
+          why: `A backup you've never tested restoring is no backup at all. Cloud "sync" propagates deletions or encryption too, so it isn't a backup; rehearsing restores regularly is what ensures they work when it counts.`,
+        },
+      ],
+    },
+    guide: {
+      monster: { name: `Fog Wraith`, emoji: `👻` },
+      intro: `A wraith condensed from the fog of "not knowing where to start" — it fears clear stock-taking, prioritizing, and record-keeping.`,
+      questions: [
+        {
+          q: `What's a good starting point for giving your organization a "security check-up"?`,
+          options: [`Buy the most expensive security tool first`, `Take stock of the current state first — your devices, accounts, and data`, `Hold an all-hands security talk first`, `Replace all your systems with new ones first`],
+          why: `Take stock first so you can find the gaps and set priorities, avoiding tools you don't need or that overlap.`,
+        },
+        {
+          q: `When resources for security improvements are limited, how should you set priorities?`,
+          options: [`Do whatever comes to mind first`, `Handle items by risk (likelihood × impact), highest to lowest`, `Spend the budget on the most expensive tool first`, `Pick the easiest, quickest wins first`],
+          why: `A risk-driven approach tackles the "most likely and most damaging" items first for the greatest payoff; only doing the easy ones tends to miss the truly critical gaps.`,
+        },
+        {
+          q: `What's the most practical way to track progress on security improvements?`,
+          options: [`Just keep it in the lead person's head`, `Use a shared checklist/log to note what's done and what's pending`, `Review it only after something goes wrong`, `One big annual stock-take is enough`],
+          why: `A checklist and log keep the organization, advisors, and individuals aligned on progress, instead of relying on memory and missing things.`,
+        },
+        {
+          q: `After rolling out a new security measure, what should you do?`,
+          options: [`Once it's rolled out you can leave it alone`, `Review its effectiveness regularly and adjust to the real situation`, `Immediately swap out every measure again`, `Hand it to a tool to run automatically and never look again`],
+          why: `Security is a continuous loop: after rollout, review results, gather feedback, and keep adjusting.`,
+        },
+      ],
+    },
+    tools: {
+      monster: { name: `Data Bookworm`, emoji: `🐛` },
+      intro: `A bookworm that gnaws at "not using good tools" — it fears password managers, authenticators, VPNs, and regular backups.`,
+      questions: [
+        {
+          q: `To use a different strong password for every site and still remember them, what's most recommended?`,
+          options: [`Write passwords on a sticky note by your screen`, `A password manager`, `Keep them in your browser's notepad or your phone's notes`, `Use the same password but add a number for each site`],
+          why: `A password manager stores a unique strong password for every site — you only remember one master password; notes or "numbered" passwords are easily seen or guessed.`,
+        },
+        {
+          q: `What is an authenticator app (like Authenticator) for?`,
+          options: [`Scanning for viruses`, `Generating one-time codes as a second gate at login (MFA)`, `Automatically generating and remembering your passwords`, `Encrypting your network connection`],
+          why: `An authenticator generates a one-time code every few dozen seconds as a second factor beyond your password. Generating and remembering passwords is a password manager's job; encrypting the connection is a VPN's — don't mix them up.`,
+        },
+        {
+          q: `To protect your privacy on public Wi-Fi, what could you use?`,
+          options: [`Turn down the screen brightness`, `A reputable VPN`, `Switch the phone to airplane mode before connecting`, `As long as the site has https, there's nothing to worry about`],
+          why: `A VPN encrypts your connection for an extra layer of protection on untrusted public networks. https only protects the connection to "that site," while a VPN protects all of your device's outbound traffic.`,
+        },
+        {
+          q: `To avoid losing important data, what's the most solid tool and habit?`,
+          options: [`Keep it on just one computer`, `Back up regularly and store copies in multiple places (cloud + several offline copies)`, `One cloud-synced copy is enough`, `Manually copy to a USB drive whenever you happen to think of it`],
+          why: `Following the 3-2-1 rule — back up regularly and spread copies out — lets you recover data after failure, loss, or ransomware; a single cloud sync propagates deletion or encryption, so it doesn't count as a backup.`,
+        },
+      ],
+    },
+  },
 };
 
 // ── 合併：結構 + 文字 → main.js / battle.js 既有題目形狀 ──────────

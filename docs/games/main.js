@@ -982,7 +982,7 @@ function computeVibrancy() {
 const $ = (s) => document.querySelector(s);
 const panel = $('#panel'); const pEmoji = panel.querySelector('.emoji'); const pTitle = panel.querySelector('h2');
 const pSub = panel.querySelector('.sub'); const pDesc = panel.querySelector('.desc'); const pChips = panel.querySelector('.chips');
-const pGo = panel.querySelector('.go'); const pState = panel.querySelector('.state'); const pClose = panel.querySelector('.close'); const pFight = panel.querySelector('.fight');
+const pGo = panel.querySelector('.go'); const pState = panel.querySelector('.state'); const pClose = panel.querySelector('.close'); const pFight = panel.querySelector('.fight'); const pLangNote = panel.querySelector('.langnote');
 const badge = $('#badge'); const toastEl = $('#toast'); const logBtn = $('#logbtn'); const logEl = $('#questlog'); const logList = $('#questlog .list');
 let panelId = null, pinnedId = null; const suppressed = new Set();
 
@@ -1011,6 +1011,7 @@ function showPanel(p) {
   else if (hasBattle) { pState.textContent = isDone(d.id) ? UI.statePurified : UI.stateHasMonster; pGo.textContent = UI.goReadBeforeBattle; }
   else { pState.textContent = isDone(d.id) ? UI.stateReadDone : UI.stateNotRead; pGo.textContent = isDone(d.id) ? UI.goReadAgain : UI.goReadCourse; }
   panel.classList.toggle('story', !!d.story); pGo.style.display = d.noLink ? 'none' : ''; // 傳說面板：全文不截斷、隱藏前往鍵
+  if (pLangNote) pLangNote.textContent = (p.isRuin && !d.noLink) ? (UI.chapterLangNote || '') : ''; // 外連章節語言提示（en／简体；正體為空）
   panel.classList.add('show');
 }
 function hidePanel() { panelId = null; panel.classList.remove('show'); POIS.forEach((x) => x.el.classList.remove('is-active')); }

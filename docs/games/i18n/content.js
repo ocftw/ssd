@@ -231,7 +231,103 @@ const TEXT = {
       },
     },
   },
-  // 'en':      { ... }  ← Phase 3 補上
+  'en': {
+    board: {
+      title: `Village Chief's Notice Board`, sub: `How do I level up my security?`,
+      desc: `Welcome to the village! This land didn't wither from a natural disaster — the "defenses" that once protected it fell one by one, and the color drained away with them. Head out of the village and find the "security ruins" scattered across the wilds; each one is a lesson, and every ruin you restore rebuilds one of your village's defenses. Raise all five and the village lights up again. The golden waypoint on the map points to a suggested next stop, but you're free to choose where to go first.`,
+      chips: [`Overview`, `Priorities`, `Beginner-friendly`],
+    },
+    ocf: {
+      title: `Open Culture Foundation (OCF)`, sub: `A monument in the wilds`,
+      desc: `The Open Culture Foundation (OCF) is a non-profit supporting open source, open data, and digital rights in Taiwan — and the team behind this "Security Village." Enjoying the project? Visit the official site to support us and help open culture and security education reach further.`,
+      chips: [`Open source`, `Open data`, `Digital rights`, `Non-profit`],
+      stateText: `Thanks for your support`, goText: `Support OCF →`,
+    },
+    legend: {
+      title: `Heroes' Monument`, sub: `A weathered ancient mural`,
+      desc: `Long, long ago, a band of heroes guarded this village — a dragon-riding warrior, a green-robed mage, and their loyal companions — turning back threat after threat. Then a great calamity drained the color from the land, and the heroes vanished without a trace; no one knows where they went. All that remains is this weathered mural, quietly keeping their memory. They say that when the village crystal shines again, they will return to this land…`,
+      chips: [], stateText: `An ancient legend`,
+    },
+    chest: {
+      title: `Heroes' Lost Weapon Chest`, sub: `An old chest in the wilds`,
+      desc: `When the legendary heroes departed, they sealed their weapons in this chest. Open it and you find — not blades, but a full set of "hands-on security training": slides, handouts, and exercises. Take them, and you too can defend your village like the heroes of old.`,
+      chips: [`Training`, `Slides & handouts`, `Exercises`, `Free to use`],
+      stateText: `Heroes' armory`, goText: `Get the materials →`,
+    },
+    guidekit: {
+      title: `Security Upgrade Toolkit`, sub: `A toolbox for driving security in your org`,
+      desc: `For those responsible for security within an organization: a set of methods and tools for "driving security improvements across your org" — threat modeling, risk assessment, device audits, and impact review — to help you level up protection step by step.`,
+      chips: [`Org rollout`, `Threat modeling`, `Risk assessment`, `Device audit`, `Impact review`],
+      stateText: `Org toolkit`, goText: `Open the toolkit →`,
+    },
+    docs: {
+      doc1: { title: `Digital Threats Facing Taiwan's Rights & Democracy Advocacy Groups`, sub: `Archive · File One`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A summary of a 2024 research report (in Chinese), drawing on 35 questionnaires and 3 in-depth interviews to map the digital threats and security needs faced by rights and democracy advocacy groups in Taiwan.` },
+      doc2: { title: `Guarding the Voice of Advocacy`, sub: `Archive · File Two`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `This project's final report, documenting the service model, hands-on experience, and recommendations of the Security Mentorship Program (SMP) for civil-society groups and human-rights workers.` },
+      doc3: { title: `The Cost of Trust`, sub: `Archive · File Three`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A case-study record of real security-attack incidents experienced by human-rights workers in Taiwan, documenting attack patterns, the defense process, and lessons learned.` },
+    },
+    ruins: {
+      personal: {
+        title: `Personal Security`, sub: `A stone-house ruin in the forest`, defense: `Personal account defense`,
+        desc: `Phone and computer settings, account security, safe browsing, encrypted communication — protections you can do right now.`,
+        chips: [`Phone/PC`, `Account security`, `Web browsing`, `Encrypted chat`, `Travel abroad`],
+        tip: `A reminder for home: turn on two-factor authentication for your key accounts (email, social, password manager); back up your recovery codes before switching phones so you don't get locked out.`,
+        review: [
+          `Accounts: enable two-factor (MFA) on key accounts (email, social), and back up your recovery codes first.`,
+          `Passwords: use a different long password for every site, and let a password manager keep them.`,
+          `Devices: set a screen lock and turn on automatic updates to patch holes promptly.`,
+          `Connections: use a VPN on public Wi-Fi; use end-to-end encrypted apps for sensitive conversations.`,
+        ],
+      },
+      org: {
+        title: `Organization Security`, sub: `A fortress ruin on the hill`, defense: `Org governance defense`,
+        desc: `Work computers, network environment, account management, data permissions and backups, policy templates.`,
+        chips: [`Work PCs`, `Network`, `Account management`, `Data permissions`, `Data backup`, `Policy templates`],
+        tip: `A reminder for organizations: rehearse restoring from backups regularly, revoke access the moment an employee leaves, and grant only the minimum permissions the job requires.`,
+        review: [
+          `Accounts: revoke access immediately on departure or transfer; follow the principle of least privilege.`,
+          `Device baseline: enable disk encryption, auto-updates, screen lock, and anti-malware on work machines.`,
+          `Backups: follow 3-2-1 and rehearse restoring regularly — an untested backup is no backup.`,
+          `Policy: write the rules clearly with policy templates so everyone follows the same standard.`,
+        ],
+      },
+      common: {
+        title: `Common Security Incidents`, sub: `A collapsed tower by the rift`, defense: `Incident-response defense`,
+        desc: `Phishing, ransomware, leaked passwords, hijacked accounts — what to do first when they happen.`,
+        chips: [`Phishing`, `Ransomware`, `Leaked passwords`, `Account hijack`, `NAS attacks`, `Website attacks`],
+        tip: `Don't rush to click suspicious messages: log in via the official app or your own bookmark to verify; if you're actually caught out, change your password, turn on MFA, and keep screenshots as evidence.`,
+        review: [
+          `Phishing: don't click links in suspicious messages — log in via your own bookmark or the official app to confirm.`,
+          `Spotting URLs: check whether the "final main domain" is correct; the https lock and the logo can both be faked.`,
+          `If caught: change your password immediately, turn on MFA, keep screenshots, and report it as appropriate.`,
+          `Ransomware: recover data from "offline, off-site" backups — don't pay the ransom.`,
+        ],
+      },
+      guide: {
+        title: `Security Check-up & Progress Tracking`, sub: `An obelisk in the wilds`, defense: `Assessment & tracking defense`,
+        desc: `Use a checklist to give your org a "security check-up": take stock of where things stand, set priorities, and record improvement progress and follow-up tasks so security upgrades are visible and trackable.`,
+        chips: [`Take stock`, `Checklist`, `Progress tracking`, `Impact review`],
+        tip: `Don't track progress from memory: use a checklist to note what's done and what's next, and review and update it regularly.`,
+        review: [
+          `Start: take stock first — the current state of your devices, accounts, and data.`,
+          `Prioritize: handle items by risk (likelihood × impact), highest first.`,
+          `Track: use a shared checklist for what's done and what's next instead of relying on memory.`,
+          `Iterate: after rollout, review results and gather feedback regularly, then adjust.`,
+        ],
+      },
+      tools: {
+        title: `Recommended Tools`, sub: `A market ruin by the lake`, defense: `Everyday-tools defense`,
+        desc: `A curated set of easy-to-use security tools: password manager, authenticator, VPN, backup, and more.`,
+        chips: [`Password manager`, `Authenticator`, `VPN`, `Backup tools`],
+        tip: `How to pick tools: a password manager for strong passwords, an authenticator as a second gate, a VPN on public Wi-Fi, and 3-2-1 backups for important data.`,
+        review: [
+          `Password manager: stores a different strong password for every site — you only remember one master password.`,
+          `Authenticator app: generates one-time codes as a second gate beyond your password.`,
+          `VPN: encrypts all of your device's outbound traffic on public Wi-Fi.`,
+          `Backup: follow 3-2-1 (cloud + multiple offline copies) and test restoring regularly.`,
+        ],
+      },
+    },
+  },
 };
 
 // ── 合併：結構 + 文字 → main.js 既有物件形狀 ─────────────────────
