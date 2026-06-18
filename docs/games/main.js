@@ -736,8 +736,10 @@ const keepers = ruinAt.map((r) => {
   const built = buildKeeper(r);
   built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(-x, -z); scene.add(built.group);
   const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 3.1, 0); built.group.add(o);
-  return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1 };
+  return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1, open: false };
 });
+// 維護者對話：恢復後靠近先出現小圖示，點圖示才展開（與嚮導相同）
+keepers.forEach((k) => { k.el.addEventListener('click', (e) => { e.stopPropagation(); if (k.life > 0.6) { k.open = !k.open; k.mode = -1; } }); });
 
 // ── 首頁角色重塑：友善小龍（載白貓）、綠袍法師嚮導、村裡黃貓 ──────
 // 低多邊形小貓（可重用：白貓帶紅斗篷、黃貓不帶）
@@ -1461,12 +1463,15 @@ function animate() {
     for (const pt of k.parts) pt.m.color.lerpColors(STONE, pt.alive, k.life);
     k.group.position.y = k.baseY + (k.life > 0.5 ? Math.sin(t * 1.8 + k.pos.x) * 0.07 : 0);
     const dk = Math.hypot(hero.position.x - k.pos.x, hero.position.z - k.pos.z);
-    const want = battle.active || finaleActive ? 0 : (dk < 7 ? (k.life > 0.6 ? 2 : 1) : 0);
-    if (want !== k.mode) {
-      k.mode = want;
-      if (want === 0) k.el.className = 'bubble';
-      else if (want === 1) { k.el.className = 'bubble petrified show'; k.el.textContent = '🗿 一尊石化的村民…'; }
-      else { k.el.className = 'bubble show'; k.el.innerHTML = `<b>${k.ruin.emoji} ${k.ruin.title}・維護者</b><span>${k.ruin.tip}</span>`; }
+    const near = !battle.active && !finaleActive && dk < 7, restored = k.life > 0.6;
+    if (!near || !restored) k.open = false;
+    const state = !near ? 0 : (!restored ? 1 : (k.open ? 3 : 2)); // 0隱藏 1石化提示 2小圖示 3展開
+    if (state !== k.mode) {
+      k.mode = state;
+      if (state === 0) k.el.className = 'bubble';
+      else if (state === 1) { k.el.className = 'bubble petrified show'; k.el.textContent = '🗿 一尊石化的村民…'; }
+      else if (state === 2) { k.el.className = 'bubble chip clickable show'; k.el.innerHTML = '💬'; }
+      else { k.el.className = 'bubble clickable show'; k.el.innerHTML = `<b>${k.ruin.emoji} ${k.ruin.title}・維護者</b><span>${k.ruin.tip}</span>`; }
     }
   }
   // OCF 紀念碑：每次進來都未點亮，靠近才點燃（本次遊玩保持點亮）＝給 OCF 添柴火
