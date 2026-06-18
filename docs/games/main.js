@@ -736,10 +736,18 @@ const keepers = ruinAt.map((r) => {
   const built = buildKeeper(r);
   built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(-x, -z); scene.add(built.group);
   const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 3.1, 0); built.group.add(o);
-  return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1, open: false };
+  return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1, open: false, line: 0 };
 });
-// 維護者對話：恢復後靠近先出現小圖示，點圖示才展開（與嚮導相同）
-keepers.forEach((k) => { k.el.addEventListener('click', (e) => { e.stopPropagation(); if (k.life > 0.6) { k.open = !k.open; k.mode = -1; } }); });
+// 維護者對話：恢復後靠近先出現小圖示，點圖示展開第一則；展開中再點則輪替到下一則（複習重點）
+keepers.forEach((k) => {
+  k.el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (k.life <= 0.6) return;                                    // 僅恢復（白天）後可互動
+    if (!k.open) k.open = true;                                   // 圖示 → 展開
+    else { const ls = k.ruin.review || [k.ruin.tip]; k.line = (k.line + 1) % ls.length; } // 展開中 → 下一則
+    k.mode = -1;                                                  // 強制重繪
+  });
+});
 
 // ── 首頁角色重塑：友善小龍（載白貓）、綠袍法師嚮導、村裡黃貓 ──────
 // 低多邊形小貓（可重用：白貓帶紅斗篷、黃貓不帶）
@@ -1480,14 +1488,18 @@ function animate() {
     k.group.position.y = k.baseY + (k.life > 0.5 ? Math.sin(t * 1.8 + k.pos.x) * 0.07 : 0);
     const dk = Math.hypot(hero.position.x - k.pos.x, hero.position.z - k.pos.z);
     const near = !battle.active && !finaleActive && dk < 7, restored = k.life > 0.6;
-    if (!near || !restored) k.open = false;
+    if (!near || !restored) { k.open = false; k.line = 0; }
     const state = !near ? 0 : (!restored ? 1 : (k.open ? 3 : 2)); // 0隱藏 1石化提示 2小圖示 3展開
     if (state !== k.mode) {
       k.mode = state;
       if (state === 0) k.el.className = 'bubble';
       else if (state === 1) { k.el.className = 'bubble petrified show'; k.el.textContent = '🗿 一尊石化的村民…'; }
       else if (state === 2) { k.el.className = 'bubble chip clickable show'; k.el.innerHTML = '💬'; }
-      else { k.el.className = 'bubble clickable show'; k.el.innerHTML = `<b>${k.ruin.emoji} ${k.ruin.title}・維護者</b><span>${k.ruin.tip}</span>`; }
+      else {
+        const ls = k.ruin.review || [k.ruin.tip];
+        k.el.className = 'bubble clickable show';
+        k.el.innerHTML = `<b>${k.ruin.emoji} ${k.ruin.title}・維護者</b><span>${ls[k.line]}</span>` + (ls.length > 1 ? `<span class="more">點一下看下一則　${k.line + 1}/${ls.length} →</span>` : '');
+      }
     }
   }
   // 「建議下一站」路標：浮在推薦順序中第一個未完成的遺跡上方
