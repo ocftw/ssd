@@ -365,7 +365,7 @@ const greatBase2 = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.2, 0.8, 12),
 const greatMat = new THREE.MeshStandardMaterial({ color: 0x8a93a0, emissive: 0x20242b, emissiveIntensity: 0.4, roughness: 0.15, metalness: 0.35, flatShading: false });
 const greatCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 1), greatMat); greatCrystal.position.set(0, 5.4, 0); greatCrystal.castShadow = true; village.add(greatCrystal);
 const greatBeamMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
-const greatBeam = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 3.0, 90, 18, 1, true), greatBeamMat); greatBeam.position.set(0, 46, 0); village.add(greatBeam);
+const greatBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.85, 90, 18, 1, true), greatBeamMat); greatBeam.position.set(0, 46, 0); village.add(greatBeam); // 細長光柱，避免擋住正前方視野
 const GREAT_D = new THREE.Color(0x8a93a0), GREAT_A = new THREE.Color(0xffe6a0);
 // 能量碎片：每座遺跡一片，進化後亮起（可見的充能進度）
 const shardGroup = new THREE.Group(); shardGroup.position.set(0, 5.4, 0); village.add(shardGroup);
@@ -1279,7 +1279,7 @@ function animate() {
   greatGlow += ((allDone ? 1 : 0) - greatGlow) * Math.min(1, 1.0 * dt);
   greatMat.color.lerpColors(GREAT_D, GREAT_A, greatGlow); greatMat.emissive.copy(greatMat.color); greatMat.emissiveIntensity = 0.4 + greatGlow * 2.2;
   greatCrystal.rotation.y += dt * (0.2 + greatGlow * 1.0); greatCrystal.position.y = 5.4 + Math.sin(t * 1.2) * 0.3; greatCrystal.scale.setScalar(1 + greatGlow * 0.15);
-  greatBeamMat.color.copy(greatMat.color); greatBeamMat.opacity = greatGlow * (0.32 + Math.sin(t * 2.5) * 0.06);
+  greatBeamMat.color.copy(greatMat.color); greatBeamMat.opacity = greatGlow * (0.12 + Math.sin(t * 2.5) * 0.03);
   // 能量碎片：環繞 + 依進化狀態亮起
   shardGroup.rotation.y += dt * 0.4;
   for (const sh of shards) {
