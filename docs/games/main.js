@@ -802,6 +802,8 @@ const mage = (() => {
   return { ...built, pos: new THREE.Vector3(x, y, z), baseY: y, el, mode: -1 };
 })();
 const MAGE_TIP = '走出村莊，找回散落各地的「資安遺跡」並點亮水晶。遇到守關怪物時，用課程裡學到的小知識回擊就行！';
+mage.open = false; // 對話框：靠近先出現小圖示，點圖示才展開（避免每次經過就跳整段文字）
+mage.el.addEventListener('click', (e) => { e.stopPropagation(); mage.open = !mage.open; mage.mode = -1; });
 // 灰龍（荒野上空慢慢繞圈）＋ 背上白貓
 const dragon = (() => {
   const built = buildDragon();
@@ -1499,8 +1501,15 @@ function animate() {
   mage.orbLight.intensity = archiveActive ? 0 : (1 - vibrancy) * 48 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉
   {
     const dm = Math.hypot(hero.position.x - mage.pos.x, hero.position.z - mage.pos.z);
-    const want = (battle.active || finaleActive) ? 0 : (dm < 7 ? 1 : 0);
-    if (want !== mage.mode) { mage.mode = want; if (want) { mage.el.className = 'bubble show'; mage.el.innerHTML = `<b>🧙 村裡的嚮導</b><span>${MAGE_TIP}</span>`; } else mage.el.className = 'bubble'; }
+    const near = !battle.active && !finaleActive && dm < 7;
+    if (!near) mage.open = false;                   // 離開就收起
+    const state = !near ? 0 : (mage.open ? 2 : 1);  // 0隱藏 / 1小圖示 / 2展開
+    if (state !== mage.mode) {
+      mage.mode = state;
+      if (state === 0) mage.el.className = 'bubble';
+      else if (state === 1) { mage.el.className = 'bubble chip clickable show'; mage.el.innerHTML = '💬'; }
+      else { mage.el.className = 'bubble clickable show'; mage.el.innerHTML = `<b>🧙 村裡的嚮導</b><span>${MAGE_TIP}</span>`; }
+    }
   }
   // 灰龍：荒野上空慢慢繞圈 + 拍翅 + 偶爾吐藍火（背上白貓跟著）
   dragon.ang += dt * 0.12;
