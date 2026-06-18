@@ -9,11 +9,11 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST, GUIDE_KIT } from './content.js?v=d0a761da';
-import { WORLD, terrainHeight, groundY } from './terrain.js?v=d0a761da';
-import { BATTLES } from './battles.js?v=d0a761da';
-import { BattleSystem } from './battle.js?v=d0a761da';
-import { SFX } from './audio.js?v=d0a761da';
+import { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST, GUIDE_KIT } from './content.js?v=223a24af';
+import { WORLD, terrainHeight, groundY } from './terrain.js?v=223a24af';
+import { BATTLES } from './battles.js?v=223a24af';
+import { BattleSystem } from './battle.js?v=223a24af';
+import { SFX } from './audio.js?v=223a24af';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -29,7 +29,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=d0a761da', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=d0a761da', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=223a24af', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=223a24af', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -46,7 +46,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=d0a761da', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=d0a761da', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=223a24af', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=223a24af', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -78,13 +78,13 @@ const composer = new EffectComposer(renderer);
 composer.setPixelRatio(PR);
 composer.addPass(new RenderPass(scene, camera));
 const gradePass = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 }, uNightBr: { value: 0.4 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; uniform float uNightBr; varying vec2 vUv;
     void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-      float sat = mix(0.18, 1.0, uVibrancy);
-      vec3 tint = mix(vec3(0.60, 0.64, 0.72), vec3(1.0), uVibrancy); // 破敗偏冷灰 → 正常
-      float br = mix(0.66, 1.0, uVibrancy);
+      float sat = mix(0.90, 1.0, uVibrancy);                          // 夜晚仍保留原色（不再大幅去飽和）
+      vec3 tint = mix(vec3(0.82, 0.88, 1.0), vec3(1.0), uVibrancy);   // 夜晚淡淡冷藍月色
+      float br = mix(uNightBr, 1.0, uVibrancy);                        // 夜晚整體亮度（uNightBr，恢復後回到 1.0）
       gl_FragColor = vec4(mix(vec3(l), c.rgb, sat) * tint * br, c.a); }`,
 });
 composer.addPass(gradePass);
@@ -122,8 +122,8 @@ const FOG_D = new THREE.Color(0x83878d), FOG_A = new THREE.Color(0xcfe4f0);
 }
 
 // ── 燈光（太陽會跟著角色移動，保持大世界陰影清晰）─────────────────
-scene.add(new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.6));
-scene.add(new THREE.AmbientLight(0xffffff, 0.08));
+const hemi = new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.6); scene.add(hemi);
+const ambient = new THREE.AmbientLight(0xffffff, 0.08); scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xfff1d8, 2.2);
 sun.castShadow = true;
 sun.shadow.mapSize.set(4096, 4096);
@@ -133,9 +133,54 @@ sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun);
 scene.add(sun.target);
+// 夜→日燈光：用「光照強度」表現明暗（取代後製壓暗），讓火把照到的地方能顯出原本顏色
+function setWorldLight(k) { // k：0＝夜晚（荒蕪）、1＝白天（恢復）
+  sun.intensity = 0.25 + (2.2 - 0.25) * k;
+  hemi.intensity = 0.12 + (0.6 - 0.12) * k;
+  ambient.intensity = 0.03 + (0.08 - 0.03) * k;
+  scene.environmentIntensity = 0.16 + (1 - 0.16) * k; // 夜晚同時壓低天空環境光（否則整片仍偏亮）
+  // 陰影：全部遺跡點亮（≈vibrancy 1）才有太陽 → 才有太陽陰影；夜晚改由火把投影
+  const day = k > 0.9;
+  sun.castShadow = day;            // 夜晚沒有太陽：樹/物件不投太陽影
+  torchGround.castShadow = !day;   // 夜晚火把即時投影；白天關閉（太陽影接手）以省效能，避免同時兩張陰影圖
+}
 // 主角隨身火把：照亮周圍一圈暖光（世界越荒蕪越亮、恢復後轉弱），帶輕微火光晃動
 const torch = new THREE.PointLight(0xffb061, 0, 24, 2.0);
 scene.add(torch);
+// 火把投向前方地面的光錐：照亮腳前的路（讓前方地面也亮起來），夜晚由它投出即時陰影
+const torchGround = new THREE.SpotLight(0xffc079, 0, 32, Math.PI * 0.32, 0.6, 1.5);
+torchGround.shadow.mapSize.set(1024, 1024);          // 1024 為效能考量（可改 2048 提升清晰度）
+torchGround.shadow.camera.near = 1; torchGround.shadow.camera.far = 55;
+torchGround.shadow.bias = -0.0006; torchGround.shadow.normalBias = 0.04;
+scene.add(torchGround); scene.add(torchGround.target);
+
+// 螢火蟲：點綴「已完成」的遺跡（自體發光、漂浮閃爍）。完成一座遺跡，28 顆便分布到各已完成遺跡周圍。
+const fireflyTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,242,170,0.9)');
+  g.addColorStop(0.6, 'rgba(190,255,150,0.22)'); g.addColorStop(1, 'rgba(190,255,150,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const fireflies = [];
+const fireflyGroup = new THREE.Group(); scene.add(fireflyGroup);
+for (let i = 0; i < 28; i++) {
+  const m = new THREE.SpriteMaterial({ map: fireflyTex, color: 0xfff0a0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const s = new THREE.Sprite(m); s.scale.setScalar(rand(0.5, 1.0)); fireflyGroup.add(s);
+  fireflies.push({ s, m, on: false, cx: 0, cz: 0, cy: 0, ox: rand(-1, 1) * 4.5, oz: rand(-1, 1) * 4.5, h: rand(0.5, 3.2),
+    sx: rand(0.12, 0.32), sz: rand(0.12, 0.32), ax: rand(1.0, 2.4), az: rand(1.0, 2.4), ph: rand(0, TAU), bob: rand(0.4, 1.0), tw: rand(1.6, 3.0) });
+}
+// 把 28 顆螢火蟲分配到「已完成」遺跡的石化維護者周圍（完成數改變時呼叫）；沒有完成的遺跡則全部隱藏
+function assignFireflies() {
+  const done = ruinAt.filter((r) => isDone(r.id));
+  fireflies.forEach((f, i) => {
+    if (!done.length) { f.on = false; return; }
+    const r = done[i % done.length];
+    const c = (keepers.find((kp) => kp.ruin.id === r.id) || {}).pos || r; // 以維護者為中心（找不到才退回遺跡）
+    f.cx = c.x; f.cz = c.z; f.cy = c.y; f.on = true;
+  });
+}
 
 // ── 地形 ────────────────────────────────────────────────────────
 const segs = 240;
@@ -158,8 +203,8 @@ for (let i = 0; i < tp.count; i++) {
 }
 tGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=d0a761da', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=d0a761da', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=223a24af', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=223a24af', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -233,12 +278,12 @@ const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
 const trees = scatter(170, WORLD.villageR + 8, WORLD.maxR - 4, WORLD.water + 0.8, true);
 const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
-const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=d0a761da', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=d0a761da', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=223a24af', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=223a24af', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
 // 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=d0a761da', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=d0a761da', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=223a24af', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=223a24af', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -269,7 +314,7 @@ const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
 const bladeQuad = new THREE.PlaneGeometry(1, 0.95); bladeQuad.translate(0, 0.475, 0);
 const bladeQuad2 = bladeQuad.clone(); bladeQuad2.rotateY(Math.PI / 2);
 const tuftGeo = mergeGeometries([bladeQuad, bladeQuad2]);
-const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=d0a761da', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
+const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=223a24af', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
 const tufts = scatter(620, WORLD.villageR + 3, WORLD.maxR - 2, WORLD.water + 0.6, false);
 const tuftMesh = new THREE.InstancedMesh(tuftGeo, tuftMat, tufts.length);
 const tuftTints = [0x86c45f, 0x6fae57, 0x95cf6c, 0x5f9c49];
@@ -291,15 +336,15 @@ path.position.set(0, 0.47, 11); path.receiveShadow = true; village.add(path);
 
 // 中央水井（含屋頂、井圈）
 const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 1.2, 12), mat(0xb3a48c));
-wellBase.position.set(-5, 0.7, -3); wellBase.castShadow = wellBase.receiveShadow = true; village.add(wellBase);
+wellBase.position.set(-10.2, 0.7, -10.8); wellBase.castShadow = wellBase.receiveShadow = true; village.add(wellBase);
 const wellRim = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.18, 10, 16), mat(0x9a8a70));
-wellRim.rotation.x = Math.PI / 2; wellRim.position.set(-5, 1.3, -3); village.add(wellRim);
+wellRim.rotation.x = Math.PI / 2; wellRim.position.set(-10.2, 1.3, -10.8); village.add(wellRim);
 const wellWater = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.2, 16), mat(0x6cc5e0, { roughness: 0.2 }));
-wellWater.position.set(-5, 1.15, -3); village.add(wellWater);
+wellWater.position.set(-10.2, 1.15, -10.8); village.add(wellWater);
 const wellRoof = new THREE.Group();
 for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 2.6, 10), mat(0x7a5230)); p.position.set(wx, 1.3, 0); p.castShadow = true; wellRoof.add(p); applyWood(p.material); boxUV(p.geometry); }
 const wrf = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.2, 8), mat(0x9c5b3a)); wrf.position.y = 3.2; wrf.rotation.y = Math.PI / 4; wrf.castShadow = true; wellRoof.add(wrf);
-wellRoof.position.set(-5, 0, -3); village.add(wellRoof);
+wellRoof.position.set(-10.2, 0, -10.8); village.add(wellRoof);
 
 // 低石牆 + 牆上石柱帽 + 村口拱門
 const wall = new THREE.Mesh(new THREE.TorusGeometry(20, 0.6, 10, 64), mat(0xb3a88f));
@@ -326,8 +371,8 @@ function cottage(color, roofC) {
 }
 const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x4f6c92], [0xc98f9b, 0x8a5663], [0xcdb87e, 0x8a6e3a]];
 // 精簡村莊：只留一間民房，另一間是檔案室（見下方 ARCHIVE）
-const houseSpots = [[12, 5, -1.0]];
-houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], 0, s[1]); c.rotation.y = s[2]; village.add(c); });
+const houseSpots = [[12, 5]];
+houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], 0, s[1]); c.rotation.y = Math.atan2(-s[0], -s[1]); village.add(c); }); // 門（+z 面）朝中央水晶
 
 // 提燈路燈
 for (const lp of [[6, -1], [-3, 9], [8, 6], [-7, -2]]) {
@@ -355,12 +400,11 @@ for (const fp of [[-8, 2, 0x5b9cff], [9, 1, 0xff7a45]]) {
 
 // 村長告示牌（任務起點，造型升級）
 const board = new THREE.Group();
-const bplat = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.4, 0.3, 12), mat(0xb8ac90)); bplat.position.y = 0.15; bplat.receiveShadow = true; board.add(bplat);
 for (const bx of [-1.4, 1.4]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 3.4, 12), mat(0x7a5230)); p.position.set(bx, 1.7, 0); p.castShadow = true; board.add(p); applyWood(p.material); boxUV(p.geometry); }
 const sign = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 0.25), mat(0xe7c884)); sign.position.set(0, 2.9, 0); sign.castShadow = true; board.add(sign); applyWood(sign.material); boxUV(sign.geometry);
 const frame = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 0.3), mat(0x9c6b41)); frame.position.set(0, 4.05, 0); board.add(frame); applyWood(frame.material); boxUV(frame.geometry);
 const roofb = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.5, 1.2), mat(0x9c5b3a)); roofb.position.set(0, 4.35, 0); roofb.castShadow = true; board.add(roofb);
-board.position.set(0, 0, 7); village.add(board);
+board.position.set(-9.2, 0, 13.1); board.rotation.y = Math.atan2(-board.position.x, -board.position.z); village.add(board); // 面朝中央水晶（村心）
 
 // 村莊中央大水晶（全部遺跡進化後才啟動）
 const greatBase = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 1.2, 12), mat(0x9a9080)); greatBase.position.set(0, 0.6, 0); greatBase.castShadow = greatBase.receiveShadow = true; village.add(greatBase); applyStone(greatBase.material); boxUV(greatBase.geometry);
@@ -487,7 +531,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=d0a761da'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=223a24af'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -511,13 +555,13 @@ function makeLabel(text) { const el = document.createElement('div'); el.classNam
 // 告示牌 POI
 {
   const lab = makeLabel(`${VILLAGE_BOARD.emoji} 村長告示牌`); lab.o.position.set(0, 5.4, 0); board.add(lab.o);
-  POIS.push({ data: VILLAGE_BOARD, isRuin: false, pos: new THREE.Vector3(0, 0, 7), el: lab.el, openDist: 9 });
+  POIS.push({ data: VILLAGE_BOARD, isRuin: false, pos: new THREE.Vector3(-9.2, 0, 13.1), el: lab.el, openDist: 4.5 });
 }
 // 遺跡 POI
 ruinAt.forEach((r) => {
   const built = buildRuin(r); texturizeStone(built.group);
   const lab = makeLabel(`❔ 未知遺跡`); lab.o.position.set(0, 9, 0); built.group.add(lab.o);
-  POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 13, discoverDist: 8, ...built, lift: 0 });
+  POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 6.5, discoverDist: 8, ...built, lift: 0 });
 });
 // OCF 紀念碑 POI（非課程：無戰鬥、不計進度、不影響繁榮度與終局）
 // 每次遊戲載入都從「未點亮」開始，玩家靠近才點燃（本次遊玩內保持點亮）＝給 OCF 添柴火的儀式感
@@ -526,7 +570,7 @@ const ocfMon = (() => {
   built.group.position.set(ocfAt.x, ocfAt.y, ocfAt.z);
   built.group.rotation.y = Math.atan2(-ocfAt.x, -ocfAt.z);
   const lab = makeLabel(`${OCF_STATUE.emoji} OCF 紀念碑`); lab.o.position.set(0, 8, 0); built.group.add(lab.o);
-  POIS.push({ data: OCF_STATUE, isRuin: false, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, openDist: 12 });
+  POIS.push({ data: OCF_STATUE, isRuin: false, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, openDist: 6 });
   return { ...built, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, lit: 0, ignited: false };
 })();
 const OCF_GOLD = new THREE.Color(OCF_STATUE.color);
@@ -542,7 +586,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=d0a761da'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=223a24af'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -559,7 +603,7 @@ function buildMonument() {
   const x = 0, z = -18, y = groundY(x, z);                       // 村莊後方中軸、正對入口大門的開闊處
   built.group.position.set(x, y, z); built.group.rotation.y = 0; scene.add(built.group); // 壁畫面向 +z（玩家由大門進入的方向）
   const lab = makeLabel(`${LEGEND.emoji} ${LEGEND.title}`); lab.o.position.set(0, 7.4, 0); built.group.add(lab.o);
-  POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 12 });
+  POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 6 });
 }
 
 // ── 村外的「資源寶箱」（非課程；走近開面板 → 連到資源頁）：箱身共用，蓋子上方浮一個發光物件 ──
@@ -584,7 +628,7 @@ function buildChest(content, buildTop) {
   g.position.set(cx, cy, cz); g.rotation.y = Math.atan2(-cx, -cz);                    // 正面朝向村莊／玩家
   scene.add(g);
   const lab = makeLabel(`${content.emoji} ${content.title}`); lab.o.position.set(0, 4.4, 0); g.add(lab.o);
-  POIS.push({ data: content, isRuin: false, pos: new THREE.Vector3(cx, cy, cz), el: lab.el, openDist: 9 });
+  POIS.push({ data: content, isRuin: false, pos: new THREE.Vector3(cx, cy, cz), el: lab.el, openDist: 4.5 });
   return { top, beam };
 }
 // 武器寶箱：浮空寶劍（英雄的武器）
@@ -608,7 +652,13 @@ const toolkitObj = buildChest(GUIDE_KIT, (top, add) => {
 });
 
 // ── 檔案室：村莊邊入口建築 → 走進門淡出傳送到隱藏室內房間 → 靠近文件台開 PDF（新分頁）──
-const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5), enter: new THREE.Vector3(-11, 0, 5), back: new THREE.Vector3(-8, 0, 5), roomY: -120 };
+const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5), roomY: -120 };
+// 入口門朝向中央水晶（村心）：門在建築 +x 側，rotation.y 讓 +x 指向村心；
+// enter（觸發點）/back（離開落點）沿「指向村心」方向排在門外，與旋轉後的門對齊。
+ARCHIVE.face = Math.atan2(ARCHIVE.pos.z, -ARCHIVE.pos.x);
+ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
+ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
+ARCHIVE.back = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 5);
 const ARCHIVE_FLOOR = ARCHIVE.roomY + 0.2;
 let archiveActive = false, archEnterArmed = true, archExitArmed = true;
 const archFadeEl = document.getElementById('fade');
@@ -618,7 +668,7 @@ function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLO
 function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; hero.visible = true; yaw = Math.PI; pitch = 0.6; if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
 // 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
 {
-  const g = new THREE.Group(); g.position.copy(ARCHIVE.pos);
+  const g = new THREE.Group(); g.position.copy(ARCHIVE.pos); g.rotation.y = ARCHIVE.face; // 門面朝中央水晶
   const wallMat = applyStone(mat(0xffffff));
   const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
   add(new THREE.BoxGeometry(0.6, 4, 6), wallMat, -2.2, 2, 0);
@@ -740,13 +790,14 @@ function buildMage() {
   const orbMat = new THREE.MeshStandardMaterial({ color: 0x9a6cff, emissive: 0x7a4cff, emissiveIntensity: 1.6, roughness: 0.2 });
   const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18, 1), orbMat); orb.position.set(0.62, 2.75, 0.22); g.add(orb);
   orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 10), new THREE.MeshBasicMaterial({ color: 0x9a6cff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })));
-  return { group: g, orb, orbMat };
+  const orbLight = new THREE.PointLight(0x8a5cff, 0, 16, 2); orb.add(orbLight); // 夜晚發出紫光（跟著手杖球）
+  return { group: g, orb, orbMat, orbLight };
 }
 // 綠袍法師（村中嚮導 NPC）
 const mage = (() => {
   const built = buildMage();
-  const x = 6, z = 3, y = groundY(x, z);
-  built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(0 - x, 14 - z); scene.add(built.group); // 面向玩家入口
+  const x = 4.4, z = 15.2, y = groundY(x, z);
+  built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(0 - x, 0 - z); scene.add(built.group); // 面向中央水晶（村心）
   const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 3.5, 0); built.group.add(o);
   return { ...built, pos: new THREE.Vector3(x, y, z), baseY: y, el, mode: -1 };
 })();
@@ -904,9 +955,9 @@ const isDone = (id) => progress.completed.includes(id);
 // 世界繁榮度（0 破敗 → 1 繁榮）：發現各 0.3、進化各 0.7
 let vibrancy = 0, vibrancyTarget = 0, greatGlow = 0;
 function computeVibrancy() {
-  let d = 0, c = 0;
-  for (const r of ruinAt) { if (isDisc(r.id)) d++; if (isDone(r.id)) c++; }
-  vibrancyTarget = (d * 0.3 + c * 0.7) / ruinAt.length;
+  // 世界亮度為二元：全部遺跡完成前維持夜晚(0)，全部完成才切到白天(1)。
+  // 個別遺跡的發現／完成不改變世界亮度（只改變該遺跡自身的水晶／光束）。
+  vibrancyTarget = ruinAt.every((r) => isDone(r.id)) ? 1 : 0;
 }
 
 // ── HUD ─────────────────────────────────────────────────────────
@@ -941,7 +992,7 @@ actbtnEl.addEventListener('click', () => { if (panelId) suppressed.add(panelId);
 let jumpPending = false;
 const jumpBtn = document.getElementById('jumpbtn');
 jumpBtn.addEventListener('pointerdown', (e) => { jumpPending = true; SFX.unlock(); e.preventDefault(); });
-pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); computeVibrancy(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); } });
+pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); } });
 
 // 點亮遺跡外觀（水晶、光束、標籤）
 function lightRuin(p) {
@@ -959,7 +1010,7 @@ function startBattle(p) {
     if (won) {
       if (!isDisc(p.data.id)) progress.discovered.push(p.data.id);
       if (!isDone(p.data.id)) progress.completed.push(p.data.id);
-      save(); lightRuin(p); updateHud(); computeVibrancy(); spawnBurst(p); afterCompleteToast(p); checkAllDone();
+      save(); lightRuin(p); updateHud(); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone();
     }
     suppressed.delete(p.data.id);
   });
@@ -975,12 +1026,58 @@ function discover(p) {
 let allDoneShown = false, finaleActive = false, finaleT = 0, finaleShown = false;
 function afterCompleteToast(p) {
   const left = ruinAt.length - progress.completed.length;
-  if (left > 0) toast('🎉 遺跡淨化！', `${p.data.title} 已點亮 — 再點亮 ${left} 座，中央大水晶就會甦醒`);
+  const title = p.data.defense ? `🛡️ 重建了「${p.data.defense}」` : '🎉 遺跡淨化！';
+  if (left > 0) toast(title, `${p.data.title} 已點亮 — 再點亮 ${left} 座，中央大水晶就會甦醒`);
 }
 function showFinaleOverlay() {
   const f = document.getElementById('finale');
   f.querySelector('.badges').innerHTML = ruinAt.map((r) => `<span title="${r.title}">${r.emoji}</span>`).join('');
+  // B 英雄守則卷軸：把每關現成的 tip（回家小提醒）收攏成可截圖的個人行動清單
+  f.querySelector('.scroll').innerHTML = ruinAt
+    .map((r) => `<div class="item"><span class="ico">${r.emoji}</span><span class="tx"><b>${r.defense || r.title}</b>${r.tip || ''}</span></div>`)
+    .join('');
   f.classList.add('show');
+  // D 通關後信心檢核 + 前後比對
+  const cc = f.querySelector('.confcompare'); if (cc) cc.textContent = '';
+  if (localStorage.getItem(CONF_PRE) != null && localStorage.getItem(CONF_POST) == null) {
+    setTimeout(() => showConfidence('post', renderConfCompare), 800);
+  } else {
+    renderConfCompare();
+  }
+}
+// 前後測信心檢核（純前端 localStorage；不外傳）
+const CONF_PRE = 'ssd-village-conf-pre', CONF_POST = 'ssd-village-conf-post';
+const CONF_FACES = ['😟', '😐', '🙂'];
+const CONF_LEVELS = [{ e: '😟', l: '不太有把握' }, { e: '😐', l: '普通' }, { e: '🙂', l: '蠻有把握' }];
+function showConfidence(phase, onDone) {
+  const root = document.getElementById('confidence');
+  root.querySelector('.cq').textContent = phase === 'pre'
+    ? '出發前，你對「保護自己的數位安全」有多少把握？' : '走完這趟旅程，現在你的把握是？';
+  root.querySelector('.csub').textContent = phase === 'pre'
+    ? '一指選一個就好，通關時會再問一次。' : '和出發前比比看吧。';
+  const opts = root.querySelector('.opts'); opts.innerHTML = '';
+  CONF_LEVELS.forEach((lv, i) => {
+    const b = document.createElement('button'); b.className = 'opt';
+    b.innerHTML = `<span class="e">${lv.e}</span><span class="l">${lv.l}</span>`;
+    b.addEventListener('click', () => {
+      try { localStorage.setItem(phase === 'pre' ? CONF_PRE : CONF_POST, String(i)); } catch (e) { /* ignore */ }
+      root.classList.remove('show'); SFX.unlock(); onDone && onDone();
+    });
+    opts.appendChild(b);
+  });
+  root.classList.add('show');
+}
+function renderConfCompare() {
+  const el = document.querySelector('#finale .confcompare'); if (!el) return;
+  const pre = localStorage.getItem(CONF_PRE), post = localStorage.getItem(CONF_POST);
+  if (pre == null || post == null) { el.textContent = ''; return; }
+  const a = +pre, b = +post;
+  const msg = b > a ? '把握度提升了，繼續保持！' : b === a ? '穩穩守住了把握度。' : '別氣餒，回章節再練練就更穩。';
+  el.textContent = `把握度：${CONF_FACES[a]} → ${CONF_FACES[b]}　${msg}`;
+}
+function maybeShowPreConfidence() {
+  if (localStorage.getItem(CONF_PRE) != null) return;
+  setTimeout(() => showConfidence('pre'), 800);
 }
 function checkAllDone() {
   if (allDoneShown || !ruinAt.every((r) => isDone(r.id))) return;
@@ -1027,15 +1124,17 @@ function resetRuinVisual(p) {
 function resetProgress() {
   if (!window.confirm('確定要重置所有遺跡進度嗎？此動作無法復原。')) return;
   progress = { discovered: [], completed: [] }; save();
+  try { localStorage.removeItem(CONF_PRE); localStorage.removeItem(CONF_POST); } catch (e) { /* ignore */ }
+  const cc = document.querySelector('#finale .confcompare'); if (cc) cc.textContent = '';
   allDoneShown = false; pinnedId = null; suppressed.clear(); hidePanel();
   POIS.forEach((p) => { if (p.isRuin) resetRuinVisual(p); });
-  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; updateHud(); computeVibrancy();
+  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; updateHud(); computeVibrancy(); assignFireflies();
   toast('🔄 進度已重置', '所有遺跡回到未發現狀態');
 }
 document.getElementById('resetbtn').addEventListener('click', resetProgress);
 // 還原已發現遺跡的外觀
 POIS.forEach((p) => { if (p.isRuin && isDisc(p.data.id)) lightRuin(p); });
-updateHud(); allDoneShown = ruinAt.every((r) => isDone(r.id)); computeVibrancy(); vibrancy = vibrancyTarget;
+updateHud(); allDoneShown = ruinAt.every((r) => isDone(r.id)); computeVibrancy(); vibrancy = vibrancyTarget; assignFireflies();
 
 // 擴散光環（mul=擴張倍率、dur=持續秒數）
 const bursts = [];
@@ -1113,14 +1212,40 @@ let walkPhase = 0, mmAcc = 0, lastStepFloor = 0;
 let jumpVel = 0, jumpOff = 0, jumpHeld = false; // 跳躍：地面高度之上的位移
 let doubleJumped = false, spinning = false, spinT = 0, yawBeforeSpin = 0; // 二段跳 + 空中轉一圈
 const SPIN_DUR = 0.55;
+// 座標框（開發／定位用）：預設隱藏，按 G 切換顯示（輸入框聚焦時不觸發，例如戰鬥密碼題）
+const coordsEl = document.getElementById('coords');
+let fpsAvg = 60; // 平滑後的 FPS（座標框內顯示，方便量測效能）
+// 火把「探照」即時可調參數（座標框開啟時：[ ] 選參數、- = 增減）；調好後把數值告訴我即可固定
+const torchTune = { spotInt: 300, spotAng: 0.36, spotPen: 0.5, spotFwd: 25, spotH: 5, spotDist: 200, ptInt: 32, nightBr: 0.4 };
+const torchParams = [
+  { k: 'spotInt', label: '強度', step: 10, fmt: (v) => v.toFixed(0) },
+  { k: 'spotAng', label: '角度', step: 0.02, fmt: (v) => v.toFixed(2) + 'π', max: 0.49 },
+  { k: 'spotPen', label: '邊緣', step: 0.05, fmt: (v) => v.toFixed(2), max: 1 },
+  { k: 'spotFwd', label: '前距', step: 0.5, fmt: (v) => v.toFixed(1) },
+  { k: 'spotH', label: '高度', step: 0.2, fmt: (v) => v.toFixed(1) },
+  { k: 'spotDist', label: '距離', step: 2, fmt: (v) => v.toFixed(0) },
+  { k: 'ptInt', label: '點光', step: 4, fmt: (v) => v.toFixed(0) },
+  { k: 'nightBr', label: '夜亮', step: 0.05, fmt: (v) => v.toFixed(2), max: 1 },
+];
+let torchSel = 0;
+addEventListener('keydown', (e) => {
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  if (e.code === 'KeyG') { coordsEl.classList.toggle('show'); return; }
+  if (!coordsEl.classList.contains('show')) return;
+  if (e.code === 'BracketLeft') torchSel = (torchSel + torchParams.length - 1) % torchParams.length;
+  else if (e.code === 'BracketRight') torchSel = (torchSel + 1) % torchParams.length;
+  else if (e.code === 'Minus') { const p = torchParams[torchSel]; torchTune[p.k] = Math.max(0, +(torchTune[p.k] - p.step).toFixed(3)); }
+  else if (e.code === 'Equal') { const p = torchParams[torchSel]; torchTune[p.k] = +(Math.min(torchTune[p.k] + p.step, p.max ?? Infinity)).toFixed(3); }
+});
 
 function animate() {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
+  fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 用未截斷的原始幀時間估 FPS
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
   jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
-  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; battle.update(dt); composer.render(); return; }
+  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); composer.render(); return; }
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
@@ -1236,9 +1361,26 @@ function animate() {
   // 太陽跟著角色
   sun.position.set(hero.position.x + 48, hero.position.y + 72, hero.position.z + 32);
   sun.target.position.copy(hero.position); sun.target.updateMatrixWorld();
-  // 隨身火把：跟著主角、略偏視線前方；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
-  torch.position.set(hero.position.x + fwd.x * 2, hero.position.y + 2.4, hero.position.z + fwd.z * 2);
-  torch.intensity = archiveActive ? 0 : 52 * (1 - 0.7 * vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
+  // 隨身火把：朝「主角正面」方向（不跟鏡頭轉）；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
+  const hfx = Math.sin(hero.rotation.y), hfz = Math.cos(hero.rotation.y); // 主角正面方向（+z 面）
+  torch.position.set(hero.position.x + hfx * 2, hero.position.y + 2.4, hero.position.z + hfz * 2);
+  torch.intensity = archiveActive ? 0 : torchTune.ptInt * (1 - vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
+  // 火把地面光錐（探照效果，參數可在座標框即時調整）：從頭頂斜射到主角正面的地面；天亮(vibrancy→1)後關閉
+  torchGround.angle = torchTune.spotAng * Math.PI; torchGround.penumbra = torchTune.spotPen; torchGround.distance = torchTune.spotDist;
+  torchGround.position.set(hero.position.x, hero.position.y + torchTune.spotH, hero.position.z);
+  { const gx = hero.position.x + hfx * torchTune.spotFwd, gz = hero.position.z + hfz * torchTune.spotFwd; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
+  torchGround.intensity = archiveActive ? 0 : torchTune.spotInt * (1 - vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
+  // 螢火蟲：環繞各「已完成」遺跡漂浮閃爍（點綴）；室內關閉
+  {
+    const ffBright = archiveActive ? 0 : 1;
+    for (const f of fireflies) {
+      if (!f.on || ffBright <= 0) { if (f.m.opacity) f.m.opacity = 0; continue; }
+      const fx = f.cx + f.ox + Math.sin(t * f.sx + f.ph) * f.ax;
+      const fz = f.cz + f.oz + Math.cos(t * f.sz + f.ph) * f.az;
+      f.s.position.set(fx, f.cy + f.h + Math.sin(t * f.bob + f.ph) * 0.6, fz);
+      f.m.opacity = ffBright * (0.18 + 0.82 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph * 2.3)));
+    }
+  }
 
   // POI 鄰近 / 發現 / 面板
   let near = null, nd = Infinity;
@@ -1292,6 +1434,8 @@ function animate() {
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
   gradePass.uniforms.uVibrancy.value = archiveActive ? 1 : vibrancy; // 檔案室內固定滿色
+  gradePass.uniforms.uNightBr.value = torchTune.nightBr;             // 夜晚亮度（座標框可即時調）
+  setWorldLight(archiveActive ? 1 : vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
   skyMat.uniforms.top.value.lerpColors(SKY_TOP_D, SKY_TOP_A, vibrancy);
   skyMat.uniforms.bottom.value.lerpColors(SKY_BOT_D, SKY_BOT_A, vibrancy);
   scene.fog.color.lerpColors(FOG_D, FOG_A, vibrancy);
@@ -1352,6 +1496,7 @@ function animate() {
   // 綠袍法師：呼吸擺動 + 法杖球脈動 + 靠近顯示提示
   mage.group.position.y = mage.baseY + Math.sin(t * 1.5) * 0.04;
   mage.orbMat.emissiveIntensity = 1.3 + Math.sin(t * 3) * 0.5;
+  mage.orbLight.intensity = archiveActive ? 0 : (1 - vibrancy) * 48 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉
   {
     const dm = Math.hypot(hero.position.x - mage.pos.x, hero.position.z - mage.pos.z);
     const want = (battle.active || finaleActive) ? 0 : (dm < 7 ? 1 : 0);
@@ -1395,10 +1540,18 @@ function animate() {
   // 腳印淡出
   for (let i = prints.length - 1; i >= 0; i--) { const f = prints[i]; f.t += dt; const k = f.t / f.dur; f.mat.opacity = f.op * (1 - k); if (k >= 1) { scene.remove(f.m); f.mat.dispose(); prints.splice(i, 1); } }
 
+  // 座標框（按 G 開啟時才更新）：座標／fps + 火把探照即時調參
+  if (coordsEl && coordsEl.classList.contains('show')) {
+    const hx = hero.position.x, hz = hero.position.z;
+    let deg = Math.atan2(hz, hx) * 180 / Math.PI; if (deg < 0) deg += 360;
+    const tuneStr = torchParams.map((p, i) => { const s = `${p.label} ${p.fmt(torchTune[p.k])}`; return i === torchSel ? `<b style="color:#ffd24b">▸${s}</b>` : s; }).join('　');
+    coordsEl.innerHTML = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}　｜　fps ${Math.round(fpsAvg)}<br>🔧 調參（[ ] 選・ − ＝ 增減）：${tuneStr}`;
+  }
+
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
   composer.render(); labelRenderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
 
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
-requestAnimationFrame(() => setTimeout(() => $('#loader').classList.add('hide'), 350));
+requestAnimationFrame(() => setTimeout(() => { $('#loader').classList.add('hide'); maybeShowPreConfidence(); }, 350));
