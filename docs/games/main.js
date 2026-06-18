@@ -1319,12 +1319,13 @@ function animate() {
   // 太陽跟著角色
   sun.position.set(hero.position.x + 48, hero.position.y + 72, hero.position.z + 32);
   sun.target.position.copy(hero.position); sun.target.updateMatrixWorld();
-  // 隨身火把：跟著主角、略偏視線前方；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
-  torch.position.set(hero.position.x + fwd.x * 2, hero.position.y + 2.4, hero.position.z + fwd.z * 2);
+  // 隨身火把：朝「主角正面」方向（不跟鏡頭轉）；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
+  const hfx = Math.sin(hero.rotation.y), hfz = Math.cos(hero.rotation.y); // 主角正面方向（+z 面）
+  torch.position.set(hero.position.x + hfx * 2, hero.position.y + 2.4, hero.position.z + hfz * 2);
   torch.intensity = archiveActive ? 0 : 52 * (1 - 0.7 * vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
-  // 火把地面光錐：從頭頂斜射到前方地面，照亮腳前的路
+  // 火把地面光錐：從頭頂斜射到主角正面的地面，照亮腳前的路
   torchGround.position.set(hero.position.x, hero.position.y + 3.4, hero.position.z);
-  { const gx = hero.position.x + fwd.x * 6, gz = hero.position.z + fwd.z * 6; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
+  { const gx = hero.position.x + hfx * 6, gz = hero.position.z + hfz * 6; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
   torchGround.intensity = archiveActive ? 0 : 120 * (1 - 0.7 * vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
   // 螢火蟲：固定地點群聚、漂浮閃爍；越暗越亮、室內關閉
   {
