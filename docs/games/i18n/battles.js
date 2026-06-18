@@ -1,0 +1,252 @@
+// 戰鬥內容（多語系）：守關怪物 + 課程小測驗。
+//
+// 結構分兩層（與 content.js 同樣概念）：
+//   STRUCT — 與語言無關：怪物視覺（color/accent/style）、題型 type、正解索引 correct、章節連結 link、
+//            釣魚信顯示網址 mailLink、真假網址清單 urls（url 與 real）。翻譯不會動到這些。
+//   TEXT   — 各語言文字：怪物 name/emoji、intro，以及每題的 q／options／why／釣魚信 from·subject·body。
+// 合併時 options 與題目「原順序」對齊，correct 索引才會正確；翻譯請維持選項順序。
+//
+// 題型 type：'mcq'（預設，四選一）／'phish'（擬真釣魚卡，二選一）／'url'（真假網址）／'password'（密碼強度條）。
+// ⚠️ 題目與解說屬資安教育內容，正式採用前請審閱正確性。
+const SITE = 'https://ssd.ocf.tw';
+
+// ── 結構（語言無關）──────────────────────────────────────────────
+const STRUCT = {
+  // 常見資安事件 → 釣魚巨怪
+  common: {
+    monster: { color: 0x4b6a8a, accent: 0xffe14d, style: 'angler' },
+    questions: [
+      { type: 'phish', isPhish: true, mailLink: 'http://accournt-verify.com/login?id=8821', link: `${SITE}/common/phishing.html` },
+      { type: 'url', urls: [
+        { url: 'https://accounts.google.com', real: true },
+        { url: 'https://accounts-google.secure-login.com', real: false },
+        { url: 'https://accounts.google.com.verify-id.net', real: false },
+      ], link: `${SITE}/common/phishing.html` },
+      { correct: 1, link: `${SITE}/common/leaked_password.html` },
+      { correct: 1, link: `${SITE}/chapter/profile/mfa.html` },
+      { correct: 1, link: `${SITE}/common/phishing.html` },
+    ],
+  },
+  // 個人資安 → 弱密碼史萊姆
+  personal: {
+    monster: { color: 0x57b89c, accent: 0x9affd1, style: 'slime' },
+    questions: [
+      { type: 'password', link: `${SITE}/chapter/profile/password.html` },
+      { correct: 1, link: `${SITE}/chapter/profile/password_manager.html` },
+      { correct: 0, link: `${SITE}/chapter/profile/password_manager.html` },
+      { correct: 1, link: `${SITE}/user_guide/devices/index.html` },
+      { correct: 1, link: `${SITE}/chapter/profile/mfa.html` },
+    ],
+  },
+  // 組織資安 → 勒索魔像
+  org: {
+    monster: { color: 0x5b8def, accent: 0x9fd0ff, style: 'golem' },
+    questions: [
+      { correct: 1, link: `${SITE}/org/backup/index.html` },
+      { correct: 1, link: `${SITE}/org/account/audit.html` },
+      { correct: 1, link: `${SITE}/org/data/role.html` },
+      { correct: 1, link: `${SITE}/org/devices/baseline.html` },
+      { correct: 1, link: `${SITE}/org/backup/index.html` },
+    ],
+  },
+  // 資安升級工具包 → 迷霧幽靈
+  guide: {
+    monster: { color: 0x8d7bc4, accent: 0xd7b8ff, style: 'ghost' },
+    questions: [
+      { correct: 1, link: `${SITE}/assessment/` },
+      { correct: 1, link: `${SITE}/assessment/` },
+      { correct: 1, link: `${SITE}/assessment/checklist/` },
+      { correct: 1, link: `${SITE}/assessment/` },
+    ],
+  },
+  // 工具推薦 → 資料蠹蟲
+  tools: {
+    monster: { color: 0xc99a3a, accent: 0xffd866, style: 'bug' },
+    questions: [
+      { correct: 1, link: `${SITE}/tools/` },
+      { correct: 1, link: `${SITE}/chapter/profile/mfa.html` },
+      { correct: 1, link: `${SITE}/chapter/network/vpn.html` },
+      { correct: 1, link: `${SITE}/org/backup/index.html` },
+    ],
+  },
+};
+
+// ── 各語言文字 ───────────────────────────────────────────────────
+const TEXT = {
+  'zh-Hant': {
+    common: {
+      monster: { name: '釣魚巨怪', emoji: '🎣' },
+      intro: '一隻披著「official」外皮的巨怪擋在遺跡前，靠各種假訊息誘人上鉤。用你的資安知識回擊牠！',
+      questions: [
+        {
+          q: '這封信進了你的收件匣——你的判斷是？',
+          mail: {
+            from: '"帳號安全中心" <security@accournt-verify.com>',
+            subject: '【緊急】偵測到異常登入，24 小時內未驗證將永久停用',
+            body: '我們偵測到你的帳號出現異常登入活動。為保障安全，請立即點擊下方連結登入驗證身分，否則帳號將於 24 小時內被永久停用。',
+          },
+          why: '這是典型釣魚信：寄件網域拼錯（accournt-verify.com 不是官方）、用「24 小時內停用」製造急迫、要你點信中連結登入。正確做法是不點，改用自己平常的書籤或官方 App 登入確認。',
+        },
+        {
+          q: '你要登入 Google 帳號——下列哪一個才是「真正」的官方網址？',
+          why: '看網域要找「最後一段主網域」：真正的官方主網域是 google.com。secure-login.com、verify-id.net 才是這兩個假網址真正的網域，google 只是被塞進去混淆。https 鎖頭或看起來有 google 字樣都不能當作可信依據。',
+        },
+        {
+          q: '你不小心在可疑網站輸入了某服務的密碼，第一步該做什麼？',
+          options: ['先觀察幾天，沒被盜再說', '透過官方管道登入該服務、立刻改密碼，並檢查／開啟多重驗證', '只把這個網站的密碼改掉就好', '改成另一組你其他帳號也在用的舊密碼'],
+          why: '立即用官方管道改密碼並開啟 MFA；若其他帳號用了相同密碼，也要一起換掉，避免被「撞庫」連環攻破。',
+        },
+        {
+          q: '為什麼開啟「多重驗證（MFA）」能在密碼被騙走時保護你？',
+          options: ['因為密碼會自動變長', '因為登入還需要第二關（手機驗證碼或實體金鑰），光有密碼進不來', '因為開了之後密碼就不會外洩', '因為這樣就不必再記密碼了'],
+          why: 'MFA 多了一道關卡，即使密碼外洩，攻擊者沒有你的第二因素（驗證碼或金鑰）仍無法登入。它不會讓密碼「不外洩」，而是讓外洩的密碼不夠用。',
+        },
+        {
+          q: '收到主管訊息「很急！馬上幫我買點數卡，把序號拍給我」，較安全的做法是？',
+          options: ['主管很急，立刻照做', '透過另一個管道（當面或打電話）向本人確認再說', '在同一個對話裡回問「請問是本人嗎」', '先用自己的錢墊，金額不大應該還好'],
+          why: '假冒主管／熟人的社交工程很常見，且歹徒就在同一個對話裡，回問「是不是本人」沒有意義。凡涉及金錢、點數、轉帳，務必換一個管道親自向本人確認。',
+        },
+      ],
+    },
+    personal: {
+      monster: { name: '弱密碼史萊姆', emoji: '🦠' },
+      intro: '一坨由弱密碼凝聚而成的史萊姆，最怕你把每個帳號都換上又長又獨特的密碼。',
+      questions: [
+        {
+          q: '弱密碼史萊姆最怕強密碼——在下面打造一組「又長又難猜」的密碼來反擊！',
+          why: '密碼的「長度」與「不可預測性」最重要。把幾個不相關的詞組成長密碼短語（或加上大小寫、數字、符號），既好記又難被破解；別用生日、姓名或常見密碼。',
+        },
+        {
+          q: '為什麼不該在多個網站重複使用同一組密碼？',
+          options: ['只是比較難記而已', '一個網站外洩，駭客會拿同組帳密去試你其他網站（撞庫攻擊）', '只要密碼夠複雜，重複用也沒關係', '只有不重要的網站才需要不同密碼'],
+          why: '這叫「撞庫」。只要一處外洩，重複使用的帳號就會被連環攻破——再複雜的密碼一旦重複使用，也擋不住。最好為每個網站使用不同的強密碼。',
+        },
+        {
+          q: '密碼管理器最主要的好處是？',
+          options: ['幫你為每個網站保存不同的強密碼，你只需記住一組主密碼', '把所有密碼都改成同一組好記的', '取代多重驗證，開了就不必再開 MFA', '取代防毒軟體'],
+          why: '密碼管理器幫你產生並保存每個網站獨一無二的強密碼，你只要記住一組主密碼即可。它不會取代 MFA，兩者要一起用。',
+        },
+        {
+          q: '手機、電腦怎麼設定才安全？',
+          options: ['不設鎖比較方便', '設定螢幕鎖（PIN／生物辨識）並開啟系統自動更新', '更新常出問題，先關掉自動更新比較穩', '設個四位數生日當鎖比較好記'],
+          why: '螢幕鎖與自動更新是最基本的兩道防護：前者防止他人直接操作，後者及時修補安全漏洞——關掉更新等於把已知漏洞一直留著。',
+        },
+        {
+          q: '開啟多重驗證（MFA）後，萬一手機遺失，怎樣才不會被鎖在帳號外？',
+          options: ['不用事先準備，到時候再說', '事先保存好「備份碼」，並設定第二種驗證方式（如另一裝置或安全金鑰）', '把備份碼截圖存在手機相簿就好', '乾脆別開 MFA，免得換機麻煩'],
+          why: '啟用 MFA 時就先保存備份碼、並準備備援驗證方式。備份碼若只截圖存在手機相簿，手機遺失就一起沒了，也可能被偷看，要妥善另存。',
+        },
+      ],
+    },
+    org: {
+      monster: { name: '勒索魔像', emoji: '🗿' },
+      intro: '一尊由疏於管理的系統堆砌而成的魔像，最怕健全的備份、權限控管與裝置基準。',
+      questions: [
+        {
+          q: '遇到勒索軟體把檔案加密了，最能救回資料的是？',
+          options: ['趕快付贖金把檔案贖回來', '平時就做好的「異地、離線」備份', '用防毒軟體掃描就能把檔案解回來', '重灌系統，檔案自然會回來'],
+          why: '付贖金不保證能還原，還可能成為再次目標；防毒與重灌都救不回已被加密的檔案。可靠的離線／異地備份（3-2-1 原則）才是救命關鍵。',
+        },
+        {
+          q: '員工離職時，組織的帳號管理應該怎麼做？',
+          options: ['帳號先留著，之後可能還會用到', '立即停用或回收其帳號與各項權限', '只改密碼、帳號繼續開著', '等系統定期清理就好'],
+          why: '離職、轉調都要即時調整權限。未回收的帳號是常見的入侵破口——只改密碼、留著帳號仍有風險。',
+        },
+        {
+          q: '「最小權限原則」是指什麼？',
+          options: ['統一都給管理員權限最方便', '只給每個人完成工作所需的最小權限', '主管一律給最高權限', '先全部開放，出事再收回'],
+          why: '只給必要權限，可在帳號被盜或內部失誤時，把可能造成的傷害降到最低。',
+        },
+        {
+          q: '公務電腦的基本安全基準，應該包含？',
+          options: ['為了相容性關閉系統更新', '開啟磁碟加密、自動更新、螢幕鎖與防毒', '全公司共用一個管理帳號比較好管', '把防毒關掉避免影響效能'],
+          why: '為公務裝置訂出一致的安全基準（加密、更新、鎖定、防毒），是組織防護的地基；共用帳號則會讓事件無法追查。',
+        },
+        {
+          q: '關於組織的備份，下列哪個觀念正確？',
+          options: ['備份設定好就一勞永逸', '要定期演練「還原」，確認備份真的救得回來', '備份放在同一台機器上就夠了', '有雲端同步就等於有備份'],
+          why: '沒有測試過還原的備份，等於沒有備份。雲端「同步」會把刪除或加密一起同步過去，並不等於備份；定期演練還原才能確保關鍵時刻派得上用場。',
+        },
+      ],
+    },
+    guide: {
+      monster: { name: '迷霧幽靈', emoji: '👻' },
+      intro: '一團由「不知道該從哪做起」的迷霧凝成的幽靈，最怕清楚的盤點、排序與紀錄。',
+      questions: [
+        {
+          q: '幫組織做一次「資安體檢」，較好的起點是？',
+          options: ['先買一套最貴的資安工具', '先盤點現況——裝置、帳號、資料目前的狀態', '先辦一場全員資安講座', '先把所有系統都換新'],
+          why: '先盤點現況，才能找出缺口、排出優先序，避免買了用不到或重複的工具。',
+        },
+        {
+          q: '資安改善的資源有限時，應該如何排定優先順序？',
+          options: ['想到什麼就先做什麼', '依「風險」（發生可能性 × 造成衝擊）由高到低處理', '先把預算花在最貴的工具上', '先挑最簡單、最快看到成果的做'],
+          why: '以風險為導向，先處理「最可能發生且後果最嚴重」的項目，效益最高；只挑簡單的做容易漏掉真正致命的缺口。',
+        },
+        {
+          q: '要追蹤資安改善的進度，最實用的做法是？',
+          options: ['靠負責人記在腦中就好', '用共用的檢查清單／紀錄表記下「做到哪、待辦什麼」', '等出事了再回頭檢討', '每年大盤點一次就夠'],
+          why: '檢查清單與紀錄表能讓組織、顧問與個人對齊進度，避免單靠記憶而遺漏。',
+        },
+        {
+          q: '導入新的資安措施之後，應該怎麼做？',
+          options: ['導入完成就可以放著不管', '定期檢視成效，並依實際情況調整', '立刻把所有措施再換一輪', '交給工具自動執行，不必再看'],
+          why: '資安是持續循環：導入後要檢視成效、收集回饋，再滾動調整。',
+        },
+      ],
+    },
+    tools: {
+      monster: { name: '資料蠹蟲', emoji: '🐛' },
+      intro: '一隻專咬「沒在用好工具」的蠹蟲，最怕密碼管理器、驗證器、VPN 與定期備份。',
+      questions: [
+        {
+          q: '想為每個網站都用不同的強密碼又記得住，最推薦使用？',
+          options: ['把密碼寫在便利貼貼在螢幕邊', '密碼管理器', '存在瀏覽器記事本／手機備忘錄裡', '用同一組密碼但每個網站加個編號'],
+          why: '密碼管理器能為每個網站保存獨特強密碼，你只需記住一組主密碼；記事本或「加編號」的密碼都很容易被看到或猜到。',
+        },
+        {
+          q: '驗證器 App（如 Authenticator）的用途是？',
+          options: ['幫你掃毒', '產生一次性驗證碼，作為登入時的第二道關卡（MFA）', '幫你自動產生並記住密碼', '加密你的網路連線'],
+          why: '驗證器每隔數十秒產生一組一次性碼，當作密碼之外的第二因素。產生並記住密碼是密碼管理器、加密連線是 VPN，別搞混了。',
+        },
+        {
+          q: '在公共 Wi-Fi 想保護連線隱私，可以考慮使用？',
+          options: ['關掉螢幕亮度', '信譽良好的 VPN', '把手機調成飛航模式再連', '只要網站有 https 就完全不必擔心'],
+          why: 'VPN 會把你的連線加密，在不可信的公共網路上多一層保護。https 只保護「該網站」的連線，VPN 則保護整台裝置的對外流量。',
+        },
+        {
+          q: '想避免重要資料遺失，最實在的工具與習慣是？',
+          options: ['只存在一台電腦裡', '定期備份，並分散存放（雲端 + 離線多份）', '只用雲端同步一份就夠', '偶爾想到再手動複製到隨身碟'],
+          why: '依 3-2-1 原則定期備份、分散存放，才能在故障、遺失或勒索時把資料救回來；單一雲端同步會把刪除或加密一起同步，不算備份。',
+        },
+      ],
+    },
+  },
+  // 'zh-Hans': { ... }  ← Phase 2 補上
+  // 'en':      { ... }  ← Phase 3 補上
+};
+
+// ── 合併：結構 + 文字 → main.js / battle.js 既有題目形狀 ──────────
+const DEFAULT_TEXT_LANG = 'zh-Hant';
+function assemble(lang) {
+  const t = TEXT[lang] || TEXT[DEFAULT_TEXT_LANG];
+  const out = {};
+  for (const id of Object.keys(STRUCT)) {
+    const s = STRUCT[id], ts = t[id];
+    out[id] = {
+      monster: { ...s.monster, ...ts.monster },
+      intro: ts.intro,
+      questions: s.questions.map((sq, i) => {
+        const tq = ts.questions[i];
+        const q = { ...sq, q: tq.q, why: tq.why };
+        if (tq.options) q.options = tq.options;
+        if (sq.type === 'phish') q.mail = { from: tq.mail.from, subject: tq.mail.subject, body: tq.mail.body, link: sq.mailLink };
+        return q;
+      }),
+    };
+  }
+  return out;
+}
+
+export const BATTLES_LANGS = Object.keys(TEXT);
+export const BATTLES_ALL = Object.fromEntries(BATTLES_LANGS.map((l) => [l, assemble(l)]));

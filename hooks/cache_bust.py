@@ -13,8 +13,12 @@ import pathlib
 import re
 
 GAMES = "games"
-# 參與快取破壞的本地模組（固定順序，雜湊才穩定）
-MODULES = ["audio.js", "battle.js", "battles.js", "content.js", "main.js", "terrain.js"]
+# 參與快取破壞的本地模組（固定順序，雜湊才穩定）。
+# 多語系內容／測驗／介面字典移到 i18n/ 子目錄（main.js 以 './i18n/x.js' 靜態匯入）。
+MODULES = [
+    "audio.js", "battle.js", "main.js", "terrain.js",
+    "i18n/lang.js", "i18n/content.js", "i18n/battles.js", "i18n/ui.js",
+]
 
 
 IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")

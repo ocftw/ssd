@@ -71,22 +71,24 @@ function buildMonster(data) {
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // 密碼強度啟發式評分（教育用，非真正的密碼學強度估算）
+// 回傳 level 鍵（empty/common/short/mid/variety/ok）；對應的提示文字由 ui.battle.pwMsg 提供（多語系）。
 function scorePw(pw, common) {
   const len = pw.length;
-  if (!len) return { pct: 6, color: '#9aa1b0', ok: false, msg: '在上面輸入一組密碼試試…' };
+  if (!len) return { pct: 6, color: '#9aa1b0', ok: false, level: 'empty' };
   const lc = pw.toLowerCase();
   const isCommon = common.some((c) => lc.includes(c)) || /^(.)\1+$/.test(pw) || /^(0123|1234|2345|3456|4567|5678|6789|abcd|qwer)/.test(lc);
   const variety = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((re) => re.test(pw)).length;
-  if (isCommon) return { pct: 28, color: '#d0433a', ok: false, msg: '⚠️ 這是常見或可預測的密碼，太容易被猜中' };
-  if (len < 8) return { pct: 30, color: '#d0433a', ok: false, msg: '太短了——長度是密碼最重要的防線' };
-  if (len < 12) return { pct: 58, color: '#f0a500', ok: false, msg: '再長一點（建議 12 字以上）會更難破解' };
-  if (variety < 2 && len < 16) return { pct: 72, color: '#f0a500', ok: false, msg: '夠長了！再加點變化（大小寫／數字／符號），或湊到 16 字以上' };
-  return { pct: 100, color: '#3aa45b', ok: true, msg: '✓ 又長又難猜——這組可以！出招吧' };
+  if (isCommon) return { pct: 28, color: '#d0433a', ok: false, level: 'common' };
+  if (len < 8) return { pct: 30, color: '#d0433a', ok: false, level: 'short' };
+  if (len < 12) return { pct: 58, color: '#f0a500', ok: false, level: 'mid' };
+  if (variety < 2 && len < 16) return { pct: 72, color: '#f0a500', ok: false, level: 'variety' };
+  return { pct: 100, color: '#3aa45b', ok: true, level: 'ok' };
 }
 
 export class BattleSystem {
-  constructor({ scene, camera, hero }) {
+  constructor({ scene, camera, hero, ui }) {
     this.scene = scene; this.camera = camera; this.hero = hero;
+    this.ui = ui;   // 多語系介面字串（由 main.js 注入；含 battle 子物件）
     this.active = false; this.mon = null; this.state = 'idle'; this.stateT = 0; this.locked = false;
     this.monPos = new THREE.Vector3(); this.dir = new THREE.Vector3(); this.right = new THREE.Vector3();
     this._camPos = new THREE.Vector3(); this._look = new THREE.Vector3();
@@ -139,7 +141,7 @@ export class BattleSystem {
   _renderHearts() { this.el.hearts.innerHTML = ''; for (let i = 0; i < this.maxHearts; i++) { const s = document.createElement('span'); s.textContent = i < this.hearts ? '🛡️' : '🤍'; this.el.hearts.appendChild(s); } }
   _renderQuestion() {
     const q = this.data.questions[this.qi]; this.locked = false;
-    this.el.fb.classList.remove('show'); this.el.q.textContent = `第 ${this.qi + 1} / ${this.data.questions.length} 題　${q.q}`;
+    this.el.fb.classList.remove('show'); this.el.q.textContent = this.ui.battle.qCounter(this.qi + 1, this.data.questions.length, q.q);
     this.el.opts.innerHTML = '';
     const type = q.type || 'mcq';
     if (type === 'phish') return this._renderPhish(q);
@@ -155,14 +157,16 @@ export class BattleSystem {
       this.locked = true;
       this.monHP--; this._renderHP(); this._hit();
       const won = this.monHP <= 0;
-      this._feedback(true, q, won ? '🎉 淨化成功！' : '✓ 答對了！出招！', won ? '撤退凱旋' : '繼續', () => (won ? this._finish(true) : this._next()));
+      const b = this.ui.battle;
+      this._feedback(true, q, won ? b.win : b.correct, won ? b.retreat : b.next, () => (won ? this._finish(true) : this._next()));
     } else {
       this.locked = true;
       this.hearts--; this._renderHearts(); this._monsterAttack();
+      const b = this.ui.battle;
       if (this.hearts <= 0) {
-        this._feedback(false, q, '🛡️ 防護被擊穿了…', '先去讀章節再來', () => this._finish(false));
+        this._feedback(false, q, b.defeated, b.goRead, () => this._finish(false));
       } else {
-        this._feedback(false, q, '✗ 中招了！看懂下面的說明，再試一次 →', '再試一次', () => { this.el.fb.classList.remove('show'); this.locked = false; onWrongRetry && onWrongRetry(); });
+        this._feedback(false, q, b.wrongRetry, b.tryAgain, () => { this.el.fb.classList.remove('show'); this.locked = false; onWrongRetry && onWrongRetry(); });
       }
     }
   }
@@ -171,15 +175,16 @@ export class BattleSystem {
   _renderPhish(q) {
     this.locked = false;
     const m = q.mail || {};
+    const b = this.ui.battle;
     const wrap = document.createElement('div'); wrap.className = 'interactive phish';
     wrap.innerHTML =
       '<div class="phish-card">' +
-      `<div class="ph-row"><span class="ph-k">寄件人</span><span class="ph-v">${esc(m.from)}</span></div>` +
-      `<div class="ph-row"><span class="ph-k">主旨</span><span class="ph-v">${esc(m.subject)}</span></div>` +
+      `<div class="ph-row"><span class="ph-k">${esc(b.phFrom)}</span><span class="ph-v">${esc(m.from)}</span></div>` +
+      `<div class="ph-row"><span class="ph-k">${esc(b.phSubject)}</span><span class="ph-v">${esc(m.subject)}</span></div>` +
       `<div class="ph-body">${esc(m.body)}</div>` +
       (m.link ? `<div class="ph-link">🔗 ${esc(m.link)}</div>` : '') +
       '</div>' +
-      '<div class="phish-btns"><button class="opt ph-yes">🚩 這是釣魚／詐騙</button><button class="opt ph-no">✅ 這是正常訊息</button></div>';
+      `<div class="phish-btns"><button class="opt ph-yes">${esc(b.phYes)}</button><button class="opt ph-no">${esc(b.phNo)}</button></div>`;
     this.el.opts.appendChild(wrap);
     const decide = (saysPhish) => {
       if (this.locked) return; this.locked = true;
@@ -216,19 +221,20 @@ export class BattleSystem {
   // 密碼強度即時條：打造一組夠強的密碼才能出招（做中學）
   _renderPassword(q) {
     this.locked = false;
+    const b = this.ui.battle;
     const wrap = document.createElement('div'); wrap.className = 'interactive pw';
     wrap.innerHTML =
-      '<input class="pw-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="在這裡輸入一組密碼試試…" />' +
+      `<input class="pw-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${esc(b.pwPlaceholder)}" />` +
       '<div class="pw-meter"><i></i></div>' +
       '<div class="pw-tip"></div>' +
-      '<button class="opt pw-go" disabled>用這組密碼出招 →</button>';
+      `<button class="opt pw-go" disabled>${esc(b.pwGo)}</button>`;
     this.el.opts.appendChild(wrap);
     const input = wrap.querySelector('.pw-input');
     const bar = wrap.querySelector('.pw-meter i');
     const tip = wrap.querySelector('.pw-tip');
     const go = wrap.querySelector('.pw-go');
     const common = q.common || ['12345678', 'password', 'qwerty', '111111', 'abc123', 'iloveyou', '000000', 'letmein', 'admin', '123456'];
-    const refresh = () => { const r = scorePw(input.value, common); bar.style.width = r.pct + '%'; bar.style.background = r.color; tip.textContent = r.msg; tip.style.color = r.color; go.disabled = !r.ok; };
+    const refresh = () => { const r = scorePw(input.value, common); bar.style.width = r.pct + '%'; bar.style.background = r.color; tip.textContent = b.pwMsg[r.level]; tip.style.color = r.color; go.disabled = !r.ok; };
     input.addEventListener('input', refresh); refresh();
     go.addEventListener('click', () => { if (this.locked || go.disabled) return; this.locked = true; input.disabled = true; go.disabled = true; this._judge(true, q, () => this._renderQuestion()); });
   }
@@ -243,14 +249,16 @@ export class BattleSystem {
       btns.forEach((b, i) => { b.disabled = true; if (i === idx) b.classList.add('right'); else if (small) b.style.display = 'none'; });
       this.monHP--; this._renderHP(); this._hit();
       const won = this.monHP <= 0;
-      this._feedback(true, q, won ? '🎉 淨化成功！' : '✓ 答對了！出招！', won ? '撤退凱旋' : '繼續', () => (won ? this._finish(true) : this._next()));
+      const bt = this.ui.battle;
+      this._feedback(true, q, won ? bt.win : bt.correct, won ? bt.retreat : bt.next, () => (won ? this._finish(true) : this._next()));
     } else {
       this.hearts--; this._renderHearts(); this._monsterAttack();
       btns.forEach((b, i) => { b.disabled = true; if (i === idx) b.classList.add('wrong'); if (i === q.correct) b.classList.add('right'); });
+      const bt = this.ui.battle;
       if (this.hearts <= 0) {
         this.locked = true;
         if (small) btns.forEach((b, i) => { if (i !== q.correct) b.style.display = 'none'; }); // 小螢幕只留正解
-        this._feedback(false, q, '🛡️ 防護被擊穿了…', '先去讀章節再來', () => this._finish(false));
+        this._feedback(false, q, bt.defeated, bt.goRead, () => this._finish(false));
       } else {
         // 揭曉正解：小螢幕收掉其他選項只留正解；平板/桌面四選項都留著
         this.locked = true;
@@ -258,7 +266,7 @@ export class BattleSystem {
         const cor = btns[q.correct];
         cor.disabled = false; cor.classList.add('learn');
         cor.onclick = () => { this.locked = false; this._answer(q.correct); };
-        this._feedback(false, q, '✗ 中招了！點亮起的正解，學起來反擊 →', null, null);
+        this._feedback(false, q, bt.wrongLearn, null, null);
       }
     }
   }
