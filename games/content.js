@@ -7,7 +7,7 @@ const SITE = 'https://ssd.ocf.tw';
 export const VILLAGE_BOARD = {
   id: 'how-to', title: '村長的告示牌', sub: '怎麼升級資安？', emoji: '🧭',
   url: `${SITE}/how-to/`,
-  desc: '歡迎來到新手村！這片土地的枯萎不是天災——是當年守護村子的「防線」一道道倒下，色彩才跟著褪去。走出村莊，找到散落各地的「資安遺跡」，每一座都是一門課程；你修復的每座遺跡，就是替自己的村子重建一道防線。五道防線齊備，村子就會重新亮起。',
+  desc: '歡迎來到新手村！這片土地的枯萎不是天災——是當年守護村子的「防線」一道道倒下，色彩才跟著褪去。走出村莊，找到散落各地的「資安遺跡」，每一座都是一門課程；你修復的每座遺跡，就是替自己的村子重建一道防線。五道防線齊備，村子就會重新亮起。地圖上的金色路標會指引你建議的下一站，但你也可以自由選擇先去哪一座。',
   chips: ['整體路線', '優先順序', '新手友善'],
 };
 
@@ -52,9 +52,9 @@ export const GUIDE_KIT = {
 // 檔案室裡的 3 份文件（走進檔案室 → 室內 → 靠近文件台開 PDF 新分頁）
 // cover：文件台上展示的封面圖（依序對應）。
 export const ARCHIVE_DOCS = [
-  { id: 'doc1', title: '台灣人權與民主倡議團體數位威脅概況', sub: '檔案室・卷宗一', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover1.webp?v=223a24af', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view', desc: '2024 年研究報告摘要（中文版），整理 35 份問卷與 3 場深度訪談中，在臺人權與民主倡議團體面臨的數位威脅樣態與資安需求。' },
-  { id: 'doc2', title: '守護倡議之聲', sub: '檔案室・卷宗二', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover2.webp?v=223a24af', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link', desc: '本專案結案報告，整理「資安陪伴計畫」(SMP) 對公民團體與人權工作者的服務模式、實作經驗與建議。' },
-  { id: 'doc3', title: '信任的代價', sub: '檔案室・卷宗三', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover3.webp?v=223a24af', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link', desc: '一份針對臺灣人權工作者實際遭遇資安攻擊事件的個案研究實錄，記錄攻擊樣態、防守過程與經驗教訓。' },
+  { id: 'doc1', title: '台灣人權與民主倡議團體數位威脅概況', sub: '檔案室・卷宗一', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover1.webp?v=11fd2fab', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view', desc: '2024 年研究報告摘要（中文版），整理 35 份問卷與 3 場深度訪談中，在臺人權與民主倡議團體面臨的數位威脅樣態與資安需求。' },
+  { id: 'doc2', title: '守護倡議之聲', sub: '檔案室・卷宗二', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover2.webp?v=11fd2fab', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link', desc: '本專案結案報告，整理「資安陪伴計畫」(SMP) 對公民團體與人權工作者的服務模式、實作經驗與建議。' },
+  { id: 'doc3', title: '信任的代價', sub: '檔案室・卷宗三', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover3.webp?v=11fd2fab', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link', desc: '一份針對臺灣人權工作者實際遭遇資安攻擊事件的個案研究實錄，記錄攻擊樣態、防守過程與經驗教訓。' },
 ];
 
 // 散落在村莊外的遺跡：每一座 = 一個資安主題
@@ -66,6 +66,12 @@ export const RUINS = [
     desc: '手機電腦設定、帳號安全、安全瀏覽、加密溝通——個人能立刻做的防護。',
     chips: ['手機/電腦', '帳號安全', '網路瀏覽', '加密溝通', '海外出差'],
     tip: '回家小提醒：把常用帳號（Email、社群、密碼管理器）都開啟兩步驗證；換手機前先備份驗證碼，才不會被鎖在門外。',
+    review: [
+      '帳號：常用帳號（Email、社群）都開兩步驗證(MFA)，並先備份備用碼。',
+      '密碼：每個網站用不同的長密碼，交給密碼管理器保管就好。',
+      '裝置：手機電腦設螢幕鎖、開自動更新，及時修補漏洞。',
+      '連線：公共 Wi-Fi 用 VPN；敏感對話用端對端加密的通訊軟體。',
+    ],
   },
   {
     id: 'org', title: '組織資安', sub: '山丘上的堡壘遺跡', emoji: '🏢',
@@ -74,6 +80,12 @@ export const RUINS = [
     desc: '公務機、網路環境、帳號管理、資料權限與備份、政策範本。',
     chips: ['公務電腦', '網路環境', '帳號管理', '資料權限', '資料備份', '政策範本'],
     tip: '給組織的提醒：定期演練「還原」備份、員工離職立刻收回權限、權限只給工作所需的最小範圍。',
+    review: [
+      '帳號：離職／轉調立刻回收權限，採「最小權限原則」。',
+      '裝置基準：公務機開磁碟加密、自動更新、螢幕鎖與防毒。',
+      '備份：3-2-1 備份並「定期演練還原」，沒測過等於沒有。',
+      '制度：用政策範本把規則寫清楚，讓全員一致遵循。',
+    ],
   },
   {
     id: 'common', title: '常見資安事件', sub: '裂谷邊的崩塌高塔', emoji: '🚨',
@@ -82,6 +94,12 @@ export const RUINS = [
     desc: '釣魚、勒索、密碼外洩、帳號被盜……遇到時的第一步該怎麼做。',
     chips: ['釣魚信', '勒索軟體', '密碼外洩', '帳號被盜', 'NAS 攻擊', '網站攻擊'],
     tip: '遇到可疑訊息別急著點：改用官方 App 或自己的書籤登入確認；真的中招就先改密碼、開 MFA、保留截圖證據。',
+    review: [
+      '釣魚：可疑訊息別點連結，改用自己的書籤或官方 App 登入確認。',
+      '認網址：看「最後的主網域」是否正確，https 鎖頭和 Logo 都能偽造。',
+      '中招了：立刻改密碼、開 MFA、保留截圖，並視情況通報。',
+      '勒索：靠「離線、異地」的備份救資料，別付贖金。',
+    ],
   },
   {
     id: 'guide', title: '資安體檢與進度追蹤', sub: '荒野中的方尖碑', emoji: '📋',
@@ -90,6 +108,12 @@ export const RUINS = [
     desc: '用檢查清單為組織做「資安體檢」：盤點現況、排出優先順序，並把改善進度與課後任務記錄下來，讓資安升級看得見、追得動。',
     chips: ['現況盤點', '檢查清單', '進度追蹤', '成效檢視'],
     tip: '別只靠記憶追進度：用一份檢查清單記下「做到哪、下一步做什麼」，定期回顧、滾動更新。',
+    review: [
+      '起點：先盤點現況——裝置、帳號、資料目前的狀態。',
+      '排序：依風險（可能性 × 衝擊）由高到低處理。',
+      '追蹤：用共用檢查清單記「做到哪、下一步」，別只靠記憶。',
+      '循環：導入後定期檢視成效、收回饋，再滾動調整。',
+    ],
   },
   {
     id: 'tools', title: '工具推薦', sub: '湖畔的市集遺跡', emoji: '🛠️',
@@ -98,5 +122,11 @@ export const RUINS = [
     desc: '精選好上手的資安工具：密碼管理器、驗證器、VPN、備份等。',
     chips: ['密碼管理器', '驗證器', 'VPN', '備份工具'],
     tip: '挑工具的原則：密碼管理器存強密碼、驗證器當第二道關、公共 Wi-Fi 用 VPN、重要資料記得 3-2-1 備份。',
+    review: [
+      '密碼管理器：替每個網站存不同強密碼，你只要記一組主密碼。',
+      '驗證器 App：產生一次性驗證碼，當密碼之外的第二道關卡。',
+      'VPN：在公共 Wi-Fi 上加密整台裝置的對外連線。',
+      '備份：依 3-2-1 原則（雲端＋離線多份），並定期測試還原。',
+    ],
   },
 ];

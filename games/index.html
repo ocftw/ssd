@@ -28,8 +28,15 @@
       opacity:0; transform:translateY(5px) scale(.96); transition:opacity .2s ease, transform .2s ease; }
     .bubble.show { opacity:1; transform:translateY(0) scale(1); }
     .bubble b { display:block; font-size:12px; color:var(--brand); margin-bottom:3px; }
+    .bubble .more { display:block; margin-top:6px; font-size:11px; font-weight:700; color:#b1773f; }
     .bubble.petrified { color:#6b7280; font-weight:700; background:rgba(228,228,232,.95); }
     .bubble.say { max-width:210px; text-align:center; font-weight:700; }
+    /* 可點的對話：靠近先出現小圖示(chip)，點了才展開 */
+    .bubble.clickable { pointer-events:auto; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .bubble.chip { width:38px; height:38px; max-width:none; padding:0; display:grid; place-items:center; font-size:19px;
+      border-radius:50%; animation:chippulse 1.6s ease-in-out infinite; }
+    .bubble.chip:hover { filter:brightness(1.05); }
+    @keyframes chippulse { 0%,100%{ box-shadow:var(--shadow); } 50%{ box-shadow:0 0 0 5px rgba(255,122,69,.32), var(--shadow); } }
 
     /* 標題牌 + 進度 */
     #titlecard { position:fixed; left:16px; top:16px; z-index:10; max-width:min(78vw,360px);
@@ -383,6 +390,6 @@
 
   <div id="loader"><div><div class="spin"></div><p>正在生成世界…</p></div></div>
 
-  <script type="module" src="./main.js?v=223a24af"></script>
+  <script type="module" src="./main.js?v=11fd2fab"></script>
 </body>
 </html>
