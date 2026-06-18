@@ -82,9 +82,9 @@ const gradePass = new ShaderPass({
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
   fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; varying vec2 vUv;
     void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-      float sat = mix(0.18, 1.0, uVibrancy);
-      vec3 tint = mix(vec3(0.60, 0.64, 0.72), vec3(1.0), uVibrancy); // 破敗偏冷灰 → 正常
-      float br = mix(0.66, 1.0, uVibrancy);
+      float sat = mix(0.90, 1.0, uVibrancy);                          // 夜晚仍保留原色（不再大幅去飽和）
+      vec3 tint = mix(vec3(0.82, 0.88, 1.0), vec3(1.0), uVibrancy);   // 夜晚淡淡冷藍月色
+      float br = mix(0.96, 1.0, uVibrancy);                            // 明暗改由燈光表現，後製幾乎不壓暗
       gl_FragColor = vec4(mix(vec3(l), c.rgb, sat) * tint * br, c.a); }`,
 });
 composer.addPass(gradePass);
@@ -122,8 +122,8 @@ const FOG_D = new THREE.Color(0x83878d), FOG_A = new THREE.Color(0xcfe4f0);
 }
 
 // ── 燈光（太陽會跟著角色移動，保持大世界陰影清晰）─────────────────
-scene.add(new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.6));
-scene.add(new THREE.AmbientLight(0xffffff, 0.08));
+const hemi = new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.6); scene.add(hemi);
+const ambient = new THREE.AmbientLight(0xffffff, 0.08); scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xfff1d8, 2.2);
 sun.castShadow = true;
 sun.shadow.mapSize.set(4096, 4096);
@@ -133,6 +133,13 @@ sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun);
 scene.add(sun.target);
+// 夜→日燈光：用「光照強度」表現明暗（取代後製壓暗），讓火把照到的地方能顯出原本顏色
+function setWorldLight(k) { // k：0＝夜晚（荒蕪）、1＝白天（恢復）
+  sun.intensity = 0.25 + (2.2 - 0.25) * k;
+  hemi.intensity = 0.12 + (0.6 - 0.12) * k;
+  ambient.intensity = 0.03 + (0.08 - 0.03) * k;
+  scene.environmentIntensity = 0.16 + (1 - 0.16) * k; // 夜晚同時壓低天空環境光（否則整片仍偏亮）
+}
 // 主角隨身火把：照亮周圍一圈暖光（世界越荒蕪越亮、恢復後轉弱），帶輕微火光晃動
 const torch = new THREE.PointLight(0xffb061, 0, 24, 2.0);
 scene.add(torch);
@@ -1203,7 +1210,7 @@ function animate() {
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
   jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
-  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; battle.update(dt); composer.render(); return; }
+  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); composer.render(); return; }
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
@@ -1394,6 +1401,7 @@ function animate() {
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
   gradePass.uniforms.uVibrancy.value = archiveActive ? 1 : vibrancy; // 檔案室內固定滿色
+  setWorldLight(archiveActive ? 1 : vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
   skyMat.uniforms.top.value.lerpColors(SKY_TOP_D, SKY_TOP_A, vibrancy);
   skyMat.uniforms.bottom.value.lerpColors(SKY_BOT_D, SKY_BOT_A, vibrancy);
   scene.fog.color.lerpColors(FOG_D, FOG_A, vibrancy);
