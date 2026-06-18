@@ -136,6 +136,31 @@ scene.add(sun.target);
 // 主角隨身火把：照亮周圍一圈暖光（世界越荒蕪越亮、恢復後轉弱），帶輕微火光晃動
 const torch = new THREE.PointLight(0xffb061, 0, 24, 2.0);
 scene.add(torch);
+// 火把投向前方地面的光錐：照亮腳前的路（讓前方地面也亮起來）
+const torchGround = new THREE.SpotLight(0xffc079, 0, 32, Math.PI * 0.32, 0.6, 1.5);
+scene.add(torchGround); scene.add(torchGround.target);
+
+// 螢火蟲：暗場氛圍光點（自體發光、漂浮閃爍；世界恢復後轉淡、室內檔案室關閉）
+const fireflyTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,242,170,0.9)');
+  g.addColorStop(0.6, 'rgba(190,255,150,0.22)'); g.addColorStop(1, 'rgba(190,255,150,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const fireflies = [];
+const fireflyGroup = new THREE.Group(); scene.add(fireflyGroup);
+for (let i = 0; i < 28; i++) {
+  const near = i < 2; // 前兩隻靠近主角、負責提燈照明
+  const m = new THREE.SpriteMaterial({ map: fireflyTex, color: 0xfff0a0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const s = new THREE.Sprite(m); s.scale.setScalar(near ? rand(0.8, 1.1) : rand(0.5, 1.0)); fireflyGroup.add(s);
+  fireflies.push({ s, m, ox: rand(-1, 1) * (near ? 4 : 13), oz: rand(-1, 1) * (near ? 4 : 13), h: near ? rand(1.2, 2.4) : rand(0.8, 3.4),
+    sx: rand(0.12, 0.32), sz: rand(0.12, 0.32), ax: near ? rand(1.5, 2.5) : rand(2.0, 5.0), az: near ? rand(1.5, 2.5) : rand(2.0, 5.0), ph: rand(0, TAU), bob: rand(0.4, 1.0), tw: rand(1.6, 3.0) });
+}
+// 兩盞「螢火蟲提燈」：給最靠近主角的兩隻一點真實照明（暖綠光）
+const fireflyLights = [new THREE.PointLight(0xcfffa0, 0, 9, 1.6), new THREE.PointLight(0xcfffa0, 0, 9, 1.6)];
+fireflyLights.forEach((l) => scene.add(l));
 
 // ── 地形 ────────────────────────────────────────────────────────
 const segs = 240;
@@ -1295,6 +1320,24 @@ function animate() {
   // 隨身火把：跟著主角、略偏視線前方；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
   torch.position.set(hero.position.x + fwd.x * 2, hero.position.y + 2.4, hero.position.z + fwd.z * 2);
   torch.intensity = archiveActive ? 0 : 52 * (1 - 0.7 * vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
+  // 火把地面光錐：從頭頂斜射到前方地面，照亮腳前的路
+  torchGround.position.set(hero.position.x, hero.position.y + 3.4, hero.position.z);
+  { const gx = hero.position.x + fwd.x * 6, gz = hero.position.z + fwd.z * 6; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
+  torchGround.intensity = archiveActive ? 0 : 120 * (1 - 0.7 * vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
+  // 螢火蟲：漂浮閃爍；越暗越亮、室內關閉
+  {
+    const ffBright = archiveActive ? 0 : (1 - 0.8 * vibrancy), baseY = groundY(hero.position.x, hero.position.z);
+    for (const f of fireflies) {
+      const fx = hero.position.x + f.ox + Math.sin(t * f.sx + f.ph) * f.ax;
+      const fz = hero.position.z + f.oz + Math.cos(t * f.sz + f.ph) * f.az;
+      f.s.position.set(fx, baseY + f.h + Math.sin(t * f.bob + f.ph) * 0.6, fz);
+      f.m.opacity = ffBright * (0.18 + 0.82 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph * 2.3)));
+    }
+    fireflyLights[0].position.copy(fireflies[0].s.position); fireflyLights[1].position.copy(fireflies[1].s.position);
+    const ffLi = archiveActive ? 0 : 16 * (1 - 0.8 * vibrancy);
+    fireflyLights[0].intensity = ffLi * (0.7 + 0.3 * Math.sin(t * 3.1));
+    fireflyLights[1].intensity = ffLi * (0.7 + 0.3 * Math.sin(t * 2.3 + 1));
+  }
 
   // POI 鄰近 / 發現 / 面板
   let near = null, nd = Infinity;
