@@ -322,7 +322,8 @@ function cottage(color, roofC) {
   return g;
 }
 const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x4f6c92], [0xc98f9b, 0x8a5663], [0xcdb87e, 0x8a6e3a]];
-const houseSpots = [[11, -8, 0.6], [-12, 5, -0.4], [12, 9, 2.4], [-10, 13, -2.2], [5, 14, 3.0]];
+// 精簡村莊：只留一間民房，另一間是檔案室（見下方 ARCHIVE）
+const houseSpots = [[12, 5, -1.0]];
 houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], 0, s[1]); c.rotation.y = s[2]; village.add(c); });
 
 // 提燈路燈
@@ -559,7 +560,7 @@ function buildMonument() {
 }
 
 // ── 檔案室：村莊邊入口建築 → 走進門淡出傳送到隱藏室內房間 → 靠近文件台開 PDF（新分頁）──
-const ARCHIVE = { pos: new THREE.Vector3(-24, 0, 0), enter: new THREE.Vector3(-22, 0, 0), back: new THREE.Vector3(-19, 0, 0), roomY: -120 };
+const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5), enter: new THREE.Vector3(-11, 0, 5), back: new THREE.Vector3(-8, 0, 5), roomY: -120 };
 const ARCHIVE_FLOOR = ARCHIVE.roomY + 0.2;
 let archiveActive = false, archEnterArmed = true, archExitArmed = true;
 const archFadeEl = document.getElementById('fade');
