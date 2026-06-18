@@ -78,13 +78,13 @@ const composer = new EffectComposer(renderer);
 composer.setPixelRatio(PR);
 composer.addPass(new RenderPass(scene, camera));
 const gradePass = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 }, uNightBr: { value: 0.4 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; uniform float uNightBr; varying vec2 vUv;
     void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
       float sat = mix(0.90, 1.0, uVibrancy);                          // 夜晚仍保留原色（不再大幅去飽和）
       vec3 tint = mix(vec3(0.82, 0.88, 1.0), vec3(1.0), uVibrancy);   // 夜晚淡淡冷藍月色
-      float br = mix(0.4, 1.0, uVibrancy);                             // 夜晚整體亮度壓到 0.4（恢復後回到 1.0）
+      float br = mix(uNightBr, 1.0, uVibrancy);                        // 夜晚整體亮度（uNightBr，恢復後回到 1.0）
       gl_FragColor = vec4(mix(vec3(l), c.rgb, sat) * tint * br, c.a); }`,
 });
 composer.addPass(gradePass);
@@ -1215,15 +1215,16 @@ const SPIN_DUR = 0.55;
 const coordsEl = document.getElementById('coords');
 let fpsAvg = 60; // 平滑後的 FPS（座標框內顯示，方便量測效能）
 // 火把「探照」即時可調參數（座標框開啟時：[ ] 選參數、- = 增減）；調好後把數值告訴我即可固定
-const torchTune = { spotInt: 300, spotAng: 0.36, spotPen: 0.5, spotFwd: 25, spotH: 5, spotDist: 200, ptInt: 32 };
+const torchTune = { spotInt: 300, spotAng: 0.36, spotPen: 0.5, spotFwd: 25, spotH: 5, spotDist: 200, ptInt: 32, nightBr: 0.4 };
 const torchParams = [
   { k: 'spotInt', label: '強度', step: 10, fmt: (v) => v.toFixed(0) },
-  { k: 'spotAng', label: '角度', step: 0.02, fmt: (v) => v.toFixed(2) + 'π' },
-  { k: 'spotPen', label: '邊緣', step: 0.05, fmt: (v) => v.toFixed(2) },
+  { k: 'spotAng', label: '角度', step: 0.02, fmt: (v) => v.toFixed(2) + 'π', max: 0.49 },
+  { k: 'spotPen', label: '邊緣', step: 0.05, fmt: (v) => v.toFixed(2), max: 1 },
   { k: 'spotFwd', label: '前距', step: 0.5, fmt: (v) => v.toFixed(1) },
   { k: 'spotH', label: '高度', step: 0.2, fmt: (v) => v.toFixed(1) },
   { k: 'spotDist', label: '距離', step: 2, fmt: (v) => v.toFixed(0) },
   { k: 'ptInt', label: '點光', step: 4, fmt: (v) => v.toFixed(0) },
+  { k: 'nightBr', label: '夜亮', step: 0.05, fmt: (v) => v.toFixed(2), max: 1 },
 ];
 let torchSel = 0;
 addEventListener('keydown', (e) => {
@@ -1233,7 +1234,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'BracketLeft') torchSel = (torchSel + torchParams.length - 1) % torchParams.length;
   else if (e.code === 'BracketRight') torchSel = (torchSel + 1) % torchParams.length;
   else if (e.code === 'Minus') { const p = torchParams[torchSel]; torchTune[p.k] = Math.max(0, +(torchTune[p.k] - p.step).toFixed(3)); }
-  else if (e.code === 'Equal') { const p = torchParams[torchSel]; torchTune[p.k] = +(torchTune[p.k] + p.step).toFixed(3); }
+  else if (e.code === 'Equal') { const p = torchParams[torchSel]; torchTune[p.k] = +(Math.min(torchTune[p.k] + p.step, p.max ?? Infinity)).toFixed(3); }
 });
 
 function animate() {
@@ -1432,6 +1433,7 @@ function animate() {
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
   gradePass.uniforms.uVibrancy.value = archiveActive ? 1 : vibrancy; // 檔案室內固定滿色
+  gradePass.uniforms.uNightBr.value = torchTune.nightBr;             // 夜晚亮度（座標框可即時調）
   setWorldLight(archiveActive ? 1 : vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
   skyMat.uniforms.top.value.lerpColors(SKY_TOP_D, SKY_TOP_A, vibrancy);
   skyMat.uniforms.bottom.value.lerpColors(SKY_BOT_D, SKY_BOT_A, vibrancy);
@@ -1541,7 +1543,7 @@ function animate() {
     const hx = hero.position.x, hz = hero.position.z;
     let deg = Math.atan2(hz, hx) * 180 / Math.PI; if (deg < 0) deg += 360;
     const tuneStr = torchParams.map((p, i) => { const s = `${p.label} ${p.fmt(torchTune[p.k])}`; return i === torchSel ? `<b style="color:#ffd24b">▸${s}</b>` : s; }).join('　');
-    coordsEl.innerHTML = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}　｜　fps ${Math.round(fpsAvg)}<br>🔦 探照（[ ] 選參數・ − ＝ 增減）：${tuneStr}`;
+    coordsEl.innerHTML = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}　｜　fps ${Math.round(fpsAvg)}<br>🔧 調參（[ ] 選・ − ＝ 增減）：${tuneStr}`;
   }
 
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
