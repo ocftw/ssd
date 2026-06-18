@@ -67,6 +67,23 @@ function buildMonster(data) {
   return { group: g, body, bodyMat: body.material, glowMat, mats };
 }
 
+// 將使用者可見字串轉義後再放進 innerHTML（避免信件內容中的 < > 被當成 HTML 標籤）
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// 密碼強度啟發式評分（教育用，非真正的密碼學強度估算）
+function scorePw(pw, common) {
+  const len = pw.length;
+  if (!len) return { pct: 6, color: '#9aa1b0', ok: false, msg: '在上面輸入一組密碼試試…' };
+  const lc = pw.toLowerCase();
+  const isCommon = common.some((c) => lc.includes(c)) || /^(.)\1+$/.test(pw) || /^(0123|1234|2345|3456|4567|5678|6789|abcd|qwer)/.test(lc);
+  const variety = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((re) => re.test(pw)).length;
+  if (isCommon) return { pct: 28, color: '#d0433a', ok: false, msg: '⚠️ 這是常見或可預測的密碼，太容易被猜中' };
+  if (len < 8) return { pct: 30, color: '#d0433a', ok: false, msg: '太短了——長度是密碼最重要的防線' };
+  if (len < 12) return { pct: 58, color: '#f0a500', ok: false, msg: '再長一點（建議 12 字以上）會更難破解' };
+  if (variety < 2 && len < 16) return { pct: 72, color: '#f0a500', ok: false, msg: '夠長了！再加點變化（大小寫／數字／符號），或湊到 16 字以上' };
+  return { pct: 100, color: '#3aa45b', ok: true, msg: '✓ 又長又難猜——這組可以！出招吧' };
+}
+
 export class BattleSystem {
   constructor({ scene, camera, hero }) {
     this.scene = scene; this.camera = camera; this.hero = hero;
@@ -124,7 +141,96 @@ export class BattleSystem {
     const q = this.data.questions[this.qi]; this.locked = false;
     this.el.fb.classList.remove('show'); this.el.q.textContent = `第 ${this.qi + 1} / ${this.data.questions.length} 題　${q.q}`;
     this.el.opts.innerHTML = '';
+    const type = q.type || 'mcq';
+    if (type === 'phish') return this._renderPhish(q);
+    if (type === 'url') return this._renderUrl(q);
+    if (type === 'password') return this._renderPassword(q);
     q.options.forEach((opt, i) => { const b = document.createElement('button'); b.className = 'opt'; b.textContent = opt; b.addEventListener('click', () => this._answer(i)); this.el.opts.appendChild(b); });
+  }
+
+  // 情境互動題（phish/url/password）共用判定：沿用怪血、護盾、解說與勝負流程
+  // 注意：方法名避開既有的 this._resolve（戰鬥 Promise 的 resolve 回呼）
+  _judge(correct, q, onWrongRetry) {
+    if (correct) {
+      this.locked = true;
+      this.monHP--; this._renderHP(); this._hit();
+      const won = this.monHP <= 0;
+      this._feedback(true, q, won ? '🎉 淨化成功！' : '✓ 答對了！出招！', won ? '撤退凱旋' : '繼續', () => (won ? this._finish(true) : this._next()));
+    } else {
+      this.locked = true;
+      this.hearts--; this._renderHearts(); this._monsterAttack();
+      if (this.hearts <= 0) {
+        this._feedback(false, q, '🛡️ 防護被擊穿了…', '先去讀章節再來', () => this._finish(false));
+      } else {
+        this._feedback(false, q, '✗ 中招了！看懂下面的說明，再試一次 →', '再試一次', () => { this.el.fb.classList.remove('show'); this.locked = false; onWrongRetry && onWrongRetry(); });
+      }
+    }
+  }
+
+  // 擬真釣魚卡：先讀信，再決策「這是釣魚／這是正常」
+  _renderPhish(q) {
+    this.locked = false;
+    const m = q.mail || {};
+    const wrap = document.createElement('div'); wrap.className = 'interactive phish';
+    wrap.innerHTML =
+      '<div class="phish-card">' +
+      `<div class="ph-row"><span class="ph-k">寄件人</span><span class="ph-v">${esc(m.from)}</span></div>` +
+      `<div class="ph-row"><span class="ph-k">主旨</span><span class="ph-v">${esc(m.subject)}</span></div>` +
+      `<div class="ph-body">${esc(m.body)}</div>` +
+      (m.link ? `<div class="ph-link">🔗 ${esc(m.link)}</div>` : '') +
+      '</div>' +
+      '<div class="phish-btns"><button class="opt ph-yes">🚩 這是釣魚／詐騙</button><button class="opt ph-no">✅ 這是正常訊息</button></div>';
+    this.el.opts.appendChild(wrap);
+    const decide = (saysPhish) => {
+      if (this.locked) return; this.locked = true;
+      wrap.querySelectorAll('.opt').forEach((b) => { b.disabled = true; });
+      this._judge(saysPhish === !!q.isPhish, q, () => this._renderQuestion());
+    };
+    wrap.querySelector('.ph-yes').addEventListener('click', () => decide(true));
+    wrap.querySelector('.ph-no').addEventListener('click', () => decide(false));
+  }
+
+  // 真假網址：挑出真正屬於官方的那一個（看主網域）
+  _renderUrl(q) {
+    this.locked = false;
+    const urls = q.urls || [];
+    const realIdx = urls.findIndex((u) => u.real);
+    const wrap = document.createElement('div'); wrap.className = 'interactive urlpick';
+    const list = document.createElement('div'); list.className = 'url-list';
+    urls.forEach((u) => {
+      const b = document.createElement('button'); b.className = 'opt url-opt'; b.textContent = u.url;
+      b.addEventListener('click', () => {
+        if (this.locked) return; this.locked = true;
+        const btns = [...list.querySelectorAll('.url-opt')];
+        btns.forEach((x) => { x.disabled = true; });
+        b.classList.add(u.real ? 'right' : 'wrong');
+        if (!u.real && realIdx >= 0 && btns[realIdx]) btns[realIdx].classList.add('right');
+        this._judge(!!u.real, q, () => this._renderQuestion());
+      });
+      list.appendChild(b);
+    });
+    wrap.appendChild(list);
+    this.el.opts.appendChild(wrap);
+  }
+
+  // 密碼強度即時條：打造一組夠強的密碼才能出招（做中學）
+  _renderPassword(q) {
+    this.locked = false;
+    const wrap = document.createElement('div'); wrap.className = 'interactive pw';
+    wrap.innerHTML =
+      '<input class="pw-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="在這裡輸入一組密碼試試…" />' +
+      '<div class="pw-meter"><i></i></div>' +
+      '<div class="pw-tip"></div>' +
+      '<button class="opt pw-go" disabled>用這組密碼出招 →</button>';
+    this.el.opts.appendChild(wrap);
+    const input = wrap.querySelector('.pw-input');
+    const bar = wrap.querySelector('.pw-meter i');
+    const tip = wrap.querySelector('.pw-tip');
+    const go = wrap.querySelector('.pw-go');
+    const common = q.common || ['12345678', 'password', 'qwerty', '111111', 'abc123', 'iloveyou', '000000', 'letmein', 'admin', '123456'];
+    const refresh = () => { const r = scorePw(input.value, common); bar.style.width = r.pct + '%'; bar.style.background = r.color; tip.textContent = r.msg; tip.style.color = r.color; go.disabled = !r.ok; };
+    input.addEventListener('input', refresh); refresh();
+    go.addEventListener('click', () => { if (this.locked || go.disabled) return; this.locked = true; input.disabled = true; go.disabled = true; this._judge(true, q, () => this._renderQuestion()); });
   }
 
   _answer(idx) {

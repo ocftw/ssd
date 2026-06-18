@@ -7,7 +7,7 @@ const SITE = 'https://ssd.ocf.tw';
 export const VILLAGE_BOARD = {
   id: 'how-to', title: '村長的告示牌', sub: '怎麼升級資安？', emoji: '🧭',
   url: `${SITE}/how-to/`,
-  desc: '歡迎來到新手村！走出村莊，找到散落各地的「資安遺跡」，每一座都是一門課程。點亮全部遺跡，村子就安全了。',
+  desc: '歡迎來到新手村！這片土地的枯萎不是天災——是當年守護村子的「防線」一道道倒下，色彩才跟著褪去。走出村莊，找到散落各地的「資安遺跡」，每一座都是一門課程；你修復的每座遺跡，就是替自己的村子重建一道防線。五道防線齊備，村子就會重新亮起。',
   chips: ['整體路線', '優先順序', '新手友善'],
 };
 
@@ -62,6 +62,7 @@ export const RUINS = [
   {
     id: 'personal', title: '個人資安', sub: '森林裡的石屋遺跡', emoji: '🏠',
     color: 0x4fd1a8, style: 'grove', angle: 32, radius: 62, url: `${SITE}/personal/`,
+    defense: '個人帳號防線',
     desc: '手機電腦設定、帳號安全、安全瀏覽、加密溝通——個人能立刻做的防護。',
     chips: ['手機/電腦', '帳號安全', '網路瀏覽', '加密溝通', '海外出差'],
     tip: '回家小提醒：把常用帳號（Email、社群、密碼管理器）都開啟兩步驗證；換手機前先備份驗證碼，才不會被鎖在門外。',
@@ -69,6 +70,7 @@ export const RUINS = [
   {
     id: 'org', title: '組織資安', sub: '山丘上的堡壘遺跡', emoji: '🏢',
     color: 0x5b9cff, style: 'fortress', angle: 110, radius: 80, url: `${SITE}/org/`,
+    defense: '組織治理防線',
     desc: '公務機、網路環境、帳號管理、資料權限與備份、政策範本。',
     chips: ['公務電腦', '網路環境', '帳號管理', '資料權限', '資料備份', '政策範本'],
     tip: '給組織的提醒：定期演練「還原」備份、員工離職立刻收回權限、權限只給工作所需的最小範圍。',
@@ -76,6 +78,7 @@ export const RUINS = [
   {
     id: 'common', title: '常見資安事件', sub: '裂谷邊的崩塌高塔', emoji: '🚨',
     color: 0xff7a5c, style: 'tower', angle: 188, radius: 70, url: `${SITE}/common/`,
+    defense: '臨場應變防線',
     desc: '釣魚、勒索、密碼外洩、帳號被盜……遇到時的第一步該怎麼做。',
     chips: ['釣魚信', '勒索軟體', '密碼外洩', '帳號被盜', 'NAS 攻擊', '網站攻擊'],
     tip: '遇到可疑訊息別急著點：改用官方 App 或自己的書籤登入確認；真的中招就先改密碼、開 MFA、保留截圖證據。',
@@ -83,6 +86,7 @@ export const RUINS = [
   {
     id: 'guide', title: '資安體檢與進度追蹤', sub: '荒野中的方尖碑', emoji: '📋',
     color: 0x5bc8bf, style: 'obelisk', angle: 250, radius: 84, url: `${SITE}/assessment/`,
+    defense: '盤點追蹤防線',
     desc: '用檢查清單為組織做「資安體檢」：盤點現況、排出優先順序，並把改善進度與課後任務記錄下來，讓資安升級看得見、追得動。',
     chips: ['現況盤點', '檢查清單', '進度追蹤', '成效檢視'],
     tip: '別只靠記憶追進度：用一份檢查清單記下「做到哪、下一步做什麼」，定期回顧、滾動更新。',
@@ -90,6 +94,7 @@ export const RUINS = [
   {
     id: 'tools', title: '工具推薦', sub: '湖畔的市集遺跡', emoji: '🛠️',
     color: 0xffc24b, style: 'market', angle: 308, radius: 60, url: `${SITE}/tools/`,
+    defense: '日常工具防線',
     desc: '精選好上手的資安工具：密碼管理器、驗證器、VPN、備份等。',
     chips: ['密碼管理器', '驗證器', 'VPN', '備份工具'],
     tip: '挑工具的原則：密碼管理器存強密碼、驗證器當第二道關、公共 Wi-Fi 用 VPN、重要資料記得 3-2-1 備份。',

@@ -975,12 +975,58 @@ function discover(p) {
 let allDoneShown = false, finaleActive = false, finaleT = 0, finaleShown = false;
 function afterCompleteToast(p) {
   const left = ruinAt.length - progress.completed.length;
-  if (left > 0) toast('🎉 遺跡淨化！', `${p.data.title} 已點亮 — 再點亮 ${left} 座，中央大水晶就會甦醒`);
+  const title = p.data.defense ? `🛡️ 重建了「${p.data.defense}」` : '🎉 遺跡淨化！';
+  if (left > 0) toast(title, `${p.data.title} 已點亮 — 再點亮 ${left} 座，中央大水晶就會甦醒`);
 }
 function showFinaleOverlay() {
   const f = document.getElementById('finale');
   f.querySelector('.badges').innerHTML = ruinAt.map((r) => `<span title="${r.title}">${r.emoji}</span>`).join('');
+  // B 英雄守則卷軸：把每關現成的 tip（回家小提醒）收攏成可截圖的個人行動清單
+  f.querySelector('.scroll').innerHTML = ruinAt
+    .map((r) => `<div class="item"><span class="ico">${r.emoji}</span><span class="tx"><b>${r.defense || r.title}</b>${r.tip || ''}</span></div>`)
+    .join('');
   f.classList.add('show');
+  // D 通關後信心檢核 + 前後比對
+  const cc = f.querySelector('.confcompare'); if (cc) cc.textContent = '';
+  if (localStorage.getItem(CONF_PRE) != null && localStorage.getItem(CONF_POST) == null) {
+    setTimeout(() => showConfidence('post', renderConfCompare), 800);
+  } else {
+    renderConfCompare();
+  }
+}
+// 前後測信心檢核（純前端 localStorage；不外傳）
+const CONF_PRE = 'ssd-village-conf-pre', CONF_POST = 'ssd-village-conf-post';
+const CONF_FACES = ['😟', '😐', '🙂'];
+const CONF_LEVELS = [{ e: '😟', l: '不太有把握' }, { e: '😐', l: '普通' }, { e: '🙂', l: '蠻有把握' }];
+function showConfidence(phase, onDone) {
+  const root = document.getElementById('confidence');
+  root.querySelector('.cq').textContent = phase === 'pre'
+    ? '出發前，你對「保護自己的數位安全」有多少把握？' : '走完這趟旅程，現在你的把握是？';
+  root.querySelector('.csub').textContent = phase === 'pre'
+    ? '一指選一個就好，通關時會再問一次。' : '和出發前比比看吧。';
+  const opts = root.querySelector('.opts'); opts.innerHTML = '';
+  CONF_LEVELS.forEach((lv, i) => {
+    const b = document.createElement('button'); b.className = 'opt';
+    b.innerHTML = `<span class="e">${lv.e}</span><span class="l">${lv.l}</span>`;
+    b.addEventListener('click', () => {
+      try { localStorage.setItem(phase === 'pre' ? CONF_PRE : CONF_POST, String(i)); } catch (e) { /* ignore */ }
+      root.classList.remove('show'); SFX.unlock(); onDone && onDone();
+    });
+    opts.appendChild(b);
+  });
+  root.classList.add('show');
+}
+function renderConfCompare() {
+  const el = document.querySelector('#finale .confcompare'); if (!el) return;
+  const pre = localStorage.getItem(CONF_PRE), post = localStorage.getItem(CONF_POST);
+  if (pre == null || post == null) { el.textContent = ''; return; }
+  const a = +pre, b = +post;
+  const msg = b > a ? '把握度提升了，繼續保持！' : b === a ? '穩穩守住了把握度。' : '別氣餒，回章節再練練就更穩。';
+  el.textContent = `把握度：${CONF_FACES[a]} → ${CONF_FACES[b]}　${msg}`;
+}
+function maybeShowPreConfidence() {
+  if (localStorage.getItem(CONF_PRE) != null) return;
+  setTimeout(() => showConfidence('pre'), 800);
 }
 function checkAllDone() {
   if (allDoneShown || !ruinAt.every((r) => isDone(r.id))) return;
@@ -1027,6 +1073,8 @@ function resetRuinVisual(p) {
 function resetProgress() {
   if (!window.confirm('確定要重置所有遺跡進度嗎？此動作無法復原。')) return;
   progress = { discovered: [], completed: [] }; save();
+  try { localStorage.removeItem(CONF_PRE); localStorage.removeItem(CONF_POST); } catch (e) { /* ignore */ }
+  const cc = document.querySelector('#finale .confcompare'); if (cc) cc.textContent = '';
   allDoneShown = false; pinnedId = null; suppressed.clear(); hidePanel();
   POIS.forEach((p) => { if (p.isRuin) resetRuinVisual(p); });
   logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; updateHud(); computeVibrancy();
@@ -1401,4 +1449,4 @@ function animate() {
 renderer.setAnimationLoop(animate);
 
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
-requestAnimationFrame(() => setTimeout(() => $('#loader').classList.add('hide'), 350));
+requestAnimationFrame(() => setTimeout(() => { $('#loader').classList.add('hide'); maybeShowPreConfidence(); }, 350));
