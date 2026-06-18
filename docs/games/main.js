@@ -1363,12 +1363,12 @@ function animate() {
   // 隨身火把：朝「主角正面」方向（不跟鏡頭轉）；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
   const hfx = Math.sin(hero.rotation.y), hfz = Math.cos(hero.rotation.y); // 主角正面方向（+z 面）
   torch.position.set(hero.position.x + hfx * 2, hero.position.y + 2.4, hero.position.z + hfz * 2);
-  torch.intensity = archiveActive ? 0 : torchTune.ptInt * (1 - 0.7 * vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
-  // 火把地面光錐（探照效果，參數可在座標框即時調整）：從頭頂斜射到主角正面的地面
+  torch.intensity = archiveActive ? 0 : torchTune.ptInt * (1 - vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
+  // 火把地面光錐（探照效果，參數可在座標框即時調整）：從頭頂斜射到主角正面的地面；天亮(vibrancy→1)後關閉
   torchGround.angle = torchTune.spotAng * Math.PI; torchGround.penumbra = torchTune.spotPen; torchGround.distance = torchTune.spotDist;
   torchGround.position.set(hero.position.x, hero.position.y + torchTune.spotH, hero.position.z);
   { const gx = hero.position.x + hfx * torchTune.spotFwd, gz = hero.position.z + hfz * torchTune.spotFwd; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
-  torchGround.intensity = archiveActive ? 0 : torchTune.spotInt * (1 - 0.7 * vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
+  torchGround.intensity = archiveActive ? 0 : torchTune.spotInt * (1 - vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
   // 螢火蟲：環繞各「已完成」遺跡漂浮閃爍（點綴）；室內關閉
   {
     const ffBright = archiveActive ? 0 : 1;
