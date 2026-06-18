@@ -29,6 +29,14 @@ export const LEGEND = {
   chips: [], stateText: '遠古的傳說', story: true, noLink: true,
 };
 
+// 檔案室裡的 3 份文件（走進檔案室 → 室內 → 靠近文件台開 PDF 新分頁）
+// TODO：把 url 換成站上真實的 3 個 PDF 網址；title/sub/desc 可一併調整。
+export const ARCHIVE_DOCS = [
+  { id: 'doc1', title: '資安政策範本', sub: '檔案室・卷宗一', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], url: 'https://ssd.ocf.tw/#pdf-1', desc: '組織資安制度與政策範本，可直接參考、改寫成自己單位的規範。' },
+  { id: 'doc2', title: '事件應變手冊', sub: '檔案室・卷宗二', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], url: 'https://ssd.ocf.tw/#pdf-2', desc: '遇到資安事件時的處置流程與聯絡、通報、保全證據要點。' },
+  { id: 'doc3', title: '資安自我檢核表', sub: '檔案室・卷宗三', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], url: 'https://ssd.ocf.tw/#pdf-3', desc: '個人與組織可逐項打勾的資安檢核清單，定期自我盤點。' },
+];
+
 // 散落在村莊外的遺跡：每一座 = 一個資安主題
 export const RUINS = [
   {

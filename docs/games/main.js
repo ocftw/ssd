@@ -9,7 +9,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND } from './content.js';
+import { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS } from './content.js';
 import { WORLD, terrainHeight, groundY } from './terrain.js';
 import { BATTLES } from './battles.js';
 import { BattleSystem } from './battle.js';
@@ -558,6 +558,57 @@ function buildMonument() {
   POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 12 });
 }
 
+// ── 檔案室：村莊邊入口建築 → 走進門淡出傳送到隱藏室內房間 → 靠近文件台開 PDF（新分頁）──
+const ARCHIVE = { pos: new THREE.Vector3(-24, 0, 0), enter: new THREE.Vector3(-22, 0, 0), back: new THREE.Vector3(-19, 0, 0), roomY: -120 };
+const ARCHIVE_FLOOR = ARCHIVE.roomY + 0.2;
+let archiveActive = false, archEnterArmed = true, archExitArmed = true;
+const archFadeEl = document.getElementById('fade');
+const archFade = { on: false, t: 0, dur: 0.7, mid: false, go: null };
+const startArchFade = (go) => { archFade.on = true; archFade.t = 0; archFade.mid = false; archFade.go = go; };
+function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLOOR, 2); hero.rotation.y = Math.PI; archiveActive = true; archiveRoom.visible = true; archExitArmed = false; if (panelId) hidePanel(); camera.position.set(0, ARCHIVE_FLOOR + 3, 8); }); }
+function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
+// 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
+{
+  const g = new THREE.Group(); g.position.copy(ARCHIVE.pos);
+  const wallMat = applyStone(mat(0xffffff));
+  const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
+  add(new THREE.BoxGeometry(0.6, 4, 6), wallMat, -2.2, 2, 0);
+  add(new THREE.BoxGeometry(4.4, 4, 0.6), wallMat, 0, 2, -2.7);
+  add(new THREE.BoxGeometry(4.4, 4, 0.6), wallMat, 0, 2, 2.7);
+  add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, -2);
+  add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, 2);
+  add(new THREE.BoxGeometry(0.6, 1, 2.2), wallMat, 2.2, 3.5, 0);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(4.4, 1.8, 4), mat(0x9c5b3a)); roof.position.set(0, 5, 0); roof.rotation.y = Math.PI / 4; roof.castShadow = true; g.add(roof);
+  for (const sz of [-0.95, 0.95]) { const fr = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3, 0.25), RUIN.woodDk); boxUV(fr.geometry); fr.position.set(2.25, 1.5, sz); fr.castShadow = true; g.add(fr); }
+  const lab = makeLabel('📚 檔案室'); lab.o.position.set(2.4, 4.7, 0); g.add(lab.o);
+  scene.add(g);
+}
+// 隱藏室內房間（世界下方，平時 visible=false）
+const archiveRoom = new THREE.Group(); archiveRoom.position.set(0, ARCHIVE.roomY, 0); archiveRoom.visible = false; scene.add(archiveRoom);
+{
+  const g = archiveRoom, wallMat = applyStone(mat(0xffffff)), woodM = RUIN.wood;
+  const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
+  add(new THREE.BoxGeometry(15, 0.4, 13), wallMat, 0, 0, 0);            // 地板
+  add(new THREE.BoxGeometry(15, 0.4, 13), wallMat, 0, 5, 0);            // 天花
+  add(new THREE.BoxGeometry(0.4, 5, 13), wallMat, -7.3, 2.5, 0);        // 左牆
+  add(new THREE.BoxGeometry(0.4, 5, 13), wallMat, 7.3, 2.5, 0);         // 右牆
+  add(new THREE.BoxGeometry(15, 5, 0.4), wallMat, 0, 2.5, -6.3);        // 後牆
+  add(new THREE.BoxGeometry(6, 5, 0.4), wallMat, -4.5, 2.5, 6.3);       // 前牆左段
+  add(new THREE.BoxGeometry(6, 5, 0.4), wallMat, 4.5, 2.5, 6.3);        // 前牆右段（中間留門）
+  add(new THREE.BoxGeometry(3, 1.2, 0.4), wallMat, 0, 4.4, 6.3);        // 前牆門楣
+  for (const bx of [-5.6, 5.6]) add(new THREE.BoxGeometry(2.4, 4, 0.7), woodM, bx, 2, -5.7); // 書架
+  const lamp = new THREE.PointLight(0xffe6b8, 55, 38, 1.5); lamp.position.set(0, 4.2, 0); g.add(lamp);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0xfff0cf })); bulb.position.set(0, 4.3, 0); g.add(bulb);
+  ARCHIVE_DOCS.forEach((d, i) => {
+    const dx = (i - 1) * 4.2;
+    const stand = add(new THREE.BoxGeometry(1.4, 1.0, 0.9), woodM, dx, 0.9, -4.7); stand.rotation.x = -0.5;
+    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.1), new THREE.MeshStandardMaterial({ color: 0xfbf7ef, emissive: 0xe9dfb0, emissiveIntensity: 0.55, roughness: 0.7 }));
+    sheet.position.set(dx, 1.55, -4.45); sheet.rotation.x = -0.5; g.add(sheet);
+    const lab = makeLabel(`${d.emoji} ${d.title}`); lab.o.position.set(dx, 2.6, -4.5); g.add(lab.o);
+    POIS.push({ data: d, isRuin: false, area: 'archive', pos: new THREE.Vector3(dx, ARCHIVE.roomY, -3.2), el: lab.el, openDist: 3.4 });
+  });
+}
+
 // ── 石化村民（遺跡維護者）：大水晶啟動後解除石化、靠近給提醒 ──────
 const STONE = new THREE.Color(0x9a958c);
 function buildKeeper(r) {
@@ -1027,7 +1078,7 @@ function animate() {
   if (keys.has('KeyA') || keys.has('ArrowLeft')) kx -= 1;
   kx += joyX; kz += joyZ;   // 虛擬搖桿
   const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
-  if (finaleActive) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡時凍結玩家
+  if (finaleActive || archFade.on) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡／檔案室轉場時凍結玩家
 
   moveDir.set(0, 0, 0);
   if (kx || kz) { hasTarget = false; moveDir.addScaledVector(fwd, kz).addScaledVector(right, kx); }
@@ -1038,7 +1089,7 @@ function animate() {
     moveDir.normalize();
     hero.position.addScaledVector(moveDir, (sprint ? 26 : 16) * dt);
     const len = Math.hypot(hero.position.x, hero.position.z);
-    if (len > WORLD.maxR) hero.position.multiplyScalar(WORLD.maxR / len);
+    if (!archiveActive && len > WORLD.maxR) hero.position.multiplyScalar(WORLD.maxR / len);
     const tr = Math.atan2(moveDir.x, moveDir.z);
     if (!spinning) hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
     moving = true;
@@ -1083,6 +1134,19 @@ function animate() {
   }
   if (airborne) { legL.rotation.x = -0.6; legR.rotation.x = -0.9; armL.rotation.x = -1.1; armR.rotation.x = -1.1; } // 滯空收腿擺手
 
+  // 檔案室：淡入淡出轉場 + 走進門/走到出口的觸發
+  if (archFade.on) {
+    archFade.t += dt; const half = archFade.dur / 2;
+    archFadeEl.style.opacity = (archFade.t < half ? archFade.t / half : Math.max(0, 1 - (archFade.t - half) / half)).toFixed(3);
+    if (archFade.t >= half && !archFade.mid) { archFade.mid = true; archFade.go(); }
+    if (archFade.t >= archFade.dur) { archFade.on = false; archFadeEl.style.opacity = '0'; }
+  } else if (!archiveActive) {
+    if (Math.hypot(hero.position.x - ARCHIVE.enter.x, hero.position.z - ARCHIVE.enter.z) < 1.7) { if (archEnterArmed) { archEnterArmed = false; enterArchive(); } } else archEnterArmed = true;
+  } else {
+    if (Math.hypot(hero.position.x - 0, hero.position.z - 5.5) < 1.7) { if (archExitArmed) { archExitArmed = false; exitArchive(); } } else archExitArmed = true;
+  }
+  if (archiveActive) hero.position.y = ARCHIVE_FLOOR + jumpOff; // 室內地板高度（覆蓋地形跟隨）
+
   // 對話泡：踩水反應 + 漫步自言自語
   if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
   const inWater = groundH < WORLD.water + 0.2;
@@ -1094,9 +1158,10 @@ function animate() {
   wasInWater = inWater;
 
   // 鏡頭跟隨（避免穿地）
-  camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, hero.position.y + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
+  const cd = archiveActive ? 5.0 : dist, cp = archiveActive ? Math.min(pitch, 0.3) : pitch, ch = archiveActive ? 1.4 : 2; // 室內用較近/較低的鏡頭，避免穿牆穿天花
+  camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(cp) * cd, hero.position.y + Math.sin(cp) * cd + ch, hero.position.z + Math.cos(yaw) * Math.cos(cp) * cd);
   const camGround = terrainHeight(camPos.x, camPos.z) + 3;
-  if (camPos.y < camGround) camPos.y = camGround;
+  if (!archiveActive && camPos.y < camGround) camPos.y = camGround;
   camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
   lookAt.set(hero.position.x, hero.position.y + 2.4, hero.position.z); camera.lookAt(lookAt);
   // 終局運鏡：鏡頭飛向村莊中央大水晶，看完噴發動畫後才彈出完成畫面
@@ -1114,6 +1179,7 @@ function animate() {
   // POI 鄰近 / 發現 / 面板
   let near = null, nd = Infinity;
   for (const p of POIS) {
+    if ((p.area || 'world') !== (archiveActive ? 'archive' : 'world')) continue; // 只判定當前空間的 POI
     const d = Math.hypot(hero.position.x - p.pos.x, hero.position.z - p.pos.z);
     if (d < p.openDist && d < nd) { nd = d; near = p; }
     if (p.isRuin) {
@@ -1161,7 +1227,7 @@ function animate() {
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
-  gradePass.uniforms.uVibrancy.value = vibrancy;
+  gradePass.uniforms.uVibrancy.value = archiveActive ? 1 : vibrancy; // 檔案室內固定滿色
   skyMat.uniforms.top.value.lerpColors(SKY_TOP_D, SKY_TOP_A, vibrancy);
   skyMat.uniforms.bottom.value.lerpColors(SKY_BOT_D, SKY_BOT_A, vibrancy);
   scene.fog.color.lerpColors(FOG_D, FOG_A, vibrancy);
