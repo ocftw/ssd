@@ -1214,7 +1214,27 @@ const SPIN_DUR = 0.55;
 // 座標框（開發／定位用）：預設隱藏，按 G 切換顯示（輸入框聚焦時不觸發，例如戰鬥密碼題）
 const coordsEl = document.getElementById('coords');
 let fpsAvg = 60; // 平滑後的 FPS（座標框內顯示，方便量測效能）
-addEventListener('keydown', (e) => { if (e.code === 'KeyG' && document.activeElement?.tagName !== 'INPUT') coordsEl.classList.toggle('show'); });
+// 火把「探照」即時可調參數（座標框開啟時：[ ] 選參數、- = 增減）；調好後把數值告訴我即可固定
+const torchTune = { spotInt: 120, spotAng: 0.32, spotPen: 0.6, spotFwd: 6, spotH: 3.4, spotDist: 32, ptInt: 52 };
+const torchParams = [
+  { k: 'spotInt', label: '強度', step: 10, fmt: (v) => v.toFixed(0) },
+  { k: 'spotAng', label: '角度', step: 0.02, fmt: (v) => v.toFixed(2) + 'π' },
+  { k: 'spotPen', label: '邊緣', step: 0.05, fmt: (v) => v.toFixed(2) },
+  { k: 'spotFwd', label: '前距', step: 0.5, fmt: (v) => v.toFixed(1) },
+  { k: 'spotH', label: '高度', step: 0.2, fmt: (v) => v.toFixed(1) },
+  { k: 'spotDist', label: '距離', step: 2, fmt: (v) => v.toFixed(0) },
+  { k: 'ptInt', label: '點光', step: 4, fmt: (v) => v.toFixed(0) },
+];
+let torchSel = 0;
+addEventListener('keydown', (e) => {
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  if (e.code === 'KeyG') { coordsEl.classList.toggle('show'); return; }
+  if (!coordsEl.classList.contains('show')) return;
+  if (e.code === 'BracketLeft') torchSel = (torchSel + torchParams.length - 1) % torchParams.length;
+  else if (e.code === 'BracketRight') torchSel = (torchSel + 1) % torchParams.length;
+  else if (e.code === 'Minus') { const p = torchParams[torchSel]; torchTune[p.k] = Math.max(0, +(torchTune[p.k] - p.step).toFixed(3)); }
+  else if (e.code === 'Equal') { const p = torchParams[torchSel]; torchTune[p.k] = +(torchTune[p.k] + p.step).toFixed(3); }
+});
 
 function animate() {
   timer.update();
@@ -1342,11 +1362,12 @@ function animate() {
   // 隨身火把：朝「主角正面」方向（不跟鏡頭轉）；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
   const hfx = Math.sin(hero.rotation.y), hfz = Math.cos(hero.rotation.y); // 主角正面方向（+z 面）
   torch.position.set(hero.position.x + hfx * 2, hero.position.y + 2.4, hero.position.z + hfz * 2);
-  torch.intensity = archiveActive ? 0 : 52 * (1 - 0.7 * vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
-  // 火把地面光錐：從頭頂斜射到主角正面的地面，照亮腳前的路
-  torchGround.position.set(hero.position.x, hero.position.y + 3.4, hero.position.z);
-  { const gx = hero.position.x + hfx * 6, gz = hero.position.z + hfz * 6; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
-  torchGround.intensity = archiveActive ? 0 : 120 * (1 - 0.7 * vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
+  torch.intensity = archiveActive ? 0 : torchTune.ptInt * (1 - 0.7 * vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
+  // 火把地面光錐（探照效果，參數可在座標框即時調整）：從頭頂斜射到主角正面的地面
+  torchGround.angle = torchTune.spotAng * Math.PI; torchGround.penumbra = torchTune.spotPen; torchGround.distance = torchTune.spotDist;
+  torchGround.position.set(hero.position.x, hero.position.y + torchTune.spotH, hero.position.z);
+  { const gx = hero.position.x + hfx * torchTune.spotFwd, gz = hero.position.z + hfz * torchTune.spotFwd; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
+  torchGround.intensity = archiveActive ? 0 : torchTune.spotInt * (1 - 0.7 * vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
   // 螢火蟲：環繞各「已完成」遺跡漂浮閃爍（點綴）；室內關閉
   {
     const ffBright = archiveActive ? 0 : 1;
@@ -1515,11 +1536,12 @@ function animate() {
   // 腳印淡出
   for (let i = prints.length - 1; i >= 0; i--) { const f = prints[i]; f.t += dt; const k = f.t / f.dur; f.mat.opacity = f.op * (1 - k); if (k >= 1) { scene.remove(f.m); f.mat.dispose(); prints.splice(i, 1); } }
 
-  // 座標框（按 G 開啟時才更新）：顯示主角 x／z 與 極座標（角度°、半徑）
+  // 座標框（按 G 開啟時才更新）：座標／fps + 火把探照即時調參
   if (coordsEl && coordsEl.classList.contains('show')) {
     const hx = hero.position.x, hz = hero.position.z;
     let deg = Math.atan2(hz, hx) * 180 / Math.PI; if (deg < 0) deg += 360;
-    coordsEl.textContent = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}　｜　fps ${Math.round(fpsAvg)}`;
+    const tuneStr = torchParams.map((p, i) => { const s = `${p.label} ${p.fmt(torchTune[p.k])}`; return i === torchSel ? `<b style="color:#ffd24b">▸${s}</b>` : s; }).join('　');
+    coordsEl.innerHTML = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}　｜　fps ${Math.round(fpsAvg)}<br>🔦 探照（[ ] 選參數・ − ＝ 增減）：${tuneStr}`;
   }
 
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }

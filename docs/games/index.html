@@ -183,11 +183,11 @@
     .pw-tip { font-size:12px; font-weight:700; line-height:1.5; min-height:1.2em; text-align:center; }
     .pw-go:disabled { opacity:.5; cursor:default; }
 
-    /* 座標框（開發／定位用）：預設隱藏，按 G 切換顯示 */
+    /* 座標框＋火把探照調參（開發用）：預設隱藏，按 G 切換顯示 */
     #coords { display:none; position:fixed; left:50%; top:54px; transform:translateX(-50%); z-index:16;
       font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; font-weight:700; color:#fff;
-      background:rgba(29,36,51,.82); padding:6px 12px; border-radius:999px; box-shadow:var(--shadow);
-      pointer-events:none; white-space:nowrap; }
+      background:rgba(29,36,51,.85); padding:7px 13px; border-radius:14px; box-shadow:var(--shadow);
+      pointer-events:none; max-width:94vw; text-align:center; line-height:1.7; }
     #coords.show { display:block; }
 
     /* 小地圖 */
