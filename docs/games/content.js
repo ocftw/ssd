@@ -29,6 +29,16 @@ export const LEGEND = {
   chips: [], stateText: '遠古的傳說', story: true, noLink: true,
 };
 
+// 英雄遺落的武器寶箱（村外的隱藏地標，非課程：無戰鬥、不計遺跡進度）
+// 走近 → 跳出說明 → 按鍵連到資安實戰教材資源頁。
+export const WEAPON_CHEST = {
+  id: 'chest', title: '英雄遺落的武器寶箱', sub: '荒野中的古老寶箱', emoji: '🗡️',
+  color: 0xffd24b, angle: 90, radius: 32, url: 'https://ssd.ocf.tw/resources/cscs-materials.html',
+  desc: '傳說中的英雄離開時，把武器封存在這只寶箱。打開一看——裡頭不是刀劍，而是一整套「資安實戰教材」：簡報、講義與練習。帶上它們，你也能像當年的英雄一樣守住自己的村莊。',
+  chips: ['資安教材', '簡報講義', '實作練習', '自由取用'],
+  stateText: '英雄的武器庫', goText: '取得教材資源 →',
+};
+
 // 檔案室裡的 3 份文件（走進檔案室 → 室內 → 靠近文件台開 PDF 新分頁）
 // cover：文件台上展示的封面圖（依序對應）。
 export const ARCHIVE_DOCS = [
