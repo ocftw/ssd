@@ -306,8 +306,20 @@
       #panel .foot { margin-top:10px; }
     }
 
+    /* 中小螢幕：右上控制群換行，讓語言鈕落到第二排靠右、與左側標題牌錯開（避免左右兩側重疊）。
+       上限取 680px：因標題牌展開說明時最寬達 360px，單排的右上群在約 632px 以下會與其相撞。 */
+    @media (min-width:561px) and (max-width:680px) {
+      #topright { flex-wrap:wrap; justify-content:flex-end; max-width:155px; }
+    }
     @media (max-width:560px) {
       #titlecard p { display:none; }
+      /* 很小的螢幕：標題牌與徽章再收窄，右上群以更緊的上限換行（必要時各鈕逐排靠右），確保避開左側標題 */
+      #titlecard { max-width:54vw; }
+      #titlecard h1 { font-size:13px; line-height:1.25; }
+      #badge { font-size:11px; padding:4px 9px; margin-top:7px; }
+      #topright { flex-wrap:wrap; justify-content:flex-end; max-width:44vw; }
+      #langsw { gap:2px; padding:3px; }
+      #langsw button { padding:5px 7px; font-size:11px; }
       #minimap { width:128px; height:128px; } #minimap canvas { width:128px; height:128px; }
       #jumpbtn { bottom:calc(156px + env(safe-area-inset-bottom)); } /* 小地圖縮成 128，跳鍵跟著下移仍在其上方 */
       #hint kbd:nth-child(n+4) { display:none; }
