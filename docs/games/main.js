@@ -84,7 +84,7 @@ const gradePass = new ShaderPass({
     void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
       float sat = mix(0.90, 1.0, uVibrancy);                          // 夜晚仍保留原色（不再大幅去飽和）
       vec3 tint = mix(vec3(0.82, 0.88, 1.0), vec3(1.0), uVibrancy);   // 夜晚淡淡冷藍月色
-      float br = mix(0.8, 1.0, uVibrancy);                             // 夜晚整體亮度壓到 0.8（恢復後回到 1.0）
+      float br = mix(0.4, 1.0, uVibrancy);                             // 夜晚整體亮度壓到 0.4（恢復後回到 1.0）
       gl_FragColor = vec4(mix(vec3(l), c.rgb, sat) * tint * br, c.a); }`,
 });
 composer.addPass(gradePass);
