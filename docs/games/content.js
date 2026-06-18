@@ -39,6 +39,16 @@ export const WEAPON_CHEST = {
   stateText: '英雄的武器庫', goText: '取得教材資源 →',
 };
 
+// 資安升級工具包（村外的「資源寶箱」，非課程；走近 → 說明 → 連到 /guide/）
+// 給組織內負責資安的夥伴：如何在自己的組織裡一步步推動資安提升。
+export const GUIDE_KIT = {
+  id: 'guidekit', title: '資安升級工具包', sub: '組織推動資安的工具箱', emoji: '🧰',
+  color: 0xb98bff, angle: 106, radius: 30, url: 'https://ssd.ocf.tw/guide/',
+  desc: '給組織內負責資安的夥伴：一套「如何在組織裡推動資安提升」的方法與工具——威脅建模、風險評估、裝置稽核、成效檢視，陪你一步步把整個組織的防護升級。',
+  chips: ['組織推動', '威脅建模', '風險評估', '裝置稽核', '成效檢視'],
+  stateText: '組織工具包', goText: '打開工具包 →',
+};
+
 // 檔案室裡的 3 份文件（走進檔案室 → 室內 → 靠近文件台開 PDF 新分頁）
 // cover：文件台上展示的封面圖（依序對應）。
 export const ARCHIVE_DOCS = [

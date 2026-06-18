@@ -9,7 +9,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST } from './content.js';
+import { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST, GUIDE_KIT } from './content.js';
 import { WORLD, terrainHeight, groundY } from './terrain.js';
 import { BATTLES } from './battles.js';
 import { BattleSystem } from './battle.js';
@@ -559,9 +559,9 @@ function buildMonument() {
   POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 12 });
 }
 
-// ── 英雄遺落的武器寶箱（村外地標，非課程；走近開面板 → 連到資源頁）──
-const chestObj = (() => {
-  const a = WEAPON_CHEST.angle * Math.PI / 180, cx = Math.cos(a) * WEAPON_CHEST.radius, cz = Math.sin(a) * WEAPON_CHEST.radius, cy = groundY(cx, cz);
+// ── 村外的「資源寶箱」（非課程；走近開面板 → 連到資源頁）：箱身共用，蓋子上方浮一個發光物件 ──
+function buildChest(content, buildTop) {
+  const a = content.angle * Math.PI / 180, cx = Math.cos(a) * content.radius, cz = Math.sin(a) * content.radius, cy = groundY(cx, cz);
   const g = new THREE.Group();
   const woodM = mat(0x6b4a2f, { roughness: 0.8 }), bandM = mat(0xb8893a, { metalness: 0.6, roughness: 0.4 });
   const goldM = mat(0xffd24b, { emissive: 0xffcf6b, emissiveIntensity: 0.5, metalness: 0.5, roughness: 0.3 });
@@ -576,18 +576,33 @@ const chestObj = (() => {
   lid.rotation.x = -2.0;
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.95, 3.6, 18, 1, true), new THREE.MeshBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false }));
   beam.position.set(0, 2.0, 0); g.add(beam);
-  const sword = new THREE.Group(); sword.position.set(0, 2.5, 0); g.add(sword);       // 浮空寶劍＝英雄的武器
-  add(new THREE.BoxGeometry(0.16, 1.6, 0.05), mat(0xeaf2ff, { emissive: 0x9fd0ff, emissiveIntensity: 0.85, metalness: 0.7, roughness: 0.25 }), 0, 0.9, 0, sword);
-  add(new THREE.ConeGeometry(0.08, 0.22, 4), mat(0xeaf2ff, { emissive: 0x9fd0ff, emissiveIntensity: 0.85 }), 0, 1.8, 0, sword);
-  add(new THREE.BoxGeometry(0.72, 0.14, 0.14), goldM, 0, 0.1, 0, sword);              // 護手
-  add(new THREE.BoxGeometry(0.12, 0.5, 0.12), woodM, 0, -0.18, 0, sword);            // 握把
-  add(new THREE.SphereGeometry(0.12, 12, 10), goldM, 0, -0.48, 0, sword);            // 劍柄圓頭
+  const top = new THREE.Group(); top.position.set(0, 2.5, 0); g.add(top);             // 浮空發光物件（武器／工具包…）
+  buildTop(top, add, goldM, woodM);
   g.position.set(cx, cy, cz); g.rotation.y = Math.atan2(-cx, -cz);                    // 正面朝向村莊／玩家
   scene.add(g);
-  const lab = makeLabel(`${WEAPON_CHEST.emoji} ${WEAPON_CHEST.title}`); lab.o.position.set(0, 4.4, 0); g.add(lab.o);
-  POIS.push({ data: WEAPON_CHEST, isRuin: false, pos: new THREE.Vector3(cx, cy, cz), el: lab.el, openDist: 9 });
-  return { sword, beam };
-})();
+  const lab = makeLabel(`${content.emoji} ${content.title}`); lab.o.position.set(0, 4.4, 0); g.add(lab.o);
+  POIS.push({ data: content, isRuin: false, pos: new THREE.Vector3(cx, cy, cz), el: lab.el, openDist: 9 });
+  return { top, beam };
+}
+// 武器寶箱：浮空寶劍（英雄的武器）
+const chestObj = buildChest(WEAPON_CHEST, (top, add, goldM, woodM) => {
+  add(new THREE.BoxGeometry(0.16, 1.6, 0.05), mat(0xeaf2ff, { emissive: 0x9fd0ff, emissiveIntensity: 0.85, metalness: 0.7, roughness: 0.25 }), 0, 0.9, 0, top);
+  add(new THREE.ConeGeometry(0.08, 0.22, 4), mat(0xeaf2ff, { emissive: 0x9fd0ff, emissiveIntensity: 0.85 }), 0, 1.8, 0, top);
+  add(new THREE.BoxGeometry(0.72, 0.14, 0.14), goldM, 0, 0.1, 0, top);                // 護手
+  add(new THREE.BoxGeometry(0.12, 0.5, 0.12), woodM, 0, -0.18, 0, top);              // 握把
+  add(new THREE.SphereGeometry(0.12, 12, 10), goldM, 0, -0.48, 0, top);              // 劍柄圓頭
+});
+// 工具包寶箱：浮空發光手冊（組織資安升級工具包）
+const toolkitObj = buildChest(GUIDE_KIT, (top, add) => {
+  const pageMat = mat(0xfbf7ef, { emissive: 0xfff0cf, emissiveIntensity: 0.55, roughness: 0.6 });
+  const coverMat = mat(0x8c5bd8, { emissive: 0x5a3bb0, emissiveIntensity: 0.4, roughness: 0.5 });
+  const book = new THREE.Group(); book.rotation.x = -0.55; top.add(book);             // 打開的手冊，微微朝玩家攤開
+  for (const s of [-1, 1]) {
+    add(new THREE.BoxGeometry(0.78, 0.05, 1.0), coverMat, s * 0.4, -0.04, 0, book).rotation.z = s * 0.16; // 封面
+    add(new THREE.BoxGeometry(0.7, 0.04, 0.92), pageMat, s * 0.37, 0.0, 0, book).rotation.z = s * 0.16;   // 內頁
+  }
+  add(new THREE.BoxGeometry(0.1, 0.13, 1.0), coverMat, 0, -0.03, 0, book);            // 書脊
+});
 
 // ── 檔案室：村莊邊入口建築 → 走進門淡出傳送到隱藏室內房間 → 靠近文件台開 PDF（新分頁）──
 const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5), enter: new THREE.Vector3(-11, 0, 5), back: new THREE.Vector3(-8, 0, 5), roomY: -120 };
@@ -1321,10 +1336,13 @@ function animate() {
     m.globe.rotation.y += dt * (0.1 + L * 0.6);
     m.globe.position.y = 6.6 + Math.sin(t * 1.5) * 0.12 * L;
   }
-  // 武器寶箱：浮空寶劍緩緩旋轉＋上下漂浮，光束脈動
-  chestObj.sword.rotation.y += dt * 0.8;
-  chestObj.sword.position.y = 2.5 + Math.sin(t * 1.6) * 0.12;
+  // 資源寶箱：浮空物件緩緩旋轉＋上下漂浮，光束脈動
+  chestObj.top.rotation.y += dt * 0.8;
+  chestObj.top.position.y = 2.5 + Math.sin(t * 1.6) * 0.12;
   chestObj.beam.material.opacity = 0.12 + Math.sin(t * 2.2) * 0.04;
+  toolkitObj.top.rotation.y += dt * 0.6;
+  toolkitObj.top.position.y = 2.45 + Math.sin(t * 1.5 + 1) * 0.1;
+  toolkitObj.beam.material.opacity = 0.12 + Math.sin(t * 2.0 + 1) * 0.04;
   // 綠袍法師：呼吸擺動 + 法杖球脈動 + 靠近顯示提示
   mage.group.position.y = mage.baseY + Math.sin(t * 1.5) * 0.04;
   mage.orbMat.emissiveIntensity = 1.3 + Math.sin(t * 3) * 0.5;
