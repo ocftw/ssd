@@ -29,6 +29,34 @@ export const LEGEND = {
   chips: [], stateText: '遠古的傳說', story: true, noLink: true,
 };
 
+// 英雄遺落的武器寶箱（村外的隱藏地標，非課程：無戰鬥、不計遺跡進度）
+// 走近 → 跳出說明 → 按鍵連到資安實戰教材資源頁。
+export const WEAPON_CHEST = {
+  id: 'chest', title: '英雄遺落的武器寶箱', sub: '荒野中的古老寶箱', emoji: '🗡️',
+  color: 0xffd24b, angle: 74, radius: 30, url: 'https://ssd.ocf.tw/resources/cscs-materials.html',
+  desc: '傳說中的英雄離開時，把武器封存在這只寶箱。打開一看——裡頭不是刀劍，而是一整套「資安實戰教材」：簡報、講義與練習。帶上它們，你也能像當年的英雄一樣守住自己的村莊。',
+  chips: ['資安教材', '簡報講義', '實作練習', '自由取用'],
+  stateText: '英雄的武器庫', goText: '取得教材資源 →',
+};
+
+// 資安升級工具包（村外的「資源寶箱」，非課程；走近 → 說明 → 連到 /guide/）
+// 給組織內負責資安的夥伴：如何在自己的組織裡一步步推動資安提升。
+export const GUIDE_KIT = {
+  id: 'guidekit', title: '資安升級工具包', sub: '組織推動資安的工具箱', emoji: '🧰',
+  color: 0xb98bff, angle: 106, radius: 30, url: 'https://ssd.ocf.tw/guide/',
+  desc: '給組織內負責資安的夥伴：一套「如何在組織裡推動資安提升」的方法與工具——威脅建模、風險評估、裝置稽核、成效檢視，陪你一步步把整個組織的防護升級。',
+  chips: ['組織推動', '威脅建模', '風險評估', '裝置稽核', '成效檢視'],
+  stateText: '組織工具包', goText: '打開工具包 →',
+};
+
+// 檔案室裡的 3 份文件（走進檔案室 → 室內 → 靠近文件台開 PDF 新分頁）
+// cover：文件台上展示的封面圖（依序對應）。
+export const ARCHIVE_DOCS = [
+  { id: 'doc1', title: '台灣人權與民主倡議團體數位威脅概況', sub: '檔案室・卷宗一', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover1.webp?v=fd5cb132', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view', desc: '2024 年研究報告摘要（中文版），整理 35 份問卷與 3 場深度訪談中，在臺人權與民主倡議團體面臨的數位威脅樣態與資安需求。' },
+  { id: 'doc2', title: '守護倡議之聲', sub: '檔案室・卷宗二', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover2.webp?v=fd5cb132', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link', desc: '本專案結案報告，整理「資安陪伴計畫」(SMP) 對公民團體與人權工作者的服務模式、實作經驗與建議。' },
+  { id: 'doc3', title: '信任的代價', sub: '檔案室・卷宗三', emoji: '📄', stateText: '文件', goText: '閱讀 PDF →', chips: [], cover: './cover3.webp?v=fd5cb132', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link', desc: '一份針對臺灣人權工作者實際遭遇資安攻擊事件的個案研究實錄，記錄攻擊樣態、防守過程與經驗教訓。' },
+];
+
 // 散落在村莊外的遺跡：每一座 = 一個資安主題
 export const RUINS = [
   {
@@ -53,11 +81,11 @@ export const RUINS = [
     tip: '遇到可疑訊息別急著點：改用官方 App 或自己的書籤登入確認；真的中招就先改密碼、開 MFA、保留截圖證據。',
   },
   {
-    id: 'guide', title: '資安升級工具包', sub: '荒野中的方尖碑', emoji: '🧰',
-    color: 0xb98bff, style: 'obelisk', angle: 250, radius: 84, url: `${SITE}/guide/`,
-    desc: '威脅建模、風險評估、裝置稽核——陪組織一步步升級的工具與方法。',
-    chips: ['威脅建模', '風險評估', '裝置稽核', '成效檢視'],
-    tip: '升級資安先盤點：列出要保護的資產與最怕的後果，依風險高低排優先序，別想一次全部做完。',
+    id: 'guide', title: '資安體檢與進度追蹤', sub: '荒野中的方尖碑', emoji: '📋',
+    color: 0x5bc8bf, style: 'obelisk', angle: 250, radius: 84, url: `${SITE}/assessment/`,
+    desc: '用檢查清單為組織做「資安體檢」：盤點現況、排出優先順序，並把改善進度與課後任務記錄下來，讓資安升級看得見、追得動。',
+    chips: ['現況盤點', '檢查清單', '進度追蹤', '成效檢視'],
+    tip: '別只靠記憶追進度：用一份檢查清單記下「做到哪、下一步做什麼」，定期回顧、滾動更新。',
   },
   {
     id: 'tools', title: '工具推薦', sub: '湖畔的市集遺跡', emoji: '🛠️',

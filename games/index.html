@@ -186,6 +186,8 @@
     #loader p { margin:0; font-weight:700; color:#51596b; } @keyframes spin { to { transform:rotate(360deg); } }
 
     /* 完成（重生）畫面 */
+    /* 檔案室進出的全螢幕淡入淡出 */
+    #fade { position:fixed; inset:0; z-index:38; background:#0c0f14; opacity:0; pointer-events:none; }
     #finale { position:fixed; top:0; left:0; right:0; height:100dvh; z-index:40; display:grid; place-items:center; padding:20px;
       background:radial-gradient(120% 90% at 50% 40%, rgba(28,40,30,.5), rgba(14,20,16,.82));
       opacity:0; pointer-events:none; transition:opacity .6s ease; }
@@ -231,6 +233,7 @@
 <body>
   <div id="app"></div>
   <div id="vignette"></div>
+  <div id="fade"></div>
 
   <div id="titlecard">
     <h1>資安防護新手村 · 探險</h1>
@@ -308,6 +311,6 @@
 
   <div id="loader"><div><div class="spin"></div><p>正在生成世界…</p></div></div>
 
-  <script type="module" src="./main.js?v=d83e1ac6"></script>
+  <script type="module" src="./main.js?v=fd5cb132"></script>
 </body>
 </html>
