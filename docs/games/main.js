@@ -973,6 +973,18 @@ const badge = $('#badge'); const toastEl = $('#toast'); const logBtn = $('#logbt
 let panelId = null, pinnedId = null; const suppressed = new Set();
 
 function poiById(id) { return POIS.find((p) => p.data.id === id); }
+// 「建議下一站」：依學習層次的推薦順序，指向第一個尚未完成的遺跡（只引導、不鎖定）
+const RUIN_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
+function nextRecommendedRuinId() { for (const id of RUIN_ORDER) { if (poiById(id) && !isDone(id)) return id; } return null; }
+const guideMark = (() => {
+  const g = new THREE.Group();
+  const gem = new THREE.Mesh(new THREE.OctahedronGeometry(1.0, 0), new THREE.MeshStandardMaterial({ color: 0xffd86b, emissive: 0xffc24b, emissiveIntensity: 1.6, roughness: 0.3, metalness: 0.2 }));
+  g.add(gem);
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(1.8, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffd86b, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false })));
+  const lab = makeLabel('🧭 建議下一站'); lab.o.position.set(0, 1.6, 0); g.add(lab.o);
+  g.visible = false; scene.add(g);
+  return { group: g, gem };
+})();
 function showPanel(p) {
   const d = p.data; panelId = d.id;
   POIS.forEach((x) => x.el.classList.toggle('is-active', x === p));
@@ -1197,6 +1209,9 @@ function drawMinimap() {
     if (!isDisc(r.id)) { mc.strokeStyle = 'rgba(40,50,40,.55)'; mc.setLineDash([3, 3]); mc.beginPath(); mc.arc(x, y, 6, 0, TAU); mc.stroke(); mc.setLineDash([]); mc.fillStyle = 'rgba(40,50,40,.65)'; mc.fillText('?', x, y); }
     else { mc.fillStyle = '#' + r.color.toString(16).padStart(6, '0'); mc.beginPath(); mc.arc(x, y, 6, 0, TAU); mc.fill(); if (isDone(r.id)) { mc.strokeStyle = '#fff'; mc.lineWidth = 2; mc.beginPath(); mc.arc(x, y, 6, 0, TAU); mc.stroke(); } }
   });
+  // 建議下一站：脈動金環
+  const recId = nextRecommendedRuinId();
+  if (recId) { const rr = ruinAt.find((r) => r.id === recId); const [rx, ry] = w2m(rr.x, rr.z); const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.004); mc.strokeStyle = `rgba(255,210,80,${(0.5 + pulse * 0.45).toFixed(2)})`; mc.lineWidth = 2.5; mc.beginPath(); mc.arc(rx, ry, 9 + pulse * 3, 0, TAU); mc.stroke(); }
   // 玩家
   const [hx, hy] = w2m(hero.position.x, hero.position.z); const a = hero.rotation.y;
   mc.fillStyle = '#ff7a45'; mc.beginPath();
@@ -1472,6 +1487,16 @@ function animate() {
       else if (state === 1) { k.el.className = 'bubble petrified show'; k.el.textContent = '🗿 一尊石化的村民…'; }
       else if (state === 2) { k.el.className = 'bubble chip clickable show'; k.el.innerHTML = '💬'; }
       else { k.el.className = 'bubble clickable show'; k.el.innerHTML = `<b>${k.ruin.emoji} ${k.ruin.title}・維護者</b><span>${k.ruin.tip}</span>`; }
+    }
+  }
+  // 「建議下一站」路標：浮在推薦順序中第一個未完成的遺跡上方
+  {
+    const recId = (battle.active || finaleActive || archiveActive) ? null : nextRecommendedRuinId();
+    guideMark.group.visible = !!recId;
+    if (recId) {
+      const rp = poiById(recId).pos;
+      guideMark.group.position.set(rp.x, rp.y + 10 + Math.sin(t * 1.6) * 0.5, rp.z);
+      guideMark.gem.rotation.y += dt * 1.2; guideMark.gem.rotation.x = Math.sin(t * 0.9) * 0.3;
     }
   }
   // OCF 紀念碑：每次進來都未點亮，靠近才點燃（本次遊玩保持點亮）＝給 OCF 添柴火
