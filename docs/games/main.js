@@ -1166,7 +1166,9 @@ let walkPhase = 0, mmAcc = 0, lastStepFloor = 0;
 let jumpVel = 0, jumpOff = 0, jumpHeld = false; // 跳躍：地面高度之上的位移
 let doubleJumped = false, spinning = false, spinT = 0, yawBeforeSpin = 0; // 二段跳 + 空中轉一圈
 const SPIN_DUR = 0.55;
-const coordsEl = document.getElementById('coords'); // TEMP 開發用座標顯示
+// 座標框（開發／定位用）：預設隱藏，按 G 切換顯示（輸入框聚焦時不觸發，例如戰鬥密碼題）
+const coordsEl = document.getElementById('coords');
+addEventListener('keydown', (e) => { if (e.code === 'KeyG' && document.activeElement?.tagName !== 'INPUT') coordsEl.classList.toggle('show'); });
 
 function animate() {
   timer.update();
@@ -1449,8 +1451,8 @@ function animate() {
   // 腳印淡出
   for (let i = prints.length - 1; i >= 0; i--) { const f = prints[i]; f.t += dt; const k = f.t / f.dur; f.mat.opacity = f.op * (1 - k); if (k >= 1) { scene.remove(f.m); f.mat.dispose(); prints.splice(i, 1); } }
 
-  // TEMP 開發用座標顯示（定位完成後移除：此區塊、index.html 的 #coords div 與 CSS）
-  if (coordsEl) {
+  // 座標框（按 G 開啟時才更新）：顯示主角 x／z 與 極座標（角度°、半徑）
+  if (coordsEl && coordsEl.classList.contains('show')) {
     const hx = hero.position.x, hz = hero.position.z;
     let deg = Math.atan2(hz, hx) * 180 / Math.PI; if (deg < 0) deg += 360;
     coordsEl.textContent = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}`;
