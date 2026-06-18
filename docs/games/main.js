@@ -154,8 +154,7 @@ torchGround.shadow.camera.near = 1; torchGround.shadow.camera.far = 34;
 torchGround.shadow.bias = -0.0006; torchGround.shadow.normalBias = 0.04;
 scene.add(torchGround); scene.add(torchGround.target);
 
-// 螢火蟲：固定在地圖某一地點的群聚特效（自體發光、漂浮閃爍；世界恢復後轉淡、室內關閉）
-const FIREFLY_SPOT = new THREE.Vector3(18, 0, -10); // 群聚地點（可調整：用座標框 G 找位置）
+// 螢火蟲：點綴「已完成」的遺跡（自體發光、漂浮閃爍）。完成一座遺跡，28 顆便分布到各已完成遺跡周圍。
 const fireflyTex = (() => {
   const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
   const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -164,19 +163,22 @@ const fireflyTex = (() => {
   x.fillStyle = g; x.fillRect(0, 0, 64, 64);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 })();
-const FIREFLY_BASE_Y = groundY(FIREFLY_SPOT.x, FIREFLY_SPOT.z); // 固定地點，地面高度只算一次
 const fireflies = [];
 const fireflyGroup = new THREE.Group(); scene.add(fireflyGroup);
 for (let i = 0; i < 28; i++) {
-  const lead = i < 2; // 前兩隻靠群中心、負責提燈微光
   const m = new THREE.SpriteMaterial({ map: fireflyTex, color: 0xfff0a0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
-  const s = new THREE.Sprite(m); s.scale.setScalar(lead ? rand(0.8, 1.1) : rand(0.5, 1.0)); fireflyGroup.add(s);
-  fireflies.push({ s, m, ox: rand(-1, 1) * (lead ? 3 : 7), oz: rand(-1, 1) * (lead ? 3 : 7), h: rand(0.8, 3.2),
+  const s = new THREE.Sprite(m); s.scale.setScalar(rand(0.5, 1.0)); fireflyGroup.add(s);
+  fireflies.push({ s, m, on: false, cx: 0, cz: 0, cy: 0, ox: rand(-1, 1) * 6, oz: rand(-1, 1) * 6, h: rand(1.0, 4.5),
     sx: rand(0.12, 0.32), sz: rand(0.12, 0.32), ax: rand(1.2, 3.0), az: rand(1.2, 3.0), ph: rand(0, TAU), bob: rand(0.4, 1.0), tw: rand(1.6, 3.0) });
 }
-// 兩盞「螢火蟲提燈」：在群中心給一點暖綠微光
-const fireflyLights = [new THREE.PointLight(0xcfffa0, 0, 9, 1.6), new THREE.PointLight(0xcfffa0, 0, 9, 1.6)];
-fireflyLights.forEach((l) => scene.add(l));
+// 把 28 顆螢火蟲分配到「已完成」的遺跡周圍（完成數改變時呼叫）；沒有完成的遺跡則全部隱藏
+function assignFireflies() {
+  const done = ruinAt.filter((r) => isDone(r.id));
+  fireflies.forEach((f, i) => {
+    if (!done.length) { f.on = false; return; }
+    const r = done[i % done.length]; f.cx = r.x; f.cz = r.z; f.cy = r.y; f.on = true;
+  });
+}
 
 // ── 地形 ────────────────────────────────────────────────────────
 const segs = 240;
@@ -987,7 +989,7 @@ actbtnEl.addEventListener('click', () => { if (panelId) suppressed.add(panelId);
 let jumpPending = false;
 const jumpBtn = document.getElementById('jumpbtn');
 jumpBtn.addEventListener('pointerdown', (e) => { jumpPending = true; SFX.unlock(); e.preventDefault(); });
-pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); computeVibrancy(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); } });
+pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); } });
 
 // 點亮遺跡外觀（水晶、光束、標籤）
 function lightRuin(p) {
@@ -1005,7 +1007,7 @@ function startBattle(p) {
     if (won) {
       if (!isDisc(p.data.id)) progress.discovered.push(p.data.id);
       if (!isDone(p.data.id)) progress.completed.push(p.data.id);
-      save(); lightRuin(p); updateHud(); computeVibrancy(); spawnBurst(p); afterCompleteToast(p); checkAllDone();
+      save(); lightRuin(p); updateHud(); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone();
     }
     suppressed.delete(p.data.id);
   });
@@ -1123,13 +1125,13 @@ function resetProgress() {
   const cc = document.querySelector('#finale .confcompare'); if (cc) cc.textContent = '';
   allDoneShown = false; pinnedId = null; suppressed.clear(); hidePanel();
   POIS.forEach((p) => { if (p.isRuin) resetRuinVisual(p); });
-  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; updateHud(); computeVibrancy();
+  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; updateHud(); computeVibrancy(); assignFireflies();
   toast('🔄 進度已重置', '所有遺跡回到未發現狀態');
 }
 document.getElementById('resetbtn').addEventListener('click', resetProgress);
 // 還原已發現遺跡的外觀
 POIS.forEach((p) => { if (p.isRuin && isDisc(p.data.id)) lightRuin(p); });
-updateHud(); allDoneShown = ruinAt.every((r) => isDone(r.id)); computeVibrancy(); vibrancy = vibrancyTarget;
+updateHud(); allDoneShown = ruinAt.every((r) => isDone(r.id)); computeVibrancy(); vibrancy = vibrancyTarget; assignFireflies();
 
 // 擴散光環（mul=擴張倍率、dur=持續秒數）
 const bursts = [];
@@ -1343,19 +1345,16 @@ function animate() {
   torchGround.position.set(hero.position.x, hero.position.y + 3.4, hero.position.z);
   { const gx = hero.position.x + hfx * 6, gz = hero.position.z + hfz * 6; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
   torchGround.intensity = archiveActive ? 0 : 120 * (1 - 0.7 * vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
-  // 螢火蟲：固定地點群聚、漂浮閃爍；越暗越亮、室內關閉
+  // 螢火蟲：環繞各「已完成」遺跡漂浮閃爍（點綴）；室內關閉
   {
-    const ffBright = archiveActive ? 0 : (1 - 0.5 * vibrancy);
+    const ffBright = archiveActive ? 0 : 1;
     for (const f of fireflies) {
-      const fx = FIREFLY_SPOT.x + f.ox + Math.sin(t * f.sx + f.ph) * f.ax;
-      const fz = FIREFLY_SPOT.z + f.oz + Math.cos(t * f.sz + f.ph) * f.az;
-      f.s.position.set(fx, FIREFLY_BASE_Y + f.h + Math.sin(t * f.bob + f.ph) * 0.6, fz);
+      if (!f.on || ffBright <= 0) { if (f.m.opacity) f.m.opacity = 0; continue; }
+      const fx = f.cx + f.ox + Math.sin(t * f.sx + f.ph) * f.ax;
+      const fz = f.cz + f.oz + Math.cos(t * f.sz + f.ph) * f.az;
+      f.s.position.set(fx, f.cy + f.h + Math.sin(t * f.bob + f.ph) * 0.6, fz);
       f.m.opacity = ffBright * (0.18 + 0.82 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph * 2.3)));
     }
-    fireflyLights[0].position.copy(fireflies[0].s.position); fireflyLights[1].position.copy(fireflies[1].s.position);
-    const ffLi = archiveActive ? 0 : 14 * (1 - 0.5 * vibrancy);
-    fireflyLights[0].intensity = ffLi * (0.7 + 0.3 * Math.sin(t * 3.1));
-    fireflyLights[1].intensity = ffLi * (0.7 + 0.3 * Math.sin(t * 2.3 + 1));
   }
 
   // POI 鄰近 / 發現 / 面板
