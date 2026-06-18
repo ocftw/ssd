@@ -84,7 +84,7 @@ const gradePass = new ShaderPass({
     void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
       float sat = mix(0.90, 1.0, uVibrancy);                          // 夜晚仍保留原色（不再大幅去飽和）
       vec3 tint = mix(vec3(0.82, 0.88, 1.0), vec3(1.0), uVibrancy);   // 夜晚淡淡冷藍月色
-      float br = mix(0.96, 1.0, uVibrancy);                            // 明暗改由燈光表現，後製幾乎不壓暗
+      float br = mix(0.8, 1.0, uVibrancy);                             // 夜晚整體亮度壓到 0.8（恢復後回到 1.0）
       gl_FragColor = vec4(mix(vec3(l), c.rgb, sat) * tint * br, c.a); }`,
 });
 composer.addPass(gradePass);
@@ -139,12 +139,19 @@ function setWorldLight(k) { // k：0＝夜晚（荒蕪）、1＝白天（恢復�
   hemi.intensity = 0.12 + (0.6 - 0.12) * k;
   ambient.intensity = 0.03 + (0.08 - 0.03) * k;
   scene.environmentIntensity = 0.16 + (1 - 0.16) * k; // 夜晚同時壓低天空環境光（否則整片仍偏亮）
+  // 陰影：全部遺跡點亮（≈vibrancy 1）才有太陽 → 才有太陽陰影；夜晚改由火把投影
+  const day = k > 0.9;
+  sun.castShadow = day;            // 夜晚沒有太陽：樹/物件不投太陽影
+  torchGround.castShadow = !day;   // 夜晚火把即時投影；白天關閉（太陽影接手）以省效能，避免同時兩張陰影圖
 }
 // 主角隨身火把：照亮周圍一圈暖光（世界越荒蕪越亮、恢復後轉弱），帶輕微火光晃動
 const torch = new THREE.PointLight(0xffb061, 0, 24, 2.0);
 scene.add(torch);
-// 火把投向前方地面的光錐：照亮腳前的路（讓前方地面也亮起來）
+// 火把投向前方地面的光錐：照亮腳前的路（讓前方地面也亮起來），夜晚由它投出即時陰影
 const torchGround = new THREE.SpotLight(0xffc079, 0, 32, Math.PI * 0.32, 0.6, 1.5);
+torchGround.shadow.mapSize.set(1024, 1024);          // 1024 為效能考量（可改 2048 提升清晰度）
+torchGround.shadow.camera.near = 1; torchGround.shadow.camera.far = 34;
+torchGround.shadow.bias = -0.0006; torchGround.shadow.normalBias = 0.04;
 scene.add(torchGround); scene.add(torchGround.target);
 
 // 螢火蟲：固定在地圖某一地點的群聚特效（自體發光、漂浮閃爍；世界恢復後轉淡、室內關閉）
@@ -1202,11 +1209,13 @@ let doubleJumped = false, spinning = false, spinT = 0, yawBeforeSpin = 0; // 二
 const SPIN_DUR = 0.55;
 // 座標框（開發／定位用）：預設隱藏，按 G 切換顯示（輸入框聚焦時不觸發，例如戰鬥密碼題）
 const coordsEl = document.getElementById('coords');
+let fpsAvg = 60; // 平滑後的 FPS（座標框內顯示，方便量測效能）
 addEventListener('keydown', (e) => { if (e.code === 'KeyG' && document.activeElement?.tagName !== 'INPUT') coordsEl.classList.toggle('show'); });
 
 function animate() {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
+  fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 用未截斷的原始幀時間估 FPS
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
   jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
@@ -1509,7 +1518,7 @@ function animate() {
   if (coordsEl && coordsEl.classList.contains('show')) {
     const hx = hero.position.x, hz = hero.position.z;
     let deg = Math.atan2(hz, hx) * 180 / Math.PI; if (deg < 0) deg += 360;
-    coordsEl.textContent = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}`;
+    coordsEl.textContent = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}　｜　fps ${Math.round(fpsAvg)}`;
   }
 
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
