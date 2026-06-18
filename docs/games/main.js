@@ -511,13 +511,13 @@ function makeLabel(text) { const el = document.createElement('div'); el.classNam
 // 告示牌 POI
 {
   const lab = makeLabel(`${VILLAGE_BOARD.emoji} 村長告示牌`); lab.o.position.set(0, 5.4, 0); board.add(lab.o);
-  POIS.push({ data: VILLAGE_BOARD, isRuin: false, pos: new THREE.Vector3(0, 0, 7), el: lab.el, openDist: 9 });
+  POIS.push({ data: VILLAGE_BOARD, isRuin: false, pos: new THREE.Vector3(0, 0, 7), el: lab.el, openDist: 4.5 });
 }
 // 遺跡 POI
 ruinAt.forEach((r) => {
   const built = buildRuin(r); texturizeStone(built.group);
   const lab = makeLabel(`❔ 未知遺跡`); lab.o.position.set(0, 9, 0); built.group.add(lab.o);
-  POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 13, discoverDist: 8, ...built, lift: 0 });
+  POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 6.5, discoverDist: 8, ...built, lift: 0 });
 });
 // OCF 紀念碑 POI（非課程：無戰鬥、不計進度、不影響繁榮度與終局）
 // 每次遊戲載入都從「未點亮」開始，玩家靠近才點燃（本次遊玩內保持點亮）＝給 OCF 添柴火的儀式感
@@ -526,7 +526,7 @@ const ocfMon = (() => {
   built.group.position.set(ocfAt.x, ocfAt.y, ocfAt.z);
   built.group.rotation.y = Math.atan2(-ocfAt.x, -ocfAt.z);
   const lab = makeLabel(`${OCF_STATUE.emoji} OCF 紀念碑`); lab.o.position.set(0, 8, 0); built.group.add(lab.o);
-  POIS.push({ data: OCF_STATUE, isRuin: false, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, openDist: 12 });
+  POIS.push({ data: OCF_STATUE, isRuin: false, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, openDist: 6 });
   return { ...built, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, lit: 0, ignited: false };
 })();
 const OCF_GOLD = new THREE.Color(OCF_STATUE.color);
@@ -559,7 +559,7 @@ function buildMonument() {
   const x = 0, z = -18, y = groundY(x, z);                       // 村莊後方中軸、正對入口大門的開闊處
   built.group.position.set(x, y, z); built.group.rotation.y = 0; scene.add(built.group); // 壁畫面向 +z（玩家由大門進入的方向）
   const lab = makeLabel(`${LEGEND.emoji} ${LEGEND.title}`); lab.o.position.set(0, 7.4, 0); built.group.add(lab.o);
-  POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 12 });
+  POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 6 });
 }
 
 // ── 村外的「資源寶箱」（非課程；走近開面板 → 連到資源頁）：箱身共用，蓋子上方浮一個發光物件 ──
@@ -584,7 +584,7 @@ function buildChest(content, buildTop) {
   g.position.set(cx, cy, cz); g.rotation.y = Math.atan2(-cx, -cz);                    // 正面朝向村莊／玩家
   scene.add(g);
   const lab = makeLabel(`${content.emoji} ${content.title}`); lab.o.position.set(0, 4.4, 0); g.add(lab.o);
-  POIS.push({ data: content, isRuin: false, pos: new THREE.Vector3(cx, cy, cz), el: lab.el, openDist: 9 });
+  POIS.push({ data: content, isRuin: false, pos: new THREE.Vector3(cx, cy, cz), el: lab.el, openDist: 4.5 });
   return { top, beam };
 }
 // 武器寶箱：浮空寶劍（英雄的武器）
