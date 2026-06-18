@@ -804,6 +804,7 @@ const mage = (() => {
   return { ...built, pos: new THREE.Vector3(x, y, z), baseY: y, el, mode: -1 };
 })();
 const MAGE_TIP = '走出村莊，找回散落各地的「資安遺跡」並點亮水晶。遇到守關怪物時，用課程裡學到的小知識回擊就行！';
+const MAGE_TIP_DONE = '五道防線都重建了，天也亮了——你成了真正的資安守護者！把學到的帶回現實：常用帳號開兩步驗證、用密碼管理器、定期備份。想複習就去找各遺跡的維護者聊聊吧。';
 mage.open = false; // 對話框：靠近先出現小圖示，點圖示才展開（避免每次經過就跳整段文字）
 mage.el.addEventListener('click', (e) => { e.stopPropagation(); mage.open = !mage.open; mage.mode = -1; });
 // 灰龍（荒野上空慢慢繞圈）＋ 背上白貓
@@ -1538,7 +1539,7 @@ function animate() {
       mage.mode = state;
       if (state === 0) mage.el.className = 'bubble';
       else if (state === 1) { mage.el.className = 'bubble chip clickable show'; mage.el.innerHTML = '💬'; }
-      else { mage.el.className = 'bubble clickable show'; mage.el.innerHTML = `<b>🧙 村裡的嚮導</b><span>${MAGE_TIP}</span>`; }
+      else { mage.el.className = 'bubble clickable show'; mage.el.innerHTML = `<b>🧙 村裡的嚮導</b><span>${allDone ? MAGE_TIP_DONE : MAGE_TIP}</span>`; }
     }
   }
   // 灰龍：荒野上空慢慢繞圈 + 拍翅 + 偶爾吐藍火（背上白貓跟著）
