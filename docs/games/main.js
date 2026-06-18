@@ -1161,6 +1161,7 @@ let walkPhase = 0, mmAcc = 0, lastStepFloor = 0;
 let jumpVel = 0, jumpOff = 0, jumpHeld = false; // 跳躍：地面高度之上的位移
 let doubleJumped = false, spinning = false, spinT = 0, yawBeforeSpin = 0; // 二段跳 + 空中轉一圈
 const SPIN_DUR = 0.55;
+const coordsEl = document.getElementById('coords'); // TEMP 開發用座標顯示
 
 function animate() {
   timer.update();
@@ -1442,6 +1443,13 @@ function animate() {
   }
   // 腳印淡出
   for (let i = prints.length - 1; i >= 0; i--) { const f = prints[i]; f.t += dt; const k = f.t / f.dur; f.mat.opacity = f.op * (1 - k); if (k >= 1) { scene.remove(f.m); f.mat.dispose(); prints.splice(i, 1); } }
+
+  // TEMP 開發用座標顯示（定位完成後移除：此區塊、index.html 的 #coords div 與 CSS）
+  if (coordsEl) {
+    const hx = hero.position.x, hz = hero.position.z;
+    let deg = Math.atan2(hz, hx) * 180 / Math.PI; if (deg < 0) deg += 360;
+    coordsEl.textContent = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}`;
+  }
 
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
   composer.render(); labelRenderer.render(scene, camera);
