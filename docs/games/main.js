@@ -291,15 +291,15 @@ path.position.set(0, 0.47, 11); path.receiveShadow = true; village.add(path);
 
 // 中央水井（含屋頂、井圈）
 const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 1.2, 12), mat(0xb3a48c));
-wellBase.position.set(-5, 0.7, -3); wellBase.castShadow = wellBase.receiveShadow = true; village.add(wellBase);
+wellBase.position.set(-10.2, 0.7, -10.8); wellBase.castShadow = wellBase.receiveShadow = true; village.add(wellBase);
 const wellRim = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.18, 10, 16), mat(0x9a8a70));
-wellRim.rotation.x = Math.PI / 2; wellRim.position.set(-5, 1.3, -3); village.add(wellRim);
+wellRim.rotation.x = Math.PI / 2; wellRim.position.set(-10.2, 1.3, -10.8); village.add(wellRim);
 const wellWater = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.2, 16), mat(0x6cc5e0, { roughness: 0.2 }));
-wellWater.position.set(-5, 1.15, -3); village.add(wellWater);
+wellWater.position.set(-10.2, 1.15, -10.8); village.add(wellWater);
 const wellRoof = new THREE.Group();
 for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 2.6, 10), mat(0x7a5230)); p.position.set(wx, 1.3, 0); p.castShadow = true; wellRoof.add(p); applyWood(p.material); boxUV(p.geometry); }
 const wrf = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.2, 8), mat(0x9c5b3a)); wrf.position.y = 3.2; wrf.rotation.y = Math.PI / 4; wrf.castShadow = true; wellRoof.add(wrf);
-wellRoof.position.set(-5, 0, -3); village.add(wellRoof);
+wellRoof.position.set(-10.2, 0, -10.8); village.add(wellRoof);
 
 // 低石牆 + 牆上石柱帽 + 村口拱門
 const wall = new THREE.Mesh(new THREE.TorusGeometry(20, 0.6, 10, 64), mat(0xb3a88f));
@@ -326,8 +326,8 @@ function cottage(color, roofC) {
 }
 const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x4f6c92], [0xc98f9b, 0x8a5663], [0xcdb87e, 0x8a6e3a]];
 // 精簡村莊：只留一間民房，另一間是檔案室（見下方 ARCHIVE）
-const houseSpots = [[12, 5, -1.0]];
-houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], 0, s[1]); c.rotation.y = s[2]; village.add(c); });
+const houseSpots = [[12, 5]];
+houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], 0, s[1]); c.rotation.y = Math.atan2(-s[0], -s[1]); village.add(c); }); // 門（+z 面）朝中央水晶
 
 // 提燈路燈
 for (const lp of [[6, -1], [-3, 9], [8, 6], [-7, -2]]) {
@@ -355,12 +355,11 @@ for (const fp of [[-8, 2, 0x5b9cff], [9, 1, 0xff7a45]]) {
 
 // 村長告示牌（任務起點，造型升級）
 const board = new THREE.Group();
-const bplat = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.4, 0.3, 12), mat(0xb8ac90)); bplat.position.y = 0.15; bplat.receiveShadow = true; board.add(bplat);
 for (const bx of [-1.4, 1.4]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 3.4, 12), mat(0x7a5230)); p.position.set(bx, 1.7, 0); p.castShadow = true; board.add(p); applyWood(p.material); boxUV(p.geometry); }
 const sign = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 0.25), mat(0xe7c884)); sign.position.set(0, 2.9, 0); sign.castShadow = true; board.add(sign); applyWood(sign.material); boxUV(sign.geometry);
 const frame = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 0.3), mat(0x9c6b41)); frame.position.set(0, 4.05, 0); board.add(frame); applyWood(frame.material); boxUV(frame.geometry);
 const roofb = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.5, 1.2), mat(0x9c5b3a)); roofb.position.set(0, 4.35, 0); roofb.castShadow = true; board.add(roofb);
-board.position.set(0, 0, 7); village.add(board);
+board.position.set(-9.2, 0, 13.1); board.rotation.y = Math.atan2(-board.position.x, -board.position.z); village.add(board); // 面朝中央水晶（村心）
 
 // 村莊中央大水晶（全部遺跡進化後才啟動）
 const greatBase = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 1.2, 12), mat(0x9a9080)); greatBase.position.set(0, 0.6, 0); greatBase.castShadow = greatBase.receiveShadow = true; village.add(greatBase); applyStone(greatBase.material); boxUV(greatBase.geometry);
@@ -511,7 +510,7 @@ function makeLabel(text) { const el = document.createElement('div'); el.classNam
 // 告示牌 POI
 {
   const lab = makeLabel(`${VILLAGE_BOARD.emoji} 村長告示牌`); lab.o.position.set(0, 5.4, 0); board.add(lab.o);
-  POIS.push({ data: VILLAGE_BOARD, isRuin: false, pos: new THREE.Vector3(0, 0, 7), el: lab.el, openDist: 4.5 });
+  POIS.push({ data: VILLAGE_BOARD, isRuin: false, pos: new THREE.Vector3(-9.2, 0, 13.1), el: lab.el, openDist: 4.5 });
 }
 // 遺跡 POI
 ruinAt.forEach((r) => {
@@ -608,7 +607,13 @@ const toolkitObj = buildChest(GUIDE_KIT, (top, add) => {
 });
 
 // ── 檔案室：村莊邊入口建築 → 走進門淡出傳送到隱藏室內房間 → 靠近文件台開 PDF（新分頁）──
-const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5), enter: new THREE.Vector3(-11, 0, 5), back: new THREE.Vector3(-8, 0, 5), roomY: -120 };
+const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5), roomY: -120 };
+// 入口門朝向中央水晶（村心）：門在建築 +x 側，rotation.y 讓 +x 指向村心；
+// enter（觸發點）/back（離開落點）沿「指向村心」方向排在門外，與旋轉後的門對齊。
+ARCHIVE.face = Math.atan2(ARCHIVE.pos.z, -ARCHIVE.pos.x);
+ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
+ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
+ARCHIVE.back = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 5);
 const ARCHIVE_FLOOR = ARCHIVE.roomY + 0.2;
 let archiveActive = false, archEnterArmed = true, archExitArmed = true;
 const archFadeEl = document.getElementById('fade');
@@ -618,7 +623,7 @@ function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLO
 function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; hero.visible = true; yaw = Math.PI; pitch = 0.6; if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
 // 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
 {
-  const g = new THREE.Group(); g.position.copy(ARCHIVE.pos);
+  const g = new THREE.Group(); g.position.copy(ARCHIVE.pos); g.rotation.y = ARCHIVE.face; // 門面朝中央水晶
   const wallMat = applyStone(mat(0xffffff));
   const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
   add(new THREE.BoxGeometry(0.6, 4, 6), wallMat, -2.2, 2, 0);
@@ -745,8 +750,8 @@ function buildMage() {
 // 綠袍法師（村中嚮導 NPC）
 const mage = (() => {
   const built = buildMage();
-  const x = 6, z = 3, y = groundY(x, z);
-  built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(0 - x, 14 - z); scene.add(built.group); // 面向玩家入口
+  const x = 4.4, z = 15.2, y = groundY(x, z);
+  built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(0 - x, 0 - z); scene.add(built.group); // 面向中央水晶（村心）
   const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 3.5, 0); built.group.add(o);
   return { ...built, pos: new THREE.Vector3(x, y, z), baseY: y, el, mode: -1 };
 })();
