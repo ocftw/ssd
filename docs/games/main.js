@@ -790,7 +790,7 @@ function buildMage() {
   const orbMat = new THREE.MeshStandardMaterial({ color: 0x9a6cff, emissive: 0x7a4cff, emissiveIntensity: 1.6, roughness: 0.2 });
   const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18, 1), orbMat); orb.position.set(0.62, 2.75, 0.22); g.add(orb);
   orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 10), new THREE.MeshBasicMaterial({ color: 0x9a6cff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })));
-  const orbLight = new THREE.PointLight(0x8a5cff, 0, 13, 2); orb.add(orbLight); // 夜晚發出紫光（跟著手杖球）
+  const orbLight = new THREE.PointLight(0x8a5cff, 0, 16, 2); orb.add(orbLight); // 夜晚發出紫光（跟著手杖球）
   return { group: g, orb, orbMat, orbLight };
 }
 // 綠袍法師（村中嚮導 NPC）
@@ -1496,7 +1496,7 @@ function animate() {
   // 綠袍法師：呼吸擺動 + 法杖球脈動 + 靠近顯示提示
   mage.group.position.y = mage.baseY + Math.sin(t * 1.5) * 0.04;
   mage.orbMat.emissiveIntensity = 1.3 + Math.sin(t * 3) * 0.5;
-  mage.orbLight.intensity = archiveActive ? 0 : (1 - vibrancy) * 24 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉
+  mage.orbLight.intensity = archiveActive ? 0 : (1 - vibrancy) * 48 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉
   {
     const dm = Math.hypot(hero.position.x - mage.pos.x, hero.position.z - mage.pos.z);
     const want = (battle.active || finaleActive) ? 0 : (dm < 7 ? 1 : 0);
