@@ -6,6 +6,9 @@ repo_url: https://github.com/ocftw/ssd
 repo_name: ocftw/ssd
 edit_uri: edit/shield/docs/
 copyright: "CC-BY 4.0 姓名標示"
+# games/ 的開發說明用 Markdown 但不發佈成網站頁面（維持原 readme.txt 不被 build 的用意）
+exclude_docs: |
+  games/README.md
 # 建置後給 /games 的 ES module 加內容雜湊版本號，避免部署時新舊 .js 混搭載入失敗
 hooks:
   - hooks/cache_bust.py
