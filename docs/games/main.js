@@ -698,12 +698,13 @@ ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
 ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
 ARCHIVE.back = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 5);
 const ARCHIVE_FLOOR = ARCHIVE.roomY + 0.2;
+const ARCHIVE_FOV = 86;   // 室內用更廣的視角：手機直式畫面水平 FOV 很窄，廣角才能一進門就看到三份文件並排
 let archiveActive = false, archEnterArmed = true, archExitArmed = true;
 const archFadeEl = document.getElementById('fade');
 const archFade = { on: false, t: 0, dur: 0.7, mid: false, go: null };
 const startArchFade = (go) => { archFade.on = true; archFade.t = 0; archFade.mid = false; archFade.go = go; };
-function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLOOR, 2); hero.rotation.y = Math.PI; archiveActive = true; archiveRoom.visible = true; archExitArmed = false; hero.visible = false; yaw = 0; pitch = 0.15; if (panelId) hidePanel(); }); }
-function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; hero.visible = true; yaw = Math.PI; pitch = 0.6; if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
+function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLOOR, 6); hero.rotation.y = Math.PI; archiveActive = true; archiveRoom.visible = true; archExitArmed = false; hero.visible = false; yaw = 0; pitch = 0.12; camera.fov = ARCHIVE_FOV; camera.updateProjectionMatrix(); if (panelId) hidePanel(); }); } // 從門口(+z)往內看三份文件
+function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; hero.visible = true; yaw = Math.PI; pitch = 0.6; camera.fov = 52; camera.updateProjectionMatrix(); if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
 // 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
 {
   const g = new THREE.Group(); g.position.copy(ARCHIVE.pos); g.rotation.y = ARCHIVE.face; // 門面朝中央水晶
@@ -725,27 +726,31 @@ const archiveRoom = new THREE.Group(); archiveRoom.position.set(0, ARCHIVE.roomY
 {
   const g = archiveRoom, wallMat = applyStone(mat(0xffffff)), woodM = RUIN.wood;
   const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  add(new THREE.BoxGeometry(15, 0.4, 13), wallMat, 0, 0, 0);            // 地板
-  add(new THREE.BoxGeometry(15, 0.4, 13), wallMat, 0, 5, 0);            // 天花
-  add(new THREE.BoxGeometry(0.4, 5, 13), wallMat, -7.3, 2.5, 0);        // 左牆
-  add(new THREE.BoxGeometry(0.4, 5, 13), wallMat, 7.3, 2.5, 0);         // 右牆
-  add(new THREE.BoxGeometry(15, 5, 0.4), wallMat, 0, 2.5, -6.3);        // 後牆
-  add(new THREE.BoxGeometry(6, 5, 0.4), wallMat, -4.5, 2.5, 6.3);       // 前牆左段
-  add(new THREE.BoxGeometry(6, 5, 0.4), wallMat, 4.5, 2.5, 6.3);        // 前牆右段（中間留門）
-  add(new THREE.BoxGeometry(3, 1.2, 0.4), wallMat, 0, 4.4, 6.3);        // 前牆門楣
-  for (const bx of [-5.6, 5.6]) add(new THREE.BoxGeometry(2.4, 4, 0.7), woodM, bx, 2, -5.7); // 書架
-  const lamp = new THREE.PointLight(0xffe6b8, 55, 38, 1.5); lamp.position.set(0, 4.2, 0); g.add(lamp);
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0xfff0cf })); bulb.position.set(0, 4.3, 0); g.add(bulb);
+  // 放大的展示廳：22(寬) × 20(深) × 5(高)。三份文件一字排開靠後牆，從前方門口(+z)進入即可一覽
+  add(new THREE.BoxGeometry(22, 0.4, 20), wallMat, 0, 0, 0);            // 地板
+  add(new THREE.BoxGeometry(22, 0.4, 20), wallMat, 0, 5, 0);            // 天花
+  add(new THREE.BoxGeometry(0.4, 5, 20), wallMat, -10.7, 2.5, 0);      // 左牆
+  add(new THREE.BoxGeometry(0.4, 5, 20), wallMat, 10.7, 2.5, 0);       // 右牆
+  add(new THREE.BoxGeometry(22, 5, 0.4), wallMat, 0, 2.5, -9.7);       // 後牆（文件靠這面）
+  add(new THREE.BoxGeometry(8.2, 5, 0.4), wallMat, -6.9, 2.5, 9.7);    // 前牆左段
+  add(new THREE.BoxGeometry(8.2, 5, 0.4), wallMat, 6.9, 2.5, 9.7);     // 前牆右段（中間留門）
+  add(new THREE.BoxGeometry(5.6, 1.2, 0.4), wallMat, 0, 4.4, 9.7);     // 前牆門楣
+  for (const bx of [-9.2, 9.2]) add(new THREE.BoxGeometry(2.4, 4, 0.7), woodM, bx, 2, -9.0); // 兩側書架（靠後牆）
+  // 兩盞吊燈把長廳照勻（前、後各一）
+  for (const lz of [3, -7]) {
+    const lamp = new THREE.PointLight(0xffe6b8, 55, 60, 1.5); lamp.position.set(0, 4.2, lz); g.add(lamp);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0xfff0cf })); bulb.position.set(0, 4.3, lz); g.add(bulb);
+  }
   ARCHIVE_DOCS.forEach((d, i) => {
-    const dx = (i - 1) * 4.2;
-    add(new THREE.BoxGeometry(1.8, 1.0, 0.7), woodM, dx, 0.5, -5.0);          // 展示基座
-    const cw = 1.5, tilt = -0.12;                                            // 封面（正方形、幾乎直立、略後仰、正面朝玩家 +z）
+    const dx = (i - 1) * 3.5;                                                // 三份一字排開（間距 3.5），靠後牆、正面朝門口(+z)
+    add(new THREE.BoxGeometry(1.9, 1.0, 0.7), woodM, dx, 0.5, -8.7);         // 展示基座
+    const cw = 1.6, tilt = -0.12;                                           // 封面（正方形、略後仰、正面朝玩家 +z）
     const frame = new THREE.Mesh(new THREE.PlaneGeometry(cw + 0.16, cw + 0.16), new THREE.MeshStandardMaterial({ color: 0x2b2620, roughness: 0.6 }));
-    frame.position.set(dx, 1.88, -4.86); frame.rotation.x = tilt; g.add(frame);
+    frame.position.set(dx, 1.95, -8.56); frame.rotation.x = tilt; g.add(frame);
     const cover = new THREE.Mesh(new THREE.PlaneGeometry(cw, cw), new THREE.MeshBasicMaterial({ map: tex(d.cover, 1, 1, true) }));
-    cover.position.set(dx, 1.88, -4.85); cover.rotation.x = tilt; g.add(cover);
-    const lab = makeLabel(`${d.emoji} ${d.title}`); lab.o.position.set(dx, 3.0, -4.86); g.add(lab.o);
-    POIS.push({ data: d, isRuin: false, area: 'archive', pos: new THREE.Vector3(dx, ARCHIVE.roomY, -3.2), el: lab.el, openDist: 3.4 });
+    cover.position.set(dx, 1.95, -8.55); cover.rotation.x = tilt; g.add(cover);
+    const lab = makeLabel(`${d.emoji} ${d.title}`); lab.o.position.set(dx, 3.15, -8.56); g.add(lab.o);
+    POIS.push({ data: d, isRuin: false, area: 'archive', pos: new THREE.Vector3(dx, ARCHIVE.roomY, -6.5), el: lab.el, openDist: 3.6 });
   });
 }
 
@@ -1359,8 +1364,10 @@ function animate() {
   } else if (!archiveActive) {
     if (Math.hypot(hero.position.x - ARCHIVE.enter.x, hero.position.z - ARCHIVE.enter.z) < 1.7) { if (archEnterArmed) { archEnterArmed = false; enterArchive(); } } else archEnterArmed = true;
   } else {
-    // 牆壁可穿越：第一人稱下走出任一面牆（超出房間範圍）即離開檔案室
-    if (Math.abs(hero.position.x) > 7.6 || Math.abs(hero.position.z) > 6.6) { if (archExitArmed) { archExitArmed = false; exitArchive(); } } else archExitArmed = true;
+    // 檔案室內：夾住左右與後方（不會誤穿牆離開），只有從前方門口往外走(+z)才離開——避免左右看文件時不小心碰邊界就出去
+    hero.position.x = Math.max(-10, Math.min(10, hero.position.x));
+    if (hero.position.z < -8) hero.position.z = -8;     // 後方停在文件前
+    if (hero.position.z > 9) { if (archExitArmed) { archExitArmed = false; exitArchive(); } } else archExitArmed = true;
   }
   if (archiveActive) hero.position.y = ARCHIVE_FLOOR + jumpOff; // 室內地板高度（覆蓋地形跟隨）
 
