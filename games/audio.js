@@ -70,6 +70,13 @@ export const SFX = {
   jump() { tone({ freq: 300, type: 'sine', dur: 0.16, peak: 0.3, slideTo: 620 }); }, // 起跳「hop」
   discover() { tone({ freq: 660, type: 'triangle', dur: 0.2, peak: 0.36 }); tone({ freq: 990, type: 'triangle', dur: 0.2, peak: 0.36, at: 0.09 }); tone({ freq: 1320, type: 'triangle', dur: 0.26, peak: 0.36, at: 0.18 }); },
   complete() { tone({ freq: 880, type: 'triangle', dur: 0.18, peak: 0.34 }); tone({ freq: 1320, type: 'triangle', dur: 0.28, peak: 0.34, at: 0.1 }); },
+  // 綠色膠囊逃跑消失：上揚的魔法「咻」＋亮晶晶滑音＋細微消散噗，像瞬間閃走
+  vanish() {
+    tone({ freq: 520, type: 'triangle', dur: 0.22, peak: 0.30, slideTo: 1500 });
+    tone({ freq: 1040, type: 'sine', dur: 0.18, peak: 0.20, slideTo: 2200, at: 0.06 });
+    tone({ freq: 1760, type: 'triangle', dur: 0.12, peak: 0.15, at: 0.16 });
+    noise({ dur: 0.12, peak: 0.10, type: 'highpass', freq: 3000, at: 0.13 });
+  },
 
   // 戰鬥
   battleStart() { tone({ freq: 140, type: 'sawtooth', dur: 0.5, peak: 0.42, slideTo: 90 }); noise({ dur: 0.4, peak: 0.28, type: 'lowpass', freq: 240 }); },
