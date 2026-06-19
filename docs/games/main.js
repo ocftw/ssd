@@ -1272,16 +1272,13 @@ addEventListener('keydown', (e) => {
 });
 
 let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
-let _frameAcc = 0;          // 累積幀時間，用於約 60fps 上限
-const FRAME_CAP = 1 / 61;   // 上限約 60fps：120Hz 裝置會跳過半數 refresh，GPU 工作量減半
 function animate() {
   if (!started) return;     // landing 仍在最前：完全跳過模擬與渲染（場景被不透明 landing 蓋住，不需畫）
+  // 註：不做幀率上限。先前以累積器限到 60fps 會造成幀距不均，讓 CSS2D 地標標籤相對 3D 錨點「游移」抖動；
+  //     依顯示器原生更新率渲染最平順。降溫主要靠像素比 3×→2×（填充率減半）＋陰影縮小＋landing 暫停。
   timer.update();
-  _frameAcc += timer.getDelta();
-  if (_frameAcc < FRAME_CAP) return; // 未達幀上限門檻 → 這個 refresh 不處理（節能）
-  const dt = Math.min(_frameAcc, 0.05), t = timer.getElapsed();
-  fpsAvg += (1 / Math.max(_frameAcc, 1e-4) - fpsAvg) * 0.08; // 實際處理幀率（座標框量測用）
-  _frameAcc = 0;
+  const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
+  fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 原始幀時間估 FPS
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
   jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
