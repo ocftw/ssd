@@ -1243,6 +1243,31 @@ function ringBurst(x, y, z, color, mul, dur) {
 }
 function spawnBurst(p) { ringBurst(p.pos.x, p.pos.y + 1.2, p.pos.z, p.data.color, 6, 0.9); }
 
+// ── 綠色膠囊：荒野裡會逃跑的神秘綠光球（純彩蛋，不存檔/不計數/無名牌）。定點抖動懸浮 → 英雄靠近→原地旋轉縮小→消失→他處重生，循環 ──
+const CAP_TRIGGER = 8, CAP_SPIN_DUR = 0.7, CAP_HIDE = 0.5;
+const capMat = mat(0x9dffb0, { emissive: 0x3bff77, emissiveIntensity: 1.4, roughness: 0.25 }); // 綠 emissive 最亮通道 >bloom 門檻 → 桌機發綠光暈
+const capMesh = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 16), capMat);
+capMesh.add(new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 12), new THREE.MeshBasicMaterial({ color: 0x5bff8a, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }))); // 柔光殼：兩檔位都有綠暈
+const capLight = Q.mageNight ? new THREE.PointLight(0x44ff77, 0, 14, 2) : null; if (capLight) capMesh.add(capLight); // 夜間綠點光（桌機限定）
+scene.add(capMesh);
+const cap = { mesh: capMesh, mat: capMat, light: capLight, state: 'idle', ax: 0, ay: 0, az: 0, t: 0, scale: 0.01, ph: rand(0, TAU) };
+function capRespawn() {
+  let x = cap.ax, z = cap.az;
+  for (let i = 0; i < 40; i++) {
+    const a = rand(0, TAU), r = rand(WORLD.villageR + 10, WORLD.maxR - 6);
+    const cx = Math.cos(a) * r, cz = Math.sin(a) * r;
+    if (terrainHeight(cx, cz) < WORLD.water + 1) continue;                       // 不落在水裡
+    if (nearAnyRuin(cx, cz, 12)) continue;                                       // 避開遺跡
+    if (Math.hypot(cx - hero.position.x, cz - hero.position.z) < 24) continue;   // 離英雄遠一點，避免一出現就被觸發
+    x = cx; z = cz; break;
+  }
+  cap.ax = x; cap.az = z; cap.ay = groundY(x, z) + 2.2;                          // 懸浮高度
+  cap.mesh.position.set(cap.ax, cap.ay, cap.az); cap.mesh.scale.setScalar(0.01); cap.scale = 0.01;
+  cap.state = 'idle'; cap.t = 0; cap.ph = rand(0, TAU);
+  ringBurst(cap.ax, cap.ay, cap.az, 0x5bff8a, 4, 0.7);                          // 出現的綠色光環
+}
+capRespawn();
+
 // 塵土：受光的塵色小團塊往外噴、上飄後受重力落下並淡出。
 // power≈衝擊力；o 可微調顆數/外擴/上飄/大小/壽命/透明度（走路用很小的揚塵）。
 const dustGeo = new THREE.IcosahedronGeometry(0.22, 0);
@@ -1679,6 +1704,32 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     c.group.position.set(c.pos.x, gy + Math.abs(Math.sin(t * 9)) * 0.05, c.pos.z);
     c.group.rotation.y = c.face;
   }
+  // 綠色膠囊：抖動懸浮／靠近就原地旋轉縮小→消失／他處重生
+  {
+    const c = cap;
+    if (c.state === 'idle') {
+      const jx = Math.sin(t * 12 + c.ph) * 0.5 + Math.sin(t * 19) * 0.16;       // 快速左右
+      const jy = Math.sin(t * 9 + c.ph * 1.7) * 0.35 + Math.sin(t * 25) * 0.1;  // 快速上下
+      const jz = Math.cos(t * 14 + c.ph) * 0.5 + Math.cos(t * 21) * 0.16;       // 快速前後
+      c.mesh.position.set(c.ax + jx, c.ay + jy, c.az + jz);
+      c.mesh.rotation.y += dt * 1.6;
+      if (c.scale < 1) { c.scale = Math.min(1, c.scale + dt * 3); c.mesh.scale.setScalar(c.scale); } // 出現彈大
+      const d = Math.hypot(hero.position.x - c.ax, hero.position.z - c.az);
+      if (!battle.active && !finaleActive && !archiveActive && d < CAP_TRIGGER) { c.state = 'spin'; c.t = 0; }
+    } else if (c.state === 'spin') {
+      c.t += dt;
+      c.mesh.rotation.y += dt * (10 + c.t * 45);                                 // 原地越轉越快
+      c.mesh.position.set(c.ax, c.ay + Math.sin(c.t * 30) * 0.1, c.az);
+      const k = Math.min(1, c.t / CAP_SPIN_DUR); c.scale = 1 - k * k; c.mesh.scale.setScalar(Math.max(0.001, c.scale)); // 邊轉邊縮
+      if (c.t >= CAP_SPIN_DUR) { ringBurst(c.ax, c.ay, c.az, 0x5bff8a, 5, 0.7); c.state = 'gone'; c.t = 0; } // 消失光環
+    } else { // gone：短暫隱藏後他處重生
+      c.t += dt; c.mesh.scale.setScalar(0.001);
+      if (c.t >= CAP_HIDE) capRespawn();
+    }
+    const lit = c.state !== 'gone';
+    c.mat.emissiveIntensity = (lit ? 1.4 : 0) * (0.85 + Math.sin(t * 4 + c.ph) * 0.15);            // 綠光脈動
+    if (c.light) c.light.intensity = (lit ? 1 : 0) * (1 - vibrancy) * 30 * (0.8 + Math.sin(t * 5) * 0.2); // 夜亮日滅
+  }
   for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; const k = b.t / b.dur; b.ring.scale.setScalar(1 + k * b.mul); b.ring.material.opacity = Math.max(0, 0.85 * (1 - k)); if (k >= 1) { scene.remove(b.ring); b.ring.material.dispose(); b.ring.geometry.dispose(); bursts.splice(i, 1); } }
   // 落地塵土更新
   for (let i = dusts.length - 1; i >= 0; i--) {
@@ -1738,13 +1789,22 @@ function setupLanding() {
       qEl.appendChild(b);
     });
   }
-  // 「開始探險」：解鎖音訊、淡出 landing、首次進入才出現前測信心卡
+  // 「開始探險」：解鎖音訊 →「載入中」轉圈 → 非阻塞預編譯著色器 → 暖機數幀 → 淡出 landing 平順進場
+  // （首幀卡頓主因是第一次 render 同步編譯全部著色器＋上傳貼圖；改用 compileAsync 預編譯，並在 landing 仍蓋著時暖機幾幀，把卡頓藏起來）
   const btn = document.getElementById('startbtn');
-  if (btn) btn.addEventListener('click', () => {
+  const frame = () => new Promise((r) => requestAnimationFrame(r));
+  if (btn) btn.addEventListener('click', async () => {
     if (btn.disabled) return;
-    started = true;            // 開始模擬與渲染
+    btn.disabled = true;
     SFX.unlock();
-    root.classList.add('hide');
+    // 載入中狀態：重新顯示轉圈、按鈕轉文字
+    btn.textContent = UI.landingLoading;
+    const prep = root.querySelector('.prep'); if (prep) prep.classList.remove('done');
+    await frame(); await frame();                              // 先讓「載入中」畫面上屏
+    try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) {} // 非阻塞預編譯場景著色器（支援並行編譯時轉圈不卡）
+    started = true;                                            // 開始模擬與渲染
+    for (let i = 0; i < 3; i++) await frame();                 // 暖機數幀（後製 pass 著色器/貼圖上傳），landing 仍蓋著
+    root.classList.add('hide');                                // 平順淡出 → 進入遊戲
     maybeShowPreConfidence();
   });
 }
