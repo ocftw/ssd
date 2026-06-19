@@ -47,6 +47,12 @@ export const UI_ALL = {
     // 載入
     loaderText: '正在生成世界…',
 
+    // 進場 landing
+    landingDesc: '這是一座因資安防線一道道倒下而褪色的村莊。走出新手村，找回散落荒野的五座「資安遺跡」——每一座都是一門資安課程。用學到的知識打敗守關怪物、逐一點亮遺跡，替自己重建五道防線；村子會重新亮起，而這些習慣也能帶回你真實的數位生活。',
+    landingTopicsHd: '你會探索的五大主題',
+    landingStart: '開始探險 →',
+    landingPreparing: '世界生成中…',
+
     // 3D 標籤
     labelBoard: '村長告示牌',
     labelOcf: 'OCF 紀念碑',
@@ -202,6 +208,12 @@ export const UI_ALL = {
 
     loaderText: '正在生成世界…',
 
+    // 进场 landing
+    landingDesc: '这是一座因安全防线一道道倒下而褪色的村庄。走出新手村，找回散落荒野的五座「安全遗迹」——每一座都是一门安全课程。用学到的知识打败关卡怪物、逐一点亮遗迹，替自己重建五道防线；村子会重新亮起，而这些习惯也能带回你真实的数字生活。',
+    landingTopicsHd: '你会探索的五大主题',
+    landingStart: '开始探险 →',
+    landingPreparing: '世界生成中…',
+
     labelBoard: '村长告示牌',
     labelOcf: 'OCF 纪念碑',
     labelArchive: '📚 档案室',
@@ -347,6 +359,12 @@ export const UI_ALL = {
     finaleClose: `Keep exploring →`,
 
     loaderText: `Generating world…`,
+
+    // landing / intro
+    landingDesc: `A village drained of color as its security defenses fell, one by one. Head out of the starter village and recover the five "security ruins" scattered across the wilds — each one a security lesson. Use what you learn to defeat the guardians and light the ruins one by one, rebuilding your five defenses. The village comes back to life — and these habits come back to your real digital life too.`,
+    landingTopicsHd: `Five topics you'll explore`,
+    landingStart: `Start the adventure →`,
+    landingPreparing: `Generating world…`,
 
     labelBoard: `Notice Board`,
     labelOcf: `OCF Monument`,

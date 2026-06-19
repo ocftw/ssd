@@ -1610,4 +1610,40 @@ function animate() {
 renderer.setAnimationLoop(animate);
 
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
-requestAnimationFrame(() => setTimeout(() => { $('#loader').classList.add('hide'); maybeShowPreConfidence(); }, 350));
+// ── 進場 landing（兼作世界生成等待畫面）──────────────────────────
+function setupLanding() {
+  const root = document.getElementById('landing');
+  if (!root) return;
+  // 五大主題預告：依推薦學習順序，文字直接取自當前語言的 RUINS（自動多語）
+  const topics = root.querySelector('.topics');
+  if (topics) topics.innerHTML = RUIN_ORDER.map((id) => {
+    const r = (poiById(id) || {}).data; if (!r) return '';
+    return `<div class="t"><span class="e">${r.emoji}</span><span class="n">${r.title}</span></div>`;
+  }).join('');
+  // landing 專用語言切換器（沿用 buildLangSwitcher 邏輯；少於 2 種語言不顯示）
+  const langEl = root.querySelector('.landinglang');
+  if (langEl && AVAILABLE_LANGS.length >= 2) {
+    LANGS.filter((l) => AVAILABLE_LANGS.includes(l.id)).forEach((l) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = l.label;
+      if (l.id === LANG) b.classList.add('on');
+      b.addEventListener('click', () => { if (l.id === LANG) return; setLang(l.id); location.reload(); });
+      langEl.appendChild(b);
+    });
+  }
+  // 「開始探險」：解鎖音訊、淡出 landing、首次進入才出現前測信心卡
+  const btn = document.getElementById('startbtn');
+  if (btn) btn.addEventListener('click', () => {
+    if (btn.disabled) return;
+    SFX.unlock();
+    root.classList.add('hide');
+    maybeShowPreConfidence();
+  });
+}
+function landingReady() {
+  const root = document.getElementById('landing'); if (!root) return;
+  const prep = root.querySelector('.prep'); if (prep) prep.classList.add('done');
+  const btn = document.getElementById('startbtn');
+  if (btn) { btn.disabled = false; btn.textContent = UI.landingStart; }
+}
+setupLanding();
+requestAnimationFrame(() => setTimeout(landingReady, 350));

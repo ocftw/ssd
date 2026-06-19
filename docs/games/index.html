@@ -239,13 +239,36 @@
     #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
     #toast .t { font-size:14px; font-weight:800; } #toast .s { font-size:12px; margin-top:2px; opacity:.9; }
 
-    /* 載入 */
-    #loader { position:fixed; inset:0; z-index:30; display:grid; place-items:center;
-      background:linear-gradient(180deg,#bfe0f0 0%,#f6ead7 100%); transition:opacity .6s ease; text-align:center; }
-    #loader.hide { opacity:0; pointer-events:none; }
-    #loader .spin { width:42px; height:42px; margin:0 auto 14px; border-radius:50%;
-      border:4px solid rgba(29,36,51,.18); border-top-color:var(--brand); animation:spin 1s linear infinite; }
-    #loader p { margin:0; font-weight:700; color:#51596b; } @keyframes spin { to { transform:rotate(360deg); } }
+    /* 進場 landing（兼作世界生成時的等待畫面） */
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #landing { position:fixed; inset:0; z-index:50; display:grid; place-items:center; padding:18px;
+      background:linear-gradient(180deg,#bfe0f0 0%,#f6ead7 100%); transition:opacity .5s ease; }
+    #landing.hide { opacity:0; pointer-events:none; }
+    #landing .card { background:rgba(251,247,239,.97); border-radius:22px; padding:22px 26px; text-align:center;
+      max-width:min(94vw,520px); max-height:90dvh; overflow-y:auto; box-shadow:var(--shadow); }
+    #landing .landinglang { display:flex; justify-content:center; gap:3px; margin-bottom:6px; }
+    #landing .landinglang button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
+      background:rgba(29,36,51,.06); padding:5px 11px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
+    #landing .landinglang button.on { color:#fff; background:var(--brand); }
+    #landing .lead { font-size:46px; line-height:1; }
+    #landing h1 { margin:6px 0 0; font-size:22px; }
+    #landing .desc { margin:12px 0 0; font-size:14px; line-height:1.7; color:#3c4356; text-align:left; }
+    #landing .topics-hd { margin:18px 0 0; font-size:13px; font-weight:800; color:var(--ink); }
+    #landing .topics { margin:10px 0 0; display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+    #landing .topics .t { display:flex; align-items:center; gap:9px; background:rgba(29,36,51,.05); border-radius:12px; padding:9px 11px; text-align:left; }
+    #landing .topics .t .e { font-size:20px; flex:none; }
+    #landing .topics .t .n { font-size:12.5px; font-weight:700; color:#3c4356; line-height:1.3; }
+    #landing .prep { margin-top:16px; display:grid; place-items:center; }
+    #landing .prep .spin { width:30px; height:30px; border-radius:50%; border:4px solid rgba(29,36,51,.18); border-top-color:var(--brand); animation:spin 1s linear infinite; }
+    #landing .prep.done { display:none; }
+    #landing .start { margin-top:18px; border:0; cursor:pointer; font:inherit; font-size:15px; font-weight:800; color:#fff;
+      background:var(--brand); padding:13px 30px; border-radius:999px; box-shadow:0 8px 20px -8px rgba(255,122,69,.85); transition:filter .15s ease; }
+    #landing .start:hover:not(:disabled) { filter:brightness(1.06); }
+    #landing .start:disabled { background:#c7c2b8; color:#fff; cursor:default; box-shadow:none; }
+    @media (max-width:560px) {
+      #landing .card { padding:18px 18px; } #landing h1 { font-size:19px; } #landing .desc { font-size:13px; line-height:1.65; }
+      #landing .lead { font-size:38px; }
+    }
 
     /* 完成（重生）畫面 */
     /* 檔案室進出的全螢幕淡入淡出 */
@@ -430,7 +453,19 @@
     </div>
   </div>
 
-  <div id="loader"><div><div class="spin"></div><p data-i18n="loaderText">正在生成世界…</p></div></div>
+  <!-- 進場 landing：首屏即顯示，說明遊戲目的＋預告五大主題；世界在背後生成，按「開始探險」進入 -->
+  <div id="landing">
+    <div class="card">
+      <div class="landinglang"></div>
+      <div class="lead">🛡️</div>
+      <h1 data-i18n="titleH1">資安防護新手村 · 探險</h1>
+      <p class="desc" data-i18n="landingDesc">走出村莊，尋找散落荒野的「資安遺跡」。</p>
+      <div class="topics-hd" data-i18n="landingTopicsHd">你會探索的五大主題</div>
+      <div class="topics"></div>
+      <div class="prep"><div class="spin"></div></div>
+      <button id="startbtn" class="start" disabled data-i18n="landingPreparing">世界生成中…</button>
+    </div>
+  </div>
 
   <script type="module" src="./main.js"></script>
 </body>
