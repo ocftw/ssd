@@ -54,6 +54,26 @@ function buildLangSwitcher() {
 applyStaticI18n();
 buildLangSwitcher();
 
+// ── 能力偵測：本遊戲需要 WebGL2（Three r163 起不支援 WebGL1）。不支援就在 landing 友善提示、不進場（不黑畫面）。──
+function showUnsupported() {
+  const root = document.getElementById('landing');
+  const btn = document.getElementById('startbtn');
+  if (btn) { btn.disabled = true; btn.textContent = UI.cantPlayBtn; }
+  if (root) {
+    const prep = root.querySelector('.prep'); if (prep) prep.style.display = 'none';   // 收起「世界生成中」轉圈
+    root.querySelectorAll('.topics-hd, .topics, .landingquality').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質區塊
+    const card = root.querySelector('.card');
+    if (card && !card.querySelector('.cantplay')) {
+      const p = document.createElement('p'); p.className = 'cantplay';
+      p.style.cssText = 'margin:12px 0 0;color:#c0433a;font-weight:700;font-size:13px;line-height:1.6';
+      p.textContent = UI.cantPlayMsg;
+      card.insertBefore(p, btn);
+    }
+  }
+}
+const webgl2ok = (() => { try { return !!(window.WebGL2RenderingContext && document.createElement('canvas').getContext('webgl2')); } catch (e) { return false; } })();
+if (!webgl2ok) { showUnsupported(); throw new Error('WebGL2 unsupported — game cannot start'); }
+
 // ── 畫質檔位：依裝置自動分檔，可由 localStorage 手動覆寫（auto 時觸控→精簡、桌機→精緻）──
 // 手機／行動裝置以「能順跑、能完成」為目標（省電、低發熱優先）；筆電／桌機效能足，把畫面拉回來。
 const QKEY = 'ssd-village-quality';                       // 'auto' | 'low' | 'high'
@@ -112,7 +132,8 @@ const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
-const renderer = new THREE.WebGLRenderer({ antialias: false }); // AA 交給 composer（高＝SMAA／低＝render target 硬體 MSAA）；context MSAA 對 composer 離屏目標無效
+let renderer; // AA 交給 composer（高＝SMAA／低＝render target 硬體 MSAA）；context MSAA 對 composer 離屏目標無效
+try { renderer = new THREE.WebGLRenderer({ antialias: false }); } catch (e) { showUnsupported(); throw e; } // 偵測過但建立 context 仍失敗（驅動封鎖/context lost）時的保險
 // 裝置像素比上限依畫質檔位：手機精簡 2×（填充率＝GPU 發熱主因，2× 約少 56% 片段運算）、桌機精緻 2.5×
 const PR = Math.min(window.devicePixelRatio || 1, Q.maxPR);
 renderer.setPixelRatio(PR);
