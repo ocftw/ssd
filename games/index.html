@@ -83,7 +83,7 @@
 
     /* 任務按鈕 + 清單 */
     #topright { position:fixed; right:16px; top:16px; z-index:12; display:flex; gap:8px; align-items:flex-start; }
-    #logbtn, #soundbtn { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
+    #logbtn, #soundbtn, #achbtn { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
       background:rgba(251,247,239,.93); padding:9px 14px; border-radius:999px; box-shadow:var(--shadow); }
     #soundbtn { padding:9px 12px; }
     /* 語言切換器（由 main.js 動態插入，少於 2 種語言時不顯示） */
@@ -105,6 +105,21 @@
     .qp.none { color:#8b93a4; background:rgba(29,36,51,.07); }
     .qp.disc { color:#1d6fb8; background:rgba(29,111,184,.12); }
     .qp.done { color:#fff; background:#3aa45b; }
+    /* 成就面板（沿用任務面板樣式；與任務面板互斥顯示） */
+    #achpanel { position:fixed; right:16px; top:60px; z-index:12; width:min(86vw,300px); max-height:70dvh; overflow-y:auto;
+      background:rgba(251,247,239,.97); border-radius:16px; box-shadow:var(--shadow); padding:8px;
+      opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .2s ease, transform .2s ease; }
+    #achpanel.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+    #achpanel .hd { font-size:12px; font-weight:700; color:#6b7488; padding:6px 8px; }
+    .ach { display:flex; align-items:flex-start; gap:9px; padding:8px; border-radius:10px; }
+    .ach .ai { width:26px; text-align:center; font-size:18px; flex:none; }
+    .ach .at { flex:1; font-size:13px; font-weight:700; line-height:1.25; }
+    .ach .at i { display:block; font-style:normal; font-size:11px; font-weight:400; color:#8b93a4; margin-top:2px; }
+    .ach.locked { opacity:.55; }
+    .ach.locked .ai { filter:grayscale(1); }
+    #sharebtn2 { width:calc(100% - 16px); margin:6px 8px 4px; border:0; cursor:pointer; font:inherit; font-size:12px; font-weight:700;
+      color:var(--brand); background:rgba(60,154,95,.1); padding:9px; border-radius:10px; }
+    #sharebtn2:hover { background:rgba(60,154,95,.18); }
     #resetbtn { width:calc(100% - 16px); margin:6px 8px 4px; border:0; cursor:pointer; font:inherit; font-size:12px; font-weight:700;
       color:#c0433a; background:rgba(192,67,58,.08); padding:9px; border-radius:10px; }
     #resetbtn:hover { background:rgba(192,67,58,.16); }
@@ -307,6 +322,9 @@
     #finale .title-rank { margin:16px 0 0; font-size:14px; font-weight:800; color:var(--brand); }
     #finale-close { margin-top:18px; border:0; cursor:pointer; font:inherit; font-size:14px; font-weight:800; color:#fff;
       background:var(--brand); padding:11px 22px; border-radius:999px; }
+    #sharebtn { margin:14px 6px 0; border:0; cursor:pointer; font:inherit; font-size:14px; font-weight:800; color:var(--brand);
+      background:rgba(60,154,95,.12); padding:11px 22px; border-radius:999px; }
+    #sharebtn:hover { background:rgba(60,154,95,.2); }
     /* 通關「英雄守則」卷軸（帶得走的個人行動清單） */
     #finale .scroll-hd { margin:16px 0 0; font-size:13px; font-weight:800; color:var(--ink); }
     #finale .scroll { margin:8px 0 0; text-align:left; display:flex; flex-direction:column; gap:8px; }
@@ -368,10 +386,10 @@
       .opts { grid-template-columns:1fr; } .b-bottom .q { font-size:15px; }
     }
   </style>
-  <!-- Three.js r0.184.0 在本地自存一份（vendor/），不連外部 CDN：完全離線可用、無第三方請求 -->
+  <!-- Three.js r0.184.0 在本地自存一份（vendor/），不連外部 CDN：完全離線可用、無第三方請求。核心用官方 minified（three.module.min.js→three.core.min.js）；jsm 外掛官方無 min 維持原始碼 -->
   <script type="importmap">
   { "imports": {
-      "three": "./vendor/three.module.js",
+      "three": "./vendor/three.module.min.js",
       "three/addons/": "./vendor/jsm/"
   } }
   </script>
@@ -390,8 +408,10 @@
   <div id="topright">
     <button id="soundbtn" title="音效開關" data-i18n-title="soundToggle" aria-pressed="false">🔊</button>
     <button id="logbtn" data-i18n="logBtn">📜 任務</button>
+    <button id="achbtn" data-i18n="achBtn">🏅 成就</button>
   </div>
   <div id="questlog"><div class="hd" data-i18n="questHd">遺跡課程</div><div class="list"></div><button id="resetbtn" data-i18n="resetBtn">🔄 重置進度</button></div>
+  <div id="achpanel"><div class="hd" data-i18n="achHd">成就徽章</div><div class="alist"></div><button id="sharebtn2" data-i18n="shareBtn">📸 分享成果</button></div>
 
   <div id="joystick"><div class="knob"></div></div>
 
@@ -460,6 +480,7 @@
       <div class="langnote" data-i18n="chapterLangNote"></div>
       <div class="confcompare"></div>
       <div class="title-rank" data-i18n="finaleRank">榮銜：資安守護者 🛡️</div>
+      <button id="sharebtn" data-i18n="shareBtn">📸 分享成果</button>
       <button id="finale-close" data-i18n="finaleClose">繼續探索 →</button>
     </div>
   </div>
@@ -489,6 +510,6 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=7afd7079"></script>
+  <script type="module" src="./main.js?v=c724454a"></script>
 </body>
 </html>

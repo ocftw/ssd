@@ -11,13 +11,13 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=7afd7079';
-import { BATTLES_ALL } from './i18n/battles.js?v=7afd7079';
-import { UI_ALL } from './i18n/ui.js?v=7afd7079';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=7afd7079';
-import { WORLD, terrainHeight, groundY } from './terrain.js?v=7afd7079';
-import { BattleSystem } from './battle.js?v=7afd7079';
-import { SFX } from './audio.js?v=7afd7079';
+import { CONTENT } from './i18n/content.js?v=c724454a';
+import { BATTLES_ALL } from './i18n/battles.js?v=c724454a';
+import { UI_ALL } from './i18n/ui.js?v=c724454a';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=c724454a';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=c724454a';
+import { BattleSystem } from './battle.js?v=c724454a';
+import { SFX } from './audio.js?v=c724454a';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -54,6 +54,26 @@ function buildLangSwitcher() {
 applyStaticI18n();
 buildLangSwitcher();
 
+// ── 能力偵測：本遊戲需要 WebGL2（Three r163 起不支援 WebGL1）。不支援就在 landing 友善提示、不進場（不黑畫面）。──
+function showUnsupported() {
+  const root = document.getElementById('landing');
+  const btn = document.getElementById('startbtn');
+  if (btn) { btn.disabled = true; btn.textContent = UI.cantPlayBtn; }
+  if (root) {
+    const prep = root.querySelector('.prep'); if (prep) prep.style.display = 'none';   // 收起「世界生成中」轉圈
+    root.querySelectorAll('.topics-hd, .topics, .landingquality').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質區塊
+    const card = root.querySelector('.card');
+    if (card && !card.querySelector('.cantplay')) {
+      const p = document.createElement('p'); p.className = 'cantplay';
+      p.style.cssText = 'margin:12px 0 0;color:#c0433a;font-weight:700;font-size:13px;line-height:1.6';
+      p.textContent = UI.cantPlayMsg;
+      card.insertBefore(p, btn);
+    }
+  }
+}
+const webgl2ok = (() => { try { return !!(window.WebGL2RenderingContext && document.createElement('canvas').getContext('webgl2')); } catch (e) { return false; } })();
+if (!webgl2ok) { showUnsupported(); throw new Error('WebGL2 unsupported — game cannot start'); }
+
 // ── 畫質檔位：依裝置自動分檔，可由 localStorage 手動覆寫（auto 時觸控→精簡、桌機→精緻）──
 // 手機／行動裝置以「能順跑、能完成」為目標（省電、低發熱優先）；筆電／桌機效能足，把畫面拉回來。
 const QKEY = 'ssd-village-quality';                       // 'auto' | 'low' | 'high'
@@ -65,12 +85,12 @@ const Q = ({
   // low＝手機精簡：低發熱、省電優先；視覺精簡但玩法與功能完整（寫實效果全關，渲染路徑與現狀完全一致）
   low:  { maxPR: 2,   smaa: false, msaa: 4, shadowType: THREE.PCFShadowMap,
           sunShadow: 1024, torchShadow: 512,  waterSeg: 28, waterStep: 0.066, aniso: 2, mageNight: false,
-          bloom: false, richSky: false, rich: false },
+          bloom: false, richSky: false, rich: false, weather: false },
   // high＝桌機精緻：解除為手機而設的限制＋開啟寫實後製（光暈、大氣天空＋星空、電影色調）
   // 註：maxPR 由 2.5 調為 2.0，把填充率預算讓給 Bloom（SMAA＋2.0 仍銳利）；弱機可手動切「精簡」走 low 路徑
   high: { maxPR: 2,   smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
           sunShadow: 4096, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true,
-          bloom: true, richSky: true, rich: true },
+          bloom: true, richSky: true, rich: true, weather: true },
 })[TIER];
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -90,7 +110,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=7afd7079', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=7afd7079', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=c724454a', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=c724454a', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -107,12 +127,13 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=7afd7079', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=7afd7079', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=c724454a', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=c724454a', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
-const renderer = new THREE.WebGLRenderer({ antialias: false }); // AA 交給 composer（高＝SMAA／低＝render target 硬體 MSAA）；context MSAA 對 composer 離屏目標無效
+let renderer; // AA 交給 composer（高＝SMAA／低＝render target 硬體 MSAA）；context MSAA 對 composer 離屏目標無效
+try { renderer = new THREE.WebGLRenderer({ antialias: false }); } catch (e) { showUnsupported(); throw e; } // 偵測過但建立 context 仍失敗（驅動封鎖/context lost）時的保險
 // 裝置像素比上限依畫質檔位：手機精簡 2×（填充率＝GPU 發熱主因，2× 約少 56% 片段運算）、桌機精緻 2.5×
 const PR = Math.min(window.devicePixelRatio || 1, Q.maxPR);
 renderer.setPixelRatio(PR);
@@ -283,36 +304,146 @@ function assignFireflies() {
   });
 }
 
+// ── 沉浸感：天氣（桌機限定）＋動態生物（蝴蝶／魚影／飛鳥）。輕量、純裝飾，不影響玩法 ──
+// A2 天氣：飄霧（夜濃日淡）＋偶發細雨（僅桌機 Q.weather）
+let weather = null;
+if (Q.weather) {
+  const softTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,0.85)'); g.addColorStop(0.5, 'rgba(255,255,255,0.32)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const wg = new THREE.Group(); scene.add(wg);
+  const mists = [];
+  for (let i = 0; i < 7; i++) {
+    const m = new THREE.SpriteMaterial({ map: softTex, color: 0xccd6e2, transparent: true, opacity: 0, depthWrite: false, fog: false });
+    const s = new THREE.Sprite(m); s.scale.set(rand(42, 72), rand(20, 34), 1); wg.add(s);
+    mists.push({ s, m, ox: rand(-1, 1) * 55, oz: rand(-1, 1) * 55, h: rand(5, 15), ph: rand(0, TAU), sp: rand(0.012, 0.03) });
+  }
+  const rainTex = (() => { // 垂直短條＝雨絲（非大方塊）
+    const c = document.createElement('canvas'); c.width = 16; c.height = 64; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, 64);
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,0.95)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(6, 0, 4, 64);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const RN = 800, rpos = new Float32Array(RN * 3);
+  for (let i = 0; i < RN; i++) { rpos[i * 3] = rand(-40, 40); rpos[i * 3 + 1] = rand(0, 42); rpos[i * 3 + 2] = rand(-40, 40); }
+  const rgeo = new THREE.BufferGeometry(); rgeo.setAttribute('position', new THREE.BufferAttribute(rpos, 3));
+  const rmat = new THREE.PointsMaterial({ map: rainTex, color: 0xcdd9e6, size: 9, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false }); // 螢幕固定垂直雨絲
+  const rain = new THREE.Points(rgeo, rmat); rain.frustumCulled = false; wg.add(rain);
+  weather = { mists, rain, rgeo, rmat, amt: 0, target: 0, timer: rand(20, 45) };
+}
+
+// A3 蝴蝶：白天於草地飄舞、拍翅（兩檔位、數量少；繫於 vibrancy → 全村甦醒的白天才現身）
+const butterflies = [];
+{
+  const flutterTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    x.fillStyle = '#fff';
+    const wing = (cx, cy, rx, ry) => { x.beginPath(); x.ellipse(cx, cy, rx, ry, 0, 0, TAU); x.fill(); };
+    wing(23, 25, 11, 14); wing(41, 25, 11, 14); wing(26, 42, 8, 10); wing(38, 42, 8, 10);
+    x.fillRect(31, 16, 2, 32);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const bg = new THREE.Group(); scene.add(bg);
+  const cols = [0xffd36e, 0xff9ec7, 0x9ecbff, 0xfff1a8, 0xc59cff], N = Q.rich ? 8 : 5;
+  for (let i = 0; i < N; i++) {
+    const m = new THREE.SpriteMaterial({ map: flutterTex, color: cols[i % cols.length], transparent: true, opacity: 0, depthWrite: false, fog: true });
+    const s = new THREE.Sprite(m); bg.add(s);
+    const a = rand(0, TAU), r = rand(8, WORLD.villageR + 26);
+    butterflies.push({ s, m, cx: Math.cos(a) * r, cz: Math.sin(a) * r, ph: rand(0, TAU), sp: rand(0.4, 0.9), rad: rand(3, 8), h: rand(1.0, 2.6), fl: rand(9, 15) });
+  }
+}
+
+// A3 魚影：在湖區（地形低於水面處）緩繞的小暗影（兩檔位、半透明，透過水面隱約可見）
+const fishSchools = [];
+{
+  const spots = [];
+  for (let k = 0; k < 500 && spots.length < 3; k++) {
+    const a = rand(0, TAU), r = rand(WORLD.villageR + 8, WORLD.maxR - 6);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (terrainHeight(x, z) < WORLD.water - 0.8) spots.push({ x, z });
+  }
+  if (spots.length) {
+    const fg = new THREE.Group(); scene.add(fg);
+    const fishGeo = new THREE.SphereGeometry(0.22, 8, 6); fishGeo.scale(2.7, 0.6, 1.05);
+    const fishMat = new THREE.MeshStandardMaterial({ color: 0x8aa6b6, roughness: 0.5, metalness: 0.2, emissive: 0x33474f, emissiveIntensity: 0.8, transparent: true, opacity: 0.88 }); // 淡銀藍＋自發光：暗夜也清楚看見魚影
+    for (const sp of spots) for (let i = 0; i < 5; i++) {
+      const mesh = new THREE.Mesh(fishGeo, fishMat); fg.add(mesh);
+      fishSchools.push({ mesh, cx: sp.x, cz: sp.z, ph: rand(0, TAU), rad: rand(1.4, 4), sp: rand(0.5, 1.0) * (Math.random() < 0.5 ? 1 : -1), depth: rand(0.22, 0.55) });
+    }
+  }
+}
+
+// A3 飛鳥：白天偶爾橫越天空的小剪影（桌機限定）
+const birds = [];
+if (Q.rich) {
+  const birdTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    x.strokeStyle = '#000'; x.lineWidth = 6; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(10, 40); x.quadraticCurveTo(32, 20, 32, 36); x.quadraticCurveTo(32, 20, 54, 40); x.stroke();
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const bg = new THREE.Group(); scene.add(bg);
+  for (let i = 0; i < 5; i++) {
+    const m = new THREE.SpriteMaterial({ map: birdTex, color: 0x35424c, transparent: true, opacity: 0, depthWrite: false, fog: false });
+    const s = new THREE.Sprite(m); s.scale.setScalar(rand(2.6, 4.2)); bg.add(s);
+    birds.push({ s, m, base: s.scale.x, ph: rand(0, TAU), sp: rand(0.012, 0.026) * (Math.random() < 0.5 ? 1 : -1), r: rand(110, 165), h: rand(40, 60), fl: rand(6, 10) });
+  }
+}
+
+// ── 遠方地標：外環荒野的視覺目的地（純裝飾、低多邊形、兩檔位）——增加方位感與空間層次 ──
+{
+  const lmStone = mat(0x8d8478, { roughness: 0.95 }), lmWood = mat(0x5a4a3a, { roughness: 1 });
+  const place = (deg, r, build) => { const a = deg * Math.PI / 180, x = Math.cos(a) * r, z = Math.sin(a) * r; const g = build(); g.position.set(x, groundY(x, z), z); g.rotation.y = rand(0, TAU); scene.add(g); };
+  place(55, 160, () => { const g = new THREE.Group(); for (let i = 0; i < 5; i++) { const h = rand(4, 7), s = new THREE.Mesh(new THREE.BoxGeometry(1.2, h, 1.0), lmStone), a = (i / 5) * TAU; s.position.set(Math.cos(a) * 3, h / 2, Math.sin(a) * 3); s.rotation.set(rand(-0.1, 0.1), rand(0, TAU), rand(-0.12, 0.12)); s.castShadow = true; g.add(s); } return g; });                                  // 立石群
+  place(146, 120, () => { const g = new THREE.Group(); for (const sx of [-1, 1]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 7, 8), lmStone); c.position.set(sx * 2.4, 3.5, 0); c.castShadow = true; g.add(c); } const top = new THREE.Mesh(new THREE.BoxGeometry(7, 1.2, 1.6), lmStone); top.position.set(0, 7.2, 0); top.rotation.z = 0.04; top.castShadow = true; g.add(top); return g; });  // 殘破石拱
+  place(285, 150, () => { const g = new THREE.Group(); const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.7, 6, 8), lmWood); tr.position.y = 3; tr.castShadow = true; g.add(tr); for (let i = 0; i < 4; i++) { const bl = rand(2, 3.2), b = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.28, bl, 6), lmWood), a = rand(0, TAU); b.position.set(Math.cos(a) * 0.5, rand(4, 5.5), Math.sin(a) * 0.5); b.rotation.set(rand(0.4, 1.0), a, rand(-0.4, 0.4)); g.add(b); } return g; });           // 枯樹立於小丘
+}
+
 // ── 地形 ────────────────────────────────────────────────────────
-const segs = 240;
+const segs = Q.rich ? 320 : 240;   // 放大後桌機加段數讓近景丘陵平滑；手機維持 240（載入期一次性、無每幀成本）
 const tGeo = new THREE.PlaneGeometry(WORLD.half * 2, WORLD.half * 2, segs, segs);
 tGeo.rotateX(-Math.PI / 2);
 const tp = tGeo.attributes.position;
-for (let i = 0; i < tp.count; i++) tp.setY(i, terrainHeight(tp.getX(i), tp.getZ(i)));
-tGeo.computeVertexNormals();
 // 依高度/坡度上色（沙岸 / 草地 / 岩石）
 const cSand = lin(0xcdbb8e), cGrass = lin(0x82bd63), cGrass2 = lin(0x6fae57), cRock = lin(0x9a8e7c);
-const colors = new Float32Array(tp.count * 3);
-const nrm = tGeo.attributes.normal; const cTmp = new THREE.Color();
-for (let i = 0; i < tp.count; i++) {
-  const x = tp.getX(i), y = tp.getY(i), z = tp.getZ(i), slope = 1 - nrm.getY(i);
-  let c;
-  if (y < WORLD.water + 1.2) c = cSand;
-  else if (y > 15 || slope > 0.5) c = cRock;
-  else c = cTmp.copy(cGrass).lerp(cGrass2, Math.sin(x * 0.12) * Math.sin(z * 0.11) * 0.5 + 0.5); // 平滑色塊，避免格紋
-  colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+const _tColors = new Float32Array(tp.count * 3); const _cTmp = new THREE.Color();
+// 依目前 openness 重算地形頂點高度＋法線＋頂點色；可重複呼叫（夜→日群山沉降時再算一次，被終局運鏡蓋住）
+function displaceTerrain() {
+  for (let i = 0; i < tp.count; i++) tp.setY(i, terrainHeight(tp.getX(i), tp.getZ(i)));
+  tp.needsUpdate = true; tGeo.computeVertexNormals();
+  const nrm = tGeo.attributes.normal;
+  for (let i = 0; i < tp.count; i++) {
+    const x = tp.getX(i), y = tp.getY(i), z = tp.getZ(i), slope = 1 - nrm.getY(i);
+    let c;
+    if (y < WORLD.water + 1.2) c = cSand;
+    else if (y > 15 || slope > 0.5) c = cRock;
+    else c = _cTmp.copy(cGrass).lerp(cGrass2, Math.sin(x * 0.12) * Math.sin(z * 0.11) * 0.5 + 0.5); // 平滑色塊，避免格紋
+    _tColors[i * 3] = c.r; _tColors[i * 3 + 1] = c.g; _tColors[i * 3 + 2] = c.b;
+  }
+  if (tGeo.attributes.color) { tGeo.attributes.color.array.set(_tColors); tGeo.attributes.color.needsUpdate = true; }
+  else tGeo.setAttribute('color', new THREE.BufferAttribute(_tColors, 3));
 }
-tGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+displaceTerrain();   // 建場：夜
+// ── 沒有牆的大陸：全清變白天後群山沉降、可走範圍向海岸敞開（夜＝有界，維持現狀）──
+let worldOpen = false;
+const DAY_MAXR = 245;                                  // 白天可走到海岸淺灘（再外是海＋海霧）
+const worldLim = () => (worldOpen ? DAY_MAXR : WORLD.maxR);
+function setWorldOpen(open) { if (open === worldOpen) return; worldOpen = open; setTerrainOpenness(open ? 1 : 0); displaceTerrain(); } // 群山沉降↔回復（重算一次）
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=7afd7079', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=7afd7079', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=c724454a', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=c724454a', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
   sh.fragmentShader = 'uniform sampler2D grassMap;\nvarying vec2 vTerUv;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
   {
     float gm = smoothstep(0.04, 0.16, vColor.g - vColor.r);                 // 只在草地（綠>紅）混入
-    vec3 grass = mix(texture2D(grassMap, vTerUv * 36.0).rgb, texture2D(grassMap, vTerUv * 9.0).rgb, 0.5); // 雙尺度打散重複
+    vec3 grass = mix(texture2D(grassMap, vTerUv * 67.0).rgb, texture2D(grassMap, vTerUv * 17.0).rgb, 0.5); // 雙尺度打散重複（隨地圖放大提高重複數維持密度）
     float gv = dot(grass, vec3(0.299, 0.587, 0.114));
     diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * (0.72 + gv * 0.62), gm); // 以草皮明暗調變綠地、保留綠色基調
   }`);
@@ -324,10 +455,14 @@ scene.add(terrain);
 // 水面
 const water = new THREE.Mesh(
   new THREE.PlaneGeometry(WORLD.half * 2, WORLD.half * 2, Q.waterSeg, Q.waterSeg), // 段數依畫質檔位（桌機 48／手機 28）
-  new THREE.MeshStandardMaterial({ color: 0x4fa9d6, transparent: true, opacity: 0.82, roughness: 0.06, metalness: 0.4, envMapIntensity: 1.3 })
+  new THREE.MeshStandardMaterial({ color: 0x4fa9d6, transparent: true, opacity: 0.82, roughness: 0.5, metalness: 0.08, envMapIntensity: 0.35, depthWrite: false }) // 平靜水面：低反光（不閃爍）＋depthWrite:false（不與海面/岸邊 z-fighting）
 );
 water.rotation.x = -Math.PI / 2; water.position.y = WORLD.water;
 scene.add(water);
+// 遠方海洋：一大張平坦海面，讓白天敞開時看見海延伸到霧化的海平線；夜晚被外圍群山遮住而看不到。
+// 用 MeshBasic（不受光、無鏡面反射）＝掠射角不會有反光閃爍；polygonOffset 再把它在深度往後推避免與漣漪水面/地形打架。
+const sea = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), new THREE.MeshBasicMaterial({ color: 0x59a3cf, fog: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 }));
+sea.rotation.x = -Math.PI / 2; sea.position.y = WORLD.water - 0.1; scene.add(sea);
 
 // ── 遺跡座標（先算位置，植被才能避開）────────────────────────────
 const ruinAt = RUINS.map((r) => {
@@ -377,14 +512,14 @@ const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
   const c = new THREE.ConeGeometry(1.7 - k * 0.42, 1.8, 12); c.translate(0, 2.4 + k * 1.0 + 0.9, 0); return c;
 }));
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
-const trees = scatter(170, WORLD.villageR + 8, WORLD.maxR - 4, WORLD.water + 0.8, true);
+const trees = scatter(Q.rich ? 480 : 300, WORLD.villageR + 8, 172, WORLD.water + 0.8, true); // rMax 172＝夜/日地形相同的內圈，群山沉降時不會浮空
 const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
-const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=7afd7079', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=7afd7079', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=c724454a', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=c724454a', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
 // 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=7afd7079', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=7afd7079', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=c724454a', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=c724454a', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -395,7 +530,7 @@ function craggyRockGeo(amp) {
 const rockGeos = [craggyRockGeo(0.18), craggyRockGeo(0.22), craggyRockGeo(0.13)];
 const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
 {
-  const rockPts = scatter(90, WORLD.villageR + 4, WORLD.maxR + 14, WORLD.water + 0.3, true);
+  const rockPts = scatter(Q.rich ? 250 : 160, WORLD.villageR + 4, 174, WORLD.water + 0.3, true);
   const dummy = new THREE.Object3D(), col = new THREE.Color();
   rockGeos.forEach((geo, gi) => {
     const pts = rockPts.filter((_, i) => i % rockGeos.length === gi);
@@ -415,8 +550,8 @@ const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
 const bladeQuad = new THREE.PlaneGeometry(1, 0.95); bladeQuad.translate(0, 0.475, 0);
 const bladeQuad2 = bladeQuad.clone(); bladeQuad2.rotateY(Math.PI / 2);
 const tuftGeo = mergeGeometries([bladeQuad, bladeQuad2]);
-const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=7afd7079', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
-const tufts = scatter(620, WORLD.villageR + 3, WORLD.maxR - 2, WORLD.water + 0.6, false);
+const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=c724454a', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
+const tufts = scatter(Q.rich ? 1700 : 950, WORLD.villageR + 3, 172, WORLD.water + 0.6, false);
 const tuftMesh = new THREE.InstancedMesh(tuftGeo, tuftMat, tufts.length);
 const tuftTints = [0x86c45f, 0x6fae57, 0x95cf6c, 0x5f9c49];
 { const col = new THREE.Color(); tufts.forEach((p, i) => { dummy.position.set(p.x, p.y - 0.05, p.z); dummy.rotation.set(0, p.ry, 0); const s = p.s * 0.95; dummy.scale.set(s, s * rand(0.8, 1.25), s); dummy.updateMatrix(); tuftMesh.setMatrixAt(i, dummy.matrix); tuftMesh.setColorAt(i, col.set(tuftTints[(Math.random() * tuftTints.length) | 0])); }); }
@@ -632,7 +767,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=7afd7079'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=c724454a'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -687,7 +822,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=7afd7079'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=c724454a'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -844,16 +979,39 @@ const keepers = ruinAt.map((r) => {
   const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 3.1, 0); built.group.add(o);
   return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1, open: false, line: 0 };
 });
+// 維護者台詞＝劇情開場（keeperLore）＋原本的資安重點（review）；不變動 review 本體
+const keeperLines = (k) => [((UI.keeperLore && UI.keeperLore[k.ruin.id]) || k.ruin.tip), ...(k.ruin.review || [])];
 // 維護者對話：恢復後靠近先出現小圖示，點圖示展開第一則；展開中再點則輪替到下一則（複習重點）
 keepers.forEach((k) => {
   k.el.addEventListener('click', (e) => {
     e.stopPropagation();
     if (k.life <= 0.6) return;                                    // 僅恢復（白天）後可互動
     if (!k.open) k.open = true;                                   // 圖示 → 展開
-    else { const ls = k.ruin.review || [k.ruin.tip]; k.line = (k.line + 1) % ls.length; } // 展開中 → 下一則
+    else { const ls = keeperLines(k); k.line = (k.line + 1) % ls.length; } // 展開中 → 下一則
     k.mode = -1;                                                  // 強制重繪
   });
 });
+
+// ── 環境村民：村裡漫步的普通村民，點一下說一句資安小撇步（沿用泡泡系統；不影響玩法）──
+function buildVillager(bodyHex, hairHex) {
+  const g = new THREE.Group();
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  for (const sx of [-1, 1]) add(new THREE.CapsuleGeometry(0.12, 0.42, 5, 10), mat(0x4a4a55), sx * 0.16, 0.42, 0); // 腿
+  add(new THREE.CapsuleGeometry(0.34, 0.62, 6, 12), mat(bodyHex), 0, 1.05, 0);                                    // 身體
+  for (const sx of [-1, 1]) add(new THREE.CapsuleGeometry(0.1, 0.4, 5, 10), mat(bodyHex), sx * 0.44, 1.05, 0);    // 手臂
+  add(new THREE.SphereGeometry(0.32, 14, 12), mat(0xf2c79b), 0, 1.78, 0);                                         // 頭
+  add(new THREE.SphereGeometry(0.34, 14, 12, 0, TAU, 0, Math.PI * 0.55), mat(hairHex), 0, 1.84, 0);               // 髮
+  for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), mat(0x2a2630)); e.position.set(sx * 0.12, 1.8, 0.29); g.add(e); }
+  return g;
+}
+const villagers = [[0xc85a54, 0x4a3a2c], [0x4f7bb0, 0x2a2a30], [0x6aa15a, 0x5a4a36], [0xb98a3e, 0x3a2e22]].map(([bodyHex, hairHex], i) => {
+  const a = (i / 4) * TAU + rand(-0.4, 0.4), r = rand(9, 24);
+  const x = Math.cos(a) * r, z = Math.sin(a) * r, y = groundY(x, z);
+  const g = buildVillager(bodyHex, hairHex); g.position.set(x, y, z); scene.add(g);
+  const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 2.5, 0); g.add(o);
+  return { group: g, el, pos: new THREE.Vector3(x, 0, z), target: new THREE.Vector3(x, 0, z), face: a, wait: rand(1, 4), persona: i, line: 0, mode: -1, open: false };
+});
+villagers.forEach((v, i) => { v.el.addEventListener('click', (e) => { e.stopPropagation(); met.villagers.add(i); if (!v.open) v.open = true; else v.line++; v.mode = -1; }); });
 
 // ── 首頁角色重塑：友善小龍（載白貓）、綠袍法師嚮導、村裡黃貓 ──────
 // 低多邊形小貓（可重用：白貓帶紅斗篷、黃貓不帶）
@@ -972,14 +1130,21 @@ const heroBubble = new CSS2DObject(heroBubbleEl); heroBubble.position.set(0, 3.6
 const WATER_LINES = UI.waterLines;   // 戲水台詞（多語系，見 i18n/ui.js）
 const IDLE_LINES = UI.idleLines;     // 漫步自言自語（資安小提醒 + 氛圍穿插）
 const pick = (a) => a[(Math.random() * a.length) | 0];
-let sayTimer = 0, idleTalkTimer = 3, wasInWater = false;
+let sayTimer = 0, idleTalkTimer = 12, wasInWater = false;
 function heroSay(text, dur = 3) { heroBubbleEl.textContent = text; heroBubbleEl.classList.add('show'); sayTimer = dur; }
+// 是否靠近任一可對話 NPC（村民/維護者/法師）——用來暫停主角自言自語，避免多個對話泡同時跳出
+function heroNearNPC() {
+  const hx = hero.position.x, hz = hero.position.z;
+  for (const v of villagers) if (Math.hypot(hx - v.pos.x, hz - v.pos.z) < 7) return true;
+  for (const k of keepers) if (Math.hypot(hx - k.pos.x, hz - k.pos.z) < 8) return true;
+  return !!(mage && Math.hypot(hx - mage.pos.x, hz - mage.pos.z) < 8);
+}
 
 // ── 控制 ────────────────────────────────────────────────────────
 const keys = new Set();
 addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); });
 addEventListener('keyup', (e) => { keys.delete(e.code); });
-let yaw = Math.PI, pitch = 0.6, dist = 30;
+let yaw = Math.PI, pitch = 0.6, dist = 24;
 // 開場就把鏡頭擺到跟隨位置，避免從原點 (0,0,0) 起始＝卡在中央水晶光束裡（遺跡全通後光束很亮會洗版）
 { const sy = groundY(hero.position.x, hero.position.z); camera.position.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, sy + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist); }
 const moveTarget = new THREE.Vector3(); let hasTarget = false;
@@ -1002,13 +1167,13 @@ dom.addEventListener('pointerup', (e) => {
     if (hit) {
       hitPoint.copy(hit.point);
       const len = Math.hypot(hitPoint.x, hitPoint.z);
-      if (len > WORLD.maxR) hitPoint.multiplyScalar(WORLD.maxR / len);
+      if (len > worldLim()) hitPoint.multiplyScalar(worldLim() / len);
       moveTarget.copy(hitPoint); hasTarget = true;
     }
   }
   pDown = false; dragging = false;
 });
-addEventListener('wheel', (e) => { dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 16, 72); }, { passive: true });
+addEventListener('wheel', (e) => { dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 14, 56); }, { passive: true });
 // 首次互動解鎖音訊（瀏覽器自動播放限制；iOS 需多種手勢）
 ['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => addEventListener(ev, () => SFX.unlock(), { passive: true }));
 document.addEventListener('visibilitychange', () => { if (!document.hidden) SFX.unlock(); });
@@ -1038,6 +1203,8 @@ try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.discovere
 const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(progress)); } catch (e) { /* ignore */ } };
 const isDisc = (id) => progress.discovered.includes(id);
 const isDone = (id) => progress.completed.includes(id);
+// 成就足跡：村民/檔案/彩蛋生物等探索事件（當次會話累計；達成的成就 id 才寫入 progress.achievements）
+const met = { docs: new Set(), villagers: new Set(), capsule: false, mole: false, moth: false };
 
 // 世界繁榮度（0 破敗 → 1 繁榮）：發現各 0.3、進化各 0.7
 let vibrancy = 0, vibrancyTarget = 0, greatGlow = 0;
@@ -1132,10 +1299,15 @@ function afterCompleteToast(p) {
 function showFinaleOverlay() {
   const f = document.getElementById('finale');
   f.querySelector('.badges').innerHTML = ruinAt.map((r) => `<span title="${r.title}">${r.emoji}</span>`).join('');
-  // B 英雄守則卷軸：把每關現成的 tip（回家小提醒）收攏成可截圖的個人行動清單
-  f.querySelector('.scroll').innerHTML = ruinAt
-    .map((r) => `<div class="item"><span class="ico">${r.emoji}</span><span class="tx"><b>${r.defense || r.title}</b>${r.tip || ''}</span></div>`)
-    .join('');
+  // B 英雄守則卷軸（強化）：心法為標題、回家小提醒為內文、附「深入了解」連到真實 SSD 資源頁；ico 顯示心法碎片是否集滿，標頭顯示碎片收集數
+  const totalShards = ruinAt.length * SHARD_PER;
+  const gotShards = ruinAt.reduce((n, r) => n + ((progress.shards[r.id] || []).length), 0);
+  const hdEl = f.querySelector('.scroll-hd'); if (hdEl) hdEl.textContent = `${UI.finaleScrollHd}　${UI.finaleShardHd(gotShards, totalShards)}`;
+  f.querySelector('.scroll').innerHTML = ruinAt.map((r) => {
+    const lesson = (UI.shardLesson && UI.shardLesson[r.id]) || r.defense || r.title;
+    const done = (progress.shards[r.id] || []).length >= SHARD_PER;
+    return `<div class="item"><span class="ico">${r.emoji}${done ? ' ✅' : ''}</span><span class="tx"><b>${r.title}・${lesson}</b>${r.tip || ''}<a href="${r.url}" target="_blank" rel="noopener" style="display:inline-block;margin-top:5px;color:#1d6fb8;font-weight:700;text-decoration:none;font-size:11px">${UI.finaleLearnMore}</a></span></div>`;
+  }).join('');
   f.classList.add('show');
   // D 通關後信心檢核 + 前後比對
   const cc = f.querySelector('.confcompare'); if (cc) cc.textContent = '';
@@ -1180,6 +1352,7 @@ function maybeShowPreConfidence() {
 function checkAllDone() {
   if (allDoneShown || !ruinAt.every((r) => isDone(r.id))) return;
   allDoneShown = true;
+  setWorldOpen(true);   // 沒有牆的大陸：群山沉降、向海敞開（一次性重算被終局運鏡蓋住）
   SFX.win();
   ringBurst(0, 2.2, 0, 0xfff0c0, 55, 1.7);   // 金色衝擊波
   ringBurst(0, 2.6, 0, 0x9affb0, 82, 2.5);   // 綠色復甦波橫掃世界
@@ -1204,7 +1377,20 @@ function updateHud() {
     logList.appendChild(row);
   });
 }
-logBtn.addEventListener('click', () => logEl.classList.toggle('show'));
+// 線索：在任務面板頂端顯示「最近未完成封印」的方位＋約略步數（開啟面板時即時計算；方位與小地圖一致：北=−z、東=+x）
+const questHintEl = document.createElement('div'); questHintEl.className = 'qhint';
+questHintEl.style.cssText = 'padding:7px 10px;margin:2px 0 6px;font-size:12px;font-weight:600;line-height:1.5;color:#a85d00;background:rgba(255,170,50,.18);border-radius:8px';
+{ const hd = logEl.querySelector('.hd'); if (hd) hd.after(questHintEl); else logEl.prepend(questHintEl); }
+function refreshQuestHint() {
+  const recId = nextRecommendedRuinId();
+  if (!recId) { questHintEl.innerHTML = `🧭 ${UI.questAllDone}`; return; }
+  const r = ruinAt.find((x) => x.id === recId);
+  const dx = r.x - hero.position.x, dz = r.z - hero.position.z;
+  const ang = (Math.atan2(dx, -dz) + TAU) % TAU;
+  const dir = UI.compass[Math.round(ang / (Math.PI / 4)) % 8];
+  questHintEl.innerHTML = `🧭 ${UI.questDir(dir, Math.max(1, Math.round(Math.hypot(dx, dz) / 1.5)))}`;
+}
+logBtn.addEventListener('click', () => { const showing = logEl.classList.toggle('show'); if (showing) { refreshQuestHint(); document.getElementById('achpanel')?.classList.remove('show'); } });
 // 靜音開關
 const soundBtn = document.getElementById('soundbtn');
 const refreshSound = () => { soundBtn.textContent = SFX.isMuted() ? '🔇' : '🔊'; soundBtn.setAttribute('aria-pressed', String(SFX.isMuted())); };
@@ -1226,13 +1412,14 @@ function resetProgress() {
   const cc = document.querySelector('#finale .confcompare'); if (cc) cc.textContent = '';
   allDoneShown = false; pinnedId = null; suppressed.clear(); hidePanel();
   POIS.forEach((p) => { if (p.isRuin) resetRuinVisual(p); });
-  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; updateHud(); computeVibrancy(); assignFireflies();
+  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; setWorldOpen(false); updateHud(); computeVibrancy(); assignFireflies();
   toast(UI.resetToastTitle, UI.resetToastSub);
 }
 document.getElementById('resetbtn').addEventListener('click', resetProgress);
 // 還原已發現遺跡的外觀
 POIS.forEach((p) => { if (p.isRuin && isDisc(p.data.id)) lightRuin(p); });
 updateHud(); allDoneShown = ruinAt.every((r) => isDone(r.id)); computeVibrancy(); vibrancy = vibrancyTarget; assignFireflies();
+if (allDoneShown) setWorldOpen(true);   // 載入已完成存檔：直接是白天敞開狀態
 
 // 擴散光環（mul=擴張倍率、dur=持續秒數）
 const bursts = [];
@@ -1268,6 +1455,150 @@ function capRespawn() {
 }
 capRespawn();
 
+// ── 更多彩蛋生物（純彩蛋，不存檔/不計數/無名牌）。沿用膠囊狀態機 ──
+function wildSpot(minHero) {                                       // 挑荒野合法落點（不在水裡、避遺跡、離英雄遠）
+  for (let i = 0; i < 40; i++) {
+    const a = rand(0, TAU), r = rand(WORLD.villageR + 10, WORLD.maxR - 6);
+    const cx = Math.cos(a) * r, cz = Math.sin(a) * r;
+    if (terrainHeight(cx, cz) < WORLD.water + 1) continue;
+    if (nearAnyRuin(cx, cz, 12)) continue;
+    if (Math.hypot(cx - hero.position.x, cz - hero.position.z) < minHero) continue;
+    return { x: cx, z: cz };
+  }
+  return { x: cap.ax, z: cap.az };
+}
+function glowCritter(coreHex, shellHex, lightHex, radius) {
+  const m = mat(coreHex, { emissive: coreHex, emissiveIntensity: 1.4, roughness: 0.3 });
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 18, 14), m);
+  mesh.add(new THREE.Mesh(new THREE.SphereGeometry(radius * 1.85, 14, 10), new THREE.MeshBasicMaterial({ color: shellHex, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })));
+  const light = Q.mageNight ? new THREE.PointLight(lightHex, 0, 12, 2) : null; if (light) mesh.add(light);
+  scene.add(mesh);
+  return { mesh, mat: m, light };
+}
+// 生物①「膽小地鼠光點」：橘黃光點蹲在地面，英雄靠近就鑽地消失、他處冒出
+const MOLE_TRIGGER = 5;
+const mole = { ...glowCritter(0xffd27a, 0xffb347, 0xffa12c, 0.4), state: 'idle', ax: 0, az: 0, ay: 0, t: 0, ph: rand(0, TAU) };
+function moleRespawn() {
+  const s = wildSpot(22); mole.ax = s.x; mole.az = s.z; mole.ay = groundY(s.x, s.z) + 0.45;
+  mole.mesh.position.set(mole.ax, mole.ay, mole.az); mole.mesh.scale.setScalar(0.01); mole.state = 'rise'; mole.t = 0; mole.ph = rand(0, TAU);
+  ringBurst(mole.ax, mole.ay - 0.3, mole.az, 0xffb347, 3, 0.6);
+}
+moleRespawn();
+// 生物②「好奇光蝶」：青白光點飄浮，玩家在中距離時會好奇地靠近，太近則急閃他處
+const MOTH_NOTICE = 15, MOTH_FLEE = 4.5;
+const moth = { ...glowCritter(0xbfeaff, 0x8fd6ff, 0x53b8ff, 0.32), state: 'idle', ax: 0, az: 0, ay: 0, t: 0, ph: rand(0, TAU), dx: 0, dz: 0 };
+function mothRespawn() {
+  const s = wildSpot(26); moth.ax = s.x; moth.az = s.z; moth.ay = groundY(s.x, s.z) + 2.6;
+  moth.mesh.position.set(moth.ax, moth.ay, moth.az); moth.mesh.scale.setScalar(0.01); moth.state = 'idle'; moth.t = 0; moth.ph = rand(0, TAU);
+  ringBurst(moth.ax, moth.ay, moth.az, 0x8fd6ff, 3, 0.6);
+}
+mothRespawn();
+
+// ── 知識碎片：每座遺跡周邊散落 3 枚，走近自動拾取；集滿一主題解鎖「心法」（純加分，不 gate 進度，存檔向後相容）──
+const SHARD_PER = 3, SHARD_PICK = 2.6;
+progress.shards = progress.shards || {};
+const kShardGeo = new THREE.OctahedronGeometry(0.34, 0);
+const knowledgeShards = [];
+ruinAt.forEach((r) => {
+  progress.shards[r.id] = progress.shards[r.id] || [];
+  const base = r.angle * Math.PI / 180;
+  for (let i = 0; i < SHARD_PER; i++) {
+    const a = base + (i / SHARD_PER) * TAU, rr = 7 + (i % 2) * 2;
+    const x = r.x + Math.cos(a) * rr, z = r.z + Math.sin(a) * rr, y = groundY(x, z) + 1.2;
+    const m = mat(r.color, { emissive: r.color, emissiveIntensity: 0.95, roughness: 0.25, metalness: 0.2 });
+    const mesh = new THREE.Mesh(kShardGeo, m);
+    mesh.add(new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 10), new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })));
+    mesh.position.set(x, y, z); mesh.visible = !progress.shards[r.id].includes(i); scene.add(mesh);
+    knowledgeShards.push({ mesh, m, id: r.id, idx: i, x, z, y, ph: rand(0, TAU), got: progress.shards[r.id].includes(i) });
+  }
+});
+function collectShard(s) {
+  s.got = true; s.mesh.visible = false;
+  const arr = progress.shards[s.id]; if (!arr.includes(s.idx)) arr.push(s.idx);
+  save(); ringBurst(s.x, s.y, s.z, (ruinAt.find((r) => r.id === s.id) || {}).color || 0xffffff, 3, 0.6);
+  const r = ruinAt.find((x) => x.id === s.id) || {};
+  if (arr.length >= SHARD_PER) { SFX.complete(); toast(UI.shardComplete(r.title || ''), (UI.shardLesson && UI.shardLesson[s.id]) || ''); }
+  else { SFX.collect(); toast(UI.shardGot(arr.length, SHARD_PER), r.title || ''); }
+}
+
+// ── 成就系統：偵測解鎖→toast＋音效；面板從右上角「🏅 成就」開啟。存檔擴充 progress.achievements（向後相容）──
+progress.achievements = progress.achievements || [];
+const ACHIEVEMENTS = [
+  { id: 'firstRuin', cond: () => progress.completed.length >= 1 },
+  { id: 'explorer', cond: () => ruinAt.every((r) => isDisc(r.id)) },
+  { id: 'allRuins', cond: () => ruinAt.every((r) => isDone(r.id)) },
+  { id: 'shardMaster', cond: () => ruinAt.every((r) => (progress.shards[r.id] || []).length >= SHARD_PER) },
+  { id: 'archivist', cond: () => met.docs.size >= ARCHIVE_DOCS.length },
+  { id: 'villageFriend', cond: () => met.villagers.size >= villagers.length },
+  { id: 'capsule', cond: () => met.capsule },
+  { id: 'critterHunter', cond: () => met.capsule && met.mole && met.moth },
+];
+const achPanelEl = document.getElementById('achpanel');
+const achBtnEl = document.getElementById('achbtn');
+const achListEl = achPanelEl ? achPanelEl.querySelector('.alist') : null;
+function renderAchPanel() {
+  if (!achListEl) return;
+  achListEl.innerHTML = ACHIEVEMENTS.map((a) => {
+    const got = progress.achievements.includes(a.id);
+    const info = (UI.ach && UI.ach[a.id]) || { t: a.id, d: '' };
+    return `<div class="ach${got ? '' : ' locked'}"><span class="ai">${got ? '🏅' : '🔒'}</span><span class="at">${info.t}<i>${info.d}</i></span></div>`;
+  }).join('');
+}
+function checkAchievements() {
+  for (const a of ACHIEVEMENTS) {
+    if (progress.achievements.includes(a.id) || !a.cond()) continue;
+    progress.achievements.push(a.id); save();
+    const info = (UI.ach && UI.ach[a.id]) || { t: a.id, d: '' };
+    toast(UI.achToast(info.t), info.d); SFX.complete(); renderAchPanel();
+  }
+}
+if (achBtnEl) achBtnEl.addEventListener('click', () => { const showing = achPanelEl.classList.toggle('show'); if (showing) { renderAchPanel(); logEl.classList.remove('show'); } });
+renderAchPanel();
+
+// ── 分享成果卡片：終局以 canvas 合成一張成果圖，可下載／（行動裝置）系統分享。零外部資產 ──
+function buildShareCard() {
+  const W = 1080, H = 1080, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d');
+  const done = progress.completed.filter((id) => ruinAt.some((r) => r.id === id)).length, total = ruinAt.length, allDone = done >= total;
+  const gotShards = ruinAt.reduce((n, r) => n + ((progress.shards[r.id] || []).length), 0);
+  // 背景＝當下遊戲畫面：先即時渲染一次（確保 WebGL 緩衝有內容），再把畫布以 cover 方式填滿卡片
+  let scene3d = false;
+  try {
+    renderScene();
+    const gc = renderer.domElement, gw = gc.width, gh = gc.height;
+    if (gw && gh) { const s = Math.max(W / gw, H / gh), dw = gw * s, dh = gh * s; x.drawImage(gc, (W - dw) / 2, (H - dh) / 2, dw, dh); scene3d = true; }
+  } catch (e) { /* 擷取失敗就退回純漸層 */ }
+  // 暗化覆蓋層：壓暗背景讓文字清楚（保留品牌綠調）；無背景時用原本的綠色漸層
+  const g = x.createLinearGradient(0, 0, 0, H);
+  if (scene3d) { g.addColorStop(0, 'rgba(8,24,16,.74)'); g.addColorStop(0.46, 'rgba(8,24,16,.32)'); g.addColorStop(1, 'rgba(6,38,30,.82)'); }
+  else { g.addColorStop(0, '#15331f'); g.addColorStop(1, '#0c5b4a'); }
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.textAlign = 'center'; x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 14; x.shadowOffsetY = 2;
+  x.fillStyle = '#ffffff'; x.font = 'bold 66px sans-serif'; x.fillText(UI.shareCardTitle, W / 2, 180);
+  x.fillStyle = '#ffe9b8'; x.font = '600 40px sans-serif'; x.fillText(allDone ? UI.shareCardWin : UI.shareCardProgress, W / 2, 270);
+  x.font = '108px sans-serif'; x.fillText(ruinAt.map((r) => r.emoji).join('  '), W / 2, 460);
+  x.font = '210px sans-serif'; x.fillText(allDone ? '🛡️' : '🧭', W / 2, 720);
+  x.fillStyle = '#ffffff'; x.font = '600 46px sans-serif'; x.fillText(UI.shareCardStats(done, total, gotShards, total * SHARD_PER), W / 2, 858);
+  x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '600 40px sans-serif'; x.fillText('ssd.ocf.tw/games', W / 2, 985);
+  x.shadowColor = 'transparent'; x.shadowBlur = 0; x.shadowOffsetY = 0;
+  return cv;
+}
+function shareResult() {
+  buildShareCard().toBlob((blob) => {
+    if (!blob) return;
+    const file = new File([blob], 'ssd-village.png', { type: 'image/png' });
+    // 只分享圖片、不帶文字／網址：避免 X／LinkedIn 把網址展開成第二張連結預覽圖（網址已印在圖上）
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch((err) => { if (err && err.name !== 'AbortError') downloadBlob(blob); });
+    } else downloadBlob(blob);
+  }, 'image/png');
+}
+function downloadBlob(blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ssd-village.png';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+{ const sb = document.getElementById('sharebtn'); if (sb) sb.addEventListener('click', shareResult); const sb2 = document.getElementById('sharebtn2'); if (sb2) sb2.addEventListener('click', shareResult); }
+
 // 塵土：受光的塵色小團塊往外噴、上飄後受重力落下並淡出。
 // power≈衝擊力；o 可微調顆數/外擴/上飄/大小/壽命/透明度（走路用很小的揚塵）。
 const dustGeo = new THREE.IcosahedronGeometry(0.22, 0);
@@ -1301,7 +1632,7 @@ function spawnFootprint(x, y, z, ry) {
 
 // ── 小地圖 ──────────────────────────────────────────────────────
 const mm = $('#minimap canvas'); const mc = mm.getContext('2d'); const MMR = 76;
-const w2m = (x, z) => { let mx = (x / WORLD.maxR) * MMR, mz = (z / WORLD.maxR) * MMR; const l = Math.hypot(mx, mz); if (l > MMR) { mx *= MMR / l; mz *= MMR / l; } return [88 + mx, 88 + mz]; };
+const w2m = (x, z) => { const lim = worldLim(); let mx = (x / lim) * MMR, mz = (z / lim) * MMR; const l = Math.hypot(mx, mz); if (l > MMR) { mx *= MMR / l; mz *= MMR / l; } return [88 + mx, 88 + mz]; };
 function drawMinimap() {
   mc.clearRect(0, 0, 176, 176);
   mc.save(); mc.beginPath(); mc.arc(88, 88, MMR + 6, 0, TAU); mc.clip();
@@ -1396,9 +1727,16 @@ function animate() {
   let moving = false;
   if (moveDir.lengthSq() > 0.0001) {
     moveDir.normalize();
-    hero.position.addScaledVector(moveDir, (sprint ? 26 : 16) * dt);
+    // 邊緣減速：接近可走半徑時，向外的位移漸減 → 滑停而非撞隱形牆（保留 maxR 硬夾作安全網）
+    let spd = sprint ? 26 : 14;
+    const r0 = Math.hypot(hero.position.x, hero.position.z), EDGE = 14, lim = worldLim();
+    if (!archiveActive && r0 > lim - EDGE) {
+      const outward = (moveDir.x * hero.position.x + moveDir.z * hero.position.z) / (r0 || 1);
+      if (outward > 0) spd *= Math.max(0.12, (lim - r0) / EDGE);
+    }
+    hero.position.addScaledVector(moveDir, spd * dt);
     const len = Math.hypot(hero.position.x, hero.position.z);
-    if (!archiveActive && len > WORLD.maxR) hero.position.multiplyScalar(WORLD.maxR / len);
+    if (!archiveActive && len > worldLim()) hero.position.multiplyScalar(worldLim() / len);
     const tr = Math.atan2(moveDir.x, moveDir.z);
     if (!spinning) hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
     moving = true;
@@ -1423,7 +1761,7 @@ function animate() {
 
   const groundH = terrainHeight(hero.position.x, hero.position.z);
   if (moving) {
-    walkPhase += dt * (sprint ? 18 : 12); const s = Math.sin(walkPhase);
+    walkPhase += dt * (sprint ? 15 : 10); const s = Math.sin(walkPhase);
     legL.rotation.x = s * 0.6; legR.rotation.x = -s * 0.6; armL.rotation.x = -s * 0.5; armR.rotation.x = s * 0.5;
     hero.position.y = groundH + Math.abs(Math.sin(walkPhase)) * 0.12 + jumpOff;
     const sf = Math.floor(walkPhase / Math.PI);
@@ -1460,12 +1798,14 @@ function animate() {
   if (archiveActive) hero.position.y = ARCHIVE_FLOOR + jumpOff; // 室內地板高度（覆蓋地形跟隨）
 
   // 對話泡：踩水反應 + 漫步自言自語
-  if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
+  const nearNPC = heroNearNPC();   // 靠近可對話 NPC 時，主角先不自言自語（並立即收起正在顯示的台詞）
+  if (nearNPC) { if (sayTimer > 0) { sayTimer = 0; heroBubbleEl.classList.remove('show'); } }
+  else if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
   const inWater = groundH < WORLD.water + 0.2;
-  if (!finaleActive && !archiveActive) {
+  if (!finaleActive && !archiveActive && !nearNPC) {
     if (inWater && !wasInWater && sayTimer <= 0) heroSay(pick(WATER_LINES), 2.6);
     idleTalkTimer -= dt;
-    if (idleTalkTimer <= 0) { idleTalkTimer = rand(4, 8); if (sayTimer <= 0 && !inWater && moving) heroSay(pick(IDLE_LINES), 3); }
+    if (idleTalkTimer <= 0) { idleTalkTimer = rand(16, 30); if (sayTimer <= 0 && !inWater && moving) heroSay(pick(IDLE_LINES), 3); }
   }
   wasInWater = inWater;
 
@@ -1520,6 +1860,7 @@ function animate() {
     if ((p.area || 'world') !== (archiveActive ? 'archive' : 'world')) continue; // 只判定當前空間的 POI
     const d = Math.hypot(hero.position.x - p.pos.x, hero.position.z - p.pos.z);
     if (d < p.openDist && d < nd) { nd = d; near = p; }
+    if (p.area === 'archive' && d < p.openDist) met.docs.add(p.data.id); // 成就：看過檔案室文件
     if (p.isRuin) {
       const want = (d < p.openDist) ? 1 : 0; p.lift += (want - p.lift) * Math.min(1, 6 * dt);
       const lit = isDisc(p.data.id);
@@ -1561,9 +1902,9 @@ function animate() {
   }
   // 特效更新
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
-  // 湖面微幅漣漪：讓環境反射有流動感（局部座標 Z = 世界 Y）。依畫質檔位節流（桌機 30fps／手機 15fps；每幀重算全部頂點法線太耗 CPU/上傳）
-  waterAcc += dt;
-  if (waterAcc >= Q.waterStep) { waterAcc = 0; const wp = water.geometry.attributes.position; for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), y = wp.getY(i); wp.setZ(i, Math.sin(x * 0.15 + t * 1.3) * 0.12 + Math.sin(y * 0.19 - t * 1.0) * 0.12); } wp.needsUpdate = true; water.geometry.computeVertexNormals(); }
+  // 平靜海面＋潮汐：不再做逐頂點漣漪（避免反光閃爍），改用緩慢升降水位＝海水在岸邊進退（lapping）；水面與遠方海面同步升降，維持高度差。
+  const tide = Math.sin(t * 0.33) * 0.18;
+  water.position.y = WORLD.water + tide; sea.position.y = WORLD.water - 0.1 + tide;
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
@@ -1585,6 +1926,9 @@ function animate() {
     skyMat.uniforms.bottom.value.lerpColors(SKY_BOT_D, SKY_BOT_A, vibrancy);
   }
   scene.fog.color.lerpColors(FOG_D, FOG_A, vibrancy);
+  // 邊緣迷霧：接近可走邊界時把霧收緊，遠方融進薄霧（遮住硬邊界、營造大地盡頭）
+  if (worldOpen) { scene.fog.near = 140; scene.fog.far = 440; } // 白天敞開：開闊海景到遠方海霧，不收緊（沒有牆要遮）
+  else { const rr = archiveActive ? 0 : Math.hypot(hero.position.x, hero.position.z), kf = Math.max(0, Math.min(1, (rr - (worldLim() - 45)) / 45)); scene.fog.near = 120 - kf * 40; scene.fog.far = 360 - kf * 150; } // 夜：邊緣收緊迷霧、遮住硬邊界
   // 中央大水晶（全部進化才啟動）
   const allDone = ruinAt.every((r) => isDone(r.id));
   greatGlow += ((allDone ? 1 : 0) - greatGlow) * Math.min(1, 1.0 * dt);
@@ -1619,7 +1963,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       else if (state === 1) { k.el.className = 'bubble petrified show'; k.el.textContent = UI.keeperPetrified; }
       else if (state === 2) { k.el.className = 'bubble chip clickable show'; k.el.innerHTML = '💬'; }
       else {
-        const ls = k.ruin.review || [k.ruin.tip];
+        const ls = keeperLines(k);
         k.el.className = 'bubble clickable show';
         k.el.innerHTML = `<b>${UI.keeperHeader(k.ruin.emoji, k.ruin.title)}</b><span>${ls[k.line]}</span>` + (ls.length > 1 ? `<span class="more">${UI.keeperMore(k.line + 1, ls.length)}</span>` : '');
       }
@@ -1721,7 +2065,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       c.mesh.rotation.y += dt * (10 + c.t * 45);                                 // 原地越轉越快
       c.mesh.position.set(c.ax, c.ay + Math.sin(c.t * 30) * 0.1, c.az);
       const k = Math.min(1, c.t / CAP_SPIN_DUR); c.scale = 1 - k * k; c.mesh.scale.setScalar(Math.max(0.001, c.scale)); // 邊轉邊縮
-      if (c.t >= CAP_SPIN_DUR) { ringBurst(c.ax, c.ay, c.az, 0x5bff8a, 5, 0.7); SFX.vanish(); c.state = 'gone'; c.t = 0; } // 消失光環＋音效
+      if (c.t >= CAP_SPIN_DUR) { ringBurst(c.ax, c.ay, c.az, 0x5bff8a, 5, 0.7); SFX.vanish(); met.capsule = true; c.state = 'gone'; c.t = 0; } // 消失光環＋音效
     } else { // gone：短暫隱藏後他處重生
       c.t += dt; c.mesh.scale.setScalar(0.001);
       if (c.t >= CAP_HIDE) capRespawn();
@@ -1729,6 +2073,102 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     const lit = c.state !== 'gone';
     c.mat.emissiveIntensity = (lit ? 1.4 : 0) * (0.85 + Math.sin(t * 4 + c.ph) * 0.15);            // 綠光脈動
     if (c.light) c.light.intensity = (lit ? 1 : 0) * (1 - vibrancy) * 30 * (0.8 + Math.sin(t * 5) * 0.2); // 夜亮日滅
+  }
+  // 膽小地鼠光點：蹲地→靠近鑽地→他處冒出
+  {
+    const c = mole, busy = battle.active || finaleActive || archiveActive;
+    if (c.state === 'rise') { c.t += dt; const k = Math.min(1, c.t / 0.4); c.mesh.scale.setScalar(k); c.mesh.position.set(c.ax, c.ay - 0.4 * (1 - k), c.az); if (k >= 1) { c.state = 'idle'; c.t = 0; } }
+    else if (c.state === 'idle') {
+      c.mesh.position.set(c.ax, c.ay + Math.sin(t * 3 + c.ph) * 0.08, c.az); c.mesh.scale.setScalar(1);
+      if (!busy && Math.hypot(hero.position.x - c.ax, hero.position.z - c.az) < MOLE_TRIGGER) { c.state = 'dig'; c.t = 0; spawnDust(c.ax, groundY(c.ax, c.az), c.az, 0.6, { n: 9 }); SFX.burrow(); met.mole = true; }
+    } else if (c.state === 'dig') { c.t += dt; const k = Math.min(1, c.t / 0.35); c.mesh.position.set(c.ax, c.ay - k * 0.9, c.az); c.mesh.scale.setScalar(Math.max(0.001, 1 - k)); if (k >= 1) { c.state = 'gone'; c.t = 0; } }
+    else { c.t += dt; c.mesh.scale.setScalar(0.001); if (c.t >= 0.5) moleRespawn(); }
+    const lit = c.state === 'idle' || c.state === 'rise';
+    c.mat.emissiveIntensity = (lit ? 1.4 : 0) * (0.85 + Math.sin(t * 5 + c.ph) * 0.15);
+    if (c.light) c.light.intensity = (lit ? 1 : 0) * (1 - vibrancy) * 22 * (0.8 + Math.sin(t * 4) * 0.2);
+  }
+  // 好奇光蝶：飄浮→中距離靠近玩家→太近急閃→他處重生
+  {
+    const c = moth, busy = battle.active || finaleActive || archiveActive;
+    if (c.state === 'idle') {
+      const d = Math.hypot(hero.position.x - c.ax, hero.position.z - c.az);
+      if (!busy && d < MOTH_NOTICE && d > MOTH_FLEE) { const k = 0.7 * dt; c.ax += (hero.position.x - c.ax) * k; c.az += (hero.position.z - c.az) * k; c.ay = groundY(c.ax, c.az) + 2.6; }
+      c.mesh.position.set(c.ax + Math.sin(t * 5 + c.ph) * 0.4, c.ay + Math.sin(t * 7 + c.ph * 1.3) * 0.3, c.az + Math.cos(t * 6 + c.ph) * 0.4);
+      if (c.mesh.scale.x < 1) c.mesh.scale.setScalar(Math.min(1, c.mesh.scale.x + dt * 3));
+      if (!busy && d < MOTH_FLEE) { c.state = 'flee'; c.t = 0; const a = Math.atan2(c.az - hero.position.z, c.ax - hero.position.x); c.dx = Math.cos(a); c.dz = Math.sin(a); SFX.flutter(); met.moth = true; }
+    } else if (c.state === 'flee') {
+      c.t += dt; c.ax += c.dx * 14 * dt; c.az += c.dz * 14 * dt; c.ay += 6 * dt; c.mesh.position.set(c.ax, c.ay, c.az);
+      const k = Math.min(1, c.t / 0.5); c.mesh.scale.setScalar(Math.max(0.001, 1 - k));
+      if (k >= 1) { ringBurst(c.ax, c.ay, c.az, 0x8fd6ff, 4, 0.6); c.state = 'gone'; c.t = 0; }
+    } else { c.t += dt; c.mesh.scale.setScalar(0.001); if (c.t >= 0.5) mothRespawn(); }
+    const lit = c.state !== 'gone';
+    c.mat.emissiveIntensity = (lit ? 1.4 : 0) * (0.85 + Math.sin(t * 4 + c.ph) * 0.15);
+    if (c.light) c.light.intensity = (lit ? 1 : 0) * (1 - vibrancy) * 24 * (0.8 + Math.sin(t * 5) * 0.2);
+  }
+  // 知識碎片：旋轉漂浮＋走近自動拾取
+  for (const s of knowledgeShards) {
+    if (s.got) continue;
+    s.mesh.rotation.y += dt * 1.5; s.mesh.position.y = s.y + Math.sin(t * 1.8 + s.ph) * 0.18;
+    s.m.emissiveIntensity = 0.8 + Math.sin(t * 3 + s.ph) * 0.3;
+    if (!battle.active && !finaleActive && !archiveActive && Math.hypot(hero.position.x - s.x, hero.position.z - s.z) < SHARD_PICK) collectShard(s);
+  }
+  // 環境村民：村裡漫步＋靠近點擊出資安撇步泡泡
+  for (const v of villagers) {
+    if (v.wait > 0) v.wait -= dt;
+    else {
+      const dx = v.target.x - v.pos.x, dz = v.target.z - v.pos.z, d = Math.hypot(dx, dz);
+      if (d < 0.4) { v.wait = rand(2, 6); const a = rand(0, TAU), rr = rand(8, 26); v.target.set(Math.cos(a) * rr, 0, Math.sin(a) * rr); }
+      else { const inv = 1 / d; v.pos.x += dx * inv * 1.4 * dt; v.pos.z += dz * inv * 1.4 * dt; v.face += ((Math.atan2(dx, dz) - v.face + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 8 * dt); }
+    }
+    const gy = groundY(v.pos.x, v.pos.z);
+    v.group.position.set(v.pos.x, gy + Math.abs(Math.sin(t * 5 + v.face)) * 0.03, v.pos.z); v.group.rotation.y = v.face;
+    const near = !battle.active && !finaleActive && !archiveActive && Math.hypot(hero.position.x - v.pos.x, hero.position.z - v.pos.z) < 6;
+    if (!near) v.open = false;
+    const state = !near ? 0 : (v.open ? 2 : 1);
+    if (state !== v.mode) {
+      v.mode = state;
+      if (state === 0) v.el.className = 'bubble';
+      else if (state === 1) { v.el.className = 'bubble chip clickable show'; v.el.innerHTML = '💬'; }
+      else { const cast = UI.villagerCast[v.persona % UI.villagerCast.length], ls = cast.lines; v.el.className = 'bubble clickable show'; v.el.innerHTML = `<b>${cast.name}</b><span>${ls[v.line % ls.length]}</span><span class="more">${UI.villagerMore}</span>`; }
+    }
+  }
+  // 沉浸感更新：環境音景＋天氣＋蝴蝶＋魚影＋飛鳥
+  if (!archiveActive) SFX.ambient(dt, vibrancy);
+  if (weather) {
+    if (archiveActive) { weather.rmat.opacity = 0; for (const m of weather.mists) m.m.opacity = 0; }
+    else {
+      weather.timer -= dt;
+      if (weather.timer <= 0) { const raining = weather.target > 0.5; weather.target = raining ? 0 : rand(0.65, 1.0); weather.timer = raining ? rand(45, 95) : rand(16, 32); }
+      weather.amt += (weather.target - weather.amt) * Math.min(1, 0.4 * dt);
+      const night = 1 - vibrancy, cam = camera.position;
+      for (const m of weather.mists) {
+        const mx = cam.x + m.ox + Math.sin(t * m.sp + m.ph) * 16, mz = cam.z + m.oz + Math.cos(t * m.sp * 0.8 + m.ph) * 16;
+        m.s.position.set(mx, terrainHeight(mx, mz) + m.h, mz);
+        m.m.opacity = 0.03 + 0.05 * night + weather.amt * 0.08;
+      }
+      const rp = weather.rgeo.attributes.position;
+      for (let i = 0; i < rp.count; i++) { let y = rp.getY(i) - 62 * dt; if (y < 0) y += 42; rp.setY(i, y); }
+      rp.needsUpdate = true;
+      weather.rain.position.set(cam.x, cam.y - 20, cam.z);
+      weather.rmat.opacity = weather.amt * 0.85;
+    }
+  }
+  for (const b of butterflies) {
+    const bx = b.cx + Math.sin(t * b.sp + b.ph) * b.rad, bz = b.cz + Math.cos(t * b.sp * 0.9 + b.ph) * b.rad;
+    b.s.position.set(bx, groundY(bx, bz) + b.h + Math.sin(t * 1.5 + b.ph) * 0.4, bz);
+    b.s.scale.set(0.18 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.5, 0.55, 1); // 拍翅：水平縮放
+    b.m.opacity = archiveActive ? 0 : vibrancy * 0.9;
+  }
+  for (const f of fishSchools) {
+    const ang = t * f.sp + f.ph, fx = f.cx + Math.cos(ang) * f.rad, fz = f.cz + Math.sin(ang) * f.rad;
+    f.mesh.position.set(fx, WORLD.water - f.depth + Math.sin(t * 1.2 + f.ph) * 0.1, fz);
+    f.mesh.rotation.y = -ang;
+  }
+  for (const b of birds) {
+    const ang = t * b.sp + b.ph;
+    b.s.position.set(Math.cos(ang) * b.r, b.h + Math.sin(t * 0.3 + b.ph) * 3, Math.sin(ang) * b.r);
+    b.s.scale.y = b.base * (0.4 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.3); // 拍翅：垂直壓縮
+    b.m.opacity = archiveActive ? 0 : vibrancy * 0.5;
   }
   for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; const k = b.t / b.dur; b.ring.scale.setScalar(1 + k * b.mul); b.ring.material.opacity = Math.max(0, 0.85 * (1 - k)); if (k >= 1) { scene.remove(b.ring); b.ring.material.dispose(); b.ring.geometry.dispose(); bursts.splice(i, 1); } }
   // 落地塵土更新
@@ -1749,6 +2189,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     coordsEl.innerHTML = `x ${hx.toFixed(1)}　z ${hz.toFixed(1)}　｜　角度 ${deg.toFixed(0)}°　半徑 ${Math.hypot(hx, hz).toFixed(1)}　｜　fps ${Math.round(fpsAvg)}<br>🔧 調參（[ ] 選・ − ＝ 增減）：${tuneStr}`;
   }
 
+  checkAchievements();
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
   renderScene(); labelRenderer.render(scene, camera);
 }

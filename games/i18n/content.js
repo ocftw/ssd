@@ -21,17 +21,17 @@ const STRUCT = {
   guidekit: { id: 'guidekit', emoji: '🧰', color: 0xb98bff, angle: 106, radius: 30, url: 'https://ssd.ocf.tw/guide/' },
   // 檔案室裡的 3 份文件（cover：文件台上展示的封面圖）
   docs: [
-    { id: 'doc1', emoji: '📄', cover: './cover1.webp?v=7afd7079', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view' },
-    { id: 'doc2', emoji: '📄', cover: './cover2.webp?v=7afd7079', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link' },
-    { id: 'doc3', emoji: '📄', cover: './cover3.webp?v=7afd7079', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link' },
+    { id: 'doc1', emoji: '📄', cover: './cover1.webp?v=c724454a', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view' },
+    { id: 'doc2', emoji: '📄', cover: './cover2.webp?v=c724454a', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link' },
+    { id: 'doc3', emoji: '📄', cover: './cover3.webp?v=c724454a', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link' },
   ],
   // 散落在村莊外的遺跡：每一座 = 一個資安主題（位置用「方位角度 + 距村中心距離」表示）
   ruins: [
-    { id: 'personal', emoji: '🏠', color: 0x4fd1a8, style: 'grove', angle: 32, radius: 62, url: `${SITE}/personal/` },
-    { id: 'org', emoji: '🏢', color: 0x5b9cff, style: 'fortress', angle: 110, radius: 80, url: `${SITE}/org/` },
-    { id: 'common', emoji: '🚨', color: 0xff7a5c, style: 'tower', angle: 188, radius: 70, url: `${SITE}/common/` },
-    { id: 'guide', emoji: '📋', color: 0x5bc8bf, style: 'obelisk', angle: 250, radius: 84, url: `${SITE}/assessment/` },
-    { id: 'tools', emoji: '🛠️', color: 0xffc24b, style: 'market', angle: 308, radius: 60, url: `${SITE}/tools/` },
+    { id: 'personal', emoji: '🏠', color: 0x4fd1a8, style: 'grove', angle: 20, radius: 148, url: `${SITE}/personal/` },
+    { id: 'org', emoji: '🏢', color: 0x5b9cff, style: 'fortress', angle: 104, radius: 162, url: `${SITE}/org/` },
+    { id: 'common', emoji: '🚨', color: 0xff7a5c, style: 'tower', angle: 188, radius: 155, url: `${SITE}/common/` },
+    { id: 'guide', emoji: '📋', color: 0x5bc8bf, style: 'obelisk', angle: 244, radius: 110, url: `${SITE}/assessment/` },
+    { id: 'tools', emoji: '🛠️', color: 0xffc24b, style: 'market', angle: 308, radius: 102, url: `${SITE}/tools/` },
   ],
 };
 
@@ -262,9 +262,9 @@ const TEXT = {
     },
     // 英文版有官方英文封面與 PDF（cover／url 覆寫結構層的繁中預設；zh-Hant／zh-Hans 仍用繁中版）
     docs: {
-      doc1: { title: `Digital Security Mapping for HRDs in Taiwan`, sub: `Archive · File One`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A summary of a 2024 research report, drawing on 35 questionnaires and 3 in-depth interviews to map the digital threats and security needs faced by rights and democracy advocacy groups in Taiwan.`, cover: './cover1_en.webp?v=7afd7079', url: `https://drive.google.com/file/d/1VV12Rp7IKkWexNTKQRuWIA4Zfd8ztN9X/view?usp=sharing` },
-      doc2: { title: `Safeguarding Advocacy`, sub: `Archive · File Two`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `This project's final report, documenting the service model, hands-on experience, and recommendations of the Security Mentorship Program (SMP) for civil-society groups and human-rights workers.`, cover: './cover2_en.webp?v=7afd7079', url: `https://drive.google.com/file/d/1ln6__KiGZgf9QSkYhwKo8gm4L9d9tExo/view?usp=drive_link` },
-      doc3: { title: `The Cost of Trust`, sub: `Archive · File Three`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A case-study record of real security-attack incidents experienced by human-rights workers in Taiwan, documenting attack patterns, the defense process, and lessons learned.`, cover: './cover3_en.webp?v=7afd7079', url: `https://drive.google.com/file/d/1Q3Z2nLJ4dkQpmSqXQcctl4IW3cUhdDkF/view?usp=drive_link` },
+      doc1: { title: `Digital Security Mapping for HRDs in Taiwan`, sub: `Archive · File One`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A summary of a 2024 research report, drawing on 35 questionnaires and 3 in-depth interviews to map the digital threats and security needs faced by rights and democracy advocacy groups in Taiwan.`, cover: './cover1_en.webp?v=c724454a', url: `https://drive.google.com/file/d/1VV12Rp7IKkWexNTKQRuWIA4Zfd8ztN9X/view?usp=sharing` },
+      doc2: { title: `Safeguarding Advocacy`, sub: `Archive · File Two`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `This project's final report, documenting the service model, hands-on experience, and recommendations of the Security Mentorship Program (SMP) for civil-society groups and human-rights workers.`, cover: './cover2_en.webp?v=c724454a', url: `https://drive.google.com/file/d/1ln6__KiGZgf9QSkYhwKo8gm4L9d9tExo/view?usp=drive_link` },
+      doc3: { title: `The Cost of Trust`, sub: `Archive · File Three`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A case-study record of real security-attack incidents experienced by human-rights workers in Taiwan, documenting attack patterns, the defense process, and lessons learned.`, cover: './cover3_en.webp?v=c724454a', url: `https://drive.google.com/file/d/1Q3Z2nLJ4dkQpmSqXQcctl4IW3cUhdDkF/view?usp=drive_link` },
     },
     ruins: {
       personal: {

@@ -55,6 +55,17 @@ function noise({ dur = 0.2, peak = 0.3, type = 'lowpass', freq = 1000, at = 0 })
   src.start(t0);
 }
 
+// ── 環境音景：依機率排程極短、極低音量的音粒；全部走 master（自動受靜音控制）。由主迴圈每幀呼叫 ──
+let birdTimer = 2, cricketTimer = 1.5;
+function birdChirp() { // 兩三聲快速上揚的小鳥啁啾
+  const base = 1700 + Math.random() * 1500, n = 2 + ((Math.random() * 2) | 0);
+  for (let i = 0; i < n; i++) { const f = base * (1 + i * 0.1); tone({ freq: f, type: 'triangle', dur: 0.06 + Math.random() * 0.05, peak: 0.05, slideTo: f * (1.25 + Math.random() * 0.4), at: i * 0.09 }); }
+}
+function cricket() { // 蟋蟀：高頻顫音（數個極短脈衝）
+  const f = 4200 + Math.random() * 700;
+  for (let i = 0; i < 5; i++) tone({ freq: f, type: 'square', dur: 0.012, peak: 0.02, at: i * 0.03 });
+}
+
 export const SFX = {
   unlock() { ensure(); },
   isMuted() { return muted; },
@@ -63,6 +74,14 @@ export const SFX = {
     if (master) master.gain.value = muted ? 0 : VOL;
     try { localStorage.setItem('ssd-village-mute', muted ? '1' : '0'); } catch (e) { /* ignore */ }
     return muted;
+  },
+  // 環境音景：白天稀疏鳥鳴、夜晚蟋蟀（vibrancy 0=夜→1=日）。靜音或音訊尚未解鎖則完全不排程。
+  ambient(dt, vibrancy = 0) {
+    if (muted || !ctx) return;
+    const day = vibrancy > 0.55;
+    birdTimer -= dt; cricketTimer -= dt;
+    if (birdTimer <= 0) { birdTimer = day ? 2.2 + Math.random() * 4 : 8 + Math.random() * 8; if (day) birdChirp(); }
+    if (cricketTimer <= 0) { cricketTimer = day ? 9 + Math.random() * 9 : 1.0 + Math.random() * 2.0; if (!day) cricket(); }
   },
 
   // 探索
@@ -76,6 +95,22 @@ export const SFX = {
     tone({ freq: 1040, type: 'sine', dur: 0.18, peak: 0.20, slideTo: 2200, at: 0.06 });
     tone({ freq: 1760, type: 'triangle', dur: 0.12, peak: 0.15, at: 0.16 });
     noise({ dur: 0.12, peak: 0.10, type: 'highpass', freq: 3000, at: 0.13 });
+  },
+  // 膽小地鼠鑽地：低沉下滑＋泥土窸窣
+  burrow() {
+    tone({ freq: 220, type: 'sine', dur: 0.18, peak: 0.22, slideTo: 70 });
+    noise({ dur: 0.22, peak: 0.16, type: 'lowpass', freq: 500 });
+  },
+  // 拾取知識碎片：清脆雙音
+  collect() {
+    tone({ freq: 1320, type: 'triangle', dur: 0.10, peak: 0.22 });
+    tone({ freq: 1760, type: 'triangle', dur: 0.12, peak: 0.20, at: 0.06 });
+  },
+  // 好奇光蝶急閃：輕快上揚＋細微氣音
+  flutter() {
+    tone({ freq: 900, type: 'triangle', dur: 0.12, peak: 0.16, slideTo: 1900 });
+    noise({ dur: 0.14, peak: 0.08, type: 'highpass', freq: 4000 });
+    tone({ freq: 1500, type: 'sine', dur: 0.10, peak: 0.10, slideTo: 2600, at: 0.05 });
   },
 
   // 戰鬥
