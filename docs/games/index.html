@@ -386,10 +386,10 @@
       .opts { grid-template-columns:1fr; } .b-bottom .q { font-size:15px; }
     }
   </style>
-  <!-- Three.js r0.184.0 在本地自存一份（vendor/），不連外部 CDN：完全離線可用、無第三方請求 -->
+  <!-- Three.js r0.184.0 在本地自存一份（vendor/），不連外部 CDN：完全離線可用、無第三方請求。核心用官方 minified（three.module.min.js→three.core.min.js）；jsm 外掛官方無 min 維持原始碼 -->
   <script type="importmap">
   { "imports": {
-      "three": "./vendor/three.module.js",
+      "three": "./vendor/three.module.min.js",
       "three/addons/": "./vendor/jsm/"
   } }
   </script>
