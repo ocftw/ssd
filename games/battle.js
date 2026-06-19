@@ -2,8 +2,8 @@
 // 答對 → 出招扣怪血；答錯 → 失去一顆防護心、揭曉正解與解說，再點正解學起來反擊。
 // 怪血歸零 = 勝（淨化遺跡）；防護心歸零 = 敗（先去讀章節再來，可重來）。
 import * as THREE from 'three';
-import { groundY } from './terrain.js?v=fa71dc15';
-import { SFX } from './audio.js?v=fa71dc15';
+import { groundY } from './terrain.js?v=fcbf946e';
+import { SFX } from './audio.js?v=fcbf946e';
 
 const TAU = Math.PI * 2;
 const sm = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, ...o });

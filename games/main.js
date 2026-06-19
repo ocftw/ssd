@@ -9,13 +9,15 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { CONTENT } from './i18n/content.js?v=fa71dc15';
-import { BATTLES_ALL } from './i18n/battles.js?v=fa71dc15';
-import { UI_ALL } from './i18n/ui.js?v=fa71dc15';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=fa71dc15';
-import { WORLD, terrainHeight, groundY } from './terrain.js?v=fa71dc15';
-import { BattleSystem } from './battle.js?v=fa71dc15';
-import { SFX } from './audio.js?v=fa71dc15';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
+import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
+import { CONTENT } from './i18n/content.js?v=fcbf946e';
+import { BATTLES_ALL } from './i18n/battles.js?v=fcbf946e';
+import { UI_ALL } from './i18n/ui.js?v=fcbf946e';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=fcbf946e';
+import { WORLD, terrainHeight, groundY } from './terrain.js?v=fcbf946e';
+import { BattleSystem } from './battle.js?v=fcbf946e';
+import { SFX } from './audio.js?v=fcbf946e';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -60,16 +62,22 @@ try { qOverride = localStorage.getItem(QKEY) || 'auto'; } catch (e) {}
 const COARSE = matchMedia('(pointer: coarse)').matches;   // 觸控／行動裝置
 const TIER = (qOverride === 'low' || qOverride === 'high') ? qOverride : (COARSE ? 'low' : 'high');
 const Q = ({
-  // low＝手機精簡：低發熱、省電優先；視覺精簡但玩法與功能完整
+  // low＝手機精簡：低發熱、省電優先；視覺精簡但玩法與功能完整（寫實效果全關，渲染路徑與現狀完全一致）
   low:  { maxPR: 2,   smaa: false, msaa: 4, shadowType: THREE.PCFShadowMap,
-          sunShadow: 1024, torchShadow: 512,  waterSeg: 28, waterStep: 0.066, aniso: 2, mageNight: false },
-  // high＝桌機精緻：解除為手機而設的限制，把畫面拉回來
-  high: { maxPR: 2.5, smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
-          sunShadow: 4096, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true },
+          sunShadow: 1024, torchShadow: 512,  waterSeg: 28, waterStep: 0.066, aniso: 2, mageNight: false,
+          bloom: false, richSky: false, rich: false },
+  // high＝桌機精緻：解除為手機而設的限制＋開啟寫實後製（光暈、大氣天空＋星空、電影色調）
+  // 註：maxPR 由 2.5 調為 2.0，把填充率預算讓給 Bloom（SMAA＋2.0 仍銳利）；弱機可手動切「精簡」走 low 路徑
+  high: { maxPR: 2,   smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
+          sunShadow: 4096, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true,
+          bloom: true, richSky: true, rich: true },
 })[TIER];
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
+// 村莊夜燈（路燈/市集提燈/窗戶）：登錄後在主迴圈隨繁榮度淡入淡出——夜晚發光、白天熄滅（避免白天還在反光發光）
+const nightGlowMats = [];
+const regNightGlow = (mesh) => { nightGlowMats.push({ m: mesh.material, base: mesh.material.emissiveIntensity }); return mesh; };
 const mat = (color, opts = {}) =>
   new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, envMapIntensity: 0.5, ...opts });
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
@@ -82,7 +90,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=fa71dc15', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=fa71dc15', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=fcbf946e', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=fcbf946e', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -99,7 +107,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=fa71dc15', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=fa71dc15', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=fcbf946e', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=fcbf946e', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -126,19 +134,34 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xcfe4f0, 120, 360);
 const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 1200);
 
-// 後製：色彩分級（世界繁榮度 0→1）+ SMAA 反鋸齒
+// 後製：桌機＝全域 Bloom（亮部光暈，給水晶/光束/燈籠/法師球等發光物電影感）→ 色彩分級 → SMAA；手機＝直接色彩分級（無 bloom）。
+// 採單一 composer 的標準全域 bloom：穩定、各 GPU 一致、不會吃掉或壓暗任何物件。
+//   （曾試「選擇性 bloom」雙 composer：會在部分裝置上讓中央水晶／法師手杖球／寶箱發光物消失，故改回全域 bloom。）
+//   threshold 偏高（1.05>1）只讓較亮的 emissive/亮部發光，故白底圖（壁畫/Logo/封面，未受光 BasicMaterial＝1.0）與一般受光面都不會過曝。不用 GTAO（會把加法特效當不透明物造成殘影）。
 const composer = new EffectComposer(renderer);
 composer.setPixelRatio(PR);
 composer.addPass(new RenderPass(scene, camera));
+let bloomPass = null;
+if (Q.bloom) {
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.4, 1.05); // strength, radius, threshold(>1：只發較亮處)
+  composer.addPass(bloomPass);
+}
 const gradePass = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 }, uNightBr: { value: 0.4 } },
+  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 }, uNightBr: { value: 0.4 }, uRich: { value: Q.rich ? 1 : 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; uniform float uNightBr; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; uniform float uNightBr; uniform float uRich; varying vec2 vUv;
     void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
       float sat = mix(0.90, 1.0, uVibrancy);                          // 夜晚仍保留原色（不再大幅去飽和）
       vec3 tint = mix(vec3(0.82, 0.88, 1.0), vec3(1.0), uVibrancy);   // 夜晚淡淡冷藍月色
       float br = mix(uNightBr, 1.0, uVibrancy);                        // 夜晚整體亮度（uNightBr，恢復後回到 1.0）
-      gl_FragColor = vec4(mix(vec3(l), c.rgb, sat) * tint * br, c.a); }`,
+      vec3 col = mix(vec3(l), c.rgb, sat) * tint * br;
+      if (uRich > 0.5) {                                              // 桌機：電影色調（HDR-safe；S 曲線交給最後 ACES）
+        float l2 = dot(col, vec3(0.299, 0.587, 0.114));
+        col = mix(vec3(l2), col, mix(0.82, 0.92, uVibrancy));        // 收斂卡通飽和（白天也略降）
+        float lum = clamp(l2, 0.0, 1.0);
+        col *= mix(vec3(0.96, 0.99, 1.05), vec3(1.05, 1.0, 0.94), lum); // 微 split-tone：陰影偏冷、亮部偏暖
+      }
+      gl_FragColor = vec4(col, c.a); }`,
 });
 composer.addPass(gradePass);
 if (Q.smaa) composer.addPass(new SMAAPass(innerWidth, innerHeight)); // 桌機：SMAA 邊緣抗鋸齒（多一個全螢幕 pass）
@@ -146,6 +169,8 @@ composer.addPass(new OutputPass());
 composer.setSize(innerWidth, innerHeight);
 // 手機：略過 SMAA shader pass，改對 composer 離屏目標開硬體 MSAA（較省）
 if (!Q.smaa && Q.msaa) { composer.renderTarget1.samples = composer.renderTarget2.samples = Q.msaa; }
+
+function renderScene() { composer.render(); }
 
 // ── 天空（顏色隨繁榮度由陰灰漸變到藍天）─────────────────────────
 const skyMat = new THREE.ShaderMaterial({
@@ -155,14 +180,35 @@ const skyMat = new THREE.ShaderMaterial({
   fragmentShader: `varying vec3 vP; uniform vec3 top; uniform vec3 bottom;
     void main(){ float h=clamp(vP.y/560.0*0.5+0.5,0.0,1.0); h=pow(h,0.8); gl_FragColor=vec4(mix(bottom,top,h),1.0); }`,
 });
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(560, 32, 16), skyMat));
 // 繁榮度色盤（破敗 D → 繁榮 A）
 const SKY_TOP_D = new THREE.Color(0x6d7682), SKY_TOP_A = new THREE.Color(0x4f9fd6);
 const SKY_BOT_D = new THREE.Color(0x8f8b83), SKY_BOT_A = new THREE.Color(0xfae7cf);
 const FOG_D = new THREE.Color(0x83878d), FOG_A = new THREE.Color(0xcfe4f0);
 
-// ── 環境光（IBL）：用「繁榮天空」產生環境貼圖 → 水面映天、水晶/金屬反光、整體更立體 ──
-// 只在載入時產生一次（靜態）；破敗時由 vibrancy 後製一起灰化，視覺一致、每幀零成本。
+// 桌機：大氣散射天空（Sky addon）＋夜空星點；手機：維持原漸層天空球（零變動）
+let atmoSky = null, stars = null;
+const _skySun = new THREE.Vector3();
+if (Q.richSky) {
+  atmoSky = new Sky(); atmoSky.scale.setScalar(1200); // 控制在鏡頭 far(1200) 內、又比場景大 → 永遠當背景
+  const su = atmoSky.material.uniforms;
+  su.turbidity.value = 6; su.rayleigh.value = 2.2; su.mieCoefficient.value = 0.005; su.mieDirectionalG.value = 0.8;
+  if ('cloudCoverage' in su) { su.cloudCoverage.value = 0.35; su.cloudDensity.value = 0.35; su.cloudSpeed.value = 0.00006; } // r184 內建微雲
+  scene.add(atmoSky);
+  // 夜空星點：上半球隨機分布，opacity 由 (1-vibrancy) 驅動 → 夜晚顯現、白天淡出
+  const STAR_N = 420, sp = new Float32Array(STAR_N * 3);
+  for (let i = 0; i < STAR_N; i++) {
+    const y = Math.abs(Math.random() * 2 - 1) * 0.9 + 0.08, r2 = Math.sqrt(Math.max(0, 1 - y * y)), ph = Math.random() * TAU;
+    sp[i * 3] = Math.cos(ph) * r2 * 540; sp[i * 3 + 1] = y * 540; sp[i * 3 + 2] = Math.sin(ph) * r2 * 540;
+  }
+  const starGeo = new THREE.BufferGeometry(); starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcfe0ff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  scene.add(stars);
+} else {
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(560, 32, 16), skyMat));
+}
+
+// ── 環境光（IBL）：用「繁榮天空」漸層產生環境貼圖（LDR、可控）→ 水面映天、水晶/金屬反光、整體更立體 ──
+// 兩檔位皆沿用此漸層環境（原本就調校好的亮度）；大氣 Sky 只當桌機「可見背景」，不拿來生 IBL（其 HDR 亮度會淹沒整個場景）。
 {
   const pmrem = new THREE.PMREMGenerator(renderer);
   const skyScene = new THREE.Scene();
@@ -258,8 +304,8 @@ for (let i = 0; i < tp.count; i++) {
 }
 tGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=fa71dc15', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=fa71dc15', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=fcbf946e', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=fcbf946e', 60, 60), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -333,12 +379,12 @@ const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
 const trees = scatter(170, WORLD.villageR + 8, WORLD.maxR - 4, WORLD.water + 0.8, true);
 const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
-const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=fa71dc15', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=fa71dc15', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=fcbf946e', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=fcbf946e', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
 // 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=fa71dc15', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=fa71dc15', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=fcbf946e', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=fcbf946e', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -369,7 +415,7 @@ const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
 const bladeQuad = new THREE.PlaneGeometry(1, 0.95); bladeQuad.translate(0, 0.475, 0);
 const bladeQuad2 = bladeQuad.clone(); bladeQuad2.rotateY(Math.PI / 2);
 const tuftGeo = mergeGeometries([bladeQuad, bladeQuad2]);
-const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=fa71dc15', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
+const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=fcbf946e', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
 const tufts = scatter(620, WORLD.villageR + 3, WORLD.maxR - 2, WORLD.water + 0.6, false);
 const tuftMesh = new THREE.InstancedMesh(tuftGeo, tuftMat, tufts.length);
 const tuftTints = [0x86c45f, 0x6fae57, 0x95cf6c, 0x5f9c49];
@@ -410,7 +456,7 @@ for (const gx of [-2.8, 2.8]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0
 const glintel = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.0, 1.0), mat(0x7e5630)); glintel.position.set(0, 5.4, 0); glintel.castShadow = true; gate.add(glintel);
 const groof = new THREE.Mesh(new THREE.ConeGeometry(4.7, 1.5, 8), mat(0x9c5b3a)); groof.position.set(0, 6.6, 0); groof.rotation.y = Math.PI / 4; groof.castShadow = true; gate.add(groof);
 const banner = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.3, 0.1), mat(0xff7a45, { emissive: 0xff7a45, emissiveIntensity: 0.12 })); banner.position.set(0, 4.4, 0.55); gate.add(banner);
-for (const lx of [-2.8, 2.8]) { const lan = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), mat(0xffe6a0, { emissive: 0xffcf6b, emissiveIntensity: 0.9 })); lan.position.set(lx, 4.7, 0.6); gate.add(lan); }
+for (const lx of [-2.8, 2.8]) { const lan = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), mat(0xffe6a0, { emissive: 0xffcf6b, emissiveIntensity: 0.9 })); lan.position.set(lx, 4.7, 0.6); gate.add(lan); regNightGlow(lan); }
 gate.position.set(0, 0, 20); village.add(gate);
 
 // 小屋（石基 + 屋簷 + 煙囪 + 雙窗）
@@ -421,7 +467,7 @@ function cottage(color, roofC) {
   const r = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.6, 8), mat(roofC)); r.position.y = 4.7; r.rotation.y = Math.PI / 4; r.castShadow = true; g.add(r);
   const ch = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.7), mat(0x8a6a55)); ch.position.set(1.4, 5.1, -1.0); ch.castShadow = true; g.add(ch);
   const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.9, 0.12), mat(0x4a3526)); door.position.set(0, 1.45, 2.27); g.add(door);
-  for (const wx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.12), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.4 })); win.position.set(wx, 2.3, 2.27); g.add(win); }
+  for (const wx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.12), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.4 })); win.position.set(wx, 2.3, 2.27); g.add(win); regNightGlow(win); }
   return g;
 }
 const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x4f6c92], [0xc98f9b, 0x8a5663], [0xcdb87e, 0x8a6e3a]];
@@ -434,7 +480,7 @@ for (const lp of [[6, -1], [-3, 9], [8, 6], [-7, -2]]) {
   const g = new THREE.Group();
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 3.6, 10), mat(0x55514a)); pole.position.y = 1.8; pole.castShadow = true; g.add(pole);
   const arm = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.12), mat(0x55514a)); arm.position.set(0.3, 3.5, 0); g.add(arm);
-  const lan = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), mat(0xffe6a0, { emissive: 0xffcf6b, emissiveIntensity: 1.0 })); lan.position.set(0.55, 3.3, 0); g.add(lan);
+  const lan = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), mat(0xffe6a0, { emissive: 0xffcf6b, emissiveIntensity: 1.0 })); lan.position.set(0.55, 3.3, 0); g.add(lan); regNightGlow(lan);
   g.position.set(lp[0], 0, lp[1]); g.rotation.y = rand(0, TAU); village.add(g);
 }
 
@@ -586,7 +632,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=fa71dc15'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=fcbf946e'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -641,7 +687,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=fa71dc15'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=fcbf946e'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -1271,7 +1317,7 @@ const SPIN_DUR = 0.55;
 const coordsEl = document.getElementById('coords');
 let fpsAvg = 60; // 平滑後的 FPS（座標框內顯示，方便量測效能）
 // 火把「探照」即時可調參數（座標框開啟時：[ ] 選參數、- = 增減）；調好後把數值告訴我即可固定
-const torchTune = { spotInt: 300, spotAng: 0.36, spotPen: 0.5, spotFwd: 25, spotH: 5, spotDist: 200, ptInt: 32, nightBr: 0.55 };
+const torchTune = { spotInt: 100, spotAng: 0.36, spotPen: 0.5, spotFwd: 25, spotH: 5, spotDist: 200, ptInt: 32, nightBr: 0.55 };
 const torchParams = [
   { k: 'spotInt', label: '強度', step: 10, fmt: (v) => v.toFixed(0) },
   { k: 'spotAng', label: '角度', step: 0.02, fmt: (v) => v.toFixed(2) + 'π', max: 0.49 },
@@ -1304,7 +1350,7 @@ function animate() {
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
   jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
-  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); composer.render(); return; }
+  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); renderScene(); return; }
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
@@ -1453,7 +1499,8 @@ function animate() {
       const want = (d < p.openDist) ? 1 : 0; p.lift += (want - p.lift) * Math.min(1, 6 * dt);
       const lit = isDisc(p.data.id);
       p.crystal.position.y = 3.4 + Math.sin(t * 1.5 + p.pos.x) * 0.25; p.crystal.rotation.y += dt * (lit ? 1.3 : 0.35);
-      p.beamMat.opacity = (lit ? 0.42 : 0.12) + Math.sin(t * 2 + p.pos.z) * (lit ? 0.07 : 0.02);
+      // 射向天空的光束：桌機因 bloom 會再加亮，故把基礎不透明度調暗一點避免過曝；手機無 bloom 維持原值
+  p.beamMat.opacity = (lit ? (Q.bloom ? 0.26 : 0.42) : (Q.bloom ? 0.10 : 0.12)) + Math.sin(t * 2 + p.pos.z) * (lit ? (Q.bloom ? 0.05 : 0.07) : 0.02);
       if (d < p.discoverDist && !lit) discover(p);
     }
   }
@@ -1498,13 +1545,30 @@ function animate() {
   gradePass.uniforms.uVibrancy.value = archiveActive ? 1 : vibrancy; // 檔案室內固定滿色
   gradePass.uniforms.uNightBr.value = torchTune.nightBr;             // 夜晚亮度（座標框可即時調）
   setWorldLight(archiveActive ? 1 : vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
-  skyMat.uniforms.top.value.lerpColors(SKY_TOP_D, SKY_TOP_A, vibrancy);
-  skyMat.uniforms.bottom.value.lerpColors(SKY_BOT_D, SKY_BOT_A, vibrancy);
+  for (const L of nightGlowMats) L.m.emissiveIntensity = L.base * (1 - vibrancy); // 村莊夜燈：夜晚發光、白天熄滅（避免白天反光發光）
+  if (Q.richSky) {
+    // 天空與星空跟著鏡頭走（永遠以鏡頭為中心）→ 不會因角色遠離原點而被 far plane 切出黑色方塊、星點也不位移
+    atmoSky.position.copy(camera.position);
+    if (stars) { stars.position.copy(camera.position); stars.material.opacity = (1 - vibrancy) * 0.9; } // 夜晚星點顯現、白天淡出
+    // 天空太陽：方位角取自 directional light 水平方向；仰角隨 vibrancy（夜→地平線下＝暗天、日→升起＝藍天），不更動實際打光/陰影
+    _skySun.copy(sun.position).sub(hero.position); _skySun.y = 0;
+    const az = Math.atan2(_skySun.x, _skySun.z), elev = -0.12 + 0.54 * vibrancy;
+    atmoSky.material.uniforms.sunPosition.value.setFromSphericalCoords(1, Math.PI / 2 - elev, az);
+    if ('time' in atmoSky.material.uniforms) atmoSky.material.uniforms.time.value = t; // 微雲飄動
+  } else {
+    skyMat.uniforms.top.value.lerpColors(SKY_TOP_D, SKY_TOP_A, vibrancy);
+    skyMat.uniforms.bottom.value.lerpColors(SKY_BOT_D, SKY_BOT_A, vibrancy);
+  }
   scene.fog.color.lerpColors(FOG_D, FOG_A, vibrancy);
   // 中央大水晶（全部進化才啟動）
   const allDone = ruinAt.every((r) => isDone(r.id));
   greatGlow += ((allDone ? 1 : 0) - greatGlow) * Math.min(1, 1.0 * dt);
-  greatMat.color.lerpColors(GREAT_D, GREAT_A, greatGlow); greatMat.emissive.copy(greatMat.color); greatMat.emissiveIntensity = 0.4 + greatGlow * 2.2;
+  greatMat.color.lerpColors(GREAT_D, GREAT_A, greatGlow); greatMat.color.multiplyScalar(1 - greatGlow * 0.45); greatMat.emissive.copy(greatMat.color);
+// 全過白天時大幅壓低水晶的「基色diffuse＋自發光＋反光＋鏡面高光」避免 bloom 過曝（夜晚 greatGlow≈0 → 完全維持原值：基色滿、自發光0.4、envMap1.0、roughness0.15、metalness0.35）
+greatMat.emissiveIntensity = 0.4 + greatGlow * 0.2;     // 白天自發光 0.6
+greatMat.envMapIntensity = 1 - greatGlow * 0.85;        // 白天反光 0.15
+greatMat.roughness = 0.15 + greatGlow * 0.8;            // 白天 0.95：近霧面，消除日光鏡面高光
+greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電，最低反射
   greatCrystal.rotation.y += dt * (0.2 + greatGlow * 1.0); greatCrystal.position.y = 5.4 + Math.sin(t * 1.2) * 0.3; greatCrystal.scale.setScalar(1 + greatGlow * 0.15);
   greatBeamMat.color.copy(greatMat.color); greatBeamMat.opacity = greatGlow * (0.12 + Math.sin(t * 2.5) * 0.03);
   // 能量碎片：環繞 + 依進化狀態亮起
@@ -1512,7 +1576,7 @@ function animate() {
   for (const sh of shards) {
     sh.glow += ((isDone(sh.id) ? 1 : 0) - sh.glow) * Math.min(1, 2.5 * dt);
     sh.mat.color.copy(sh.color).multiplyScalar(0.28 + sh.glow * 0.72);
-    sh.mat.emissive.copy(sh.color); sh.mat.emissiveIntensity = sh.glow * 1.5;
+    sh.mat.emissive.copy(sh.color); sh.mat.emissiveIntensity = sh.glow * 0.85; // 調暗：壓在 bloom 門檻下，五顆一致都自發光、不會只有部分有光暈
     sh.mesh.position.y = Math.sin(t * 1.6 + sh.ox) * 0.22; sh.mesh.rotation.y += dt * 1.4; sh.mesh.scale.setScalar(0.55 + sh.glow * 0.55);
   }
   // 石化村民：水晶啟動後解除石化（由灰轉彩、呼吸擺動）；靠近顯示提醒
@@ -1635,7 +1699,7 @@ function animate() {
   }
 
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
-  composer.render(); labelRenderer.render(scene, camera);
+  renderScene(); labelRenderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
 
