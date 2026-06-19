@@ -89,7 +89,8 @@ const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-const MAX_PR = (() => { const cores = navigator.hardwareConcurrency || 4; if (!matchMedia('(pointer: coarse)').matches) return 3; return cores >= 8 ? 3 : 2; })(); // 裝置感知：桌機/高核心裝置才放寬到 3×
+// 裝置像素比上限：行動裝置封頂 2×（高 DPI 手機原為 3×，渲染解析度＝填充率是 GPU 發熱主因，2× 約少 56% 片段運算）；桌機 2.5×
+const MAX_PR = matchMedia('(pointer: coarse)').matches ? 2 : 2.5;
 const PR = Math.min(window.devicePixelRatio || 1, MAX_PR);
 renderer.setPixelRatio(PR);
 renderer.setSize(innerWidth, innerHeight);
@@ -163,7 +164,7 @@ const hemi = new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.6); scene.add(hemi)
 const ambient = new THREE.AmbientLight(0xffffff, 0.08); scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xfff1d8, 2.2);
 sun.castShadow = true;
-sun.shadow.mapSize.set(4096, 4096);
+sun.shadow.mapSize.set(2048, 2048);   // 2048 已足夠此美術風格；原 4096＝4× 陰影填充，發熱大
 sun.shadow.camera.near = 1; sun.shadow.camera.far = 220;
 sun.shadow.camera.left = -50; sun.shadow.camera.right = 50;
 sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
@@ -1240,7 +1241,7 @@ function drawMinimap() {
 const timer = new THREE.Timer();
 const up = new THREE.Vector3(0, 1, 0), fwd = new THREE.Vector3(), right = new THREE.Vector3(), moveDir = new THREE.Vector3();
 const camPos = new THREE.Vector3(), lookAt = new THREE.Vector3();
-let walkPhase = 0, mmAcc = 0, lastStepFloor = 0;
+let walkPhase = 0, mmAcc = 0, lastStepFloor = 0, waterAcc = 0;
 let jumpVel = 0, jumpOff = 0, jumpHeld = false; // 跳躍：地面高度之上的位移
 let doubleJumped = false, spinning = false, spinT = 0, yawBeforeSpin = 0; // 二段跳 + 空中轉一圈
 const SPIN_DUR = 0.55;
@@ -1270,10 +1271,17 @@ addEventListener('keydown', (e) => {
   else if (e.code === 'Equal') { const p = torchParams[torchSel]; torchTune[p.k] = +(Math.min(torchTune[p.k] + p.step, p.max ?? Infinity)).toFixed(3); }
 });
 
+let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
+let _frameAcc = 0;          // 累積幀時間，用於約 60fps 上限
+const FRAME_CAP = 1 / 61;   // 上限約 60fps：120Hz 裝置會跳過半數 refresh，GPU 工作量減半
 function animate() {
+  if (!started) return;     // landing 仍在最前：完全跳過模擬與渲染（場景被不透明 landing 蓋住，不需畫）
   timer.update();
-  const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
-  fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 用未截斷的原始幀時間估 FPS
+  _frameAcc += timer.getDelta();
+  if (_frameAcc < FRAME_CAP) return; // 未達幀上限門檻 → 這個 refresh 不處理（節能）
+  const dt = Math.min(_frameAcc, 0.05), t = timer.getElapsed();
+  fpsAvg += (1 / Math.max(_frameAcc, 1e-4) - fpsAvg) * 0.08; // 實際處理幀率（座標框量測用）
+  _frameAcc = 0;
 
   joyEl.classList.toggle('hide', battle.active || finaleActive);
   jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
@@ -1460,8 +1468,9 @@ function animate() {
   }
   // 特效更新
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
-  // 湖面微幅漣漪：讓環境反射有流動感（局部座標 Z = 世界 Y）
-  { const wp = water.geometry.attributes.position; for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), y = wp.getY(i); wp.setZ(i, Math.sin(x * 0.15 + t * 1.3) * 0.12 + Math.sin(y * 0.19 - t * 1.0) * 0.12); } wp.needsUpdate = true; water.geometry.computeVertexNormals(); }
+  // 湖面微幅漣漪：讓環境反射有流動感（局部座標 Z = 世界 Y）。約 20fps 更新即可（每幀重算 1681 點法線太耗 CPU/上傳）
+  waterAcc += dt;
+  if (waterAcc >= 0.05) { waterAcc = 0; const wp = water.geometry.attributes.position; for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), y = wp.getY(i); wp.setZ(i, Math.sin(x * 0.15 + t * 1.3) * 0.12 + Math.sin(y * 0.19 - t * 1.0) * 0.12); } wp.needsUpdate = true; water.geometry.computeVertexNormals(); }
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
@@ -1634,6 +1643,7 @@ function setupLanding() {
   const btn = document.getElementById('startbtn');
   if (btn) btn.addEventListener('click', () => {
     if (btn.disabled) return;
+    started = true;            // 開始模擬與渲染
     SFX.unlock();
     root.classList.add('hide');
     maybeShowPreConfidence();
