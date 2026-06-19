@@ -1721,7 +1721,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       c.mesh.rotation.y += dt * (10 + c.t * 45);                                 // 原地越轉越快
       c.mesh.position.set(c.ax, c.ay + Math.sin(c.t * 30) * 0.1, c.az);
       const k = Math.min(1, c.t / CAP_SPIN_DUR); c.scale = 1 - k * k; c.mesh.scale.setScalar(Math.max(0.001, c.scale)); // 邊轉邊縮
-      if (c.t >= CAP_SPIN_DUR) { ringBurst(c.ax, c.ay, c.az, 0x5bff8a, 5, 0.7); c.state = 'gone'; c.t = 0; } // 消失光環
+      if (c.t >= CAP_SPIN_DUR) { ringBurst(c.ax, c.ay, c.az, 0x5bff8a, 5, 0.7); SFX.vanish(); c.state = 'gone'; c.t = 0; } // 消失光環＋音效
     } else { // gone：短暫隱藏後他處重生
       c.t += dt; c.mesh.scale.setScalar(0.001);
       if (c.t >= CAP_HIDE) capRespawn();
