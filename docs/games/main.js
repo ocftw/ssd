@@ -52,6 +52,22 @@ function buildLangSwitcher() {
 applyStaticI18n();
 buildLangSwitcher();
 
+// ── 畫質檔位：依裝置自動分檔，可由 localStorage 手動覆寫（auto 時觸控→精簡、桌機→精緻）──
+// 手機／行動裝置以「能順跑、能完成」為目標（省電、低發熱優先）；筆電／桌機效能足，把畫面拉回來。
+const QKEY = 'ssd-village-quality';                       // 'auto' | 'low' | 'high'
+let qOverride = 'auto';
+try { qOverride = localStorage.getItem(QKEY) || 'auto'; } catch (e) {}
+const COARSE = matchMedia('(pointer: coarse)').matches;   // 觸控／行動裝置
+const TIER = (qOverride === 'low' || qOverride === 'high') ? qOverride : (COARSE ? 'low' : 'high');
+const Q = ({
+  // low＝手機精簡：低發熱、省電優先；視覺精簡但玩法與功能完整
+  low:  { maxPR: 2,   smaa: false, msaa: 4, shadowType: THREE.PCFShadowMap,
+          sunShadow: 1024, torchShadow: 512,  waterSeg: 28, waterStep: 0.066, aniso: 2, mageNight: false },
+  // high＝桌機精緻：解除為手機而設的限制，把畫面拉回來
+  high: { maxPR: 2.5, smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
+          sunShadow: 4096, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true },
+})[TIER];
+
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
 const mat = (color, opts = {}) =>
@@ -62,7 +78,7 @@ const _texL = new THREE.TextureLoader();
 const tex = (url, rx = 1, ry = 1, srgb = false) => {
   const t = _texL.load(url);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry);
-  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = 4;
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = Q.aniso;
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
@@ -88,14 +104,13 @@ const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-// 裝置像素比上限：行動裝置封頂 2×（高 DPI 手機原為 3×，渲染解析度＝填充率是 GPU 發熱主因，2× 約少 56% 片段運算）；桌機 2.5×
-const MAX_PR = matchMedia('(pointer: coarse)').matches ? 2 : 2.5;
-const PR = Math.min(window.devicePixelRatio || 1, MAX_PR);
+const renderer = new THREE.WebGLRenderer({ antialias: false }); // AA 交給 composer（高＝SMAA／低＝render target 硬體 MSAA）；context MSAA 對 composer 離屏目標無效
+// 裝置像素比上限依畫質檔位：手機精簡 2×（填充率＝GPU 發熱主因，2× 約少 56% 片段運算）、桌機精緻 2.5×
+const PR = Math.min(window.devicePixelRatio || 1, Q.maxPR);
 renderer.setPixelRatio(PR);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.type = Q.shadowType; // 桌機 PCFSoft 柔邊／手機 PCF 省效能
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.04;
 app.appendChild(renderer.domElement);
@@ -126,9 +141,11 @@ const gradePass = new ShaderPass({
       gl_FragColor = vec4(mix(vec3(l), c.rgb, sat) * tint * br, c.a); }`,
 });
 composer.addPass(gradePass);
-composer.addPass(new SMAAPass(innerWidth, innerHeight));
+if (Q.smaa) composer.addPass(new SMAAPass(innerWidth, innerHeight)); // 桌機：SMAA 邊緣抗鋸齒（多一個全螢幕 pass）
 composer.addPass(new OutputPass());
 composer.setSize(innerWidth, innerHeight);
+// 手機：略過 SMAA shader pass，改對 composer 離屏目標開硬體 MSAA（較省）
+if (!Q.smaa && Q.msaa) { composer.renderTarget1.samples = composer.renderTarget2.samples = Q.msaa; }
 
 // ── 天空（顏色隨繁榮度由陰灰漸變到藍天）─────────────────────────
 const skyMat = new THREE.ShaderMaterial({
@@ -164,7 +181,7 @@ const hemi = new THREE.HemisphereLight(0xdcefff, 0x6b5a44, 0.6); scene.add(hemi)
 const ambient = new THREE.AmbientLight(0xffffff, 0.08); scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xfff1d8, 2.2);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);   // 2048 已足夠此美術風格；原 4096＝4× 陰影填充，發熱大
+sun.shadow.mapSize.set(Q.sunShadow, Q.sunShadow);   // 依畫質檔位：桌機 4096 更清晰、手機 1024 省填充低發熱
 sun.shadow.camera.near = 1; sun.shadow.camera.far = 220;
 sun.shadow.camera.left = -50; sun.shadow.camera.right = 50;
 sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
@@ -187,7 +204,7 @@ const torch = new THREE.PointLight(0xffb061, 0, 24, 2.0);
 scene.add(torch);
 // 火把投向前方地面的光錐：照亮腳前的路（讓前方地面也亮起來），夜晚由它投出即時陰影
 const torchGround = new THREE.SpotLight(0xffc079, 0, 32, Math.PI * 0.32, 0.6, 1.5);
-torchGround.shadow.mapSize.set(1024, 1024);          // 1024 為效能考量（可改 2048 提升清晰度）
+torchGround.shadow.mapSize.set(Q.torchShadow, Q.torchShadow);          // 依畫質檔位：桌機 2048／手機 512
 torchGround.shadow.camera.near = 1; torchGround.shadow.camera.far = 55;
 torchGround.shadow.bias = -0.0006; torchGround.shadow.normalBias = 0.04;
 scene.add(torchGround); scene.add(torchGround.target);
@@ -260,7 +277,7 @@ scene.add(terrain);
 
 // 水面
 const water = new THREE.Mesh(
-  new THREE.PlaneGeometry(WORLD.half * 2, WORLD.half * 2, 40, 40),
+  new THREE.PlaneGeometry(WORLD.half * 2, WORLD.half * 2, Q.waterSeg, Q.waterSeg), // 段數依畫質檔位（桌機 48／手機 28）
   new THREE.MeshStandardMaterial({ color: 0x4fa9d6, transparent: true, opacity: 0.82, roughness: 0.06, metalness: 0.4, envMapIntensity: 1.3 })
 );
 water.rotation.x = -Math.PI / 2; water.position.y = WORLD.water;
@@ -843,7 +860,7 @@ function buildMage() {
   const orbMat = new THREE.MeshStandardMaterial({ color: 0x9a6cff, emissive: 0x7a4cff, emissiveIntensity: 1.6, roughness: 0.2 });
   const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18, 1), orbMat); orb.position.set(0.62, 2.75, 0.22); g.add(orb);
   orb.add(new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 10), new THREE.MeshBasicMaterial({ color: 0x9a6cff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false })));
-  const orbLight = new THREE.PointLight(0x8a5cff, 0, 16, 2); orb.add(orbLight); // 夜晚發出紫光（跟著手杖球）
+  const orbLight = Q.mageNight ? new THREE.PointLight(0x8a5cff, 0, 16, 2) : null; if (orbLight) orb.add(orbLight); // 夜晚發出紫光（手機精簡檔省去這盞動態點光，法杖球本身仍自發光）
   return { group: g, orb, orbMat, orbLight };
 }
 // 綠袍法師（村中嚮導 NPC）
@@ -1472,9 +1489,9 @@ function animate() {
   }
   // 特效更新
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
-  // 湖面微幅漣漪：讓環境反射有流動感（局部座標 Z = 世界 Y）。約 20fps 更新即可（每幀重算 1681 點法線太耗 CPU/上傳）
+  // 湖面微幅漣漪：讓環境反射有流動感（局部座標 Z = 世界 Y）。依畫質檔位節流（桌機 30fps／手機 15fps；每幀重算全部頂點法線太耗 CPU/上傳）
   waterAcc += dt;
-  if (waterAcc >= 0.05) { waterAcc = 0; const wp = water.geometry.attributes.position; for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), y = wp.getY(i); wp.setZ(i, Math.sin(x * 0.15 + t * 1.3) * 0.12 + Math.sin(y * 0.19 - t * 1.0) * 0.12); } wp.needsUpdate = true; water.geometry.computeVertexNormals(); }
+  if (waterAcc >= Q.waterStep) { waterAcc = 0; const wp = water.geometry.attributes.position; for (let i = 0; i < wp.count; i++) { const x = wp.getX(i), y = wp.getY(i); wp.setZ(i, Math.sin(x * 0.15 + t * 1.3) * 0.12 + Math.sin(y * 0.19 - t * 1.0) * 0.12); } wp.needsUpdate = true; water.geometry.computeVertexNormals(); }
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
@@ -1558,7 +1575,7 @@ function animate() {
   // 綠袍法師：呼吸擺動 + 法杖球脈動 + 靠近顯示提示
   mage.group.position.y = mage.baseY + Math.sin(t * 1.5) * 0.04;
   mage.orbMat.emissiveIntensity = 1.3 + Math.sin(t * 3) * 0.5;
-  mage.orbLight.intensity = archiveActive ? 0 : (1 - vibrancy) * 48 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉
+  if (mage.orbLight) mage.orbLight.intensity = archiveActive ? 0 : (1 - vibrancy) * 48 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉（手機精簡檔無此點光）
   {
     const dm = Math.hypot(hero.position.x - mage.pos.x, hero.position.z - mage.pos.z);
     const near = !battle.active && !finaleActive && dm < 7;
@@ -1641,6 +1658,20 @@ function setupLanding() {
       if (l.id === LANG) b.classList.add('on');
       b.addEventListener('click', () => { if (l.id === LANG) return; setLang(l.id); location.reload(); });
       langEl.appendChild(b);
+    });
+  }
+  // landing 專用畫質切換器：自動／精簡／精緻（存 localStorage，沿用語言切換器的 reload 模式）
+  const qEl = root.querySelector('.landingquality');
+  if (qEl) {
+    [['auto', UI.qualityAuto], ['low', UI.qualityLow], ['high', UI.qualityHigh]].forEach(([v, label]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      if (v === qOverride) b.classList.add('on');
+      b.addEventListener('click', () => {
+        if (v === qOverride) return;
+        try { localStorage.setItem(QKEY, v); } catch (e) {}
+        location.reload();
+      });
+      qEl.appendChild(b);
     });
   }
   // 「開始探險」：解鎖音訊、淡出 landing、首次進入才出現前測信心卡

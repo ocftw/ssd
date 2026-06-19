@@ -52,6 +52,10 @@ export const UI_ALL = {
     landingTopicsHd: '你會探索的五大主題',
     landingStart: '開始探險 →',
     landingPreparing: '世界生成中…',
+    qualityHd: '畫質',
+    qualityAuto: '自動',
+    qualityLow: '精簡',
+    qualityHigh: '精緻',
 
     // 3D 標籤
     labelBoard: '村長告示牌',
@@ -213,6 +217,10 @@ export const UI_ALL = {
     landingTopicsHd: '你会探索的五大主题',
     landingStart: '开始探险 →',
     landingPreparing: '世界生成中…',
+    qualityHd: '画质',
+    qualityAuto: '自动',
+    qualityLow: '精简',
+    qualityHigh: '精致',
 
     labelBoard: '村长告示牌',
     labelOcf: 'OCF 纪念碑',
@@ -365,6 +373,10 @@ export const UI_ALL = {
     landingTopicsHd: `Five topics you'll explore`,
     landingStart: `Start the adventure →`,
     landingPreparing: `Generating world…`,
+    qualityHd: `Graphics`,
+    qualityAuto: `Auto`,
+    qualityLow: `Lite`,
+    qualityHigh: `Rich`,
 
     labelBoard: `Notice Board`,
     labelOcf: `OCF Monument`,
