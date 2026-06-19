@@ -27,11 +27,11 @@ const STRUCT = {
   ],
   // 散落在村莊外的遺跡：每一座 = 一個資安主題（位置用「方位角度 + 距村中心距離」表示）
   ruins: [
-    { id: 'personal', emoji: '🏠', color: 0x4fd1a8, style: 'grove', angle: 32, radius: 62, url: `${SITE}/personal/` },
-    { id: 'org', emoji: '🏢', color: 0x5b9cff, style: 'fortress', angle: 110, radius: 80, url: `${SITE}/org/` },
-    { id: 'common', emoji: '🚨', color: 0xff7a5c, style: 'tower', angle: 188, radius: 70, url: `${SITE}/common/` },
-    { id: 'guide', emoji: '📋', color: 0x5bc8bf, style: 'obelisk', angle: 250, radius: 84, url: `${SITE}/assessment/` },
-    { id: 'tools', emoji: '🛠️', color: 0xffc24b, style: 'market', angle: 308, radius: 60, url: `${SITE}/tools/` },
+    { id: 'personal', emoji: '🏠', color: 0x4fd1a8, style: 'grove', angle: 20, radius: 148, url: `${SITE}/personal/` },
+    { id: 'org', emoji: '🏢', color: 0x5b9cff, style: 'fortress', angle: 104, radius: 162, url: `${SITE}/org/` },
+    { id: 'common', emoji: '🚨', color: 0xff7a5c, style: 'tower', angle: 188, radius: 155, url: `${SITE}/common/` },
+    { id: 'guide', emoji: '📋', color: 0x5bc8bf, style: 'obelisk', angle: 244, radius: 110, url: `${SITE}/assessment/` },
+    { id: 'tools', emoji: '🛠️', color: 0xffc24b, style: 'market', angle: 308, radius: 102, url: `${SITE}/tools/` },
   ],
 };
 
