@@ -13,6 +13,10 @@ const STRUCT = {
   board: { id: 'how-to', emoji: '🧭', url: `${SITE}/how-to/` },
   // OCF 紀念碑（荒野中的隱藏地標，非課程）
   ocf: { id: 'ocf', emoji: '💛', color: 0xffd24b, angle: 150, radius: 48, url: 'https://ocf.tw/' },
+  // 通關後白天世界（worldOpen）的三個資訊點：座標在 main.js 固定擺放；desc 紀念碑由 UI.shardLesson 組裝
+  monument: { id: 'monument', emoji: '🛡️', color: 0x9fe0ff, story: true, url: `${SITE}/blog/` },
+  lighthouse: { id: 'lighthouse', emoji: '🗼', color: 0xffd9a0, story: true, noLink: true },
+  partnerwall: { id: 'partnerwall', emoji: '🤝', color: 0xffd24b, story: true, url: 'https://cscs.asia/' },
   // 英雄紀念碑（首頁主視覺壁畫 + 傳說；story＝全文不截斷、noLink＝隱藏前往鍵）
   legend: { id: 'legend', emoji: '🏛️', story: true, noLink: true },
   // 英雄遺落的武器寶箱（連到資安實戰教材資源頁）
@@ -48,6 +52,22 @@ const TEXT = {
       desc: '開放文化基金會（OCF）是支持台灣開源、開放資料與數位人權的非營利組織，也是「資安防護新手村」背後的推手。喜歡這個專案嗎？歡迎到官網支持我們，讓開放與資安教育走得更遠。',
       chips: ['開源', '開放資料', '數位人權', '非營利'],
       stateText: '感謝支持', goText: '前往 OCF 官網支持 →',
+    },
+    monument: {
+      title: '守護者紀念碑', sub: '你學到的五件事',
+      chips: ['個人帳號', '事件應變', '工具四件套', '組織防護', '進度盤點'],
+      stateText: '通關紀念', goText: '📚 延伸閱讀：進階文章 →',
+    },
+    lighthouse: {
+      title: '守護燈塔', sub: '照亮他人的路',
+      desc: '當五道防線重新亮起，這座燈塔也隨之點燃。你已經從被守護的人，變成能照亮他人數位安全之路的守護者——把學到的帶回真實生活，也分享給更多旅人。',
+      chips: ['通關獎勵', '分享出去'], stateText: '永遠明亮',
+    },
+    partnerwall: {
+      title: 'OCF × CSCS 夥伴牆', sub: '幕後夥伴',
+      desc: '這趟旅程由開放文化基金會（OCF）與 CSCS 社群的講師夥伴共同打造。OCF 是支持台灣開源、開放資料與數位人權的非營利組織；CSCS 的講師夥伴把講座裡的實戰心法，變成你能親手走過的世界。想深入這些實戰教材，歡迎造訪 CSCS。',
+      chips: ['開源', '開放資料', '數位人權', 'CSCS 講師', '資安教材'],
+      stateText: '致謝', goText: '前往 CSCS →',
     },
     legend: {
       title: '英雄紀念碑', sub: '斑駁的古老壁畫',
@@ -146,6 +166,22 @@ const TEXT = {
       chips: ['开源', '开放数据', '数字人权', '非营利'],
       stateText: '感谢支持', goText: '前往 OCF 官网支持 →',
     },
+    monument: {
+      title: '守护者纪念碑', sub: '你学到的五件事',
+      chips: ['个人账号', '事件应变', '工具四件套', '组织防护', '进度盘点'],
+      stateText: '通关纪念', goText: '📚 延伸阅读：进阶文章 →',
+    },
+    lighthouse: {
+      title: '守护灯塔', sub: '照亮他人的路',
+      desc: '当五道防线重新亮起，这座灯塔也随之点燃。你已经从被守护的人，变成能照亮他人数字安全之路的守护者——把学到的带回真实生活，也分享给更多旅人。',
+      chips: ['通关奖励', '分享出去'], stateText: '永远明亮',
+    },
+    partnerwall: {
+      title: 'OCF × CSCS 伙伴墙', sub: '幕后伙伴',
+      desc: '这趟旅程由开放文化基金会（OCF）与 CSCS 社群的讲师伙伴共同打造。OCF 是支持台湾开源、开放数据与数字人权的非营利组织；CSCS 的讲师伙伴把讲座里的实战心法，变成你能亲手走过的世界。想深入这些实战教材，欢迎造访 CSCS。',
+      chips: ['开源', '开放数据', '数字人权', 'CSCS 讲师', '安全教材'],
+      stateText: '致谢', goText: '前往 CSCS →',
+    },
     legend: {
       title: '英雄纪念碑', sub: '斑驳的古老壁画',
       desc: '很久很久以前，一群英雄曾守护着这座村庄——御龙的勇者、绿袍的法师，与它们忠诚的伙伴，一次次击退降临的威胁。后来，一场巨变夺走了大地的色彩，英雄们也就此下落不明，没有人知道他们去了哪里。如今只剩这面斑驳的壁画，静静记着他们的身影。据说，当村里的水晶重新点亮，他们会再次出现在这片土地上……',
@@ -243,6 +279,22 @@ const TEXT = {
       chips: [`Open source`, `Open data`, `Digital rights`, `Non-profit`],
       stateText: `Thanks for your support`, goText: `Support OCF →`,
     },
+    monument: {
+      title: `Guardian's Monument`, sub: `The five things you learned`,
+      chips: [`Personal accounts`, `Incident response`, `Toolkit of four`, `Org defense`, `Take stock`],
+      stateText: `Completion memento`, goText: `📚 Further reading: advanced articles →`,
+    },
+    lighthouse: {
+      title: `Guardian Lighthouse`, sub: `Lighting the way for others`,
+      desc: `When all five defenses shine again, this lighthouse lights up too. You've gone from someone who was protected to a guardian who can light the way for others' digital safety — carry what you learned back to real life, and share it with fellow travelers.`,
+      chips: [`Completion reward`, `Pass it on`], stateText: `Always bright`,
+    },
+    partnerwall: {
+      title: `OCF × CSCS Partner Wall`, sub: `The people behind it`,
+      desc: `This journey was built together by the Open Culture Foundation (OCF) and lecturer friends from the CSCS community. OCF is a non-profit supporting open source, open data, and digital rights in Taiwan; CSCS lecturers turned hands-on security know-how from their talks into a world you can walk through. Want to dig into these hands-on materials? Visit CSCS.`,
+      chips: [`Open source`, `Open data`, `Digital rights`, `CSCS lecturers`, `Security materials`],
+      stateText: `Credits`, goText: `Visit CSCS →`,
+    },
     legend: {
       title: `Heroes' Monument`, sub: `A weathered ancient mural`,
       desc: `Long, long ago, a band of heroes guarded this village — a dragon-riding warrior, a green-robed mage, and their loyal companions — turning back threat after threat. Then a great calamity drained the color from the land, and the heroes vanished without a trace; no one knows where they went. All that remains is this weathered mural, quietly keeping their memory. They say that when the village crystal shines again, they will return to this land…`,
@@ -339,6 +391,9 @@ function assemble(lang) {
   return {
     VILLAGE_BOARD: merge(STRUCT.board, t.board),
     OCF_STATUE: merge(STRUCT.ocf, t.ocf),
+    MONUMENT: merge(STRUCT.monument, t.monument),
+    LIGHTHOUSE: merge(STRUCT.lighthouse, t.lighthouse),
+    PARTNER_WALL: merge(STRUCT.partnerwall, t.partnerwall),
     LEGEND: merge(STRUCT.legend, t.legend),
     WEAPON_CHEST: merge(STRUCT.chest, t.chest),
     GUIDE_KIT: merge(STRUCT.guidekit, t.guidekit),

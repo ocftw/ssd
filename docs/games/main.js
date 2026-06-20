@@ -26,7 +26,7 @@ const AVAILABLE_LANGS = LANGS.map((l) => l.id).filter((id) => CONTENT[id] && BAT
 const LANG = AVAILABLE_LANGS.includes(resolveLang()) ? resolveLang() : FALLBACK_LANG;
 const UI = UI_ALL[LANG] || UI_ALL[FALLBACK_LANG];
 const BATTLES = BATTLES_ALL[LANG] || BATTLES_ALL[FALLBACK_LANG];
-const { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST, GUIDE_KIT } = CONTENT[LANG] || CONTENT[FALLBACK_LANG];
+const { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST, GUIDE_KIT, MONUMENT, LIGHTHOUSE, PARTNER_WALL } = CONTENT[LANG] || CONTENT[FALLBACK_LANG];
 
 // 套用 index.html 內的靜態介面文字（data-i18n＝textContent、-html＝innerHTML、-aria／-title＝屬性）
 function applyStaticI18n() {
@@ -810,6 +810,70 @@ const ocfMon = (() => {
   return { ...built, pos: new THREE.Vector3(ocfAt.x, ocfAt.y, ocfAt.z), el: lab.el, lit: 0, ignited: false };
 })();
 const OCF_GOLD = new THREE.Color(OCF_STATUE.color);
+
+// ── 通關後白天世界（worldOpen）三建物：守護者紀念碑、守護燈塔、OCF×CSCS 夥伴牆 ──
+// 皆只在白天（全清）現身；用 POI 面板（dayOnly）顯示內容。沿用 buildOcf 的石材＋加成光暈手法。
+function buildLessonStele() {
+  const g = new THREE.Group();
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CylinderGeometry(2.6, 3.0, 0.6, 12), RUIN.stoneDk, 0, 0.3, 0);
+  add(new THREE.CylinderGeometry(2.0, 2.3, 0.5, 12), RUIN.stone, 0, 0.75, 0);
+  add(new THREE.BoxGeometry(2.4, 3.8, 0.6), RUIN.stone, 0, 2.9, 0);          // 直立石板
+  add(new THREE.BoxGeometry(2.7, 0.4, 0.85), RUIN.stoneDk, 0, 4.9, 0);       // 頂楣
+  const gemMat = new THREE.MeshStandardMaterial({ color: 0xbfe6ff, emissive: 0x4aa9ff, emissiveIntensity: 1.4, roughness: 0.25, metalness: 0.2 });
+  const gem = add(new THREE.OctahedronGeometry(0.7, 0), gemMat, 0, 5.8, 0);  // 發光守護徽記
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.3, 16, 12), new THREE.MeshBasicMaterial({ color: 0x6cc4ff, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.position.y = 5.8; g.add(halo);
+  return { group: g, gem, gemMat };
+}
+function buildLighthouse() {
+  const g = new THREE.Group();
+  const white = mat(0xede7da), red = mat(0xc0433a);
+  const add = (geo, m, y) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CylinderGeometry(2.4, 3.0, 1.2, 16), RUIN.stone, 0.6);       // 岩石基座
+  add(new THREE.CylinderGeometry(1.5, 1.9, 3.0, 16), white, 2.7);
+  add(new THREE.CylinderGeometry(1.25, 1.5, 3.0, 16), red, 5.7);
+  add(new THREE.CylinderGeometry(1.05, 1.25, 3.0, 16), white, 8.7);
+  add(new THREE.CylinderGeometry(1.4, 1.4, 0.4, 16), RUIN.stoneDk, 10.4);    // 燈室平台
+  const lampY = 11.3;
+  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffe9a8, emissive: 0xffcf6b, emissiveIntensity: 1.6, roughness: 0.3 });
+  const lamp = add(new THREE.CylinderGeometry(0.95, 0.95, 1.5, 16), lampMat, lampY); // 發光燈室
+  lamp.add(new THREE.Mesh(new THREE.SphereGeometry(1.6, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })));
+  add(new THREE.ConeGeometry(1.25, 1.2, 16), red, 12.5);                     // 頂蓋
+  // 旋轉光束（水平加成、緩掃海面）：cone 繞 z 轉 90° 指 +X，置於 pivot 繞 Y 掃
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(2.4, 36, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+  beam.rotation.z = Math.PI / 2; beam.position.x = 18;                       // 頂點靠燈室、底朝外海
+  const beamPivot = new THREE.Group(); beamPivot.position.y = lampY; beamPivot.add(beam); g.add(beamPivot);
+  const lampLight = TIER !== 'low' ? new THREE.PointLight(0xffe1a0, 0, 34, 2) : null; if (lampLight) { lampLight.position.y = lampY; g.add(lampLight); } // 手機（low）僅靠 emissive
+  return { group: g, lampMat, beamPivot, lampLight };
+}
+function buildPartnerWall() {
+  const g = new THREE.Group();
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  add(new THREE.BoxGeometry(5.0, 0.5, 1.2), RUIN.stoneDk, 0, 0.25, 0);       // 基座
+  add(new THREE.BoxGeometry(4.4, 2.8, 0.5), RUIN.stone, 0, 1.7, 0);          // 牆面
+  add(new THREE.BoxGeometry(4.8, 0.4, 0.8), RUIN.stoneDk, 0, 3.2, 0);        // 頂楣
+  const emblem = (col, em, x) => { const o = add(new THREE.IcosahedronGeometry(0.5, 0), new THREE.MeshStandardMaterial({ color: col, emissive: em, emissiveIntensity: 1.0, roughness: 0.3, metalness: 0.3 }), x, 1.8, 0.32); return o; };
+  emblem(0xffd24b, 0xffc24b, -1.1); // OCF 金徽
+  emblem(0x9fd8ff, 0x4aa9ff, 1.1);  // CSCS 藍徽
+  return { group: g };
+}
+// 擺放：固定座標、worldOpen 控可見；面朝村心（faceOrigin）
+function placeDayStruct(built, data, x, z, labelY, openDist, faceOrigin) {
+  // 用「白天」地形高度擺放：這些只在 worldOpen 現身，但建立時可能仍是夜晚（外圍是山牆、海岸點會被算成 +30 高空 → 浮空只剩影子）。
+  setTerrainOpenness(1); const y = groundY(x, z); setTerrainOpenness(worldOpen ? 1 : 0);
+  const g = built.group;
+  g.position.set(x, y, z); g.rotation.y = faceOrigin ? Math.atan2(-x, -z) : 0; g.visible = false; scene.add(g);
+  const lab = makeLabel(`${data.emoji} ${data.title}`); lab.o.position.set(0, labelY, 0); g.add(lab.o);
+  POIS.push({ data, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist, dayOnly: true });
+  return built;
+}
+const LESSON_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
+const lessonStele = placeDayStruct(buildLessonStele(),
+  { ...MONUMENT, desc: LESSON_ORDER.map((id) => '・' + UI.shardLesson[id]).join('\n') }, // desc＝五則心法（重用既有三語、零新翻譯）
+  11, -13, 7, 5, true);
+const lighthouse = placeDayStruct(buildLighthouse(), LIGHTHOUSE, 60, 224, 16, 6.5, false);
+const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, 18, 18, 4.2, 5, true);
 // 英雄紀念碑：首頁主視覺壁畫 + 傳說（非課程、不計進度）
 function buildMonument() {
   const g = new THREE.Group();
@@ -1892,6 +1956,7 @@ function animate() {
   let near = null, nd = Infinity;
   for (const p of POIS) {
     if ((p.area || 'world') !== (archiveActive ? 'archive' : 'world')) continue; // 只判定當前空間的 POI
+    if (p.dayOnly && !worldOpen) continue;                                      // 通關白天建物：未開放不觸發面板
     const d = Math.hypot(hero.position.x - p.pos.x, hero.position.z - p.pos.z);
     if (d < p.openDist && d < nd) { nd = d; near = p; }
     if (p.area === 'archive' && d < p.openDist) met.docs.add(p.data.id); // 成就：看過檔案室文件
@@ -2083,6 +2148,14 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
           + `<div class="qopts">${menu}<a class="qext" href="https://toomore.net/" target="_blank" rel="noopener">${c.site}</a></div>`;
       }
     }
+  }
+  // 通關後白天世界三建物：僅 worldOpen 現身（紀念碑/燈塔/夥伴牆）
+  if (lessonStele.group.visible !== worldOpen) { lessonStele.group.visible = lighthouse.group.visible = partnerWall.group.visible = worldOpen; }
+  if (worldOpen) {
+    lessonStele.gem.rotation.y = t * 0.5; lessonStele.gemMat.emissiveIntensity = 1.2 + Math.sin(t * 2) * 0.3;
+    lighthouse.beamPivot.rotation.y = t * 0.6;                               // 光束緩掃海面
+    lighthouse.lampMat.emissiveIntensity = 1.4 + Math.sin(t * 1.6) * 0.35;   // 燈室脈動
+    if (lighthouse.lampLight) lighthouse.lampLight.intensity = 1.4 + Math.sin(t * 1.6) * 0.5;
   }
   // 灰龍：荒野上空慢慢繞圈 + 拍翅 + 偶爾吐藍火（背上白貓跟著）
   dragon.ang += dt * 0.12;
