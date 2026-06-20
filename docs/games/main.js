@@ -1079,25 +1079,39 @@ const MAGE_TIP = UI.mageTip;
 const MAGE_TIP_DONE = UI.mageTipDone;
 mage.open = false; // 對話框：靠近先出現小圖示，點圖示才展開（避免每次經過就跳整段文字）
 mage.el.addEventListener('click', (e) => { e.stopPropagation(); mage.open = !mage.open; mage.mode = -1; });
-// 遊戲製作者 NPC（彩蛋）：遺跡全清＝白天後，於海岸邊現身、面向邊界（海平線），靠近可閱讀幕後自述
+// 遊戲製作者 NPC（彩蛋）：遺跡全清＝白天後，於海岸邊現身為抽象漂浮的「創世之核」，靠近可用 Q&A 問製作幕後
 function buildCreator() {
-  const g = buildVillager(0x36506e, 0x2a2620);                                       // 深藍帽 T＋深髮的開發者形象（複用村民建模）
-  const scr = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 0.04),
-    new THREE.MeshStandardMaterial({ color: 0x0a1622, emissive: 0x4aa9ff, emissiveIntensity: 1.2, roughness: 0.4 })); // 自發光螢幕／平板
-  scr.position.set(0, 1.15, 0.42); scr.rotation.x = -0.5; scr.castShadow = true; g.add(scr);
-  return g;
+  const g = new THREE.Group();
+  const coreMat = new THREE.MeshStandardMaterial({ color: 0xbfe6ff, emissive: 0x4aa9ff, emissiveIntensity: 1.5, roughness: 0.2, metalness: 0.1 });
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 1), coreMat); g.add(core);          // 發光核心
+  core.add(new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 12),                                       // 加成光暈
+    new THREE.MeshBasicMaterial({ color: 0x6cc4ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })));
+  const shardGroup = new THREE.Group(); g.add(shardGroup);                                              // 環繞「程式碎片」
+  const sMat = new THREE.MeshStandardMaterial({ color: 0x9fd8ff, emissive: 0x3a8fe0, emissiveIntensity: 1.1, roughness: 0.3, metalness: 0.3 });
+  const N = TIER === 'low' ? 3 : 5;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * TAU;
+    const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), sMat);
+    s.position.set(Math.cos(a) * 0.95, Math.sin(a * 1.7) * 0.18, Math.sin(a) * 0.95); shardGroup.add(s);
+  }
+  return { group: g, core, coreMat, shardGroup };
 }
 const creator = (() => {
   const x = -7.4, z = 226.5;
-  const g = buildCreator();
-  g.position.set(x, groundY(x, z), z);
-  g.rotation.y = Math.atan2(x, z);   // 面向邊界（背對村心、望向海平線）
-  g.visible = false;                 // 只有白天（worldOpen）才現身
+  const b = buildCreator(); const g = b.group;
+  g.position.set(x, groundY(x, z) + 1.5, z);   // 漂浮離地
+  g.visible = false;                           // 只有白天（worldOpen）才現身
   scene.add(g);
-  const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 2.7, 0); g.add(o);
-  return { group: g, el, pos: new THREE.Vector3(x, 0, z), mode: -1, open: false, line: 0 };
+  const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 1.7, 0); g.add(o);
+  return { group: g, core: b.core, coreMat: b.coreMat, shardGroup: b.shardGroup, el, pos: new THREE.Vector3(x, 0, z), mode: -1, open: false, topic: null, qline: 0 };
 })();
-creator.el.addEventListener('click', (e) => { e.stopPropagation(); if (!creator.open) creator.open = true; else creator.line++; creator.mode = -1; });
+creator.el.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!creator.open) { creator.open = true; creator.mode = -1; return; }   // chip → 展開
+  if (e.target.closest('a.qext')) return;                                   // 外連：放行新分頁、不重繪
+  const qb = e.target.closest('[data-q]'); if (qb) { creator.topic = qb.getAttribute('data-q'); creator.qline = 0; creator.mode = -1; return; }
+  if (e.target.closest('[data-more]')) { creator.qline++; creator.mode = -1; }
+});
 // 灰龍（荒野上空慢慢繞圈）＋ 背上白貓
 const dragon = (() => {
   const built = buildDragon();
@@ -2041,23 +2055,33 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       else { mage.el.className = 'bubble clickable show'; mage.el.innerHTML = `<b>${UI.mageHeader}</b><span>${allDone ? MAGE_TIP_DONE : MAGE_TIP}</span>`; }
     }
   }
-  // 遊戲製作者 NPC：僅白天（worldOpen）現身於海岸；靠近顯示幕後自述、可循環
+  // 遊戲製作者 NPC：僅白天（worldOpen）現身為漂浮「創世之核」；靠近用 Q&A 問製作幕後
   if (!worldOpen) {
     if (creator.group.visible) creator.group.visible = false;
-    if (creator.mode !== 0) { creator.mode = 0; creator.open = false; creator.el.className = 'bubble'; }
+    if (creator.mode !== 0) { creator.mode = 0; creator.open = false; creator.topic = null; creator.qline = 0; creator.el.className = 'bubble'; }
   } else {
     creator.group.visible = true;
-    creator.group.position.y = groundY(creator.pos.x, creator.pos.z) + Math.sin(t * 1.4) * 0.04; // 輕微呼吸
+    creator.group.position.y = groundY(creator.pos.x, creator.pos.z) + 1.5 + Math.sin(t * 1.2) * 0.12; // 漂浮起伏
+    creator.core.rotation.y = t * 0.4; creator.core.rotation.x = t * 0.15; creator.shardGroup.rotation.y = -t * 0.6; // 自轉
+    creator.coreMat.emissiveIntensity = 1.3 + Math.sin(t * 2.0) * 0.35; // 脈動
     const dc = Math.hypot(hero.position.x - creator.pos.x, hero.position.z - creator.pos.z);
     const near = !battle.active && !finaleActive && !archiveActive && dc < 7;
-    if (!near) creator.open = false;
+    if (!near) { creator.open = false; creator.topic = null; creator.qline = 0; }
     const state = !near ? 0 : (creator.open ? 2 : 1);
     if (state !== creator.mode) {
       creator.mode = state;
       if (state === 0) creator.el.className = 'bubble';
       else if (state === 1) { creator.el.className = 'bubble chip clickable show'; creator.el.innerHTML = '💬'; }
-      else { const c = UI.creatorCast; creator.el.className = 'bubble clickable show';
-        creator.el.innerHTML = `<b>${c.name}</b><span>${c.lines[creator.line % c.lines.length]}</span><span class="more">${UI.villagerMore}</span>`; }
+      else {
+        const c = UI.creatorCast;
+        const tp = c.topics.find((x) => x.id === creator.topic);
+        const text = tp ? tp.a[Math.min(creator.qline, tp.a.length - 1)] : c.greeting;
+        const moreBtn = (tp && creator.qline < tp.a.length - 1) ? `<span class="more" data-more>${c.more}</span>` : '';
+        const menu = c.topics.map((x) => `<a class="qopt${x.id === creator.topic ? ' on' : ''}" data-q="${x.id}">${x.q}</a>`).join('');
+        creator.el.className = 'bubble creatorbox clickable show';
+        creator.el.innerHTML = `<b>${c.name}</b><span>${text}</span>${moreBtn}`
+          + `<div class="qopts">${menu}<a class="qext" href="https://toomore.net/" target="_blank" rel="noopener">${c.site}</a></div>`;
+      }
     }
   }
   // 灰龍：荒野上空慢慢繞圈 + 拍翅 + 偶爾吐藍火（背上白貓跟著）
@@ -2168,7 +2192,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       v.mode = state;
       if (state === 0) v.el.className = 'bubble';
       else if (state === 1) { v.el.className = 'bubble chip clickable show'; v.el.innerHTML = '💬'; }
-      else { const cast = UI.villagerCast[v.persona % UI.villagerCast.length], ls = cast.lines; v.el.className = 'bubble clickable show'; v.el.innerHTML = `<b>${cast.name}</b><span>${ls[v.line % ls.length]}</span><span class="more">${UI.villagerMore}</span>`; }
+      else { const cast = UI.villagerCast[v.persona % UI.villagerCast.length], ls = worldOpen ? [UI.villagerHint[v.persona % UI.villagerHint.length]].concat(cast.lines) : cast.lines; v.el.className = 'bubble clickable show'; v.el.innerHTML = `<b>${cast.name}</b><span>${ls[v.line % ls.length]}</span><span class="more">${UI.villagerMore}</span>`; }
     }
   }
   // 沉浸感更新：環境音景＋天氣＋蝴蝶＋魚影＋飛鳥
