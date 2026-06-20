@@ -452,9 +452,9 @@ const terrain = new THREE.Mesh(tGeo, terrainMat);
 terrain.receiveShadow = true;
 scene.add(terrain);
 
-// 水面
+// 水面（反光面）：半徑 ±500（plane 1000）＝反光邊界再往外推、被海霧吃掉更多；測試用、可再調
 const water = new THREE.Mesh(
-  new THREE.PlaneGeometry(WORLD.half * 2, WORLD.half * 2, Q.waterSeg, Q.waterSeg), // 段數依畫質檔位（桌機 48／手機 28）
+  new THREE.PlaneGeometry(1000, 1000, Q.waterSeg, Q.waterSeg), // 段數依畫質檔位（桌機 48／手機 28）
   new THREE.MeshStandardMaterial({ color: 0x4fa9d6, transparent: true, opacity: 0.82, roughness: 0.5, metalness: 0.08, envMapIntensity: 0.35, depthWrite: false }) // 平靜水面：低反光（不閃爍）＋depthWrite:false（不與海面/岸邊 z-fighting）
 );
 water.rotation.x = -Math.PI / 2; water.position.y = WORLD.water;
