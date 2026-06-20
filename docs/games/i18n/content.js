@@ -12,7 +12,7 @@ const STRUCT = {
   // 村莊中央的告示牌（旅程的起點與說明，不計入遺跡進度）
   board: { id: 'how-to', emoji: '🧭', url: `${SITE}/how-to/` },
   // OCF 紀念碑（荒野中的隱藏地標，非課程）
-  ocf: { id: 'ocf', emoji: '💛', color: 0xffd24b, angle: 150, radius: 48, url: 'https://ocf.tw/' },
+  ocf: { id: 'ocf', emoji: '💛', color: 0xffd24b, angle: 340, radius: 120, url: 'https://ocf.tw/' },
   // 通關後白天世界（worldOpen）的三個資訊點：座標在 main.js 固定擺放；desc 紀念碑由 UI.shardLesson 組裝
   monument: { id: 'monument', emoji: '🛡️', color: 0x9fe0ff, story: true, url: `${SITE}/blog/` },
   lighthouse: { id: 'lighthouse', emoji: '🗼', color: 0xffd9a0, story: true, noLink: true },

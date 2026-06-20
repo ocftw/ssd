@@ -526,8 +526,11 @@ const ruinAt = RUINS.map((r) => {
 // OCF 紀念碑座標（先算好，植被才能避開）
 const ocfAt = (() => { const a = OCF_STATUE.angle * Math.PI / 180; const x = Math.cos(a) * OCF_STATUE.radius, z = Math.sin(a) * OCF_STATUE.radius; return { x, z, y: groundY(x, z) }; })();
 addCircleCol(ocfAt.x, ocfAt.z, 1.4);   // OCF 紀念碑實體
+// 守護者紀念碑 / CSCS 夥伴牆：從村莊出口打散到荒野各方位（dayOnly）；先記座標供植被避開＋擺放＋碰撞共用（同 ocfAt 手法、單一真實來源）
+const STELE_AT = { x: -149.5, z: -69.7 }, WALL_AT = { x: 86, z: 122.9 };
 function nearAnyRuin(x, z, d) {
   if (Math.hypot(x - ocfAt.x, z - ocfAt.z) < d) return true;
+  if (Math.hypot(x - STELE_AT.x, z - STELE_AT.z) < d || Math.hypot(x - WALL_AT.x, z - WALL_AT.z) < d) return true;
   for (const r of ruinAt) if (Math.hypot(x - r.x, z - r.z) < d) return true;
   return false;
 }
@@ -988,15 +991,15 @@ function placeDayStruct(built, data, x, z, labelY, openDist, faceOrigin) {
   return built;
 }
 const LESSON_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
-// 入口紀念大道：兩座 dayOnly 紀念物夾 +z 出村路線、在寶箱/工具包(z29)之後排開（動線：拱門→寶箱→紀念物，成大道不成堆）
+// 守護者紀念碑與 CSCS 夥伴牆：打散到荒野各方位（不再擠在村莊出口）；面朝村心、座標用 STELE_AT/WALL_AT 單一來源（OCF 紀念碑也已移到外圍，見 content.js ocf）
 const lessonStele = placeDayStruct(buildLessonStele(),
   { ...MONUMENT, desc: LESSON_ORDER.map((id) => '・' + UI.shardLesson[id]).join('\n') }, // desc＝五則心法（重用既有三語、零新翻譯）
-  -10, 36, 7, 5, true);
+  STELE_AT.x, STELE_AT.z, 7, 5, true);
 const lighthouse = placeDayStruct(buildLighthouse(), LIGHTHOUSE, 60, 224, 16, 6.5, false);
-const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, 10, 36, 4.2, 5, true);
-addCircleCol(60, 224, 3, true);                            // 燈塔實體（dayOnly）
-addBoxCol(10, 36, 2.5, 0.6, Math.atan2(-10, -36), true);   // 夥伴牆實體（dayOnly）
-addBoxCol(-10, 36, 1.3, 0.8, Math.atan2(10, -36), true);   // 紀念碑實體（dayOnly）
+const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, WALL_AT.x, WALL_AT.z, 4.2, 5, true);
+addCircleCol(60, 224, 3, true);                                                          // 燈塔實體（dayOnly）
+addBoxCol(WALL_AT.x, WALL_AT.z, 2.5, 0.6, Math.atan2(-WALL_AT.x, -WALL_AT.z), true);      // 夥伴牆實體（dayOnly）
+addBoxCol(STELE_AT.x, STELE_AT.z, 1.3, 0.8, Math.atan2(-STELE_AT.x, -STELE_AT.z), true);  // 守護者紀念碑實體（dayOnly）
 // 英雄紀念碑：首頁主視覺壁畫 + 傳說（非課程、不計進度）
 function buildMonument() {
   const g = new THREE.Group();
@@ -1424,6 +1427,7 @@ joyEl.addEventListener('pointercancel', joyEnd);
 const SAVE_KEY = 'ssd-village-v1';
 let progress = { discovered: [], completed: [] };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.discovered) progress = s; } catch (e) { /* ignore */ }
+if (!Array.isArray(progress.seen)) progress.seen = []; // 小地圖：固定地標/NPC 探索揭示清單（向後相容：舊存檔自動補空陣列，不影響進度/通關條件）
 const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(progress)); } catch (e) { /* ignore */ } };
 const isDisc = (id) => progress.discovered.includes(id);
 const isDone = (id) => progress.completed.includes(id);
@@ -1854,33 +1858,90 @@ function spawnFootprint(x, y, z, ry) {
   if (prints.length > 28) { const old = prints.shift(); scene.remove(old.m); old.mat.dispose(); }
 }
 
-// ── 小地圖 ──────────────────────────────────────────────────────
+// ── 小地圖（世界縮影；隨鏡頭旋轉＝鏡頭正前方在盤頂；盤緣東南西北羅盤）──────────
 const mm = $('#minimap canvas'); const mc = mm.getContext('2d'); const MMR = 76;
-const w2m = (x, z) => { const lim = worldLim(); let mx = (x / lim) * MMR, mz = (z / lim) * MMR; const l = Math.hypot(mx, mz); if (l > MMR) { mx *= MMR / l; mz *= MMR / l; } return [88 + mx, 88 + mz]; };
+// 置中映射：世界座標 → 相對盤心(0,0)、夾在半徑內（之後再經 rot() 套用鏡頭旋轉成螢幕座標）
+const w2c = (x, z) => { const lim = worldLim(); let mx = (x / lim) * MMR, mz = (z / lim) * MMR; const l = Math.hypot(mx, mz); if (l > MMR) { mx *= MMR / l; mz *= MMR / l; } return [mx, mz]; };
+// 要標記的「固定」地標與 NPC（移動生物不列）：非遺跡 POI ＋ 檔案室 ＋ 法師/製作者/守護者；靠近寫入 progress.seen 才顯示
+const mapMarks = [
+  ...POIS.filter((p) => !p.isRuin && (p.area || 'world') === 'world')
+    .map((p) => ({ x: p.pos.x, z: p.pos.z, id: p.data.id, dayOnly: !!p.dayOnly, kind: 'land' })),
+  { x: ARCHIVE.pos.x, z: ARCHIVE.pos.z, id: 'archive', dayOnly: false, kind: 'land' },
+  { x: 4.4, z: 15.2, id: 'npc-mage', dayOnly: false, kind: 'npc' },
+  { x: -7.4, z: 226.5, id: 'npc-creator', dayOnly: true, kind: 'npc' },
+  ...ruinAt.map((r) => { const inv = 1 - 8 / r.radius; return { x: r.x * inv, z: r.z * inv, id: 'npc-keeper-' + r.id, dayOnly: false, kind: 'npc' }; }),
+];
+// 地形縮圖：載入時一次性把 terrainHeight 烤成彩色實地地圖（沙岸/草地/岩石/海＋山形陰影），盤底用它取代純色。
+// 夜（群山環抱、無海岸）與日（群山沉降、外緣成海岸線）地形不同、且地圖尺度(worldLim)也不同 → 各烤一張，drawMinimap 依 worldOpen 取用。
+// 用色比照地形網格頂點色（cSand/cGrass/cRock，此處為 sRGB 原值，canvas 2D 不需 lin()）；水色比照海面 0x4f9fd0。
+const DISC = MMR + 6;                                   // 盤半徑（含外緣）；地形圖與標記同尺度：世界 lim→MMR(76px)，圖covers到 DISC 填滿盤緣
+function bakeTerrainMap(openness, lim) {
+  const N = TIER === 'low' ? 128 : 176;
+  setTerrainOpenness(openness);
+  const Hd = new Float32Array(N * N);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { Hd[j * N + i] = terrainHeight((i / (N - 1) * 2 - 1) * lim, (j / (N - 1) * 2 - 1) * lim); }
+  const cv = document.createElement('canvas'); cv.width = cv.height = N;
+  const ctx2 = cv.getContext('2d'); const im = ctx2.createImageData(N, N); const px = im.data; const W = WORLD.water;
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const k = j * N + i, h = Hd[k]; let r, g, b;
+    if (h < W) { const dep = Math.min(1, (W - h) / 7); r = 0x4f - dep * 26; g = 0x9f - dep * 44; b = 0xd0 - dep * 28; }   // 海：依深度加深
+    else if (h < W + 1.2) { r = 0xcd; g = 0xbb; b = 0x8e; }                                                              // 沙岸（cSand）
+    else if (h > 15) { r = 0x9a; g = 0x8e; b = 0x7c; }                                                                   // 岩石／群山（cRock）
+    else { const t = Math.sin((i / (N - 1) * 2 - 1) * lim * 0.12) * Math.sin((j / (N - 1) * 2 - 1) * lim * 0.11) * 0.5 + 0.5; r = 0x82 + (0x6f - 0x82) * t; g = 0xbd + (0xae - 0xbd) * t; b = 0x63 + (0x57 - 0x63) * t; } // 草地（cGrass↔cGrass2）
+    let sh = ((h - Hd[j * N + Math.max(0, i - 1)]) + (h - Hd[Math.max(0, j - 1) * N + i])) * 0.05;                       // 山形陰影：鄰格高差
+    sh = Math.max(-0.22, Math.min(0.22, sh)); if (h >= W) { r *= 1 + sh; g *= 1 + sh; b *= 1 + sh; }                     // 只對陸地打光，海面保持平整
+    const o = k * 4; px[o] = Math.max(0, Math.min(255, r)); px[o + 1] = Math.max(0, Math.min(255, g)); px[o + 2] = Math.max(0, Math.min(255, b)); px[o + 3] = 255;
+  }
+  ctx2.putImageData(im, 0, 0); return cv;
+}
+const terrainMapNight = bakeTerrainMap(0, WORLD.maxR * DISC / MMR);
+const terrainMapDay = bakeTerrainMap(1, DAY_MAXR * DISC / MMR);
+setTerrainOpenness(worldOpen ? 1 : 0);                  // 還原 openness（與 shoreTex 烤製相同慣例）
 function drawMinimap() {
   mc.clearRect(0, 0, 176, 176);
-  mc.save(); mc.beginPath(); mc.arc(88, 88, MMR + 6, 0, TAU); mc.clip();
-  mc.fillStyle = '#9ccb78'; mc.beginPath(); mc.arc(88, 88, MMR + 6, 0, TAU); mc.fill();
-  mc.fillStyle = 'rgba(110,180,90,.6)'; for (let i = 0; i < 18; i++) { const a = i / 18 * TAU, r = MMR * 0.7; mc.beginPath(); mc.arc(88 + Math.cos(a) * r, 88 + Math.sin(a) * r, 3, 0, TAU); mc.fill(); }
-  // 村莊
-  const [vx, vy] = w2m(0, 0); mc.fillStyle = '#cfc4ab'; mc.beginPath(); mc.arc(vx, vy, 9, 0, TAU); mc.fill();
-  mc.fillStyle = '#7e5630'; mc.font = '10px sans-serif'; mc.textAlign = 'center'; mc.textBaseline = 'middle'; mc.fillText(UI.mapVillage, vx, vy);
+  mc.save(); mc.beginPath(); mc.arc(88, 88, DISC, 0, TAU); mc.clip();
+  mc.fillStyle = worldOpen ? '#4a93c4' : '#33425a'; mc.fillRect(0, 0, 176, 176);   // 海／夜色襯底（圖邊角安全色）
+  mc.save(); mc.translate(88, 88); mc.rotate(yaw); mc.imageSmoothingEnabled = true; // 地形實地縮圖隨鏡頭旋轉（與 w2s 標記同尺度）
+  mc.drawImage(worldOpen ? terrainMapDay : terrainMapNight, -DISC, -DISC, DISC * 2, DISC * 2);
+  mc.restore();
+  // 鏡頭旋轉：把置中座標(mx,mz) 轉成螢幕座標。鏡頭正前方(世界 -sin/-cos yaw)恰落在盤頂；文字另畫直立故全程用 rot() 不用 ctx.rotate
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const rot = (mx, mz) => [88 + mx * cy - mz * sy, 88 + mx * sy + mz * cy];
+  const w2s = (x, z) => { const [mx, mz] = w2c(x, z); return rot(mx, mz); };
+  // 村莊（盤心）
+  mc.fillStyle = '#cfc4ab'; mc.beginPath(); mc.arc(88, 88, 9, 0, TAU); mc.fill();
+  mc.fillStyle = '#7e5630'; mc.font = '10px sans-serif'; mc.textAlign = 'center'; mc.textBaseline = 'middle'; mc.fillText(UI.mapVillage, 88, 88);
+  // 已揭示的固定地標／NPC（地標琥珀、NPC 柔藍；小於遺跡 6px 以區分）
+  for (const m of mapMarks) {
+    if (m.dayOnly && !worldOpen) continue;
+    if (!progress.seen.includes(m.id)) continue;
+    const [x, y] = w2s(m.x, m.z);
+    mc.beginPath(); mc.arc(x, y, 3.5, 0, TAU);
+    mc.fillStyle = m.kind === 'npc' ? '#8fd0ff' : '#e7c66a'; mc.fill();
+    mc.lineWidth = 1; mc.strokeStyle = 'rgba(40,40,46,.65)'; mc.stroke();
+  }
   // 遺跡
   ruinAt.forEach((r) => {
-    const [x, y] = w2m(r.x, r.z);
-    if (!isDisc(r.id)) { mc.strokeStyle = 'rgba(40,50,40,.55)'; mc.setLineDash([3, 3]); mc.beginPath(); mc.arc(x, y, 6, 0, TAU); mc.stroke(); mc.setLineDash([]); mc.fillStyle = 'rgba(40,50,40,.65)'; mc.fillText('?', x, y); }
+    const [x, y] = w2s(r.x, r.z);
+    if (!isDisc(r.id)) { mc.strokeStyle = 'rgba(40,50,40,.55)'; mc.setLineDash([3, 3]); mc.beginPath(); mc.arc(x, y, 6, 0, TAU); mc.stroke(); mc.setLineDash([]); mc.fillStyle = 'rgba(40,50,40,.65)'; mc.font = '10px sans-serif'; mc.fillText('?', x, y); }
     else { mc.fillStyle = '#' + r.color.toString(16).padStart(6, '0'); mc.beginPath(); mc.arc(x, y, 6, 0, TAU); mc.fill(); if (isDone(r.id)) { mc.strokeStyle = '#fff'; mc.lineWidth = 2; mc.beginPath(); mc.arc(x, y, 6, 0, TAU); mc.stroke(); } }
   });
   // 建議下一站：脈動金環
   const recId = nextRecommendedRuinId();
-  if (recId) { const rr = ruinAt.find((r) => r.id === recId); const [rx, ry] = w2m(rr.x, rr.z); const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.004); mc.strokeStyle = `rgba(255,210,80,${(0.5 + pulse * 0.45).toFixed(2)})`; mc.lineWidth = 2.5; mc.beginPath(); mc.arc(rx, ry, 9 + pulse * 3, 0, TAU); mc.stroke(); }
-  // 玩家
-  const [hx, hy] = w2m(hero.position.x, hero.position.z); const a = hero.rotation.y;
-  mc.fillStyle = '#ff7a45'; mc.beginPath();
-  mc.moveTo(hx + Math.sin(a) * 7, hy + Math.cos(a) * 7);
-  mc.lineTo(hx + Math.sin(a + 2.5) * 5, hy + Math.cos(a + 2.5) * 5);
-  mc.lineTo(hx + Math.sin(a - 2.5) * 5, hy + Math.cos(a - 2.5) * 5);
-  mc.closePath(); mc.fill();
+  if (recId) { const rr = ruinAt.find((r) => r.id === recId); const [rx, ry] = w2s(rr.x, rr.z); const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.004); mc.strokeStyle = `rgba(255,210,80,${(0.5 + pulse * 0.45).toFixed(2)})`; mc.lineWidth = 2.5; mc.beginPath(); mc.arc(rx, ry, 9 + pulse * 3, 0, TAU); mc.stroke(); }
+  // 玩家（位置隨盤旋轉；箭頭朝向＝玩家面向，經 rot 後仍對應鏡頭視角）
+  const [hmx, hmz] = w2c(hero.position.x, hero.position.z); const a = hero.rotation.y;
+  const tip = rot(hmx + Math.sin(a) * 7, hmz + Math.cos(a) * 7);
+  const lf = rot(hmx + Math.sin(a + 2.5) * 5, hmz + Math.cos(a + 2.5) * 5);
+  const rt = rot(hmx + Math.sin(a - 2.5) * 5, hmz + Math.cos(a - 2.5) * 5);
+  mc.fillStyle = '#ff7a45'; mc.beginPath(); mc.moveTo(tip[0], tip[1]); mc.lineTo(lf[0], lf[1]); mc.lineTo(rt[0], rt[1]); mc.closePath(); mc.fill();
+  // 羅盤：北/東/南/西（位置隨盤旋轉、字保持直立；北標金色易定位）。重用 UI.compass[0/2/4/6]，零新字串
+  mc.font = 'bold 11px sans-serif'; mc.lineWidth = 3; const crr = MMR - 7;
+  for (const [ux, uz, idx] of [[0, -1, 0], [1, 0, 2], [0, 1, 4], [-1, 0, 6]]) {
+    const [cx, cz] = rot(ux * crr, uz * crr);
+    mc.strokeStyle = 'rgba(20,28,48,.55)'; mc.strokeText(UI.compass[idx], cx, cz);
+    mc.fillStyle = idx === 0 ? '#ffd24b' : 'rgba(255,255,255,.95)'; mc.fillText(UI.compass[idx], cx, cz);
+  }
   mc.restore();
   mc.strokeStyle = 'rgba(29,36,51,.25)'; mc.lineWidth = 3; mc.beginPath(); mc.arc(88, 88, MMR + 6, 0, TAU); mc.stroke();
 }
@@ -2096,6 +2157,12 @@ function animate() {
   p.beamMat.opacity = (lit ? (Q.bloom ? 0.26 : 0.42) : (Q.bloom ? 0.10 : 0.12)) + Math.sin(t * 2 + p.pos.z) * (lit ? (Q.bloom ? 0.05 : 0.07) : 0.02);
       if (d < p.discoverDist && !lit) discover(p);
     }
+  }
+  // 小地圖固定地標/NPC：靠近一次即永久揭示（fog-of-war，存檔保留；dayOnly 僅白天計入）
+  for (const m of mapMarks) {
+    if (m.dayOnly && !worldOpen) continue;
+    if (progress.seen.includes(m.id)) continue;
+    if (Math.hypot(hero.position.x - m.x, hero.position.z - m.z) < 16) { progress.seen.push(m.id); save(); }
   }
   if (finaleActive) { if (panelId) hidePanel(); }
   else if (near && !suppressed.has(near.data.id)) { pinnedId = null; if (panelId !== near.data.id) showPanel(near); }
