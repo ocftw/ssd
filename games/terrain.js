@@ -4,7 +4,7 @@ import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js';
 export const WORLD = {
   half: 280,        // 世界半徑（地形邊長 = half*2）；C 放大：150→280（村莊不變，只擴張外圍荒野）
   villageR: 34,     // 村莊半徑（此範圍內地形壓平）
-  water: -2.6,      // 水面高度（低於此即成湖）
+  water: -1.8,      // 水面高度（低於此即成湖）；由 -2.6 抬升 → 放大世界後水域比例回升（村莊仍乾，物件/沙岸/魚影皆相對此值自動跟調）
   maxR: 190,        // 角色可行走的最大半徑（外圍是當背景的山脈）；C 放大：114→190，邊界＝迷霧緩坡丘陵
 };
 
