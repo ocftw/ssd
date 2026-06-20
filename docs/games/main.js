@@ -98,6 +98,7 @@ const TAU = Math.PI * 2;
 // 村莊夜燈（路燈/市集提燈/窗戶）：登錄後在主迴圈隨繁榮度淡入淡出——夜晚發光、白天熄滅（避免白天還在反光發光）
 const nightGlowMats = [];
 const regNightGlow = (mesh) => { nightGlowMats.push({ m: mesh.material, base: mesh.material.emissiveIntensity }); return mesh; };
+const nightHalo = []; // 夜燈柔光暈：夜晚淡入、白天淡出（opacity 隨 1-vibrancy）
 const mat = (color, opts = {}) =>
   new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, envMapIntensity: 0.5, ...opts });
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
@@ -560,15 +561,50 @@ tuftMesh.instanceMatrix.needsUpdate = true; if (tuftMesh.instanceColor) tuftMesh
 // ── 村莊 ────────────────────────────────────────────────────────
 const village = new THREE.Group();
 scene.add(village);
-// 廣場石地（雙色 + 中央紋飾 + 通往村口的步道）
-const plaza = new THREE.Mesh(new THREE.CylinderGeometry(18, 18.5, 0.4, 48), mat(0xb6aa8e));
-plaza.position.y = 0.1; plaza.receiveShadow = true; village.add(plaza); applyStone(plaza.material); boxUV(plaza.geometry);
-const plazaIn = new THREE.Mesh(new THREE.CylinderGeometry(14, 14.2, 0.4, 48), mat(0xd6cbb0));
-plazaIn.position.y = 0.22; plazaIn.receiveShadow = true; village.add(plazaIn); applyStone(plazaIn.material); boxUV(plazaIn.geometry);
-const medallion = new THREE.Mesh(new THREE.RingGeometry(2.4, 3.1, 32), mat(0xa89a7c));
-medallion.rotation.x = -Math.PI / 2; medallion.position.y = 0.46; village.add(medallion);
-const path = new THREE.Mesh(new THREE.BoxGeometry(3, 0.16, 20), mat(0xc9bb98));
-path.position.set(0, 0.47, 11); path.receiveShadow = true; village.add(path);
+// 開放式自然村莊：地面＝草地（不再用石砌廣場）；泥土小徑用「程序生成貼圖＋柔邊」呈現（離線、貼地）
+// 程序泥土貼圖：暖棕底＋多尺度斑塊/小石；RGBA 沿寬度(U)兩側 alpha 漸隱 → 邊緣融入草地（柔邊）
+const dirtTex = (() => {
+  const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
+  x.fillStyle = '#9b7d52'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 1100; i++) { const t = Math.random();
+    x.fillStyle = t < 0.5 ? `rgba(120,96,60,${rand(0.12, 0.38)})` : t < 0.82 ? `rgba(170,142,98,${rand(0.10, 0.32)})` : `rgba(78,60,38,${rand(0.16, 0.44)})`;
+    x.beginPath(); x.arc(rand(0, S), rand(0, S), rand(0.6, 3.2), 0, TAU); x.fill(); }
+  for (let i = 0; i < 55; i++) { x.fillStyle = `rgba(150,146,138,${rand(0.3, 0.6)})`; x.beginPath(); x.arc(rand(0, S), rand(0, S), rand(1.0, 2.2), 0, TAU); x.fill(); }
+  const img = x.getImageData(0, 0, S, S);                                   // 寬度兩側 alpha 漸隱
+  for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) { const u = px / (S - 1); const a = Math.min(1, Math.min(u, 1 - u) / 0.22); img.data[(py * S + px) * 4 + 3] = (a * 255) | 0; }
+  x.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
+  t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
+})();
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+// 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
+function dirtPath(ax, az, bx, bz, w = 2.8) {
+  const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
+  const o1 = rand(-1, 1) * Math.min(5.5, L * 0.16), o2 = rand(-1, 1) * Math.min(3.5, L * 0.1); // 蜿蜒幅度（隨長度）
+  const pts = [
+    new THREE.Vector3(ax, 0, az),
+    new THREE.Vector3(ax + dx * 0.33 + nx * o2, 0, az + dz * 0.33 + nz * o2),
+    new THREE.Vector3(ax + dx * 0.5 + nx * o1, 0, az + dz * 0.5 + nz * o1),
+    new THREE.Vector3(ax + dx * 0.68 - nx * o2, 0, az + dz * 0.68 - nz * o2),
+    new THREE.Vector3(bx, 0, bz),
+  ];
+  const curve = new THREE.CatmullRomCurve3(pts), N = Math.max(8, Math.round(L / 2)), s = curve.getPoints(N);
+  const pos = [], uv = [], idx = []; let acc = 0;
+  for (let i = 0; i <= N; i++) {
+    const p = s[i], a = s[Math.max(0, i - 1)], b = s[Math.min(N, i + 1)];
+    let tx = b.x - a.x, tz = b.z - a.z; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; // 切線
+    const px = -tz, pz = tx;                                                                     // 緞帶法向（XZ）
+    pos.push(p.x + px * w / 2, 0.05, p.z + pz * w / 2, p.x - px * w / 2, 0.05, p.z - pz * w / 2);
+    if (i > 0) acc += Math.hypot(p.x - s[i - 1].x, p.z - s[i - 1].z);
+    const v = acc / 3.4; uv.push(0, v, 1, v);                                                    // U:0/1 寬度兩側(柔邊)、V:沿長度平鋪
+    if (i < N) { const k = i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); } // 正面朝上（避免背面被剔除）
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx); geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, dirtMat); m.receiveShadow = true; village.add(m);
+}
 
 // 中央水井（含屋頂、井圈）
 const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 1.2, 12), mat(0xb3a48c));
@@ -582,17 +618,7 @@ for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeome
 const wrf = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.2, 8), mat(0x9c5b3a)); wrf.position.y = 3.2; wrf.rotation.y = Math.PI / 4; wrf.castShadow = true; wellRoof.add(wrf);
 wellRoof.position.set(-10.2, 0, -10.8); village.add(wellRoof);
 
-// 低石牆 + 牆上石柱帽 + 村口拱門
-const wall = new THREE.Mesh(new THREE.TorusGeometry(20, 0.6, 10, 64), mat(0xb3a88f));
-wall.rotation.x = Math.PI / 2; wall.position.y = 0.85; wall.castShadow = true; village.add(wall); applyStone(wall.material); boxUV(wall.geometry);
-for (let i = 0; i < 16; i++) { if (i === 4) continue; const a = i / 16 * TAU; const cap = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.2, 0.9), mat(0xa89a80)); cap.position.set(Math.cos(a) * 20, 1.35, Math.sin(a) * 20); cap.rotation.y = a; cap.castShadow = true; village.add(cap); }
-const gate = new THREE.Group();
-for (const gx of [-2.8, 2.8]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.8, 5.4, 0.8), mat(0x8a5e34)); p.position.set(gx, 2.7, 0); p.castShadow = true; gate.add(p); }
-const glintel = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.0, 1.0), mat(0x7e5630)); glintel.position.set(0, 5.4, 0); glintel.castShadow = true; gate.add(glintel);
-const groof = new THREE.Mesh(new THREE.ConeGeometry(4.7, 1.5, 8), mat(0x9c5b3a)); groof.position.set(0, 6.6, 0); groof.rotation.y = Math.PI / 4; groof.castShadow = true; gate.add(groof);
-const banner = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.3, 0.1), mat(0xff7a45, { emissive: 0xff7a45, emissiveIntensity: 0.12 })); banner.position.set(0, 4.4, 0.55); gate.add(banner);
-for (const lx of [-2.8, 2.8]) { const lan = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), mat(0xffe6a0, { emissive: 0xffcf6b, emissiveIntensity: 0.9 })); lan.position.set(lx, 4.7, 0.6); gate.add(lan); regNightGlow(lan); }
-gate.position.set(0, 0, 20); village.add(gate);
+// （開放式村莊：移除圓形低石牆、柱帽與村口拱門 → 無硬邊界、自然融入草原）
 
 // 小屋（石基 + 屋簷 + 煙囪 + 雙窗）
 function cottage(color, roofC) {
@@ -602,32 +628,68 @@ function cottage(color, roofC) {
   const r = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.6, 8), mat(roofC)); r.position.y = 4.7; r.rotation.y = Math.PI / 4; r.castShadow = true; g.add(r);
   const ch = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.7), mat(0x8a6a55)); ch.position.set(1.4, 5.1, -1.0); ch.castShadow = true; g.add(ch);
   const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.9, 0.12), mat(0x4a3526)); door.position.set(0, 1.45, 2.27); g.add(door);
-  for (const wx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.12), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.4 })); win.position.set(wx, 2.3, 2.27); g.add(win); regNightGlow(win); }
+  for (const wx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.12), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.9 })); win.position.set(wx, 2.3, 2.27); g.add(win); regNightGlow(win); } // 夜晚窗光更暖
   return g;
 }
 const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x4f6c92], [0xc98f9b, 0x8a5663], [0xcdb87e, 0x8a6e3a]];
-// 精簡村莊：只留一間民房，另一間是檔案室（見下方 ARCHIVE）
-const houseSpots = [[12, 5]];
-houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], 0, s[1]); c.rotation.y = Math.atan2(-s[0], -s[1]); village.add(c); }); // 門（+z 面）朝中央水晶
+// 民房：環繞中央水晶的有機聚落，放大後分層散佈 r24–35（門面朝水晶；放大後地形 villageR58 → r35 內仍平坦）
+const houseSpots = [[24, 6], [30, -10], [34, 2], [14, -26], [-14, -26], [-28, -8], [-26, 12], [-32, 2]];
+houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], groundY(s[0], s[1]), s[1]); c.rotation.y = Math.atan2(-s[0], -s[1]); village.add(c); });
 
-// 提燈路燈
-for (const lp of [[6, -1], [-3, 9], [8, 6], [-7, -2]]) {
+// 泥土小徑網：中央 hub 往各民房／水井／告示牌／檔案室／出村方向放射（隨村莊放大而加長）
+const HUB = [0, 5];
+for (const s of houseSpots) { const r = Math.hypot(s[0], s[1]) || 1, e = (r - 2.6) / r; dirtPath(HUB[0], HUB[1], s[0] * e, s[1] * e); } // 延伸到屋前門口
+dirtPath(HUB[0], HUB[1], -10.2, -10.8, 2.4);   // 水井
+dirtPath(HUB[0], HUB[1], -9.2, 12, 2.4);       // 告示牌
+dirtPath(HUB[0], HUB[1], -12, 5.5, 2.4);       // 檔案室
+dirtPath(0, 4, 0, 30, 3.0);                    // 出村大道（接白天入口紀念大道方向 z36）
+
+// ── 田園裝點（低多邊形、純裝飾、顧手機；手機檔減量）──────────────
+function marketStall(x, z, awn) {
+  const g = new THREE.Group();
+  for (const px of [-1.3, 1.3]) for (const pz of [-0.9, 0.9]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.2, 8), mat(0x7a5230)); p.position.set(px, 1.1, pz); p.castShadow = true; g.add(p); applyWood(p.material); }
+  const top = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.25, 2.4), mat(awn, { emissive: awn, emissiveIntensity: 0.08 })); top.position.y = 2.3; top.castShadow = true; g.add(top);
+  const table = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.18, 1.2), mat(0x8a6a3f)); table.position.set(0, 1.0, 0.5); table.castShadow = true; g.add(table); applyWood(table.material);
+  for (let i = 0; i < 3; i++) { const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), mat(0x9c7a4a)); crate.position.set(-1 + i, 1.3, 0.5); g.add(crate); applyWood(crate.material); }
+  g.position.set(x, groundY(x, z), z); g.rotation.y = Math.atan2(-x, -z); village.add(g);
+}
+function gardenPatch(x, z) {
+  const g = new THREE.Group();
+  const soil = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.2, 2.0), mat(0x5e4630)); soil.position.y = 0.1; soil.receiveShadow = true; g.add(soil);
+  for (let r = -1; r <= 1; r++) for (let c = -2; c <= 2; c++) { const crop = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 6), mat(0x6fae57)); crop.position.set(c * 0.55, 0.45, r * 0.6); g.add(crop); }
+  g.position.set(x, groundY(x, z) + 0.02, z); g.rotation.y = rand(0, TAU); village.add(g);
+}
+function fence(ax, az, bx, bz) {
+  const len = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.round(len / 1.4));
+  for (let i = 0; i <= n; i++) { const t = i / n; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 1.1, 6), mat(0x6b5a44)); post.position.set(ax + (bx - ax) * t, 0.55, az + (bz - az) * t); post.castShadow = true; village.add(post); applyWood(post.material); }
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, len), mat(0x6b5a44)); rail.position.set((ax + bx) / 2, 0.78, (az + bz) / 2); rail.rotation.y = Math.atan2(bx - ax, bz - az); village.add(rail); applyWood(rail.material);
+}
+function hayPile(x, z) { const a = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 1.0, 10), mat(0xd9b65a)); a.rotation.z = Math.PI / 2; a.position.set(x, groundY(x, z) + 0.6, z); a.castShadow = true; village.add(a); }
+const dress = TIER !== 'low';
+marketStall(8, 11, 0xff7a45); marketStall(-9, 10, 0x5b9cff); if (dress) marketStall(0, 17, 0xffd166); // 中央小市集
+gardenPatch(17, -3); gardenPatch(-17, -3); gardenPatch(6, -19); if (dress) { gardenPatch(-6, -19); gardenPatch(20, 13); }
+fence(14, -6, 20, -6); fence(-14, -6, -20, -6); if (dress) fence(3, -22, 9, -22);
+hayPile(13, 13); hayPile(-13, 13); if (dress) hayPile(-20, -16);
+
+// 提燈路燈：沿主要小徑點亮夜路（隨村莊放大而分散）
+for (const lp of [[6, 13], [-6, 13], [12, -5], [-12, -5], [18, -16], [-18, -16], [0, 24]]) {
   const g = new THREE.Group();
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 3.6, 10), mat(0x55514a)); pole.position.y = 1.8; pole.castShadow = true; g.add(pole);
   const arm = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.12), mat(0x55514a)); arm.position.set(0.3, 3.5, 0); g.add(arm);
-  const lan = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), mat(0xffe6a0, { emissive: 0xffcf6b, emissiveIntensity: 1.0 })); lan.position.set(0.55, 3.3, 0); g.add(lan); regNightGlow(lan);
+  const lan = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), mat(0xffe6a0, { emissive: 0xffcf6b, emissiveIntensity: 2.2 })); lan.position.set(0.55, 3.3, 0); g.add(lan); regNightGlow(lan); // 提高到 bloom 門檻(1.05)以上 → 夜晚發光暈
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.95, 12, 10), new THREE.MeshBasicMaterial({ color: 0xffdf9a, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.copy(lan.position); g.add(halo); nightHalo.push({ m: halo.material, base: 0.45 }); // 柔光暈（手機無 bloom 也看得到亮）
   g.position.set(lp[0], 0, lp[1]); g.rotation.y = rand(0, TAU); village.add(g);
 }
 
-// 綠化：灌木、花、角落樹、旗幟
-for (let i = 0; i < 10; i++) { const a = rand(0, TAU), rr = rand(7, 16); const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(0.6, 1.1), 1), mat(0x6fae57)); bush.position.set(Math.cos(a) * rr, 0.5, Math.sin(a) * rr); bush.scale.y = 0.8; bush.castShadow = true; village.add(bush); }
+// 綠化：灌木、花、角落樹、旗幟（放大後加量、擴大範圍、用 groundY 貼地）
+for (let i = 0; i < 20; i++) { const a = rand(0, TAU), rr = rand(8, 40), x = Math.cos(a) * rr, z = Math.sin(a) * rr; const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(0.6, 1.2), 1), mat(0x6fae57)); bush.position.set(x, groundY(x, z) + 0.4, z); bush.scale.y = 0.8; bush.castShadow = true; village.add(bush); }
 const flowerC = [0xff6f91, 0xffd166, 0xc792ea, 0xffffff];
-for (let i = 0; i < 16; i++) { const a = rand(0, TAU), rr = rand(6, 17); const f = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), mat(flowerC[(Math.random() * flowerC.length) | 0])); f.position.set(Math.cos(a) * rr, 0.5, Math.sin(a) * rr); village.add(f); }
-for (const tp of [[-15, -6], [15, -4]]) {
+for (let i = 0; i < 30; i++) { const a = rand(0, TAU), rr = rand(6, 42), x = Math.cos(a) * rr, z = Math.sin(a) * rr; const f = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), mat(flowerC[(Math.random() * flowerC.length) | 0])); f.position.set(x, groundY(x, z) + 0.25, z); village.add(f); }
+for (const tp of [[20, 16], [-20, -18], [38, 12], [-40, -6], [16, 42], [-16, 40], [40, -20]]) {   // 村緣點綴樹（避開民房聚落、用 groundY）
   const tg = new THREE.Group();
   const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 2, 10), mat(0x7a4a26)); tr.position.y = 1; tr.castShadow = true; tg.add(tr);
   let yy = 2; for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(1.6 - k * 0.4, 1.6, 12), mat(0x4e9d54)); c.position.y = yy + 0.8; c.castShadow = true; tg.add(c); yy += 1.0; }
-  tg.position.set(tp[0], 0, tp[1]); village.add(tg);
+  tg.position.set(tp[0], groundY(tp[0], tp[1]), tp[1]); village.add(tg);
 }
 for (const fp of [[-8, 2, 0x5b9cff], [9, 1, 0xff7a45]]) {
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 5, 10), mat(0x6b5a44)); pole.position.set(fp[0], 2.5, fp[1]); pole.castShadow = true; village.add(pole); applyWood(pole.material); boxUV(pole.geometry);
@@ -869,11 +931,12 @@ function placeDayStruct(built, data, x, z, labelY, openDist, faceOrigin) {
   return built;
 }
 const LESSON_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
+// 入口紀念大道：兩座 dayOnly 紀念物夾 +z 出村路線、在寶箱/工具包(z29)之後排開（動線：拱門→寶箱→紀念物，成大道不成堆）
 const lessonStele = placeDayStruct(buildLessonStele(),
   { ...MONUMENT, desc: LESSON_ORDER.map((id) => '・' + UI.shardLesson[id]).join('\n') }, // desc＝五則心法（重用既有三語、零新翻譯）
-  11, -13, 7, 5, true);
+  -10, 36, 7, 5, true);
 const lighthouse = placeDayStruct(buildLighthouse(), LIGHTHOUSE, 60, 224, 16, 6.5, false);
-const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, 18, 18, 4.2, 5, true);
+const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, 10, 36, 4.2, 5, true);
 // 英雄紀念碑：首頁主視覺壁畫 + 傳說（非課程、不計進度）
 function buildMonument() {
   const g = new THREE.Group();
@@ -2011,6 +2074,7 @@ function animate() {
   gradePass.uniforms.uNightBr.value = torchTune.nightBr;             // 夜晚亮度（座標框可即時調）
   setWorldLight(archiveActive ? 1 : vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
   for (const L of nightGlowMats) L.m.emissiveIntensity = L.base * (1 - vibrancy); // 村莊夜燈：夜晚發光、白天熄滅（避免白天反光發光）
+  for (const L of nightHalo) L.m.opacity = L.base * (1 - vibrancy);                 // 夜燈柔光暈：夜晚淡入
   if (Q.richSky) {
     // 天空與星空跟著鏡頭走（永遠以鏡頭為中心）→ 不會因角色遠離原點而被 far plane 切出黑色方塊、星點也不位移
     atmoSky.position.copy(camera.position);
