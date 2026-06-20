@@ -87,8 +87,8 @@ const Q = ({
           sunShadow: 1024, torchShadow: 512,  waterSeg: 28, waterStep: 0.066, aniso: 2, mageNight: false,
           bloom: false, richSky: false, rich: false, weather: false },
   // high＝桌機精緻：解除為手機而設的限制＋開啟寫實後製（光暈、大氣天空＋星空、電影色調）
-  // 註：maxPR 由 2.5 調為 2.0，把填充率預算讓給 Bloom（SMAA＋2.0 仍銳利）；弱機可手動切「精簡」走 low 路徑
-  high: { maxPR: 2,   smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
+  // 註：maxPR 1.5（由 2.0 再降）＝把填充率砍約 44%，緩解 GPU 滿載造成的風扇狂轉與幀距不均（高刷新/高DPI 螢幕上水面等大平面最容易顯出抖動）；SMAA 在 1.5 下仍可接受。弱機可手動切「精簡」走 low 路徑
+  high: { maxPR: 1.5, smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
           sunShadow: 4096, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true,
           bloom: true, richSky: true, rich: true, weather: true },
 })[TIER];
@@ -206,6 +206,7 @@ const skyMat = new THREE.ShaderMaterial({
 const SKY_TOP_D = new THREE.Color(0x6d7682), SKY_TOP_A = new THREE.Color(0x4f9fd6);
 const SKY_BOT_D = new THREE.Color(0x8f8b83), SKY_BOT_A = new THREE.Color(0xfae7cf);
 const FOG_D = new THREE.Color(0x83878d), FOG_A = new THREE.Color(0xcfe4f0);
+const WATER_NIGHT = new THREE.Color(0x1f3a52), WATER_DAY = new THREE.Color(0x4f9fd0); // 平海面日夜色（MeshBasic 不受光，手動 lerp）
 
 // 桌機：大氣散射天空（Sky addon）＋夜空星點；手機：維持原漸層天空球（零變動）
 let atmoSky = null, stars = null;
@@ -453,17 +454,39 @@ const terrain = new THREE.Mesh(tGeo, terrainMat);
 terrain.receiveShadow = true;
 scene.add(terrain);
 
-// 水面（反光面）：半徑 ±500（plane 1000）＝反光邊界再往外推、被海霧吃掉更多；測試用、可再調
-const water = new THREE.Mesh(
-  new THREE.PlaneGeometry(1000, 1000, Q.waterSeg, Q.waterSeg), // 段數依畫質檔位（桌機 48／手機 28）
-  new THREE.MeshStandardMaterial({ color: 0x4fa9d6, transparent: true, opacity: 0.82, roughness: 0.5, metalness: 0.08, envMapIntensity: 0.35, depthWrite: false }) // 平靜水面：低反光（不閃爍）＋depthWrite:false（不與海面/岸邊 z-fighting）
-);
-water.rotation.x = -Math.PI / 2; water.position.y = WORLD.water;
+// 近岸淡入遮罩（載入時烘焙一次）：在世界 ±half 取樣「白天」地形高度，存「水深→不透明度」值。
+// 水面 shader 用它在近岸把 alpha 漸隱成柔邊，取代「平面水體 ∩ 斜岸」那條會隨相機掃動而閃爍的硬深度交線。
+// 烘焙制＝零每幀額外 GPU（不做深度預渲染）。內陸湖夜/日地形相同、白天海岸正確；夜晚外海被群山遮住不影響。
+const SHORE_FADE = 1.6; // 從岸線往深處此距離內 alpha 由 0→1
+const shoreTex = (() => {
+  const N = 512, data = new Uint8Array(N * N * 4), H = WORLD.half;
+  setTerrainOpenness(1);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const x = (i / (N - 1) * 2 - 1) * H, z = (j / (N - 1) * 2 - 1) * H;
+    const a = Math.max(0, Math.min(1, (WORLD.water - terrainHeight(x, z)) / SHORE_FADE));
+    const v = (a * 255) | 0, o = (j * N + i) * 4; data[o] = v; data[o + 1] = v; data[o + 2] = v; data[o + 3] = 255;
+  }
+  setTerrainOpenness(worldOpen ? 1 : 0); // 還原（載入時為夜晚 0）
+  const t = new THREE.DataTexture(data, N, N); t.minFilter = t.magFilter = THREE.LinearFilter;
+  t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true; return t;
+})();
+// 海面（單層・平面・不反光，MeshBasic）：一張大平面(±1600)鋪到霧化海平線，無第二層＝無 z-fighting。
+// transparent(0.82)＋depthWrite:false；顏色隨 vibrancy 日夜變化（見 animate）。近岸 alpha 由 shoreTex 漸隱＝柔化海岸線。
+const waterMat = new THREE.MeshBasicMaterial({ color: 0x4f9fd0, transparent: true, opacity: 0.82, depthWrite: false, fog: true });
+waterMat.onBeforeCompile = (sh) => {
+  sh.uniforms.tShore = { value: shoreTex };
+  sh.uniforms.uHalf = { value: WORLD.half };
+  sh.vertexShader = 'varying vec3 vWorldP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vWorldP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+  sh.fragmentShader = 'uniform sampler2D tShore;\nuniform float uHalf;\nvarying vec3 vWorldP;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+  {
+    vec2 suv = vWorldP.xz / (2.0 * uHalf) + 0.5;                                  // 世界座標→遮罩 UV
+    float sa = (suv.x < 0.0 || suv.x > 1.0 || suv.y < 0.0 || suv.y > 1.0) ? 1.0 : texture2D(tShore, suv).r; // 出地形範圍＝深海全不透明
+    diffuseColor.a *= sa;                                                          // 近岸漸隱＝柔邊（消除硬交線的相機掃動閃爍）
+  }`);
+};
+const water = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), waterMat);
+water.rotation.x = -Math.PI / 2; water.position.y = WORLD.water; water.renderOrder = -1;
 scene.add(water);
-// 遠方海洋：一大張平坦海面，讓白天敞開時看見海延伸到霧化的海平線；夜晚被外圍群山遮住而看不到。
-// 用 MeshBasic（不受光、無鏡面反射）＝掠射角不會有反光閃爍；polygonOffset 再把它在深度往後推避免與漣漪水面/地形打架。
-const sea = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), new THREE.MeshBasicMaterial({ color: 0x59a3cf, fog: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 }));
-sea.rotation.x = -Math.PI / 2; sea.position.y = WORLD.water - 0.1; scene.add(sea);
 
 // ── 遺跡座標（先算位置，植被才能避開）────────────────────────────
 const ruinAt = RUINS.map((r) => {
@@ -516,6 +539,9 @@ const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.transl
 const trees = scatter(Q.rich ? 480 : 300, WORLD.villageR + 8, 172, WORLD.water + 0.8, true); // rMax 172＝夜/日地形相同的內圈，群山沉降時不會浮空
 const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
 const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp', 3, 2, true), normalMap: tex('./tex/bark_n.webp', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+// 撞樹擺動會每幀更新 instanceMatrix（搖晃 ~2-3 秒才靜止）→ 標記為 DynamicDrawUsage，否則每幀重傳「靜態」緩衝會造成驅動層 stall／卡頓（走過樹叢時水面等大平面上抖動的主因）
+treeFoliage.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+treeTrunk.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 // 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
@@ -1981,6 +2007,7 @@ function animate() {
     const camGround = terrainHeight(camPos.x, camPos.z) + 3;
     if (camPos.y < camGround) camPos.y = camGround;
     camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
+    if (camera.position.distanceToSquared(camPos) < 1e-4) camera.position.copy(camPos); // 夠近就吸附＝相機完全停住；否則指數逼近永遠到不了，靜止後相機仍每幀次像素微動 → 水岸線等高對比邊緣持續閃爍（看起來像水面在抖）
     lookAt.set(hero.position.x, hero.position.y + 2.4, hero.position.z); camera.lookAt(lookAt);
   }
   // 終局運鏡：鏡頭飛向村莊中央大水晶，看完噴發動畫後才彈出完成畫面
@@ -2064,12 +2091,11 @@ function animate() {
   }
   // 特效更新
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
-  // 平靜海面＋潮汐：不再做逐頂點漣漪（避免反光閃爍），改用緩慢升降水位＝海水在岸邊進退（lapping）；水面與遠方海面同步升降，維持高度差。
-  const tide = Math.sin(t * 0.33) * 0.18;
-  water.position.y = WORLD.water + tide; sea.position.y = WORLD.water - 0.1 + tide;
+  // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
+  water.material.color.lerpColors(WATER_NIGHT, WATER_DAY, vibrancy); // 平海面：白天亮藍、夜晚深藍（MeshBasic 不受光，手動調）
   gradePass.uniforms.uVibrancy.value = archiveActive ? 1 : vibrancy; // 檔案室內固定滿色
   gradePass.uniforms.uNightBr.value = torchTune.nightBr;             // 夜晚亮度（座標框可即時調）
   setWorldLight(archiveActive ? 1 : vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
