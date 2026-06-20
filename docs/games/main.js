@@ -436,6 +436,35 @@ let worldOpen = false;
 const DAY_MAXR = 245;                                  // 白天可走到海岸淺灘（再外是海＋海霧）
 const worldLim = () => (worldOpen ? DAY_MAXR : WORLD.maxR);
 function setWorldOpen(open) { if (open === worldOpen) return; worldOpen = open; setTerrainOpenness(open ? 1 : 0); displaceTerrain(); } // 群山沉降↔回復（重算一次）
+
+// ── 玩家剛體碰撞（kinematic）：實體＝圓 / 有向矩形；移動後把玩家推出重疊（depenetration）→ 撞到會停、沿牆滑，無需物理引擎/尋路 ──
+const HERO_R = 0.6;
+const circleCols = [], boxCols = [];                       // 圓 {x,z,r,day} ／ 有向矩形 {x,z,hw,hd,c,s,day}（day＝僅白天敞開時生效）
+const addCircleCol = (x, z, r, day = false) => circleCols.push({ x, z, r, day });
+const addBoxCol = (x, z, hw, hd, ry, day = false) => boxCols.push({ x, z, hw, hd, c: Math.cos(ry), s: Math.sin(ry), day });
+function resolveHeroCollision() {
+  let px = hero.position.x, pz = hero.position.z;
+  for (let it = 0; it < 2; it++) {                         // 2 次迭代：處理夾在兩個碰撞體之間的角落
+    for (const o of circleCols) {
+      if (o.day && !worldOpen) continue;
+      const dx = px - o.x, dz = pz - o.z, rr = HERO_R + o.r, d2 = dx * dx + dz * dz;
+      if (d2 < rr * rr && d2 > 1e-9) { const d = Math.sqrt(d2), k = (rr - d) / d; px += dx * k; pz += dz * k; }
+    }
+    for (const o of boxCols) {
+      if (o.day && !worldOpen) continue;
+      const rx = px - o.x, rz = pz - o.z;
+      let lx = rx * o.c - rz * o.s, lz = rx * o.s + rz * o.c;                                       // 世界→盒局部
+      const cx = Math.max(-o.hw, Math.min(o.hw, lx)), cz = Math.max(-o.hd, Math.min(o.hd, lz));      // 盒上離玩家最近的點
+      let nx = lx - cx, nz = lz - cz; const d2 = nx * nx + nz * nz;
+      if (d2 > HERO_R * HERO_R) continue;
+      if (d2 > 1e-9) { const d = Math.sqrt(d2), k = (HERO_R - d) / d; lx += nx * k; lz += nz * k; }   // 邊/角：沿法線推出
+      else { const ex = o.hw - Math.abs(lx) + HERO_R, ez = o.hd - Math.abs(lz) + HERO_R;              // 圓心落在盒內：沿最小穿透軸推出
+        if (ex < ez) lx = (lx < 0 ? -1 : 1) * (o.hw + HERO_R); else lz = (lz < 0 ? -1 : 1) * (o.hd + HERO_R); }
+      px = o.x + lx * o.c + lz * o.s; pz = o.z - lx * o.s + lz * o.c;                                 // 盒局部→世界
+    }
+  }
+  hero.position.x = px; hero.position.z = pz;
+}
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
 const grassTex = tex('./tex/grass.webp', 1, 1, true);
 const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
@@ -496,6 +525,7 @@ const ruinAt = RUINS.map((r) => {
 });
 // OCF 紀念碑座標（先算好，植被才能避開）
 const ocfAt = (() => { const a = OCF_STATUE.angle * Math.PI / 180; const x = Math.cos(a) * OCF_STATUE.radius, z = Math.sin(a) * OCF_STATUE.radius; return { x, z, y: groundY(x, z) }; })();
+addCircleCol(ocfAt.x, ocfAt.z, 1.4);   // OCF 紀念碑實體
 function nearAnyRuin(x, z, d) {
   if (Math.hypot(x - ocfAt.x, z - ocfAt.z) < d) return true;
   for (const r of ruinAt) if (Math.hypot(x - r.x, z - r.z) < d) return true;
@@ -558,6 +588,7 @@ const rockGeos = [craggyRockGeo(0.18), craggyRockGeo(0.22), craggyRockGeo(0.13)]
 const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
 {
   const rockPts = scatter(Q.rich ? 250 : 160, WORLD.villageR + 4, 174, WORLD.water + 0.3, true);
+  for (const p of rockPts) addCircleCol(p.x, p.z, 0.55 * p.s);   // 石頭實體（圓，半徑隨大小）
   const dummy = new THREE.Object3D(), col = new THREE.Color();
   rockGeos.forEach((geo, gi) => {
     const pts = rockPts.filter((_, i) => i % rockGeos.length === gi);
@@ -643,6 +674,7 @@ const wellRoof = new THREE.Group();
 for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 2.6, 10), mat(0x7a5230)); p.position.set(wx, 1.3, 0); p.castShadow = true; wellRoof.add(p); applyWood(p.material); boxUV(p.geometry); }
 const wrf = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.2, 8), mat(0x9c5b3a)); wrf.position.y = 3.2; wrf.rotation.y = Math.PI / 4; wrf.castShadow = true; wellRoof.add(wrf);
 wellRoof.position.set(-10.2, 0, -10.8); village.add(wellRoof);
+addCircleCol(-10.2, -10.8, 1.9);   // 水井實體
 
 // （開放式村莊：移除圓形低石牆、柱帽與村口拱門 → 無硬邊界、自然融入草原）
 
@@ -661,6 +693,7 @@ const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x
 // 民房：環繞中央水晶的有機聚落，放大後分層散佈 r24–35（門面朝水晶；放大後地形 villageR58 → r35 內仍平坦）
 const houseSpots = [[24, 6], [30, -10], [34, 2], [14, -26], [-14, -26], [-28, -8], [-26, 12], [-32, 2]];
 houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], groundY(s[0], s[1]), s[1]); c.rotation.y = Math.atan2(-s[0], -s[1]); village.add(c); });
+houseSpots.forEach((s) => addBoxCol(s[0], s[1], 2.6, 2.35, Math.atan2(-s[0], -s[1])));   // 房子實體（有向矩形）
 
 // 泥土小徑網：中央 hub 往各民房／水井／告示牌／檔案室／出村方向放射（隨村莊放大而加長）
 const HUB = [0, 5];
@@ -678,6 +711,7 @@ function marketStall(x, z, awn) {
   const table = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.18, 1.2), mat(0x8a6a3f)); table.position.set(0, 1.0, 0.5); table.castShadow = true; g.add(table); applyWood(table.material);
   for (let i = 0; i < 3; i++) { const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), mat(0x9c7a4a)); crate.position.set(-1 + i, 1.3, 0.5); g.add(crate); applyWood(crate.material); }
   g.position.set(x, groundY(x, z), z); g.rotation.y = Math.atan2(-x, -z); village.add(g);
+  addBoxCol(x, z, 1.6, 1.0, Math.atan2(-x, -z));   // 市集攤實體
 }
 function gardenPatch(x, z) {
   const g = new THREE.Group();
@@ -711,12 +745,7 @@ for (const lp of [[6, 13], [-6, 13], [12, -5], [-12, -5], [18, -16], [-18, -16],
 for (let i = 0; i < 20; i++) { const a = rand(0, TAU), rr = rand(8, 40), x = Math.cos(a) * rr, z = Math.sin(a) * rr; const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(0.6, 1.2), 1), mat(0x6fae57)); bush.position.set(x, groundY(x, z) + 0.4, z); bush.scale.y = 0.8; bush.castShadow = true; village.add(bush); }
 const flowerC = [0xff6f91, 0xffd166, 0xc792ea, 0xffffff];
 for (let i = 0; i < 30; i++) { const a = rand(0, TAU), rr = rand(6, 42), x = Math.cos(a) * rr, z = Math.sin(a) * rr; const f = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), mat(flowerC[(Math.random() * flowerC.length) | 0])); f.position.set(x, groundY(x, z) + 0.25, z); village.add(f); }
-for (const tp of [[20, 16], [-20, -18], [38, 12], [-40, -6], [16, 42], [-16, 40], [40, -20]]) {   // 村緣點綴樹（避開民房聚落、用 groundY）
-  const tg = new THREE.Group();
-  const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 2, 10), mat(0x7a4a26)); tr.position.y = 1; tr.castShadow = true; tg.add(tr);
-  let yy = 2; for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(1.6 - k * 0.4, 1.6, 12), mat(0x4e9d54)); c.position.y = yy + 0.8; c.castShadow = true; tg.add(c); yy += 1.0; }
-  tg.position.set(tp[0], groundY(tp[0], tp[1]), tp[1]); village.add(tg);
-}
+// （村內不放大棵點綴樹：保持村莊開闊空間；外圍森林由 InstancedMesh `trees` 提供。先前 7 棵村緣點綴樹已移除——它們是固定座標、且用較簡化的 builder（無樹皮貼圖）故與森林樹外觀不一致）
 for (const fp of [[-8, 2, 0x5b9cff], [9, 1, 0xff7a45]]) {
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 5, 10), mat(0x6b5a44)); pole.position.set(fp[0], 2.5, fp[1]); pole.castShadow = true; village.add(pole); applyWood(pole.material); boxUV(pole.geometry);
   const flag = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.08), mat(fp[2], { emissive: fp[2], emissiveIntensity: 0.12 })); flag.position.set(fp[0] + 0.95, 4.0, fp[1]); village.add(flag);
@@ -729,10 +758,12 @@ const sign = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 0.25), mat(0xe7c884)
 const frame = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 0.3), mat(0x9c6b41)); frame.position.set(0, 4.05, 0); board.add(frame); applyWood(frame.material); boxUV(frame.geometry);
 const roofb = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.5, 1.2), mat(0x9c5b3a)); roofb.position.set(0, 4.35, 0); roofb.castShadow = true; board.add(roofb);
 board.position.set(-9.2, 0, 13.1); board.rotation.y = Math.atan2(-board.position.x, -board.position.z); village.add(board); // 面朝中央水晶（村心）
+addBoxCol(-9.2, 13.1, 1.9, 0.35, Math.atan2(9.2, -13.1));   // 告示牌實體（薄盒；POI openDist 4.5 仍可讀）
 
 // 村莊中央大水晶（全部遺跡進化後才啟動）
 const greatBase = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.2, 1.2, 12), mat(0x9a9080)); greatBase.position.set(0, 0.6, 0); greatBase.castShadow = greatBase.receiveShadow = true; village.add(greatBase); applyStone(greatBase.material); boxUV(greatBase.geometry);
 const greatBase2 = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.2, 0.8, 12), mat(0xb0a896)); greatBase2.position.set(0, 1.4, 0); greatBase2.castShadow = true; village.add(greatBase2); applyStone(greatBase2.material); boxUV(greatBase2.geometry);
+addCircleCol(0, 0, 3.0);   // 中央水晶石座實體
 const greatMat = new THREE.MeshStandardMaterial({ color: 0x8a93a0, emissive: 0x20242b, emissiveIntensity: 0.4, roughness: 0.15, metalness: 0.35, flatShading: false });
 const greatCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(2.2, 1), greatMat); greatCrystal.position.set(0, 5.4, 0); greatCrystal.castShadow = true; village.add(greatCrystal);
 const greatBeamMat = new THREE.MeshBasicMaterial({ color: 0xffe9a8, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -883,7 +914,7 @@ function makeLabel(text) { const el = document.createElement('div'); el.classNam
 }
 // 遺跡 POI
 ruinAt.forEach((r) => {
-  const built = buildRuin(r); texturizeStone(built.group);
+  const built = buildRuin(r); texturizeStone(built.group); addCircleCol(r.x, r.z, 4);   // 遺跡中央結構實體（保守半徑：外圈碎片 rr7-9 與 POI openDist 6.5 仍可達）
   const lab = makeLabel(UI.ruinUnknownLabel); lab.o.position.set(0, 9, 0); built.group.add(lab.o);
   POIS.push({ data: r, isRuin: true, pos: new THREE.Vector3(r.x, r.y, r.z), el: lab.el, openDist: 6.5, discoverDist: 8, ...built, lift: 0 });
 });
@@ -963,6 +994,9 @@ const lessonStele = placeDayStruct(buildLessonStele(),
   -10, 36, 7, 5, true);
 const lighthouse = placeDayStruct(buildLighthouse(), LIGHTHOUSE, 60, 224, 16, 6.5, false);
 const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, 10, 36, 4.2, 5, true);
+addCircleCol(60, 224, 3, true);                            // 燈塔實體（dayOnly）
+addBoxCol(10, 36, 2.5, 0.6, Math.atan2(-10, -36), true);   // 夥伴牆實體（dayOnly）
+addBoxCol(-10, 36, 1.3, 0.8, Math.atan2(10, -36), true);   // 紀念碑實體（dayOnly）
 // 英雄紀念碑：首頁主視覺壁畫 + 傳說（非課程、不計進度）
 function buildMonument() {
   const g = new THREE.Group();
@@ -991,6 +1025,7 @@ function buildMonument() {
   const built = buildMonument(); texturizeStone(built.group);
   const x = 0, z = -18, y = groundY(x, z);                       // 村莊後方中軸、正對入口大門的開闊處
   built.group.position.set(x, y, z); built.group.rotation.y = 0; scene.add(built.group); // 壁畫面向 +z（玩家由大門進入的方向）
+  addBoxCol(x, z, 2.7, 0.9, built.group.rotation.y);   // 英雄紀念碑實體（壁畫牆；POI openDist 6 仍可讀）
   const lab = makeLabel(`${LEGEND.emoji} ${LEGEND.title}`); lab.o.position.set(0, 7.4, 0); built.group.add(lab.o);
   POIS.push({ data: LEGEND, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist: 6 });
 }
@@ -1015,6 +1050,7 @@ function buildChest(content, buildTop) {
   const top = new THREE.Group(); top.position.set(0, 2.5, 0); g.add(top);             // 浮空發光物件（武器／工具包…）
   buildTop(top, add, goldM, woodM);
   g.position.set(cx, cy, cz); g.rotation.y = Math.atan2(-cx, -cz);                    // 正面朝向村莊／玩家
+  addBoxCol(cx, cz, 1.2, 0.85, Math.atan2(-cx, -cz));                                  // 寶箱實體（POI openDist 4.5 仍可開）
   scene.add(g);
   const lab = makeLabel(`${content.emoji} ${content.title}`); lab.o.position.set(0, 4.4, 0); g.add(lab.o);
   POIS.push({ data: content, isRuin: false, pos: new THREE.Vector3(cx, cy, cz), el: lab.el, openDist: 4.5 });
@@ -1072,6 +1108,7 @@ function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x,
   const lab = makeLabel(UI.labelArchive); lab.o.position.set(2.4, 4.7, 0); g.add(lab.o);
   scene.add(g);
 }
+addBoxCol(ARCHIVE.pos.x, ARCHIVE.pos.z, 2.0, 2.9, ARCHIVE.face);   // 檔案室實體（門在 +x 側；入口 trigger 半徑 1.7 > 停止距離 → 仍能進入）
 // 隱藏室內房間（世界下方，平時 visible=false）
 const archiveRoom = new THREE.Group(); archiveRoom.position.set(0, ARCHIVE.roomY, 0); archiveRoom.visible = false; scene.add(archiveRoom);
 {
@@ -1924,6 +1961,7 @@ function animate() {
     hero.position.addScaledVector(moveDir, spd * dt);
     const len = Math.hypot(hero.position.x, hero.position.z);
     if (!archiveActive && len > worldLim()) hero.position.multiplyScalar(worldLim() / len);
+    if (!archiveActive) resolveHeroCollision();   // 剛體碰撞：把玩家推出重疊的實體（撞牆停住、沿牆滑）；檔案室內停用
     const tr = Math.atan2(moveDir.x, moveDir.z);
     if (!spinning) hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
     moving = true;
