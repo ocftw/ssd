@@ -71,6 +71,12 @@
       border-radius:50%; animation:chippulse 1.6s ease-in-out infinite; }
     .bubble.chip:hover { filter:brightness(1.05); }
     @keyframes chippulse { 0%,100%{ box-shadow:var(--shadow); } 50%{ box-shadow:0 0 0 5px rgba(255,122,69,.32), var(--shadow); } }
+    /* 遊戲製作者 Q&A 對話框 */
+    .bubble.creatorbox { max-width:280px; }
+    .bubble .qopts { display:flex; flex-direction:column; gap:4px; margin-top:8px; }
+    .bubble .qopt { padding:5px 8px; border-radius:8px; background:rgba(0,0,0,.05); color:var(--brand); font-size:11px; font-weight:700; cursor:pointer; }
+    .bubble .qopt.on { background:rgba(0,0,0,.12); }
+    .bubble .qext { display:block; margin-top:2px; padding:5px 8px; color:#1d6fb8; font-weight:700; font-size:11px; text-decoration:none; }
 
     /* 標題牌 + 進度 */
     #titlecard { position:fixed; left:16px; top:16px; z-index:10; max-width:min(78vw,360px);
@@ -510,6 +516,6 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=6dfc15b0"></script>
+  <script type="module" src="./main.js?v=da91161a"></script>
 </body>
 </html>
