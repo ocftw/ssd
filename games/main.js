@@ -11,13 +11,13 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=c724454a';
-import { BATTLES_ALL } from './i18n/battles.js?v=c724454a';
-import { UI_ALL } from './i18n/ui.js?v=c724454a';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=c724454a';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=c724454a';
-import { BattleSystem } from './battle.js?v=c724454a';
-import { SFX } from './audio.js?v=c724454a';
+import { CONTENT } from './i18n/content.js?v=6dfc15b0';
+import { BATTLES_ALL } from './i18n/battles.js?v=6dfc15b0';
+import { UI_ALL } from './i18n/ui.js?v=6dfc15b0';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=6dfc15b0';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=6dfc15b0';
+import { BattleSystem } from './battle.js?v=6dfc15b0';
+import { SFX } from './audio.js?v=6dfc15b0';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -110,7 +110,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=c724454a', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=c724454a', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=6dfc15b0', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=6dfc15b0', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -127,7 +127,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=c724454a', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=c724454a', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=6dfc15b0', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=6dfc15b0', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -435,8 +435,8 @@ const DAY_MAXR = 245;                                  // 白天可走到海岸�
 const worldLim = () => (worldOpen ? DAY_MAXR : WORLD.maxR);
 function setWorldOpen(open) { if (open === worldOpen) return; worldOpen = open; setTerrainOpenness(open ? 1 : 0); displaceTerrain(); } // 群山沉降↔回復（重算一次）
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=c724454a', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=c724454a', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=6dfc15b0', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=6dfc15b0', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -514,12 +514,12 @@ const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
 const trees = scatter(Q.rich ? 480 : 300, WORLD.villageR + 8, 172, WORLD.water + 0.8, true); // rMax 172＝夜/日地形相同的內圈，群山沉降時不會浮空
 const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
-const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=c724454a', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=c724454a', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=6dfc15b0', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=6dfc15b0', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
 // 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=c724454a', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=c724454a', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=6dfc15b0', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=6dfc15b0', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -550,7 +550,7 @@ const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
 const bladeQuad = new THREE.PlaneGeometry(1, 0.95); bladeQuad.translate(0, 0.475, 0);
 const bladeQuad2 = bladeQuad.clone(); bladeQuad2.rotateY(Math.PI / 2);
 const tuftGeo = mergeGeometries([bladeQuad, bladeQuad2]);
-const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=c724454a', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
+const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=6dfc15b0', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
 const tufts = scatter(Q.rich ? 1700 : 950, WORLD.villageR + 3, 172, WORLD.water + 0.6, false);
 const tuftMesh = new THREE.InstancedMesh(tuftGeo, tuftMat, tufts.length);
 const tuftTints = [0x86c45f, 0x6fae57, 0x95cf6c, 0x5f9c49];
@@ -767,7 +767,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=c724454a'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=6dfc15b0'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -822,7 +822,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=c724454a'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=6dfc15b0'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -1079,6 +1079,25 @@ const MAGE_TIP = UI.mageTip;
 const MAGE_TIP_DONE = UI.mageTipDone;
 mage.open = false; // 對話框：靠近先出現小圖示，點圖示才展開（避免每次經過就跳整段文字）
 mage.el.addEventListener('click', (e) => { e.stopPropagation(); mage.open = !mage.open; mage.mode = -1; });
+// 遊戲製作者 NPC（彩蛋）：遺跡全清＝白天後，於海岸邊現身、面向邊界（海平線），靠近可閱讀幕後自述
+function buildCreator() {
+  const g = buildVillager(0x36506e, 0x2a2620);                                       // 深藍帽 T＋深髮的開發者形象（複用村民建模）
+  const scr = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 0.04),
+    new THREE.MeshStandardMaterial({ color: 0x0a1622, emissive: 0x4aa9ff, emissiveIntensity: 1.2, roughness: 0.4 })); // 自發光螢幕／平板
+  scr.position.set(0, 1.15, 0.42); scr.rotation.x = -0.5; scr.castShadow = true; g.add(scr);
+  return g;
+}
+const creator = (() => {
+  const x = -7.4, z = 226.5;
+  const g = buildCreator();
+  g.position.set(x, groundY(x, z), z);
+  g.rotation.y = Math.atan2(x, z);   // 面向邊界（背對村心、望向海平線）
+  g.visible = false;                 // 只有白天（worldOpen）才現身
+  scene.add(g);
+  const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 2.7, 0); g.add(o);
+  return { group: g, el, pos: new THREE.Vector3(x, 0, z), mode: -1, open: false, line: 0 };
+})();
+creator.el.addEventListener('click', (e) => { e.stopPropagation(); if (!creator.open) creator.open = true; else creator.line++; creator.mode = -1; });
 // 灰龍（荒野上空慢慢繞圈）＋ 背上白貓
 const dragon = (() => {
   const built = buildDragon();
@@ -1137,7 +1156,8 @@ function heroNearNPC() {
   const hx = hero.position.x, hz = hero.position.z;
   for (const v of villagers) if (Math.hypot(hx - v.pos.x, hz - v.pos.z) < 7) return true;
   for (const k of keepers) if (Math.hypot(hx - k.pos.x, hz - k.pos.z) < 8) return true;
-  return !!(mage && Math.hypot(hx - mage.pos.x, hz - mage.pos.z) < 8);
+  if (mage && Math.hypot(hx - mage.pos.x, hz - mage.pos.z) < 8) return true;
+  return !!(creator && creator.group.visible && Math.hypot(hx - creator.pos.x, hz - creator.pos.z) < 8);
 }
 
 // ── 控制 ────────────────────────────────────────────────────────
@@ -2019,6 +2039,25 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       if (state === 0) mage.el.className = 'bubble';
       else if (state === 1) { mage.el.className = 'bubble chip clickable show'; mage.el.innerHTML = '💬'; }
       else { mage.el.className = 'bubble clickable show'; mage.el.innerHTML = `<b>${UI.mageHeader}</b><span>${allDone ? MAGE_TIP_DONE : MAGE_TIP}</span>`; }
+    }
+  }
+  // 遊戲製作者 NPC：僅白天（worldOpen）現身於海岸；靠近顯示幕後自述、可循環
+  if (!worldOpen) {
+    if (creator.group.visible) creator.group.visible = false;
+    if (creator.mode !== 0) { creator.mode = 0; creator.open = false; creator.el.className = 'bubble'; }
+  } else {
+    creator.group.visible = true;
+    creator.group.position.y = groundY(creator.pos.x, creator.pos.z) + Math.sin(t * 1.4) * 0.04; // 輕微呼吸
+    const dc = Math.hypot(hero.position.x - creator.pos.x, hero.position.z - creator.pos.z);
+    const near = !battle.active && !finaleActive && !archiveActive && dc < 7;
+    if (!near) creator.open = false;
+    const state = !near ? 0 : (creator.open ? 2 : 1);
+    if (state !== creator.mode) {
+      creator.mode = state;
+      if (state === 0) creator.el.className = 'bubble';
+      else if (state === 1) { creator.el.className = 'bubble chip clickable show'; creator.el.innerHTML = '💬'; }
+      else { const c = UI.creatorCast; creator.el.className = 'bubble clickable show';
+        creator.el.innerHTML = `<b>${c.name}</b><span>${c.lines[creator.line % c.lines.length]}</span><span class="more">${UI.villagerMore}</span>`; }
     }
   }
   // 灰龍：荒野上空慢慢繞圈 + 拍翅 + 偶爾吐藍火（背上白貓跟著）
