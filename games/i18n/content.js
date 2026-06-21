@@ -25,9 +25,9 @@ const STRUCT = {
   guidekit: { id: 'guidekit', emoji: '🧰', color: 0xb98bff, angle: 106, radius: 30, url: 'https://ssd.ocf.tw/guide/' },
   // 檔案室裡的 3 份文件（cover：文件台上展示的封面圖）
   docs: [
-    { id: 'doc1', emoji: '📄', cover: './cover1.webp?v=98f3ad47', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view' },
-    { id: 'doc2', emoji: '📄', cover: './cover2.webp?v=98f3ad47', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link' },
-    { id: 'doc3', emoji: '📄', cover: './cover3.webp?v=98f3ad47', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link' },
+    { id: 'doc1', emoji: '📄', cover: './cover1.webp?v=71295972', url: 'https://drive.google.com/file/d/1sxAFmSiJL6DzdO3ezq_hJSBROuGXNLAA/view' },
+    { id: 'doc2', emoji: '📄', cover: './cover2.webp?v=71295972', url: 'https://drive.google.com/file/d/1wgYdObezFzlI6OJLozzqQF5Vt11B7gCd/view?usp=drive_link' },
+    { id: 'doc3', emoji: '📄', cover: './cover3.webp?v=71295972', url: 'https://drive.google.com/file/d/1VwZwVXpOjTBZibVCTbIF1wUdPhQU_wJz/view?usp=drive_link' },
   ],
   // 散落在村莊外的遺跡：每一座 = 一個資安主題（位置用「方位角度 + 距村中心距離」表示）
   ruins: [
@@ -71,7 +71,7 @@ const TEXT = {
     },
     legend: {
       title: '英雄紀念碑', sub: '斑駁的古老壁畫',
-      desc: '很久很久以前，一群英雄曾守護著這座村莊——御龍的勇者、綠袍的法師，與牠們忠誠的夥伴，一次次擊退降臨的威脅。後來，一場巨變奪走了大地的色彩，英雄們也就此下落不明，沒有人知道他們去了哪裡。如今只剩這面斑駁的壁畫，靜靜記著他們的身影。據說，當村裡的水晶重新點亮，他們會再次出現在這片土地上……',
+      desc: '很久很久以前，一群英雄曾守護著這座村莊——御龍的勇者、綠袍的法師，與牠們忠誠的夥伴，一次次擊退降臨的威脅。後來，一場巨變奪走了大地的色彩，英雄們也就此下落不明，沒有人知道他們去了哪裡。如今只剩這面斑駁的壁畫，靜靜記著他們的身影。據說，當村裡的水晶重新點亮，他們會再次出現在這片土地上……\n\n（這面壁畫即本站主視覺，由插畫家 Kaho Mukae 繪製；網站規劃與主題設計：Sandra Lin。）',
       chips: [], stateText: '遠古的傳說',
     },
     chest: {
@@ -184,7 +184,7 @@ const TEXT = {
     },
     legend: {
       title: '英雄纪念碑', sub: '斑驳的古老壁画',
-      desc: '很久很久以前，一群英雄曾守护着这座村庄——御龙的勇者、绿袍的法师，与它们忠诚的伙伴，一次次击退降临的威胁。后来，一场巨变夺走了大地的色彩，英雄们也就此下落不明，没有人知道他们去了哪里。如今只剩这面斑驳的壁画，静静记着他们的身影。据说，当村里的水晶重新点亮，他们会再次出现在这片土地上……',
+      desc: '很久很久以前，一群英雄曾守护着这座村庄——御龙的勇者、绿袍的法师，与它们忠诚的伙伴，一次次击退降临的威胁。后来，一场巨变夺走了大地的色彩，英雄们也就此下落不明，没有人知道他们去了哪里。如今只剩这面斑驳的壁画，静静记着他们的身影。据说，当村里的水晶重新点亮，他们会再次出现在这片土地上……\n\n（这面壁画即本站主视觉，由插画家 Kaho Mukae 绘制；网站规划与主题设计：Sandra Lin。）',
       chips: [], stateText: '远古的传说',
     },
     chest: {
@@ -297,7 +297,7 @@ const TEXT = {
     },
     legend: {
       title: `Heroes' Monument`, sub: `A weathered ancient mural`,
-      desc: `Long, long ago, a band of heroes guarded this village — a dragon-riding warrior, a green-robed mage, and their loyal companions — turning back threat after threat. Then a great calamity drained the color from the land, and the heroes vanished without a trace; no one knows where they went. All that remains is this weathered mural, quietly keeping their memory. They say that when the village crystal shines again, they will return to this land…`,
+      desc: `Long, long ago, a band of heroes guarded this village — a dragon-riding warrior, a green-robed mage, and their loyal companions — turning back threat after threat. Then a great calamity drained the color from the land, and the heroes vanished without a trace; no one knows where they went. All that remains is this weathered mural, quietly keeping their memory. They say that when the village crystal shines again, they will return to this land…\n\n(This mural is the site's key visual, illustrated by Kaho Mukae; site planning & theme design by Sandra Lin.)`,
       chips: [], stateText: `An ancient legend`,
     },
     chest: {
@@ -314,9 +314,9 @@ const TEXT = {
     },
     // 英文版有官方英文封面與 PDF（cover／url 覆寫結構層的繁中預設；zh-Hant／zh-Hans 仍用繁中版）
     docs: {
-      doc1: { title: `Digital Security Mapping for HRDs in Taiwan`, sub: `Archive · File One`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A summary of a 2024 research report, drawing on 35 questionnaires and 3 in-depth interviews to map the digital threats and security needs faced by rights and democracy advocacy groups in Taiwan.`, cover: './cover1_en.webp?v=98f3ad47', url: `https://drive.google.com/file/d/1VV12Rp7IKkWexNTKQRuWIA4Zfd8ztN9X/view?usp=sharing` },
-      doc2: { title: `Safeguarding Advocacy`, sub: `Archive · File Two`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `This project's final report, documenting the service model, hands-on experience, and recommendations of the Security Mentorship Program (SMP) for civil-society groups and human-rights workers.`, cover: './cover2_en.webp?v=98f3ad47', url: `https://drive.google.com/file/d/1ln6__KiGZgf9QSkYhwKo8gm4L9d9tExo/view?usp=drive_link` },
-      doc3: { title: `The Cost of Trust`, sub: `Archive · File Three`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A case-study record of real security-attack incidents experienced by human-rights workers in Taiwan, documenting attack patterns, the defense process, and lessons learned.`, cover: './cover3_en.webp?v=98f3ad47', url: `https://drive.google.com/file/d/1Q3Z2nLJ4dkQpmSqXQcctl4IW3cUhdDkF/view?usp=drive_link` },
+      doc1: { title: `Digital Security Mapping for HRDs in Taiwan`, sub: `Archive · File One`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A summary of a 2024 research report, drawing on 35 questionnaires and 3 in-depth interviews to map the digital threats and security needs faced by rights and democracy advocacy groups in Taiwan.`, cover: './cover1_en.webp?v=71295972', url: `https://drive.google.com/file/d/1VV12Rp7IKkWexNTKQRuWIA4Zfd8ztN9X/view?usp=sharing` },
+      doc2: { title: `Safeguarding Advocacy`, sub: `Archive · File Two`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `This project's final report, documenting the service model, hands-on experience, and recommendations of the Security Mentorship Program (SMP) for civil-society groups and human-rights workers.`, cover: './cover2_en.webp?v=71295972', url: `https://drive.google.com/file/d/1ln6__KiGZgf9QSkYhwKo8gm4L9d9tExo/view?usp=drive_link` },
+      doc3: { title: `The Cost of Trust`, sub: `Archive · File Three`, stateText: `Document`, goText: `Read PDF →`, chips: [], desc: `A case-study record of real security-attack incidents experienced by human-rights workers in Taiwan, documenting attack patterns, the defense process, and lessons learned.`, cover: './cover3_en.webp?v=71295972', url: `https://drive.google.com/file/d/1Q3Z2nLJ4dkQpmSqXQcctl4IW3cUhdDkF/view?usp=drive_link` },
     },
     ruins: {
       personal: {
