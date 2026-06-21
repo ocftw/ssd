@@ -77,6 +77,7 @@ export const UI_ALL = {
         ] },
       ],
     },
+    eggGame: { launch: '🎮 想玩個小遊戲嗎？', title: '揮刀求生', howto: '移動閃避，刀會自動揮砍', kills: '擊殺', best: '最佳', over: '遊戲結束', replay: '再玩一次', exit: '離開' },
     villagerHint: [
       '天亮以後啊，有人說海的盡頭浮著一團會發光的東西……聽說，那就是打造這一切的人。',
       '我跑到海邊，看到一顆一直轉的光球欸！會不會就是做出這整個世界的人呀？',
@@ -366,6 +367,7 @@ export const UI_ALL = {
         ] },
       ],
     },
+    eggGame: { launch: '🎮 想玩个小游戏吗？', title: '挥刀求生', howto: '移动闪避，刀会自动挥砍', kills: '击杀', best: '最佳', over: '游戏结束', replay: '再玩一次', exit: '离开' },
     villagerHint: [
       '天亮以后啊，有人说海的尽头浮着一团会发光的东西……听说，那就是打造这一切的人。',
       '我跑到海边，看到一颗一直转的光球欸！会不会就是做出这整个世界的人呀？',
@@ -642,6 +644,7 @@ export const UI_ALL = {
         ] },
       ],
     },
+    eggGame: { launch: `🎮 Fancy a quick minigame?`, title: `Blade Survivor`, howto: `Move to dodge — your blade swings on its own`, kills: `Kills`, best: `Best`, over: `Game Over`, replay: `Play again`, exit: `Leave` },
     villagerHint: [
       `Since daybreak, they say something glowing drifts at the far edge of the sea… word is, that's the one who built all of this.`,
       `I ran down to the shore and saw a ball of light that just keeps spinning! Could that be the person who made this whole world?`,
