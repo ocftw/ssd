@@ -71,7 +71,7 @@ const TEXT = {
     },
     legend: {
       title: '英雄紀念碑', sub: '斑駁的古老壁畫',
-      desc: '很久很久以前，一群英雄曾守護著這座村莊——御龍的勇者、綠袍的法師，與牠們忠誠的夥伴，一次次擊退降臨的威脅。後來，一場巨變奪走了大地的色彩，英雄們也就此下落不明，沒有人知道他們去了哪裡。如今只剩這面斑駁的壁畫，靜靜記著他們的身影。據說，當村裡的水晶重新點亮，他們會再次出現在這片土地上……',
+      desc: '很久很久以前，一群英雄曾守護著這座村莊——御龍的勇者、綠袍的法師，與牠們忠誠的夥伴，一次次擊退降臨的威脅。後來，一場巨變奪走了大地的色彩，英雄們也就此下落不明，沒有人知道他們去了哪裡。如今只剩這面斑駁的壁畫，靜靜記著他們的身影。據說，當村裡的水晶重新點亮，他們會再次出現在這片土地上……\n\n（這面壁畫即本站主視覺，由插畫家 Kaho Mukae 繪製；網站規劃與主題設計：Sandra Lin。）',
       chips: [], stateText: '遠古的傳說',
     },
     chest: {
@@ -184,7 +184,7 @@ const TEXT = {
     },
     legend: {
       title: '英雄纪念碑', sub: '斑驳的古老壁画',
-      desc: '很久很久以前，一群英雄曾守护着这座村庄——御龙的勇者、绿袍的法师，与它们忠诚的伙伴，一次次击退降临的威胁。后来，一场巨变夺走了大地的色彩，英雄们也就此下落不明，没有人知道他们去了哪里。如今只剩这面斑驳的壁画，静静记着他们的身影。据说，当村里的水晶重新点亮，他们会再次出现在这片土地上……',
+      desc: '很久很久以前，一群英雄曾守护着这座村庄——御龙的勇者、绿袍的法师，与它们忠诚的伙伴，一次次击退降临的威胁。后来，一场巨变夺走了大地的色彩，英雄们也就此下落不明，没有人知道他们去了哪里。如今只剩这面斑驳的壁画，静静记着他们的身影。据说，当村里的水晶重新点亮，他们会再次出现在这片土地上……\n\n（这面壁画即本站主视觉，由插画家 Kaho Mukae 绘制；网站规划与主题设计：Sandra Lin。）',
       chips: [], stateText: '远古的传说',
     },
     chest: {
@@ -297,7 +297,7 @@ const TEXT = {
     },
     legend: {
       title: `Heroes' Monument`, sub: `A weathered ancient mural`,
-      desc: `Long, long ago, a band of heroes guarded this village — a dragon-riding warrior, a green-robed mage, and their loyal companions — turning back threat after threat. Then a great calamity drained the color from the land, and the heroes vanished without a trace; no one knows where they went. All that remains is this weathered mural, quietly keeping their memory. They say that when the village crystal shines again, they will return to this land…`,
+      desc: `Long, long ago, a band of heroes guarded this village — a dragon-riding warrior, a green-robed mage, and their loyal companions — turning back threat after threat. Then a great calamity drained the color from the land, and the heroes vanished without a trace; no one knows where they went. All that remains is this weathered mural, quietly keeping their memory. They say that when the village crystal shines again, they will return to this land…\n\n(This mural is the site's key visual, illustrated by Kaho Mukae; site planning & theme design by Sandra Lin.)`,
       chips: [], stateText: `An ancient legend`,
     },
     chest: {
