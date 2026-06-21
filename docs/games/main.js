@@ -17,6 +17,7 @@ import { UI_ALL } from './i18n/ui.js';
 import { LANGS, resolveLang, setLang } from './i18n/lang.js';
 import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js';
 import { BattleSystem } from './battle.js';
+import { EggGame } from './egg.js';
 import { SFX } from './audio.js';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
@@ -1302,6 +1303,7 @@ creator.el.addEventListener('click', (e) => {
   e.stopPropagation();
   if (!creator.open) { creator.open = true; creator.mode = -1; return; }   // chip → 展開
   if (e.target.closest('a.qext')) return;                                   // 外連：放行新分頁、不重繪
+  if (e.target.closest('[data-egg]')) { if (!egg.active) egg.start(); return; } // 啟動彩蛋小遊戲
   const qb = e.target.closest('[data-q]'); if (qb) { creator.topic = qb.getAttribute('data-q'); creator.qline = 0; creator.mode = -1; return; }
   if (e.target.closest('[data-more]')) { creator.qline++; creator.mode = -1; }
 });
@@ -1499,6 +1501,7 @@ function lightRuin(p) {
 }
 // 戰鬥
 const battle = new BattleSystem({ scene, camera, hero, ui: UI });
+const egg = new EggGame({ ui: UI });   // 彩蛋小遊戲「揮刀求生」：由創世之核對話選單啟動
 function startBattle(p) {
   hidePanel(); suppressed.add(p.data.id); pinnedId = null;
   battle.start(p, BATTLES[p.data.id]).then(({ won }) => {
@@ -1989,8 +1992,9 @@ function animate() {
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
   fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 原始幀時間估 FPS
 
-  joyEl.classList.toggle('hide', battle.active || finaleActive);
-  jumpBtn.classList.toggle('hide', battle.active || finaleActive || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
+  joyEl.classList.toggle('hide', battle.active || finaleActive || egg.active);
+  jumpBtn.classList.toggle('hide', battle.active || finaleActive || egg.active || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
+  if (egg.active) { labelRenderer.domElement.style.display = 'none'; egg.update(dt); return; } // 彩蛋小遊戲：凍結 3D 世界，僅跑 2D 覆蓋層（不透明、免 renderScene）
   if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); renderScene(); return; }
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
@@ -2340,7 +2344,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
         const menu = c.topics.map((x) => `<a class="qopt${x.id === creator.topic ? ' on' : ''}" data-q="${x.id}">${x.q}</a>`).join('');
         creator.el.className = 'bubble creatorbox clickable show';
         creator.el.innerHTML = `<b>${c.name}</b><span>${text}</span>${moreBtn}`
-          + `<div class="qopts">${menu}<a class="qext" href="https://toomore.net/" target="_blank" rel="noopener">${c.site}</a></div>`;
+          + `<div class="qopts">${menu}<a class="qopt egg" data-egg>${UI.eggGame.launch}</a><a class="qext" href="https://toomore.net/" target="_blank" rel="noopener">${c.site}</a></div>`;
       }
     }
   }

@@ -119,4 +119,10 @@ export const SFX = {
   hurt() { tone({ freq: 200, type: 'sawtooth', dur: 0.3, peak: 0.46, slideTo: 70 }); noise({ dur: 0.18, peak: 0.26, type: 'lowpass', freq: 500 }); }, // 答錯受擊
   win() { [523, 659, 784, 1047].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.26, peak: 0.4, at: i * 0.11 })); },
   lose() { [392, 330, 262].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.32, peak: 0.38, at: i * 0.14 })); },
+
+  // 彩蛋小遊戲「揮刀求生」：揮刀風聲（每拍、刻意輕）／命中／受傷／結束三音下行
+  eggSwing() { tone({ freq: 380, type: 'square', dur: 0.1, peak: 0.16, slideTo: 170 }); noise({ dur: 0.05, peak: 0.1, type: 'highpass', freq: 2600 }); },
+  eggHit() { tone({ freq: 240, type: 'sawtooth', dur: 0.16, peak: 0.3, slideTo: 90 }); noise({ dur: 0.1, peak: 0.18, type: 'lowpass', freq: 700 }); },
+  eggHurt() { tone({ freq: 180, type: 'square', dur: 0.28, peak: 0.42, slideTo: 60 }); noise({ dur: 0.16, peak: 0.22, type: 'lowpass', freq: 420 }); },
+  eggOver() { [330, 262, 196].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.34, peak: 0.4, at: i * 0.16 })); },
 };
