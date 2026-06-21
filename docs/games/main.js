@@ -1537,7 +1537,7 @@ function showFinaleOverlay() {
   f.querySelector('.scroll').innerHTML = ruinAt.map((r) => {
     const lesson = (UI.shardLesson && UI.shardLesson[r.id]) || r.defense || r.title;
     const done = (progress.shards[r.id] || []).length >= SHARD_PER;
-    return `<div class="item"><span class="ico">${r.emoji}${done ? ' ✅' : ''}</span><span class="tx"><b>${r.title}・${lesson}</b>${r.tip || ''}<a href="${r.url}" target="_blank" rel="noopener" style="display:inline-block;margin-top:5px;color:#1d6fb8;font-weight:700;text-decoration:none;font-size:11px">${UI.finaleLearnMore}</a></span></div>`;
+    return `<div class="item"><span class="ico">${r.emoji}${done ? ' ✅' : ''}</span><span class="tx"><b>${r.title}・${lesson}</b>${r.tip || ''}<a href="${withUtm(r.url)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:5px;color:#1d6fb8;font-weight:700;text-decoration:none;font-size:11px">${UI.finaleLearnMore}</a></span></div>`;
   }).join('');
   f.classList.add('show');
   // D 通關後信心檢核 + 前後比對
@@ -1583,6 +1583,7 @@ function maybeShowPreConfidence() {
 function checkAllDone() {
   if (allDoneShown || !ruinAt.every((r) => isDone(r.id))) return;
   allDoneShown = true;
+  track('game_complete');
   setWorldOpen(true);   // 沒有牆的大陸：群山沉降、向海敞開（一次性重算被終局運鏡蓋住）
   SFX.win();
   ringBurst(0, 2.2, 0, 0xfff0c0, 55, 1.7);   // 金色衝擊波
@@ -1591,6 +1592,13 @@ function checkAllDone() {
   finaleActive = true; finaleT = 0; finaleShown = false; hidePanel();
 }
 document.getElementById('finale-close').addEventListener('click', () => { document.getElementById('finale').classList.remove('show'); finaleActive = false; });
+
+// 匿名最小化分析：gtag 不存在（DNT 或離線）即 no-op，遊戲照常運作；不送任何個資
+function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { /* no-op */ } }
+// 給通往課程的連結補上 UTM（僅 ocf.tw 站內），讓站內 GA 能歸因「遊戲 → 學習」
+function withUtm(url) { try { const u = new URL(url, location.href); if (/(^|\.)ocf\.tw$/.test(u.hostname)) { u.searchParams.set('utm_source', 'game'); u.searchParams.set('utm_medium', 'finale'); u.searchParams.set('utm_campaign', 'village-game'); } return u.toString(); } catch (e) { return url; } }
+// 終局面板上任何外連（課程／部落格）被點 → 記一次 cta_to_course（只送路徑、無個資）
+document.getElementById('finale').addEventListener('click', (e) => { const a = e.target.closest('a[href^="http"]'); if (a) track('cta_to_course', { dest: a.pathname }); });
 
 let toastTimer = 0;
 function toast(title, sub) { toastEl.querySelector('.t').textContent = title; toastEl.querySelector('.s').textContent = sub; toastEl.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3400); }
@@ -2579,6 +2587,7 @@ function setupLanding() {
     await frame(); await frame();                              // 先讓「載入中」畫面上屏
     try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) {} // 非阻塞預編譯場景著色器（支援並行編譯時轉圈不卡）
     started = true;                                            // 開始模擬與渲染
+    track('game_start');
     for (let i = 0; i < 3; i++) await frame();                 // 暖機數幀（後製 pass 著色器/貼圖上傳），landing 仍蓋著
     root.classList.add('hide');                                // 平順淡出 → 進入遊戲
     maybeShowPreConfidence();
