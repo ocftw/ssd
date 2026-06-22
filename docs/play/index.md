@@ -166,7 +166,8 @@ hide:
     整個世界都在瀏覽器裡用 [Three.js](https://threejs.org/) 即時運算，沒有遊戲引擎、沒有打包工具、不連任何外部 CDN。如果你也想做一個類似的小遊戲，這些是我們覺得值得分享的關鍵做法：
 
     - **不用 build、開檔就能跑**：用瀏覽器原生的 ES modules ＋ import map 直接載入 Three.js（r184，整份自存在站上的 `vendor/`）。整個專案就是一份 HTML 加幾支 `.js`，不需要 webpack／vite 之類的打包工具。
-    - **大量植被用 InstancedMesh**：上千棵樹、草叢、石頭若各畫一次會拖垮效能；用 `InstancedMesh` 讓同一種物件「一次 draw call」畫完，是維持流暢的關鍵。（也正因為 instancing 已經解掉繪製瓶頸，我們評估後決定留在 WebGL、沒有改用 WebGPU。）
+    - **大量植被用 InstancedMesh**：上千棵樹、草叢、石頭若各畫一次會拖垮效能；用 `InstancedMesh` 讓同一種物件「一次 draw call」畫完，是維持流暢的關鍵。
+    - **WebGPU 我們認真試過**：另外做了一個 [WebGPU 試作評估頁](/games/webgpu.html)，會自動選用 WebGPU、不支援就退回 WebGL2，並即時顯示使用中後端、FPS 與 draw call。結論是：遊戲已用 InstancedMesh 把 draw call 壓得很低，實際負載下 WebGL2 就能穩定跑滿螢幕更新率，要把壓力等級拉到遠超遊戲所需，才看得出 WebGPU 的差距。加上 WebGL2 在手機與各家瀏覽器（特別是 iOS／Safari）支援更普及，所以正式遊戲就用 WebGL2 達標，不額外要求 WebGPU。
     - **地形用函式算、不用圖檔**：地面起伏由一個高度函式即時計算，再用頂點顏色畫出沙地／草地／岩石，省下一張 heightmap 貼圖。
     - **水面的柔邊**：海岸用一張預烤的「離岸距離」貼圖，讓水的透明度漸層淡出，避免地面與水面交界處閃爍（z-fighting）。
     - **一個參數控制日夜**：用單一個「繁榮度」數值（0 夜晚 → 1 白天）同時驅動光照、色調、群山起伏、小地圖與介面配色；改一個值，整個世界就跟著變。
