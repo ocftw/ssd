@@ -13,6 +13,21 @@
 <meta name="description" content="{{ config.site_description }}" />
 {% endif %}
 
+<!-- Custom social share image (opt-in via page meta `share_image`, an absolute URL; pages
+     using it should set `social: { cards: false }` to avoid a duplicate auto-generated og:image.
+     NOTE: deliberately NOT `image`, which this site already uses for category hero images.) -->
+{% if page.meta and page.meta.share_image %}
+<meta property="og:type" content="website" />
+<meta property="og:title" content="{{ page.title | default(config.site_name, true) }}" />
+<meta property="og:description" content="{{ page.meta.description | default(config.site_description, true) }}" />
+<meta property="og:image" content="{{ page.meta.share_image }}" />
+{% if page.canonical_url %}<meta property="og:url" content="{{ page.canonical_url }}" />{% endif %}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{ page.title | default(config.site_name, true) }}" />
+<meta name="twitter:description" content="{{ page.meta.description | default(config.site_description, true) }}" />
+<meta name="twitter:image" content="{{ page.meta.share_image }}" />
+{% endif %}
+
 <!-- Page author -->
 {% if page.meta and page.meta.author %}
 <meta name="author" content="{{ page.meta.author }}" />

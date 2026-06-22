@@ -1,9 +1,12 @@
 ---
 title: 資安新手村・探險遊戲
 description: 用玩的學資安！「資安防護新手村」是一款全離線 3D 瀏覽器探險遊戲：走出村莊、尋找散落荒野的五座資安遺跡，打敗守關怪物、逐一點亮防線。免安裝、支援三語，內容連回 ssd.ocf.tw 完整教材。
+share_image: https://ssd.ocf.tw/play/shots/og-play.jpg
 hide:
   - navigation
   - toc
+social:
+  cards: false
 ---
 
 <div class="play-narrow" hidden></div>
@@ -12,7 +15,7 @@ hide:
 
 ![被重新點亮的個人資安遺跡：翠綠能量水晶懸浮在祭壇上方，光束直上夜空](shots/village-grove.webp){ loading=lazy }
 
-**用「玩」的，把資安防護學起來。** 村莊原本由五道資安防線守護，如今防線崩塌、世界褪色入夜。你的任務：走出村莊，尋回散落荒野的五座「資安遺跡」，打敗守關怪物、逐一點亮防線，讓新手村重新明亮；而每一道防線，都對應 ssd.ocf.tw 上一整套可實際操作的資安教材。
+**用「玩」的，把資安防護學起來。** 村莊原本由五道資安防線守護，如今防線崩塌、世界褪色入夜。你的任務：走出村莊，尋回散落荒野的五座「資安遺跡」，打敗守關怪物、逐一點亮防線，讓新手村重新明亮；而每一道防線，都對應「資安新手村」網站上一整套可實際操作的資安教材。
 
 [▶ 開始遊戲](/games/?utm_source=play&utm_medium=site&utm_campaign=village-game){ .md-button .md-button--primary }
 [先看看怎麼升級資安](/how-to/){ .md-button }
@@ -24,15 +27,15 @@ hide:
 
 <div class="shots" data-carousel>
   <div class="shots__track">
+    <figure><img src="shots/ruin-fortress.webp" alt="組織資安遺跡：石造堡壘中央升起藍色防線光束" loading="lazy"><figcaption>擊敗守關者，遺跡升起一道防線光束</figcaption></figure>
+    <figure><img src="shots/gameplay.webp" alt="實際遊玩畫面：主角提燈探索，右下角是隨鏡頭旋轉的小地圖" loading="lazy"><figcaption>提燈探索：HUD 與隨鏡頭旋轉的小地圖</figcaption></figure>
     <figure><img src="shots/world-night.webp" alt="入夜的世界：五道防線崩塌、大地失去顏色，遠方有資安遺跡的微光" loading="lazy"><figcaption>入夜的世界：防線崩塌、大地失色</figcaption></figure>
     <figure><img src="shots/ruin-night.webp" alt="夜裡的資安遺跡：能量水晶在祭壇上方發光，光束直上夜空" loading="lazy"><figcaption>荒野中沉睡的資安遺跡，等待被點亮</figcaption></figure>
-    <figure><img src="shots/gameplay.webp" alt="實際遊玩畫面：主角提燈探索，右下角是隨鏡頭旋轉的小地圖" loading="lazy"><figcaption>提燈探索：HUD 與隨鏡頭旋轉的小地圖</figcaption></figure>
     <figure><img src="shots/battle-slime.webp" alt="遺跡守關戰鬥：在下方輸入一組強密碼擊退守關怪物" loading="lazy"><figcaption>遺跡守關：用學到的觀念答題闖關（輸入式）</figcaption></figure>
     <figure><img src="shots/battle-ghost.webp" alt="遺跡守關戰鬥：從選項中選出正確的資安做法擊退守關怪物" loading="lazy"><figcaption>不同遺跡、不同守關怪與題目（選擇題）</figcaption></figure>
     <figure><img src="shots/questlog.webp" alt="任務日誌面板：五座遺跡的探索與闖關進度一覽" loading="lazy"><figcaption>任務日誌：五座遺跡的進度一覽</figcaption></figure>
-    <figure><img src="shots/ruin-fortress.webp" alt="組織資安遺跡：石造堡壘中央升起藍色防線光束" loading="lazy"><figcaption>擊敗守關者，遺跡升起一道防線光束</figcaption></figure>
-    <figure><img src="shots/village-grove.webp" alt="被重新點亮的個人資安遺跡：翠綠能量水晶懸浮在祭壇上方" loading="lazy"><figcaption>被重新點亮的資安遺跡：能量水晶</figcaption></figure>
     <figure><img src="shots/achievements.webp" alt="成就徽章牆：已解鎖與未解鎖的探索成就" loading="lazy"><figcaption>成就徽章牆：探索與學習的足跡</figcaption></figure>
+    <figure><img src="shots/village-grove.webp" alt="被重新點亮的個人資安遺跡：翠綠能量水晶懸浮在祭壇上方" loading="lazy"><figcaption>被重新點亮的資安遺跡：能量水晶</figcaption></figure>
     <figure><img src="shots/village-day.webp" alt="通關後的白天村莊：綠地、市集與村民重現生機" loading="lazy"><figcaption>五道防線修復後，村莊重見天光</figcaption></figure>
     <figure><img src="shots/finale.webp" alt="通關慶祝畫面：英雄守則卷軸、五遺跡徽章與心法碎片收集" loading="lazy"><figcaption>通關慶祝：英雄守則與成果分享</figcaption></figure>
     <figure><img src="shots/minigame.webp" alt="隱藏彩蛋小遊戲『揮刀求生』：操控角色閃避怪物、自動揮刀" loading="lazy"><figcaption>隱藏彩蛋小遊戲「揮刀求生」</figcaption></figure>
@@ -92,7 +95,7 @@ hide:
 })();
 </script>
 
-## 你會在五座遺跡學到什麼
+## 你會學到什麼
 
 遊戲帶你入門，完整、可逐步操作的內容都在「資安新手村」網站：
 
@@ -130,13 +133,13 @@ hide:
 
     [前往教材 →](/tools/)
 
--   📋 **資安體檢與進度追蹤**
+-   🧰 **資安升級工具包**
 
     ---
 
-    檢查清單、盤點現況、排優先順序、追蹤升級進度。
+    盤點現況、風險評估、裝置稽核、資安政策範本，一步步追蹤資安升級進度。
 
-    [前往教材 →](/assessment/)
+    [前往教材 →](/guide/)
 
 </div>
 
