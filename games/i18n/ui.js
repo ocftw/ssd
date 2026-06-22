@@ -23,6 +23,7 @@ export const UI_ALL = {
     shardGot: (n, total) => `🔹 知識碎片 ${n}/${total}`,
     shardComplete: (title) => `🔑 解鎖心法 · ${title}`,
     finaleLearnMore: '深入了解 →',
+    finaleCourses: '🎓 看完整資安教材 →',
     finaleShardHd: (n, total) => `🔑 心法碎片 ${n}/${total}`,
     shardLesson: {
       personal: '獨立長密碼配兩步驟驗證，個人帳號就穩了。',
@@ -313,6 +314,7 @@ export const UI_ALL = {
     shardGot: (n, total) => `🔹 知识碎片 ${n}/${total}`,
     shardComplete: (title) => `🔑 解锁心法 · ${title}`,
     finaleLearnMore: '深入了解 →',
+    finaleCourses: '🎓 看完整安全教材 →',
     finaleShardHd: (n, total) => `🔑 心法碎片 ${n}/${total}`,
     shardLesson: {
       personal: '独立长密码配两步验证，个人账号就稳了。',
@@ -590,6 +592,7 @@ export const UI_ALL = {
     shardGot: (n, total) => `🔹 Knowledge shard ${n}/${total}`,
     shardComplete: (title) => `🔑 Lesson unlocked · ${title}`,
     finaleLearnMore: `Learn more →`,
+    finaleCourses: `🎓 See the full security guide →`,
     finaleShardHd: (n, total) => `🔑 Lesson shards ${n}/${total}`,
     shardLesson: {
       personal: `Unique long passwords plus 2FA keep personal accounts safe.`,

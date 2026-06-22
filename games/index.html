@@ -39,6 +39,22 @@
     } catch (e) { /* ignore */ }
   })();
   </script>
+  <!-- 匿名、最小化使用分析：尊重 Do Not Track / GPC（開啟即完全不載入）；載入失敗或被擋都不影響遊戲（仍可離線遊玩）。 -->
+  <script>
+  (function () {
+    try {
+      var dnt = navigator.doNotTrack == '1' || window.doNotTrack == '1' || navigator.msDoNotTrack == '1' || window.globalPrivacyControl === true;
+      if (dnt) return;
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      gtag('js', new Date());
+      gtag('config', 'G-X3DG2E5E3W', { anonymize_ip: true, allow_google_signals: false, allow_ad_personalization_signals: false });
+      var s = document.createElement('script'); s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-X3DG2E5E3W';
+      document.head.appendChild(s);
+    } catch (e) { /* 追蹤失敗不影響遊戲 */ }
+  })();
+  </script>
   <style>
     :root { --ink:#1d2433; --paper:#fbf7ef; --brand:#ff7a45; --shadow:0 18px 40px -18px rgba(20,28,48,.55); }
     * { box-sizing:border-box; }
@@ -497,7 +513,8 @@
       <div class="badges"></div>
       <div class="scroll-hd" data-i18n="finaleScrollHd">📜 英雄守則・你的個人行動清單</div>
       <div class="scroll"></div>
-      <a class="takeaway" target="_blank" rel="noopener" href="https://ssd.ocf.tw/blog/" data-i18n="finaleTakeaway">📚 延伸閱讀：進階文章 →</a>
+      <a class="takeaway" target="_blank" rel="noopener" href="https://ssd.ocf.tw/how-to/?utm_source=game&utm_medium=finale&utm_campaign=village-game" data-i18n="finaleCourses">🎓 看完整資安教材 →</a>
+      <a class="takeaway" target="_blank" rel="noopener" href="https://ssd.ocf.tw/blog/?utm_source=game&utm_medium=finale&utm_campaign=village-game" data-i18n="finaleTakeaway">📚 延伸閱讀：進階文章 →</a>
       <div class="langnote" data-i18n="chapterLangNote"></div>
       <div class="confcompare"></div>
       <div class="title-rank" data-i18n="finaleRank">榮銜：資安守護者 🛡️</div>
@@ -541,6 +558,6 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=71295972"></script>
+  <script type="module" src="./main.js?v=f79d3017"></script>
 </body>
 </html>
