@@ -1667,3 +1667,153 @@ div.grid.cards > ul > li > p:first-child {
 .md-content--blog .md-source-file__fact--edit-link a:focus-visible {
   text-decoration: underline;
 }
+
+/* ── /play/ 遊戲畫面輪播（漸進增強：無 JS 時為可橫向滑動的捲動圖庫；類名限定本頁，不影響站內既有元件）── */
+.shots {
+  position: relative;
+  margin: 1.2rem 0 1.6rem;
+}
+
+.shots__track {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-radius: 12px;
+}
+
+.shots__track::-webkit-scrollbar {
+  display: none;
+}
+
+.shots__track > figure {
+  position: relative;
+  flex: 0 0 100%;
+  margin: 0;
+  scroll-snap-align: center;
+}
+
+.shots__track img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #11131a;
+}
+
+.shots__track figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.6rem 0.9rem 0.7rem;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(to top, rgba(8, 10, 16, 0.82), rgba(8, 10, 16, 0));
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* 導覽鈕與圓點：只有在 JS 啟用後才顯示（is-enhanced） */
+.shots__nav,
+.shots__dots {
+  display: none;
+}
+
+.shots.is-enhanced .shots__nav {
+  display: grid;
+  place-items: center;
+}
+
+.shots.is-enhanced .shots__dots {
+  display: flex;
+}
+
+.shots__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(18, 20, 30, 0.55);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.shots__nav:hover,
+.shots__nav:focus-visible {
+  background: rgba(18, 20, 30, 0.9);
+  opacity: 1;
+}
+
+.shots__prev {
+  left: 0.5rem;
+}
+
+.shots__next {
+  right: 0.5rem;
+}
+
+.shots__dots {
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.shots__dots button {
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--md-default-fg-color--lighter, #ccc);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.shots__dots button:hover {
+  background: var(--md-default-fg-color--light, #999);
+}
+
+.shots__dots button.is-active {
+  background: var(--md-primary-fg-color, #5345af);
+  transform: scale(1.25);
+}
+
+@media screen and (max-width: 480px) {
+  .shots__nav {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shots__track {
+    scroll-behavior: auto;
+  }
+}
+
+/* /play/：單獨把內文寬度收斂到 700px（隱藏標記 .play-narrow 限定本頁；沿用站內 :has() 作法）。 */
+.md-content__inner.md-typeset:has(.play-narrow) {
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.md-content__inner.md-typeset:has(.play-narrow) img {
+  max-width: 100%;
+  height: auto;
+}
