@@ -1812,13 +1812,23 @@ function buildShareCard() {
   if (scene3d) { g.addColorStop(0, 'rgba(8,24,16,.74)'); g.addColorStop(0.46, 'rgba(8,24,16,.32)'); g.addColorStop(1, 'rgba(6,38,30,.82)'); }
   else { g.addColorStop(0, '#15331f'); g.addColorStop(1, '#0c5b4a'); }
   x.fillStyle = g; x.fillRect(0, 0, W, H);
-  x.textAlign = 'center'; x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 14; x.shadowOffsetY = 2;
-  x.fillStyle = '#ffffff'; x.font = 'bold 66px sans-serif'; x.fillText(UI.shareCardTitle, W / 2, 180);
-  x.fillStyle = '#ffe9b8'; x.font = '600 40px sans-serif'; x.fillText(allDone ? UI.shareCardWin : UI.shareCardProgress, W / 2, 270);
-  x.font = '108px sans-serif'; x.fillText(ruinAt.map((r) => r.emoji).join('  '), W / 2, 460);
-  x.font = '210px sans-serif'; x.fillText(allDone ? '🛡️' : '🧭', W / 2, 720);
-  x.fillStyle = '#ffffff'; x.font = '600 46px sans-serif'; x.fillText(UI.shareCardStats(done, total, gotShards, total * SHARD_PER), W / 2, 858);
-  x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '600 40px sans-serif'; x.fillText('ssd.ocf.tw/games', W / 2, 985);
+  // 以「實際墨跡邊界」置中：textAlign='center' 用 advance width 取中點，但 emoji（尤其帶 U+FE0F 變體選擇器
+  // 的 🛠️／🛡️）在部分裝置上 advance≠視覺寬度，會讓含 emoji 的行右偏甚至溢出卡片；改以視覺中心對齊、過寬則等比夾入安全寬度。
+  const cText = (s, cx, y) => {
+    const m = x.measureText(s), maxW = W - 160;
+    const left = (m.actualBoundingBoxLeft != null) ? m.actualBoundingBoxLeft : m.width / 2;
+    const right = (m.actualBoundingBoxRight != null) ? m.actualBoundingBoxRight : m.width / 2;
+    const ink = left + right, scale = (ink > maxW) ? maxW / ink : 1, penX = cx - ((right - left) / 2) * scale;
+    if (scale !== 1) { x.save(); x.translate(penX, 0); x.scale(scale, 1); x.fillText(s, 0, y); x.restore(); }
+    else x.fillText(s, penX, y);
+  };
+  x.textAlign = 'left'; x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 14; x.shadowOffsetY = 2;
+  x.fillStyle = '#ffffff'; x.font = 'bold 66px sans-serif'; cText(UI.shareCardTitle, W / 2, 180);
+  x.fillStyle = '#ffe9b8'; x.font = '600 40px sans-serif'; cText(allDone ? UI.shareCardWin : UI.shareCardProgress, W / 2, 270);
+  x.font = '108px sans-serif'; cText(ruinAt.map((r) => r.emoji).join('  '), W / 2, 460);
+  x.font = '210px sans-serif'; cText(allDone ? '🛡️' : '🧭', W / 2, 720);
+  x.fillStyle = '#ffffff'; x.font = '600 46px sans-serif'; cText(UI.shareCardStats(done, total, gotShards, total * SHARD_PER), W / 2, 858);
+  x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '600 40px sans-serif'; cText('ssd.ocf.tw/games', W / 2, 985);
   x.shadowColor = 'transparent'; x.shadowBlur = 0; x.shadowOffsetY = 0;
   return cv;
 }
