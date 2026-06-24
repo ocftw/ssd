@@ -23,6 +23,15 @@ social:
 !!! tip "免安裝、開啟即玩"
     用瀏覽器直接玩，不必下載、不必註冊。電腦、手機、平板都可以，載入後即使離線也能繼續探索。介面支援**正體中文／简体中文／English**，會依你的裝置語言自動切換。
 
+!!! success "📣 7/20 實體論壇・免費報名中"
+    玩完遊戲，想跟真人聊聊資安、把防線練得更扎實嗎？開放文化基金會將在台北舉辦免費實體論壇 **「公民社會的數位防線：共同面對數位威脅」**，發表兩份公民團體數位安全研究報告，並邀請資安研究者、實務工作者與政策專家對談，一起守護公民社會的數位韌性。
+
+    - 📅 **2026/7/20（一）14:30–17:10**（14:00 開始報到）
+    - 📍 BEONE VISION SPACE 會議中心（台北市信義區基隆路一段 200 號 B1）
+    - 💵 **免費入場，需事先報名**
+
+    [立即報名參加 →](https://ocftw.kktix.cc/events/2026digitalfronline?utm_source=play&utm_medium=site&utm_campaign=digitalfron2026){ .md-button .md-button--primary }
+
 ## 遊戲畫面
 
 <div class="shots" data-carousel>
