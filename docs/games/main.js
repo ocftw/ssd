@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js'; // 草地自然疏密／高草區用
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
@@ -608,16 +609,142 @@ const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
     scene.add(im);
   });
 }
-// 草叢：交叉貼片 + 草葉 alpha 貼圖（比圓錐像真草）；不投影、量大、每叢隨機朝向/高度/色調
-const bladeQuad = new THREE.PlaneGeometry(1, 0.95); bladeQuad.translate(0, 0.475, 0);
-const bladeQuad2 = bladeQuad.clone(); bladeQuad2.rotateY(Math.PI / 2);
-const tuftGeo = mergeGeometries([bladeQuad, bladeQuad2]);
-const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
-const tufts = scatter(Q.rich ? 1700 : 950, WORLD.villageR + 3, 172, WORLD.water + 0.6, false);
-const tuftMesh = new THREE.InstancedMesh(tuftGeo, tuftMat, tufts.length);
-const tuftTints = [0x86c45f, 0x6fae57, 0x95cf6c, 0x5f9c49];
-{ const col = new THREE.Color(); tufts.forEach((p, i) => { dummy.position.set(p.x, p.y - 0.05, p.z); dummy.rotation.set(0, p.ry, 0); const s = p.s * 0.95; dummy.scale.set(s, s * rand(0.8, 1.25), s); dummy.updateMatrix(); tuftMesh.setMatrixAt(i, dummy.matrix); tuftMesh.setColorAt(i, col.set(tuftTints[(Math.random() * tuftTints.length) | 0])); }); }
-tuftMesh.instanceMatrix.needsUpdate = true; if (tuftMesh.instanceColor) tuftMesh.instanceColor.needsUpdate = true; scene.add(tuftMesh);
+// 草地系統：兩種程序化草共用同一材質/shader（一次編譯；每種各一筆 draw call）：
+//   ① 綠草 —— 較矮的綠色 cross-plane 柔草，鋪滿整片綠地＝柔軟絨毯；② 芒草 —— 高、金黃帶銀白穗頭，核心草原的點綴。
+//   每片葉＝「十字交叉兩片」彎曲收尖葉（cross-plane，非單片）→ 任何視角都有體積、鏡頭轉側面也不會變一條線消失（解決紙片感）；
+//   烤入「根暗尖亮」亮度漸層（0.5→1.18，厚度 AO 感）；fragment 法線往天光混 0.55 → 整片像柔軟絨毯一起受光、不是一片片卡片各自反光。
+function curvedBlade(seg, o) {                                                            // 一片彎葉（局部 X＝寬、Y＝高 0..1、Z＝彎拱）；o={c0,c1,c2,wStalk,wHead,headFrom,bow,taper}
+  const pos = [], col = [], idx = [], c = new THREE.Color();
+  const c0 = new THREE.Color(o.c0), c1 = new THREE.Color(o.c1), c2 = new THREE.Color(o.c2 ?? o.c1);
+  const hf = o.headFrom ?? 1.0, taper = o.taper ?? 0.85;
+  for (let i = 0; i <= seg; i++) {
+    const t = i / seg;
+    const head = (o.wHead && t > hf) ? Math.sin((t - hf) / (1 - hf) * Math.PI) * o.wHead : 0.0; // 穗頭膨起（芒草用；綠草無）
+    const bw = o.wStalk * (1 - t * taper) + head, z = Math.pow(t, 1.7) * o.bow;           // 寬度（往尖收窄）＋ 靜止彎拱
+    pos.push(-bw, t, z, bw, t, z);
+    if (t < hf) c.copy(c0).lerp(c1, t / hf); else c.copy(c1).lerp(c2, hf < 1 ? (t - hf) / (1 - hf) : 0); // 根→中→（穗）漸層；hf=1（綠草無穗）時避免 0/0=NaN
+    const br = 0.5 + 0.68 * t;                                                            // 根暗尖亮：根 0.5 → 尖 1.18
+    col.push(c.r * br, c.g * br, c.b * br, c.r * br, c.g * br, c.b * br);
+  }
+  for (let i = 0; i < seg; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx); return g;
+}
+function crossBlade(seg, o) { const a = curvedBlade(seg, o), b = curvedBlade(seg, o); b.rotateY(Math.PI / 2); const g = mergeGeometries([a, b]); g.computeVertexNormals(); return g; } // 十字交叉＝有體積
+const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95 });                                   // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠
+const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5 }); // 芒草：金綠桿→金黃→銀白穗頭、前傾
+// 風飄＋撥草（純 GPU vertex shader，薩爾達風草原）：① 風 — 整片往固定風向傾 + 大尺度行進陣風（波一陣陣掃過整片）+ 每葉細抖；h*h 遮罩（根固定、越往尖擺越多）、×桿高（高草擺更大）；
+//   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
+//   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
+const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
+const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) } }; // uPlayer 初始放遠處＝開場無撥動
+function makeGrassMaterial(part, upMix, envI) {                                           // part=撥草開關；upMix=法線往天光混合量（越高越柔但越吃藍天）；envI=天空環境反射量（越高越偏藍）
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
+    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS };
+    const partGLSL = part ? `
+    vec2 toBlade = gBase.xz - uPlayer.xz;
+    float pd = length(toBlade);
+    float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
+    vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
+    gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nvarying vec3 vGrassUp;\n' +
+      sh.vertexShader.replace('#include <project_vertex>', `
+    vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
+    vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
+    vec3 gBase  = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;         // 此叢草根的世界座標
+    float bladeH = length(instanceMatrix[1].xyz);                                        // 此叢實際高度（y 軸縮放）→ 擺幅依高度成比例
+    float gH = clamp(position.y, 0.0, 1.0);                                              // 0＝根 → 1＝葉尖
+    float arc = gH * gH;                                                                 // 弧形遮罩：根固定、越往尖擺得越多
+    float ph = gBase.x * 0.35 + gBase.z * 0.28;                                          // 每葉相位
+    vec2 wdir = vec2(0.86, 0.5);                                                          // 固定風向
+    float gust = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.05 - uTime * 1.0);              // 大尺度行進陣風（波一陣陣掃過整片草原）
+    vec2 flutter = vec2(sin(uTime * 1.6 + ph), cos(uTime * 1.3 + ph * 1.3)) * 0.04;      // 每葉細抖
+    gWorld.xz += (wdir * (0.10 + 0.22 * gust) + flutter) * uWind * arc * bladeH;         // 整片往風向傾、隨陣風起伏（×桿高 → 高草擺更大）
+    ${partGLSL}
+    vec4 mvPosition = viewMatrix * gWorld;
+    gl_Position = projectionMatrix * mvPosition;
+  `);
+    sh.fragmentShader = 'varying vec3 vGrassUp;\n' +
+      sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, ' + upMix.toFixed(3) + ')); // 葉法線往天光混合 → 柔軟整片受光（lights 用 geometryNormal，會由 normal copy）');
+  };
+  return mat;
+}
+const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06);                              // 薩爾達綠草：少混天光、幾乎不反射藍天 → 純綠不偏青；風 + 撥草（只側推）
+const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30);                              // 芒草：較柔（金黃色不怕藍天影響）；風 + 撥草
+// 只在「綠地」長草：沿用地形上色判定 —— 沙岸/黃土（y<water+1.2）、高地岩石（y>15）、陡坡（坡度>0.5）都不長。
+function isGrassGround(x, z) {
+  const y = terrainHeight(x, z);
+  if (y < WORLD.water + 1.2 || y > 15) return false;                                     // 黃土沙地 / 高地岩石
+  const e = 1.4, hx = terrainHeight(x + e, z) - terrainHeight(x - e, z), hz = terrainHeight(x, z + e) - terrainHeight(x, z - e);
+  const ny = 1 / Math.sqrt(1 + (hx / (2 * e)) ** 2 + (hz / (2 * e)) ** 2);               // 地表法線 y 分量
+  return (1 - ny) <= 0.5;                                                                 // 陡坡（岩石）不長
+}
+// 草地分布用雜訊（取代規則 sin 網格 → 自然有機）
+const gnoise = new ImprovedNoise();
+const noise01 = (x, z, f, s) => gnoise.noise(x * f, z * f, s) * 0.5 + 0.5;                // 0..1
+const grassClump = (x, z) => noise01(x, z, 0.012, 1.7) * 0.65 + noise01(x, z, 0.05, 8.3) * 0.35; // 大斑塊×中斑塊：自然疏密（高處密、低處疏、偶有空地）
+const grassTall  = (x, z) => noise01(x, z, 0.02, 30.5);                                   // 另一組低頻 → 有機的成片高草區
+function ruinDist(x, z) {                                                                  // 到最近遺跡/紀念碑/牆的距離
+  let m = Math.min(Math.hypot(x - ocfAt.x, z - ocfAt.z), Math.hypot(x - STELE_AT.x, z - STELE_AT.z), Math.hypot(x - WALL_AT.x, z - WALL_AT.z));
+  for (const r of ruinAt) { const dd = Math.hypot(x - r.x, z - r.z); if (dd < m) m = dd; }
+  return m;
+}
+const ruinGrassPass = (x, z) => { const rd = ruinDist(x, z); return rd >= 13 || (rd >= 5 && Math.random() < (rd - 5) / 8); }; // 遺跡本體(<5)不長、5–13 機率漸入＝柔邊（非硬圓圈）
+// 散佈放置（稀疏點綴用，如芒草）：環帶內隨機、只長綠地、避遺跡；量少 → frustumCulled=false 整片常駐。
+function plantGrass(geo, mat, cap, rMin, rMax, hMin, hMax, tint) {
+  const m = new THREE.InstancedMesh(geo, mat, cap), d = new THREE.Object3D(), col = new THREE.Color();
+  const span = rMax - rMin; let n = 0, tries = 0;
+  while (n < cap && tries < cap * 10) {
+    tries++;
+    const a = rand(0, TAU), r = rMin + Math.sqrt(rand(0, 1)) * span, x = Math.cos(a) * r, z = Math.sin(a) * r; // 依面積均勻
+    if (!isGrassGround(x, z) || !ruinGrassPass(x, z)) continue;                           // 只長綠地 + 遺跡柔邊
+    d.position.set(x, terrainHeight(x, z) - 0.05, z);
+    d.rotation.set(rand(-0.06, 0.06), rand(0, TAU), rand(-0.06, 0.06));                   // 隨機朝向 + 微傾
+    d.scale.set(rand(0.85, 1.15), rand(hMin, hMax), rand(0.85, 1.15)); d.updateMatrix(); m.setMatrixAt(n, d.matrix);
+    tint(col); m.setColorAt(n, col); n++;
+  }
+  m.count = n; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  m.frustumCulled = false; scene.add(m); return m;
+}
+// 分塊放置（高密度草皮用）：把草原切成 chunk，逐 chunk 建 InstancedMesh 並各自算 bounding → 開視椎剔除只畫看得到的 chunk，
+//   ⇒ 撐得起「棒球場草皮」級密度仍維持流暢；且 chunk 先粗判綠地、每葉只取樣 1 次地表高度，載入更快。
+function plantTurf(geo, mat, perM2, rMin, rMax, hFn, tint) {
+  const CS = 16, group = new THREE.Group(), d = new THREE.Object3D(), col = new THREE.Color();
+  const per = Math.max(1, Math.round(perM2 * CS * CS));
+  for (let cx = -rMax; cx < rMax; cx += CS) {
+    for (let cz = -rMax; cz < rMax; cz += CS) {
+      if (Math.hypot(cx + CS / 2, cz + CS / 2) > rMax + CS || Math.hypot(cx + CS / 2, cz + CS / 2) < rMin - CS) continue; // chunk 不靠近環帶
+      let green = 0;                                                                       // chunk 綠地粗判（中心＋4 角）
+      for (const s of [[cx + CS / 2, cz + CS / 2], [cx + 1, cz + 1], [cx + CS - 1, cz + 1], [cx + 1, cz + CS - 1], [cx + CS - 1, cz + CS - 1]]) if (isGrassGround(s[0], s[1])) green++;
+      if (green < 2) continue;                                                             // 幾乎沒綠地 → 跳過此 chunk
+      const im = new THREE.InstancedMesh(geo, mat, per); let n = 0;
+      for (let k = 0; k < per; k++) {
+        const x = cx + Math.random() * CS, z = cz + Math.random() * CS, rr = Math.hypot(x, z);
+        if (rr < rMin || rr > rMax) continue;
+        const y = terrainHeight(x, z);                                                     // 每葉只取樣 1 次（便宜）
+        if (y < WORLD.water + 1.2 || y > 14 || !ruinGrassPass(x, z)) continue;             // 水窪/高地不長；遺跡柔邊（越近越稀）
+        if (Math.random() > grassClump(x, z) * 1.5 - 0.1) continue;                         // 雜訊疏密：自然成片、偶有空地（非均勻噴灑）
+        d.position.set(x, y - 0.05, z);
+        d.rotation.set(rand(-0.06, 0.06), rand(0, TAU), rand(-0.06, 0.06));
+        d.scale.set(rand(0.85, 1.15), hFn(x, z), rand(0.85, 1.15)); d.updateMatrix(); im.setMatrixAt(n, d.matrix);
+        tint(col); im.setColorAt(n, col); n++;
+      }
+      if (n === 0) continue;
+      im.count = n; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+      im.computeBoundingSphere();                                                          // 以此 chunk 的實例算 bounding → 視椎剔除生效
+      group.add(im);
+    }
+  }
+  scene.add(group); return group;
+}
+// 薩爾達風草原：鋪滿「地圖上所有綠地」（r 38–170，雜訊控制自然疏密與成片高草），多數及膝、成片區域長到「及人高」（~2–3m，角色約 3m 高），隨風成波、走過撥開。
+const greenH = (x, z) => grassTall(x, z) > 0.66 ? rand(2.0, 3.0) : (Math.random() < 0.1 ? rand(1.1, 1.9) : rand(0.45, 1.0)); // 雜訊高草區及人高；其餘及膝、零星中高
+const greenGrass  = plantTurf(greenGeo,  grassMatGreen,  Q.rich ? 6 : 2, 37.4, 170, greenH, (c) => c.setRGB(rand(0.8, 1.02), rand(0.96, 1.16), rand(0.6, 0.84))); // rMin 37.4＝緊貼民房外緣(r24–35)、不長進屋群；密度再 −50%；每叢微色偏：壓藍、升綠
+const susukiGrass = plantGrass(susukiGeo, grassMatSusuki, Q.rich ? 5000 : 1200, WORLD.villageR + 6, 170, 1.2, 2.2, (c) => c.setRGB(rand(0.88, 1.06), rand(0.92, 1.08), rand(0.85, 1.05))); // 稀疏金色點綴（10%，散佈全綠地）
 
 // ── 村莊 ────────────────────────────────────────────────────────
 const village = new THREE.Group();
@@ -2217,6 +2344,7 @@ function animate() {
     if (dirty) { treeFoliage.instanceMatrix.needsUpdate = true; treeTrunk.instanceMatrix.needsUpdate = true; }
   }
   // 特效更新
+  tuftFX.uTime.value = t; tuftFX.uPlayer.value.copy(hero.position); // 草飄＋撥草：時間推進 + 玩家世界座標（撥開效果在 shader 內逐頂點計算）
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
   // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
