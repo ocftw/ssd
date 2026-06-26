@@ -191,8 +191,11 @@ composer.addPass(gradePass);
 if (Q.smaa) composer.addPass(new SMAAPass(innerWidth, innerHeight)); // 桌機：SMAA 邊緣抗鋸齒（多一個全螢幕 pass）
 composer.addPass(new OutputPass());
 composer.setSize(innerWidth, innerHeight);
-// 手機：略過 SMAA shader pass，改對 composer 離屏目標開硬體 MSAA（較省）
-if (!Q.smaa && Q.msaa) { composer.renderTarget1.samples = composer.renderTarget2.samples = Q.msaa; }
+// 邊緣抗鋸齒：對 composer 離屏目標開硬體 MSAA（需 WebGL2；context MSAA 對離屏目標無效，故走這條）。
+//   桌機＝MSAA 4× ＋ SMAA 疊加：幾何輪廓（尤其拉遠/廣角時遠處密草葉）的次像素鋸齒先被 MSAA 平滑，SMAA 再收尾 → 草邊明顯變柔。
+//   手機＝維持原本 MSAA（省去 SMAA 全螢幕 pass）。
+const rtSamples = webgl2ok ? (Q.msaa || (Q.smaa ? 4 : 0)) : 0;
+if (rtSamples) { composer.renderTarget1.samples = composer.renderTarget2.samples = rtSamples; }
 
 function renderScene() { composer.render(); }
 
@@ -688,6 +691,7 @@ const gnoise = new ImprovedNoise();
 const noise01 = (x, z, f, s) => gnoise.noise(x * f, z * f, s) * 0.5 + 0.5;                // 0..1
 const grassClump = (x, z) => noise01(x, z, 0.012, 1.7) * 0.65 + noise01(x, z, 0.05, 8.3) * 0.35; // 大斑塊×中斑塊：自然疏密（高處密、低處疏、偶有空地）
 const grassTall  = (x, z) => noise01(x, z, 0.02, 30.5);                                   // 另一組低頻 → 有機的成片高草區
+const grassPatch = (x, z) => noise01(x, z, 0.013, 41.3) * 0.7 + noise01(x, z, 0.034, 5.1) * 0.3; // 大尺度島狀遮罩：把草打散成「一區一區」散布全圖、區間留白（破除中心整片草皮）
 function ruinDist(x, z) {                                                                  // 到最近遺跡/紀念碑/牆的距離
   let m = Math.min(Math.hypot(x - ocfAt.x, z - ocfAt.z), Math.hypot(x - STELE_AT.x, z - STELE_AT.z), Math.hypot(x - WALL_AT.x, z - WALL_AT.z));
   for (const r of ruinAt) { const dd = Math.hypot(x - r.x, z - r.z); if (dd < m) m = dd; }
@@ -727,7 +731,10 @@ function plantTurf(geo, mat, perM2, rMin, rMax, hFn, tint) {
         if (rr < rMin || rr > rMax) continue;
         const y = terrainHeight(x, z);                                                     // 每葉只取樣 1 次（便宜）
         if (y < WORLD.water + 1.2 || y > 14 || !ruinGrassPass(x, z)) continue;             // 水窪/高地不長；遺跡柔邊（越近越稀）
-        if (Math.random() > grassClump(x, z) * 1.5 - 0.1) continue;                         // 雜訊疏密：自然成片、偶有空地（非均勻噴灑）
+        const p = grassPatch(x, z);
+        if (p < 0.43) continue;                                                             // 區外留白 → 全圖「一區一區」散布、破除中心整片草皮
+        const fill = Math.min(1, (p - 0.43) / 0.12);                                        // 區邊緣漸入＝柔邊（非硬切）
+        if (Math.random() > fill * (0.55 + 0.5 * grassClump(x, z))) continue;               // 整體更稀疏（區間留白）+ 區內自然疏密
         d.position.set(x, y - 0.05, z);
         d.rotation.set(rand(-0.06, 0.06), rand(0, TAU), rand(-0.06, 0.06));
         d.scale.set(rand(0.85, 1.15), hFn(x, z), rand(0.85, 1.15)); d.updateMatrix(); im.setMatrixAt(n, d.matrix);
@@ -742,9 +749,22 @@ function plantTurf(geo, mat, perM2, rMin, rMax, hFn, tint) {
   scene.add(group); return group;
 }
 // 薩爾達風草原：鋪滿「地圖上所有綠地」（r 38–170，雜訊控制自然疏密與成片高草），多數及膝、成片區域長到「及人高」（~2–3m，角色約 3m 高），隨風成波、走過撥開。
-const greenH = (x, z) => grassTall(x, z) > 0.66 ? rand(2.0, 3.0) : (Math.random() < 0.1 ? rand(1.1, 1.9) : rand(0.45, 1.0)); // 雜訊高草區及人高；其餘及膝、零星中高
+const HERO_H = 2.7;                                                                       // 角色身高（頭頂約 y2.6）→ 草最高到此
+const greenH = (x, z) => {                                                                // 高度依「離村莊距離」漸增：近村莊小草、越遠越高、最遠及角色高
+  let t = (Math.hypot(x, z) - 37.4) / (160 - 37.4); t = Math.max(0, Math.min(1, t)); t = t * t * (3 - 2 * t); // 0（村莊邊）→1（遠處），smoothstep 柔順
+  const base = 0.35 + t * (HERO_H - 0.35);                                                // 0.35（小草）→ 2.7（及角色高）
+  const h = base * rand(0.8, 1.15) * (0.85 + 0.3 * grassTall(x, z));                       // 微參差 + 低頻雜訊成片高低（同區相近、有機）
+  return Math.max(0.3, Math.min(HERO_H * 1.05, h));
+};
 const greenGrass  = plantTurf(greenGeo,  grassMatGreen,  Q.rich ? 6 : 2, 37.4, 170, greenH, (c) => c.setRGB(rand(0.8, 1.02), rand(0.96, 1.16), rand(0.6, 0.84))); // rMin 37.4＝緊貼民房外緣(r24–35)、不長進屋群；密度再 −50%；每叢微色偏：壓藍、升綠
 const susukiGrass = plantGrass(susukiGeo, grassMatSusuki, Q.rich ? 5000 : 1200, WORLD.villageR + 6, 170, 1.2, 2.2, (c) => c.setRGB(rand(0.88, 1.06), rand(0.92, 1.08), rand(0.85, 1.05))); // 稀疏金色點綴（10%，散佈全綠地）
+// 白天「沒有牆的大陸」敞開後外圈 r170→海岸 變成綠丘（夜晚同處是山牆）；草是靜態實例只種到 r170 → 白天遠處綠地光禿。
+//   以白天地形高度補種、僅 worldOpen 顯示：中遠段延伸高草草原，最外靠海換成芒草（海岸荒地的自然優勢種，綠→金漸層）。
+setTerrainOpenness(1);                                                                    // 暫切白天地形取高度/綠地判定（擺放後立即還原）
+const dayMeadow = plantTurf(greenGeo, grassMatGreen, Q.rich ? 6 : 2, 165, 202, greenH, (c) => c.setRGB(rand(0.8, 1.02), rand(0.96, 1.16), rand(0.6, 0.84))); // 延伸到白天綠丘（離村越遠越高，已達角色高）
+const daySusuki = plantGrass(susukiGeo, grassMatSusuki, Q.rich ? 4200 : 1000, 184, 236, 1.4, 2.6, (c) => c.setRGB(rand(0.88, 1.06), rand(0.92, 1.08), rand(0.85, 1.05))); // 靠海金色芒草帶：開闊海岸的自然優勢種、隨海風成浪
+setTerrainOpenness(worldOpen ? 1 : 0);                                                    // 還原 openness（載入時＝夜 0）
+dayMeadow.visible = daySusuki.visible = worldOpen;                                        // 僅白天現身（animate 隨 worldOpen 切換；夜晚此處是山牆，藏起避免穿插）
 
 // ── 村莊 ────────────────────────────────────────────────────────
 const village = new THREE.Group();
@@ -1762,6 +1782,7 @@ const soundBtn = document.getElementById('soundbtn');
 const refreshSound = () => { soundBtn.textContent = SFX.isMuted() ? '🔇' : '🔊'; soundBtn.setAttribute('aria-pressed', String(SFX.isMuted())); };
 soundBtn.addEventListener('click', () => { SFX.unlock(); SFX.toggle(); refreshSound(); });
 refreshSound();
+const shotBtn = document.getElementById('shotbtn'); if (shotBtn) shotBtn.addEventListener('click', requestScreenshot); // 📷 截圖（亦可按 P）
 
 // 重置進度：清空 localStorage，所有遺跡回到未發現狀態
 function resetRuinVisual(p) {
@@ -2127,6 +2148,32 @@ addEventListener('keydown', (e) => {
   else if (e.code === 'Minus') { const p = torchParams[torchSel]; torchTune[p.k] = Math.max(0, +(torchTune[p.k] - p.step).toFixed(3)); }
   else if (e.code === 'Equal') { const p = torchParams[torchSel]; torchTune[p.k] = +(Math.min(torchTune[p.k] + p.step, p.max ?? Infinity)).toFixed(3); }
 });
+
+// ── 截圖模式：暫時把 pixelRatio 拉高（超取樣）算一張高解析圖 → 真正抹平遠處草葉的次像素鋸齒（比加 MSAA 樣本更有效），平時遊玩效能完全不受影響。
+//   HUD／世界標籤／小地圖都是 DOM 覆蓋層、不在 WebGL canvas 內 → 擷取 canvas 自動排除，得到乾淨的純美景圖。
+let shotPending = false;
+function requestScreenshot() { if (started) shotPending = true; }                       // 設旗標，實際擷取在 animate 同幀做（render 後 buffer 仍有效，免 preserveDrawingBuffer）
+function doScreenshot() {
+  shotPending = false;
+  const prevPR = renderer.getPixelRatio(), prevSamples = composer.renderTarget1.samples;
+  const ss = Math.max(prevPR, Math.min(3, 3840 / Math.max(innerWidth, innerHeight)));    // 超取樣倍率：目標 ~4K 最長邊、上限 3×、不低於現狀
+  try {
+    composer.renderTarget1.samples = composer.renderTarget2.samples = 0;                 // 超取樣本身已足夠抗鋸齒 → 關 MSAA，省高解析下的 VRAM
+    renderer.setPixelRatio(ss); composer.setPixelRatio(ss);
+    renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+    renderScene();                                                                       // 以高解析重算一張
+    const a = document.createElement('a'), d = new Date(), p = (n) => String(n).padStart(2, '0');
+    a.download = `資安新手村-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+    a.href = renderer.domElement.toDataURL('image/png'); a.click();                       // 同步讀回 canvas → 下載
+  } catch (err) { /* 截圖失敗不影響遊戲 */ }
+  finally {                                                                               // 還原 MSAA／解析度，並立即重畫一張避免閃一幀
+    composer.renderTarget1.samples = composer.renderTarget2.samples = prevSamples;
+    renderer.setPixelRatio(prevPR); composer.setPixelRatio(prevPR);
+    renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+    renderScene();
+  }
+}
+addEventListener('keydown', (e) => { if (e.code === 'KeyP' && !(document.activeElement && document.activeElement.tagName === 'INPUT')) { e.preventDefault(); requestScreenshot(); } }); // P＝截圖
 
 let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
 function animate() {
@@ -2495,7 +2542,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     }
   }
   // 通關後白天世界三建物：僅 worldOpen 現身（紀念碑/燈塔/夥伴牆）
-  if (lessonStele.group.visible !== worldOpen) { lessonStele.group.visible = lighthouse.group.visible = partnerWall.group.visible = worldOpen; }
+  if (lessonStele.group.visible !== worldOpen) { lessonStele.group.visible = lighthouse.group.visible = partnerWall.group.visible = worldOpen; dayMeadow.visible = daySusuki.visible = worldOpen; } // 外圈白天草原/海岸芒草也隨之現身/隱藏
   if (worldOpen) {
     lessonStele.gem.rotation.y = t * 0.5; lessonStele.gemMat.emissiveIntensity = 1.2 + Math.sin(t * 2) * 0.3;
     lighthouse.beamPivot.rotation.y = t * 0.6;                               // 光束緩掃海面
@@ -2672,7 +2719,8 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
 
   checkAchievements();
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
-  renderScene(); labelRenderer.render(scene, camera);
+  if (shotPending) doScreenshot(); else renderScene();   // 截圖：同幀超取樣擷取（擷取後內部已還原並重畫）
+  labelRenderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
 

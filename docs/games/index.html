@@ -105,9 +105,9 @@
 
     /* 任務按鈕 + 清單 */
     #topright { position:fixed; right:16px; top:16px; z-index:12; display:flex; gap:8px; align-items:flex-start; }
-    #logbtn, #soundbtn, #achbtn { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
+    #logbtn, #soundbtn, #achbtn, #shotbtn { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
       background:rgba(251,247,239,.93); padding:9px 14px; border-radius:999px; box-shadow:var(--shadow); }
-    #soundbtn { padding:9px 12px; }
+    #soundbtn, #shotbtn { padding:9px 12px; }
     /* 語言切換器（由 main.js 動態插入，少於 2 種語言時不顯示） */
     #langsw { display:flex; gap:3px; background:rgba(251,247,239,.93); padding:4px; border-radius:999px; box-shadow:var(--shadow); }
     #langsw button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
@@ -444,6 +444,7 @@
 
   <div id="topright">
     <button id="soundbtn" title="音效開關" data-i18n-title="soundToggle" aria-pressed="false">🔊</button>
+    <button id="shotbtn" title="截圖（P）｜高解析柔邊美景圖（自動隱藏介面）">📷</button>
     <button id="logbtn" data-i18n="logBtn">📜 任務</button>
     <button id="achbtn" data-i18n="achBtn">🏅 成就</button>
   </div>
