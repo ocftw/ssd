@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { ImprovedNoise } from 'three/addons/math/ImprovedNoise.js'; // 草地自然疏密／高草區用
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
@@ -11,14 +12,14 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=a2ffbfab';
-import { BATTLES_ALL } from './i18n/battles.js?v=a2ffbfab';
-import { UI_ALL } from './i18n/ui.js?v=a2ffbfab';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=a2ffbfab';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=a2ffbfab';
-import { BattleSystem } from './battle.js?v=a2ffbfab';
+import { CONTENT } from './i18n/content.js?v=1dcc95ad';
+import { BATTLES_ALL } from './i18n/battles.js?v=1dcc95ad';
+import { UI_ALL } from './i18n/ui.js?v=1dcc95ad';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=1dcc95ad';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=1dcc95ad';
+import { BattleSystem } from './battle.js?v=1dcc95ad';
 import { EggGame } from './egg.js';
-import { SFX } from './audio.js?v=a2ffbfab';
+import { SFX } from './audio.js?v=1dcc95ad';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -112,7 +113,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=a2ffbfab', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=a2ffbfab', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=1dcc95ad', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=1dcc95ad', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -129,7 +130,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=a2ffbfab', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=a2ffbfab', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=1dcc95ad', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=1dcc95ad', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -190,8 +191,11 @@ composer.addPass(gradePass);
 if (Q.smaa) composer.addPass(new SMAAPass(innerWidth, innerHeight)); // 桌機：SMAA 邊緣抗鋸齒（多一個全螢幕 pass）
 composer.addPass(new OutputPass());
 composer.setSize(innerWidth, innerHeight);
-// 手機：略過 SMAA shader pass，改對 composer 離屏目標開硬體 MSAA（較省）
-if (!Q.smaa && Q.msaa) { composer.renderTarget1.samples = composer.renderTarget2.samples = Q.msaa; }
+// 邊緣抗鋸齒：對 composer 離屏目標開硬體 MSAA（需 WebGL2；context MSAA 對離屏目標無效，故走這條）。
+//   桌機＝MSAA 4× ＋ SMAA 疊加：幾何輪廓（尤其拉遠/廣角時遠處密草葉）的次像素鋸齒先被 MSAA 平滑，SMAA 再收尾 → 草邊明顯變柔。
+//   手機＝維持原本 MSAA（省去 SMAA 全螢幕 pass）。
+const rtSamples = webgl2ok ? (Q.msaa || (Q.smaa ? 4 : 0)) : 0;
+if (rtSamples) { composer.renderTarget1.samples = composer.renderTarget2.samples = rtSamples; }
 
 function renderScene() { composer.render(); }
 
@@ -467,8 +471,8 @@ function resolveHeroCollision() {
   hero.position.x = px; hero.position.z = pz;
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=a2ffbfab', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=a2ffbfab', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=1dcc95ad', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=1dcc95ad', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -572,7 +576,7 @@ const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
 const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
 const trees = scatter(Q.rich ? 480 : 300, WORLD.villageR + 8, 172, WORLD.water + 0.8, true); // rMax 172＝夜/日地形相同的內圈，群山沉降時不會浮空
 const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
-const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=a2ffbfab', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=a2ffbfab', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
+const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=1dcc95ad', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=1dcc95ad', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
 // 撞樹擺動會每幀更新 instanceMatrix（搖晃 ~2-3 秒才靜止）→ 標記為 DynamicDrawUsage，否則每幀重傳「靜態」緩衝會造成驅動層 stall／卡頓（走過樹叢時水面等大平面上抖動的主因）
 treeFoliage.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 treeTrunk.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -580,7 +584,7 @@ treeTrunk.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=a2ffbfab', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=a2ffbfab', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=1dcc95ad', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=1dcc95ad', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -608,16 +612,159 @@ const rockTints = [0xa9a7a0, 0x9a988f, 0xb4b1a8, 0x8c8a82];
     scene.add(im);
   });
 }
-// 草叢：交叉貼片 + 草葉 alpha 貼圖（比圓錐像真草）；不投影、量大、每叢隨機朝向/高度/色調
-const bladeQuad = new THREE.PlaneGeometry(1, 0.95); bladeQuad.translate(0, 0.475, 0);
-const bladeQuad2 = bladeQuad.clone(); bladeQuad2.rotateY(Math.PI / 2);
-const tuftGeo = mergeGeometries([bladeQuad, bladeQuad2]);
-const tuftMat = new THREE.MeshStandardMaterial({ map: tex('./tex/grass_blade.webp?v=a2ffbfab', 1, 1, true), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.4 });
-const tufts = scatter(Q.rich ? 1700 : 950, WORLD.villageR + 3, 172, WORLD.water + 0.6, false);
-const tuftMesh = new THREE.InstancedMesh(tuftGeo, tuftMat, tufts.length);
-const tuftTints = [0x86c45f, 0x6fae57, 0x95cf6c, 0x5f9c49];
-{ const col = new THREE.Color(); tufts.forEach((p, i) => { dummy.position.set(p.x, p.y - 0.05, p.z); dummy.rotation.set(0, p.ry, 0); const s = p.s * 0.95; dummy.scale.set(s, s * rand(0.8, 1.25), s); dummy.updateMatrix(); tuftMesh.setMatrixAt(i, dummy.matrix); tuftMesh.setColorAt(i, col.set(tuftTints[(Math.random() * tuftTints.length) | 0])); }); }
-tuftMesh.instanceMatrix.needsUpdate = true; if (tuftMesh.instanceColor) tuftMesh.instanceColor.needsUpdate = true; scene.add(tuftMesh);
+// 草地系統：兩種程序化草共用同一材質/shader（一次編譯；每種各一筆 draw call）：
+//   ① 綠草 —— 較矮的綠色 cross-plane 柔草，鋪滿整片綠地＝柔軟絨毯；② 芒草 —— 高、金黃帶銀白穗頭，核心草原的點綴。
+//   每片葉＝「十字交叉兩片」彎曲收尖葉（cross-plane，非單片）→ 任何視角都有體積、鏡頭轉側面也不會變一條線消失（解決紙片感）；
+//   烤入「根暗尖亮」亮度漸層（0.5→1.18，厚度 AO 感）；fragment 法線往天光混 0.55 → 整片像柔軟絨毯一起受光、不是一片片卡片各自反光。
+function curvedBlade(seg, o) {                                                            // 一片彎葉（局部 X＝寬、Y＝高 0..1、Z＝彎拱）；o={c0,c1,c2,wStalk,wHead,headFrom,bow,taper}
+  const pos = [], col = [], idx = [], c = new THREE.Color();
+  const c0 = new THREE.Color(o.c0), c1 = new THREE.Color(o.c1), c2 = new THREE.Color(o.c2 ?? o.c1);
+  const hf = o.headFrom ?? 1.0, taper = o.taper ?? 0.85;
+  for (let i = 0; i <= seg; i++) {
+    const t = i / seg;
+    const head = (o.wHead && t > hf) ? Math.sin((t - hf) / (1 - hf) * Math.PI) * o.wHead : 0.0; // 穗頭膨起（芒草用；綠草無）
+    const bw = o.wStalk * (1 - t * taper) + head, z = Math.pow(t, 1.7) * o.bow;           // 寬度（往尖收窄）＋ 靜止彎拱
+    pos.push(-bw, t, z, bw, t, z);
+    if (t < hf) c.copy(c0).lerp(c1, t / hf); else c.copy(c1).lerp(c2, hf < 1 ? (t - hf) / (1 - hf) : 0); // 根→中→（穗）漸層；hf=1（綠草無穗）時避免 0/0=NaN
+    const br = 0.5 + 0.68 * t;                                                            // 根暗尖亮：根 0.5 → 尖 1.18
+    col.push(c.r * br, c.g * br, c.b * br, c.r * br, c.g * br, c.b * br);
+  }
+  for (let i = 0; i < seg; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx); return g;
+}
+function crossBlade(seg, o) { const a = curvedBlade(seg, o), b = curvedBlade(seg, o); b.rotateY(Math.PI / 2); const g = mergeGeometries([a, b]); g.computeVertexNormals(); return g; } // 十字交叉＝有體積
+const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95 });                                   // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠
+const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5 }); // 芒草：金綠桿→金黃→銀白穗頭、前傾
+// 風飄＋撥草（純 GPU vertex shader，薩爾達風草原）：① 風 — 整片往固定風向傾 + 大尺度行進陣風（波一陣陣掃過整片）+ 每葉細抖；h*h 遮罩（根固定、越往尖擺越多）、×桿高（高草擺更大）；
+//   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
+//   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
+const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
+const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) } }; // uPlayer 初始放遠處＝開場無撥動
+function makeGrassMaterial(part, upMix, envI) {                                           // part=撥草開關；upMix=法線往天光混合量（越高越柔但越吃藍天）；envI=天空環境反射量（越高越偏藍）
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
+    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS };
+    const partGLSL = part ? `
+    vec2 toBlade = gBase.xz - uPlayer.xz;
+    float pd = length(toBlade);
+    float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
+    vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
+    gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nvarying vec3 vGrassUp;\n' +
+      sh.vertexShader.replace('#include <project_vertex>', `
+    vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
+    vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
+    vec3 gBase  = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;         // 此叢草根的世界座標
+    float bladeH = length(instanceMatrix[1].xyz);                                        // 此叢實際高度（y 軸縮放）→ 擺幅依高度成比例
+    float gH = clamp(position.y, 0.0, 1.0);                                              // 0＝根 → 1＝葉尖
+    float arc = gH * gH;                                                                 // 弧形遮罩：根固定、越往尖擺得越多
+    float ph = gBase.x * 0.35 + gBase.z * 0.28;                                          // 每葉相位
+    vec2 wdir = vec2(0.86, 0.5);                                                          // 固定風向
+    float gust = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.05 - uTime * 1.0);              // 大尺度行進陣風（波一陣陣掃過整片草原）
+    vec2 flutter = vec2(sin(uTime * 1.6 + ph), cos(uTime * 1.3 + ph * 1.3)) * 0.04;      // 每葉細抖
+    gWorld.xz += (wdir * (0.10 + 0.22 * gust) + flutter) * uWind * arc * bladeH;         // 整片往風向傾、隨陣風起伏（×桿高 → 高草擺更大）
+    ${partGLSL}
+    vec4 mvPosition = viewMatrix * gWorld;
+    gl_Position = projectionMatrix * mvPosition;
+  `);
+    sh.fragmentShader = 'varying vec3 vGrassUp;\n' +
+      sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, ' + upMix.toFixed(3) + ')); // 葉法線往天光混合 → 柔軟整片受光（lights 用 geometryNormal，會由 normal copy）');
+  };
+  return mat;
+}
+const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06);                              // 薩爾達綠草：少混天光、幾乎不反射藍天 → 純綠不偏青；風 + 撥草（只側推）
+const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30);                              // 芒草：較柔（金黃色不怕藍天影響）；風 + 撥草
+// 只在「綠地」長草：沿用地形上色判定 —— 沙岸/黃土（y<water+1.2）、高地岩石（y>15）、陡坡（坡度>0.5）都不長。
+function isGrassGround(x, z) {
+  const y = terrainHeight(x, z);
+  if (y < WORLD.water + 1.2 || y > 15) return false;                                     // 黃土沙地 / 高地岩石
+  const e = 1.4, hx = terrainHeight(x + e, z) - terrainHeight(x - e, z), hz = terrainHeight(x, z + e) - terrainHeight(x, z - e);
+  const ny = 1 / Math.sqrt(1 + (hx / (2 * e)) ** 2 + (hz / (2 * e)) ** 2);               // 地表法線 y 分量
+  return (1 - ny) <= 0.5;                                                                 // 陡坡（岩石）不長
+}
+// 草地分布用雜訊（取代規則 sin 網格 → 自然有機）
+const gnoise = new ImprovedNoise();
+const noise01 = (x, z, f, s) => gnoise.noise(x * f, z * f, s) * 0.5 + 0.5;                // 0..1
+const grassClump = (x, z) => noise01(x, z, 0.012, 1.7) * 0.65 + noise01(x, z, 0.05, 8.3) * 0.35; // 大斑塊×中斑塊：自然疏密（高處密、低處疏、偶有空地）
+const grassTall  = (x, z) => noise01(x, z, 0.02, 30.5);                                   // 另一組低頻 → 有機的成片高草區
+const grassPatch = (x, z) => noise01(x, z, 0.013, 41.3) * 0.7 + noise01(x, z, 0.034, 5.1) * 0.3; // 大尺度島狀遮罩：把草打散成「一區一區」散布全圖、區間留白（破除中心整片草皮）
+function ruinDist(x, z) {                                                                  // 到最近遺跡/紀念碑/牆的距離
+  let m = Math.min(Math.hypot(x - ocfAt.x, z - ocfAt.z), Math.hypot(x - STELE_AT.x, z - STELE_AT.z), Math.hypot(x - WALL_AT.x, z - WALL_AT.z));
+  for (const r of ruinAt) { const dd = Math.hypot(x - r.x, z - r.z); if (dd < m) m = dd; }
+  return m;
+}
+const ruinGrassPass = (x, z) => { const rd = ruinDist(x, z); return rd >= 13 || (rd >= 5 && Math.random() < (rd - 5) / 8); }; // 遺跡本體(<5)不長、5–13 機率漸入＝柔邊（非硬圓圈）
+// 散佈放置（稀疏點綴用，如芒草）：環帶內隨機、只長綠地、避遺跡；量少 → frustumCulled=false 整片常駐。
+function plantGrass(geo, mat, cap, rMin, rMax, hMin, hMax, tint) {
+  const m = new THREE.InstancedMesh(geo, mat, cap), d = new THREE.Object3D(), col = new THREE.Color();
+  const span = rMax - rMin; let n = 0, tries = 0;
+  while (n < cap && tries < cap * 10) {
+    tries++;
+    const a = rand(0, TAU), r = rMin + Math.sqrt(rand(0, 1)) * span, x = Math.cos(a) * r, z = Math.sin(a) * r; // 依面積均勻
+    if (!isGrassGround(x, z) || !ruinGrassPass(x, z)) continue;                           // 只長綠地 + 遺跡柔邊
+    d.position.set(x, terrainHeight(x, z) - 0.05, z);
+    d.rotation.set(rand(-0.06, 0.06), rand(0, TAU), rand(-0.06, 0.06));                   // 隨機朝向 + 微傾
+    d.scale.set(rand(0.85, 1.15), rand(hMin, hMax), rand(0.85, 1.15)); d.updateMatrix(); m.setMatrixAt(n, d.matrix);
+    tint(col); m.setColorAt(n, col); n++;
+  }
+  m.count = n; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  m.frustumCulled = false; scene.add(m); return m;
+}
+// 分塊放置（高密度草皮用）：把草原切成 chunk，逐 chunk 建 InstancedMesh 並各自算 bounding → 開視椎剔除只畫看得到的 chunk，
+//   ⇒ 撐得起「棒球場草皮」級密度仍維持流暢；且 chunk 先粗判綠地、每葉只取樣 1 次地表高度，載入更快。
+function plantTurf(geo, mat, perM2, rMin, rMax, hFn, tint) {
+  const CS = 16, group = new THREE.Group(), d = new THREE.Object3D(), col = new THREE.Color();
+  const per = Math.max(1, Math.round(perM2 * CS * CS));
+  for (let cx = -rMax; cx < rMax; cx += CS) {
+    for (let cz = -rMax; cz < rMax; cz += CS) {
+      if (Math.hypot(cx + CS / 2, cz + CS / 2) > rMax + CS || Math.hypot(cx + CS / 2, cz + CS / 2) < rMin - CS) continue; // chunk 不靠近環帶
+      let green = 0;                                                                       // chunk 綠地粗判（中心＋4 角）
+      for (const s of [[cx + CS / 2, cz + CS / 2], [cx + 1, cz + 1], [cx + CS - 1, cz + 1], [cx + 1, cz + CS - 1], [cx + CS - 1, cz + CS - 1]]) if (isGrassGround(s[0], s[1])) green++;
+      if (green < 2) continue;                                                             // 幾乎沒綠地 → 跳過此 chunk
+      const im = new THREE.InstancedMesh(geo, mat, per); let n = 0;
+      for (let k = 0; k < per; k++) {
+        const x = cx + Math.random() * CS, z = cz + Math.random() * CS, rr = Math.hypot(x, z);
+        if (rr < rMin || rr > rMax) continue;
+        const y = terrainHeight(x, z);                                                     // 每葉只取樣 1 次（便宜）
+        if (y < WORLD.water + 1.2 || y > 14 || !ruinGrassPass(x, z)) continue;             // 水窪/高地不長；遺跡柔邊（越近越稀）
+        const p = grassPatch(x, z);
+        if (p < 0.43) continue;                                                             // 區外留白 → 全圖「一區一區」散布、破除中心整片草皮
+        const fill = Math.min(1, (p - 0.43) / 0.12);                                        // 區邊緣漸入＝柔邊（非硬切）
+        if (Math.random() > fill * (0.55 + 0.5 * grassClump(x, z))) continue;               // 整體更稀疏（區間留白）+ 區內自然疏密
+        d.position.set(x, y - 0.05, z);
+        d.rotation.set(rand(-0.06, 0.06), rand(0, TAU), rand(-0.06, 0.06));
+        d.scale.set(rand(0.85, 1.15), hFn(x, z), rand(0.85, 1.15)); d.updateMatrix(); im.setMatrixAt(n, d.matrix);
+        tint(col); im.setColorAt(n, col); n++;
+      }
+      if (n === 0) continue;
+      im.count = n; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+      im.computeBoundingSphere();                                                          // 以此 chunk 的實例算 bounding → 視椎剔除生效
+      group.add(im);
+    }
+  }
+  scene.add(group); return group;
+}
+// 薩爾達風草原：鋪滿「地圖上所有綠地」（r 38–170，雜訊控制自然疏密與成片高草），多數及膝、成片區域長到「及人高」（~2–3m，角色約 3m 高），隨風成波、走過撥開。
+const HERO_H = 2.7;                                                                       // 角色身高（頭頂約 y2.6）→ 草最高到此
+const greenH = (x, z) => {                                                                // 高度依「離村莊距離」漸增：近村莊小草、越遠越高、最遠及角色高
+  let t = (Math.hypot(x, z) - 37.4) / (160 - 37.4); t = Math.max(0, Math.min(1, t)); t = t * t * (3 - 2 * t); // 0（村莊邊）→1（遠處），smoothstep 柔順
+  const base = 0.35 + t * (HERO_H - 0.35);                                                // 0.35（小草）→ 2.7（及角色高）
+  const h = base * rand(0.8, 1.15) * (0.85 + 0.3 * grassTall(x, z));                       // 微參差 + 低頻雜訊成片高低（同區相近、有機）
+  return Math.max(0.3, Math.min(HERO_H * 1.05, h));
+};
+const greenGrass  = plantTurf(greenGeo,  grassMatGreen,  Q.rich ? 6 : 2, 37.4, 170, greenH, (c) => c.setRGB(rand(0.8, 1.02), rand(0.96, 1.16), rand(0.6, 0.84))); // rMin 37.4＝緊貼民房外緣(r24–35)、不長進屋群；密度再 −50%；每叢微色偏：壓藍、升綠
+const susukiGrass = plantGrass(susukiGeo, grassMatSusuki, Q.rich ? 5000 : 1200, WORLD.villageR + 6, 170, 1.2, 2.2, (c) => c.setRGB(rand(0.88, 1.06), rand(0.92, 1.08), rand(0.85, 1.05))); // 稀疏金色點綴（10%，散佈全綠地）
+// 白天「沒有牆的大陸」敞開後外圈 r170→海岸 變成綠丘（夜晚同處是山牆）；草是靜態實例只種到 r170 → 白天遠處綠地光禿。
+//   以白天地形高度補種、僅 worldOpen 顯示：中遠段延伸高草草原，最外靠海換成芒草（海岸荒地的自然優勢種，綠→金漸層）。
+setTerrainOpenness(1);                                                                    // 暫切白天地形取高度/綠地判定（擺放後立即還原）
+const dayMeadow = plantTurf(greenGeo, grassMatGreen, Q.rich ? 6 : 2, 165, 202, greenH, (c) => c.setRGB(rand(0.8, 1.02), rand(0.96, 1.16), rand(0.6, 0.84))); // 延伸到白天綠丘（離村越遠越高，已達角色高）
+const daySusuki = plantGrass(susukiGeo, grassMatSusuki, Q.rich ? 4200 : 1000, 184, 236, 1.4, 2.6, (c) => c.setRGB(rand(0.88, 1.06), rand(0.92, 1.08), rand(0.85, 1.05))); // 靠海金色芒草帶：開闊海岸的自然優勢種、隨海風成浪
+setTerrainOpenness(worldOpen ? 1 : 0);                                                    // 還原 openness（載入時＝夜 0）
+dayMeadow.visible = daySusuki.visible = worldOpen;                                        // 僅白天現身（animate 隨 worldOpen 切換；夜晚此處是山牆，藏起避免穿插）
 
 // ── 村莊 ────────────────────────────────────────────────────────
 const village = new THREE.Group();
@@ -637,7 +784,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=a2ffbfab', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=1dcc95ad', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -890,7 +1037,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=a2ffbfab'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=1dcc95ad'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1013,7 +1160,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=a2ffbfab'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=1dcc95ad'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -1635,6 +1782,7 @@ const soundBtn = document.getElementById('soundbtn');
 const refreshSound = () => { soundBtn.textContent = SFX.isMuted() ? '🔇' : '🔊'; soundBtn.setAttribute('aria-pressed', String(SFX.isMuted())); };
 soundBtn.addEventListener('click', () => { SFX.unlock(); SFX.toggle(); refreshSound(); });
 refreshSound();
+const shotBtn = document.getElementById('shotbtn'); if (shotBtn) shotBtn.addEventListener('click', requestScreenshot); // 📷 截圖（亦可按 P）
 
 // 重置進度：清空 localStorage，所有遺跡回到未發現狀態
 function resetRuinVisual(p) {
@@ -2001,6 +2149,32 @@ addEventListener('keydown', (e) => {
   else if (e.code === 'Equal') { const p = torchParams[torchSel]; torchTune[p.k] = +(Math.min(torchTune[p.k] + p.step, p.max ?? Infinity)).toFixed(3); }
 });
 
+// ── 截圖模式：暫時把 pixelRatio 拉高（超取樣）算一張高解析圖 → 真正抹平遠處草葉的次像素鋸齒（比加 MSAA 樣本更有效），平時遊玩效能完全不受影響。
+//   HUD／世界標籤／小地圖都是 DOM 覆蓋層、不在 WebGL canvas 內 → 擷取 canvas 自動排除，得到乾淨的純美景圖。
+let shotPending = false;
+function requestScreenshot() { if (started) shotPending = true; }                       // 設旗標，實際擷取在 animate 同幀做（render 後 buffer 仍有效，免 preserveDrawingBuffer）
+function doScreenshot() {
+  shotPending = false;
+  const prevPR = renderer.getPixelRatio(), prevSamples = composer.renderTarget1.samples;
+  const ss = Math.max(prevPR, Math.min(3, 3840 / Math.max(innerWidth, innerHeight)));    // 超取樣倍率：目標 ~4K 最長邊、上限 3×、不低於現狀
+  try {
+    composer.renderTarget1.samples = composer.renderTarget2.samples = 0;                 // 超取樣本身已足夠抗鋸齒 → 關 MSAA，省高解析下的 VRAM
+    renderer.setPixelRatio(ss); composer.setPixelRatio(ss);
+    renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+    renderScene();                                                                       // 以高解析重算一張
+    const a = document.createElement('a'), d = new Date(), p = (n) => String(n).padStart(2, '0');
+    a.download = `資安新手村-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+    a.href = renderer.domElement.toDataURL('image/png'); a.click();                       // 同步讀回 canvas → 下載
+  } catch (err) { /* 截圖失敗不影響遊戲 */ }
+  finally {                                                                               // 還原 MSAA／解析度，並立即重畫一張避免閃一幀
+    composer.renderTarget1.samples = composer.renderTarget2.samples = prevSamples;
+    renderer.setPixelRatio(prevPR); composer.setPixelRatio(prevPR);
+    renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+    renderScene();
+  }
+}
+addEventListener('keydown', (e) => { if (e.code === 'KeyP' && !(document.activeElement && document.activeElement.tagName === 'INPUT')) { e.preventDefault(); requestScreenshot(); } }); // P＝截圖
+
 let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
 function animate() {
   if (!started) return;     // landing 仍在最前：完全跳過模擬與渲染（場景被不透明 landing 蓋住，不需畫）
@@ -2217,6 +2391,7 @@ function animate() {
     if (dirty) { treeFoliage.instanceMatrix.needsUpdate = true; treeTrunk.instanceMatrix.needsUpdate = true; }
   }
   // 特效更新
+  tuftFX.uTime.value = t; tuftFX.uPlayer.value.copy(hero.position); // 草飄＋撥草：時間推進 + 玩家世界座標（撥開效果在 shader 內逐頂點計算）
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
   // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
@@ -2367,7 +2542,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     }
   }
   // 通關後白天世界三建物：僅 worldOpen 現身（紀念碑/燈塔/夥伴牆）
-  if (lessonStele.group.visible !== worldOpen) { lessonStele.group.visible = lighthouse.group.visible = partnerWall.group.visible = worldOpen; }
+  if (lessonStele.group.visible !== worldOpen) { lessonStele.group.visible = lighthouse.group.visible = partnerWall.group.visible = worldOpen; dayMeadow.visible = daySusuki.visible = worldOpen; } // 外圈白天草原/海岸芒草也隨之現身/隱藏
   if (worldOpen) {
     lessonStele.gem.rotation.y = t * 0.5; lessonStele.gemMat.emissiveIntensity = 1.2 + Math.sin(t * 2) * 0.3;
     lighthouse.beamPivot.rotation.y = t * 0.6;                               // 光束緩掃海面
@@ -2544,7 +2719,8 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
 
   checkAchievements();
   mmAcc += dt; if (mmAcc > 0.08) { mmAcc = 0; drawMinimap(); }
-  renderScene(); labelRenderer.render(scene, camera);
+  if (shotPending) doScreenshot(); else renderScene();   // 截圖：同幀超取樣擷取（擷取後內部已還原並重畫）
+  labelRenderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
 
