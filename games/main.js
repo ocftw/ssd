@@ -12,14 +12,14 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=1dcc95ad';
-import { BATTLES_ALL } from './i18n/battles.js?v=1dcc95ad';
-import { UI_ALL } from './i18n/ui.js?v=1dcc95ad';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=1dcc95ad';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=1dcc95ad';
-import { BattleSystem } from './battle.js?v=1dcc95ad';
+import { CONTENT } from './i18n/content.js?v=85907760';
+import { BATTLES_ALL } from './i18n/battles.js?v=85907760';
+import { UI_ALL } from './i18n/ui.js?v=85907760';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=85907760';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=85907760';
+import { BattleSystem } from './battle.js?v=85907760';
 import { EggGame } from './egg.js';
-import { SFX } from './audio.js?v=1dcc95ad';
+import { SFX } from './audio.js?v=85907760';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -91,7 +91,7 @@ const Q = ({
   // high＝桌機精緻：解除為手機而設的限制＋開啟寫實後製（光暈、大氣天空＋星空、電影色調）
   // 註：maxPR 1.5（由 2.0 再降）＝把填充率砍約 44%，緩解 GPU 滿載造成的風扇狂轉與幀距不均（高刷新/高DPI 螢幕上水面等大平面最容易顯出抖動）；SMAA 在 1.5 下仍可接受。弱機可手動切「精簡」走 low 路徑
   high: { maxPR: 1.5, smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
-          sunShadow: 4096, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true,
+          sunShadow: 2048, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true, // 太陽陰影 4096→2048：texel 砍 3/4 降填充/頻寬，PCFSoft 下幾乎無感
           bloom: true, richSky: true, rich: true, weather: true },
 })[TIER];
 
@@ -113,7 +113,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=1dcc95ad', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=1dcc95ad', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=85907760', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=85907760', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -130,7 +130,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=1dcc95ad', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=1dcc95ad', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=85907760', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=85907760', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -336,13 +336,24 @@ if (Q.weather) {
     x.fillStyle = g; x.fillRect(6, 0, 4, 64);
     const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
   })();
-  const RN = 800, rpos = new Float32Array(RN * 3);
-  for (let i = 0; i < RN; i++) { rpos[i * 3] = rand(-40, 40); rpos[i * 3 + 1] = rand(0, 42); rpos[i * 3 + 2] = rand(-40, 40); }
-  const rgeo = new THREE.BufferGeometry(); rgeo.setAttribute('position', new THREE.BufferAttribute(rpos, 3));
+  const RN = 5000, rpos = new Float32Array(RN * 3);                              // 大池：靠 drawRange 控制密度（小雨/大雨/大雷雨；雷雨吃滿全池＝最密）
+  for (let i = 0; i < RN; i++) { rpos[i * 3] = rand(-44, 44); rpos[i * 3 + 1] = rand(0, 46); rpos[i * 3 + 2] = rand(-44, 44); }
+  const rgeo = new THREE.BufferGeometry(); rgeo.setAttribute('position', new THREE.BufferAttribute(rpos, 3)); rgeo.setDrawRange(0, 0);
   const rmat = new THREE.PointsMaterial({ map: rainTex, color: 0xcdd9e6, size: 9, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false }); // 螢幕固定垂直雨絲
   const rain = new THREE.Points(rgeo, rmat); rain.frustumCulled = false; wg.add(rain);
-  weather = { mists, rain, rgeo, rmat, amt: 0, target: 0, timer: rand(20, 45) };
+  // mode：clear晴／light小雨／heavy大雨／storm大雷雨。amt=整體強度(0..1)、storm=雷雨程度(調光+閃電)、flash=閃電亮度
+  weather = { mists, rain, rgeo, rmat, RN, amt: 0, mode: 'clear', storm: 0, timer: rand(18, 40),
+    flash: 0, reStrike: 0, strikeTimer: rand(3, 8), thunderDelay: 0,
+    baseExp: renderer.toneMappingExposure, baseCol: new THREE.Color(0xcdd9e6), stormCol: new THREE.Color(0xeaf0f8), fogStorm: new THREE.Color(0x7e8b99) };
 }
+// T 鍵：手動循環天氣（晴→小雨→大雨→大雷雨→晴），方便展示／測試；保持所選 60 秒後恢復自動排程
+addEventListener('keydown', (e) => {
+  if (e.code !== 'KeyT' || !weather || (document.activeElement && document.activeElement.tagName === 'INPUT')) return;
+  const order = ['clear', 'light', 'heavy', 'storm'];
+  weather.mode = order[(order.indexOf(weather.mode) + 1) % order.length];
+  weather.timer = 60;
+  if (weather.mode === 'storm') weather.strikeTimer = 0.5;   // 進雷雨很快來一道閃電
+});
 
 // A3 蝴蝶：白天於草地飄舞、拍翅（兩檔位、數量少；繫於 vibrancy → 全村甦醒的白天才現身）
 const butterflies = [];
@@ -471,8 +482,8 @@ function resolveHeroCollision() {
   hero.position.x = px; hero.position.z = pz;
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=1dcc95ad', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=1dcc95ad', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=85907760', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=85907760', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -569,22 +580,109 @@ function scatter(n, rMin, rMax, minH, avoidRuin) {
   }
   return out;
 }
-// 樹（針葉）：樹冠 + 樹幹兩個 instanced mesh 共用座標
-const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
-  const c = new THREE.ConeGeometry(1.7 - k * 0.42, 1.8, 12); c.translate(0, 2.4 + k * 1.0 + 0.9, 0); return c;
-}));
-const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
+// 樹：5 種「葉叢卡片」樹冠（闊葉＋針葉混合），沿用草的卡片美學＝逆光透光＋風；每種＝葉冠 InstancedMesh＋樹幹 InstancedMesh。
+const leafMap = (() => {                                   // 程序化葉叢 alpha 貼圖：白底亮度，靠頂點色染成各樹種綠（一片＝一小叢葉）
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  for (let i = 0; i < 12; i++) {
+    const a = rand(0, TAU), rr = rand(4, 20), lx = 32 + Math.cos(a) * rr, ly = 32 + Math.sin(a) * rr, rad = rand(9, 16);
+    const g = x.createRadialGradient(lx, ly, 0.5, lx, ly, rad);  // 漸層中心＝圓心（不可在 fill 前 transform，否則漸層位移→整圖 alpha≈0）
+    g.addColorStop(0, 'rgba(255,255,255,0.98)'); g.addColorStop(0.55, 'rgba(238,247,228,0.9)'); g.addColorStop(1, 'rgba(225,240,210,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(lx, ly, rad, 0, TAU); x.fill();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso; return t;
+})();
+const _leafQuad = new THREE.PlaneGeometry(1, 1);
+function canopyPoint(o) {                                   // 在樹冠形狀內取一點 → {x,y,z, rad(離心0..1), hgt(高度0..1)}
+  const ang = rand(0, TAU);
+  if (o.type === 'cone') {                                  // 針葉：錐形、偏下密
+    const hh = Math.pow(Math.random(), 0.85), r = o.R * (1 - hh) * rand(0.4, 1.0);
+    return { x: Math.cos(ang) * r, y: o.cy + hh * o.H, z: Math.sin(ang) * r, rad: 1 - hh * 0.5, hgt: hh };
+  }
+  const u = Math.acos(rand(-1, 1)), rr = Math.pow(Math.random(), 0.5), r = o.R * rr, sy = Math.cos(u); // 球/扁球
+  const px = Math.sin(u) * Math.cos(ang) * r, pz = Math.sin(u) * Math.sin(ang) * r;
+  let y = o.cy + sy * r * o.flatY;
+  if (o.type === 'weep') { const hr = Math.sin(u) * rr; y -= Math.pow(hr, 1.6) * o.R * rand(0.9, 1.5); } // 垂枝：外緣依離心半徑平滑下垂成連續垂簾（非隨機長腳）
+  return { x: px, y, z: pz, rad: rr, hgt: Math.max(0, Math.min(1, sy * 0.5 + 0.5)) };
+}
+function leafCanopy(o) {                                    // 灑 o.cards 片葉卡組成樹冠；烤入 頂點色(內暗外亮)＋aLeaf(相位)＋aSway(擺動權重：底固定、頂/外擺最多)
+  const geos = [], cc = new THREE.Color(), c0 = new THREE.Color(o.c0), c1 = new THREE.Color(o.c1);
+  for (let i = 0; i < o.cards; i++) {
+    const p = canopyPoint(o), g = _leafQuad.clone();
+    g.rotateX(rand(-1.3, 1.3)); g.rotateY(rand(0, TAU)); g.rotateZ(rand(-0.6, 0.6));
+    const sc = o.card * rand(0.7, 1.25); g.scale(sc, o.type === 'weep' ? sc * 1.5 : sc, sc);
+    g.translate(p.x, p.y, p.z);
+    const n = g.attributes.position.count, lite = Math.min(1, Math.max(0, p.hgt * 0.55 + p.rad * 0.5 + rand(-0.08, 0.08)));
+    cc.copy(c0).lerp(c1, lite);
+    const sw = Math.min(1, Math.max(0, p.hgt) * 0.7 + p.rad * 0.4), phase = rand(0, TAU), col = [], aS = [], aL = [];
+    for (let v = 0; v < n; v++) { col.push(cc.r, cc.g, cc.b); aS.push(sw); aL.push(phase); }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setAttribute('aSway', new THREE.Float32BufferAttribute(aS, 1));
+    g.setAttribute('aLeaf', new THREE.Float32BufferAttribute(aL, 1));
+    geos.push(g);
+  }
+  return mergeGeometries(geos);
+}
+const FOLIAGE_WIND = 0.5;
+function makeFoliageMaterial() {                            // 葉冠材質：alpha 葉卡＋風＋逆光透光＋法線往天光柔化（共用 tuftFX 的 uSunDir/uSunCol）
+  const m = new THREE.MeshStandardMaterial({ map: leafMap, alphaTest: 0.42, vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.08 });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol; sh.uniforms.uWind = { value: FOLIAGE_WIND };
+    sh.vertexShader = 'uniform float uTime, uWind;\nattribute float aSway, aLeaf;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vSway;\n' +
+      sh.vertexShader.replace('#include <project_vertex>', `
+    vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+    vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+    vec3 gBase = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    float ph = gBase.x * 0.25 + gBase.z * 0.25 + aLeaf * 1.7;
+    vec2 wdir = vec2(0.86, 0.5);
+    float gust = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.04 - uTime * 0.8);              // 整片陣風
+    vec2 flutter = vec2(sin(uTime * 1.3 + ph), cos(uTime * 1.1 + ph)) * 0.06;            // 每叢細抖
+    gWorld.xz += (wdir * (0.12 + 0.10 * gust) + flutter) * uWind * aSway;                // 頂/外層擺最多、樹幹基部不動
+    vViewW = normalize(cameraPosition - gWorld.xyz); vSway = aSway;
+    vec4 mvPosition = viewMatrix * gWorld; gl_Position = projectionMatrix * mvPosition;
+  `);
+    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vSway;\nuniform vec3 uSunDir, uSunCol;\n' +
+      sh.fragmentShader
+        .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, 0.55)); // 整冠像柔軟受光體、不是一片片各自反光')
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  {
+    float back = pow(max(dot(-vViewW, uSunDir), 0.0), 2.5);
+    totalEmissiveRadiance += uSunCol * back * (0.25 + 0.75 * vSway) * 0.9 * diffuseColor.rgb; // 逆光透光：外/上層葉透最多
+  }`);
+  };
+  return m;
+}
+const foliageMat = makeFoliageMaterial();
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=85907760', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=85907760', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+// 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
+const TREE_SPECIES = [
+  { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
+  { type: 'umbrella', R: 2.9, cy: 4.9, flatY: 0.50, cards: 52, card: 1.7, c0: 0x356b2e, c1: 0x8fc864, tr: [0.32, 0.46, 4.2] },
+  { type: 'cone',     R: 1.7, cy: 1.8, H: 4.8, flatY: 1, cards: 56, card: 1.1, c0: 0x224c28, c1: 0x4e8a44, tr: [0.28, 0.40, 2.0] },
+  { type: 'weep',     R: 2.4, cy: 4.5, flatY: 0.80, cards: 72, card: 1.3, c0: 0x4a6b32, c1: 0xbcc66a, tr: [0.30, 0.44, 3.6] },
+  { type: 'round',    R: 1.5, cy: 2.5, flatY: 0.95, cards: 30, card: 1.2, c0: 0x335f2c, c1: 0x7fb858, tr: [0.26, 0.40, 1.7] },
+];
 const trees = scatter(Q.rich ? 480 : 300, WORLD.villageR + 8, 172, WORLD.water + 0.8, true); // rMax 172＝夜/日地形相同的內圈，群山沉降時不會浮空
-const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
-const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp?v=1dcc95ad', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=1dcc95ad', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
-// 撞樹擺動會每幀更新 instanceMatrix（搖晃 ~2-3 秒才靜止）→ 標記為 DynamicDrawUsage，否則每幀重傳「靜態」緩衝會造成驅動層 stall／卡頓（走過樹叢時水面等大平面上抖動的主因）
-treeFoliage.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-treeTrunk.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+trees.forEach((p) => { p.sp = (Math.random() * TREE_SPECIES.length) | 0; });                 // 隨機指派樹種 → 地圖上混生
+const foliageMeshes = [], trunkMeshes = [];                                                  // 依樹種分組（撞樹擺動用 p.sp/p.li 索引）
+TREE_SPECIES.forEach((sp, si) => {
+  const bucket = trees.filter((p) => p.sp === si); bucket.forEach((p, k) => { p.li = k; });
+  const trunkGeo = new THREE.CylinderGeometry(sp.tr[0], sp.tr[1], sp.tr[2], 9); trunkGeo.translate(0, sp.tr[2] / 2, 0);
+  const fm = new THREE.InstancedMesh(leafCanopy(sp), foliageMat, bucket.length); fm.castShadow = true;
+  fm.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: leafMap, alphaTest: 0.42 }); // 葉形鏤空陰影（非實心方塊）
+  const tm = new THREE.InstancedMesh(trunkGeo, barkMat, bucket.length); tm.castShadow = true;
+  bucket.forEach((p, k) => {
+    dummy.position.set(p.x, p.y, p.z); dummy.rotation.set(0, p.ry, 0); dummy.scale.set(p.s, p.s, p.s); dummy.updateMatrix();
+    fm.setMatrixAt(k, dummy.matrix); tm.setMatrixAt(k, dummy.matrix);
+  });
+  // 撞樹擺動每幀更新 instanceMatrix → DynamicDrawUsage，否則每幀重傳「靜態」緩衝造成驅動層 stall／卡頓
+  fm.instanceMatrix.setUsage(THREE.DynamicDrawUsage); tm.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(fm); scene.add(tm); foliageMeshes.push(fm); trunkMeshes.push(tm);
+});
 // 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=1dcc95ad', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=1dcc95ad', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=85907760', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=85907760', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -627,7 +725,12 @@ function curvedBlade(seg, o) {                                                  
     pos.push(-bw, t, z, bw, t, z);
     if (t < hf) c.copy(c0).lerp(c1, t / hf); else c.copy(c1).lerp(c2, hf < 1 ? (t - hf) / (1 - hf) : 0); // 根→中→（穗）漸層；hf=1（綠草無穗）時避免 0/0=NaN
     const br = 0.5 + 0.68 * t;                                                            // 根暗尖亮：根 0.5 → 尖 1.18
-    col.push(c.r * br, c.g * br, c.b * br, c.r * br, c.g * br, c.b * br);
+    let cr = c.r * br, cg = c.g * br, cb = c.b * br;
+    if (o.gnd) {                                                                          // 底段融入地面草地綠：草根烤色（c0×0.5）遠暗於草地頂點色 → 草根貼亮草地會有色斷層
+      const u = Math.min(1, t / 0.42), sm = u * u * (3 - 2 * u), k = (1 - sm) * 0.9;      // 底 0~42% smoothstep 漸融、根部 0.9 強度（同 linear 空間、與地形上色同基準）
+      cr += (o.gnd.r - cr) * k; cg += (o.gnd.g - cg) * k; cb += (o.gnd.b - cb) * k;
+    }
+    col.push(cr, cg, cb, cr, cg, cb);
   }
   for (let i = 0; i < seg; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
   const g = new THREE.BufferGeometry();
@@ -635,18 +738,27 @@ function curvedBlade(seg, o) {                                                  
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.setIndex(idx); return g;
 }
-function crossBlade(seg, o) { const a = curvedBlade(seg, o), b = curvedBlade(seg, o); b.rotateY(Math.PI / 2); const g = mergeGeometries([a, b]); g.computeVertexNormals(); return g; } // 十字交叉＝有體積
-const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95 });                                   // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠
-const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5 }); // 芒草：金綠桿→金黃→銀白穗頭、前傾
+function crossBlade(seg, o) {
+  const a = curvedBlade(seg, o), b = curvedBlade(seg, o); b.rotateY(Math.PI / 2);
+  const tag = (geo, v) => geo.setAttribute('aBlade', new THREE.Float32BufferAttribute(new Array(geo.attributes.position.count).fill(v), 1)); // 標記十字兩片葉(0/1)→shader 錯開 flutter 相位
+  tag(a, 0); tag(b, 1);
+  const g = mergeGeometries([a, b]); g.computeVertexNormals(); return g;            // 十字交叉＝有體積
+}
+const cGrassBlade = new THREE.Color().copy(cGrass).lerp(cGrass2, 0.5);                                                                  // 草根要融入的「地面草地綠」＝地形草地頂點色中點（linear，與地形上色同基準）
+const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95, gnd: cGrassBlade });                  // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠（根部漸融地面綠）
+const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5, gnd: cGrassBlade }); // 芒草：金綠桿→金黃→銀白穗頭、前傾（根部漸融地面綠）
 // 風飄＋撥草（純 GPU vertex shader，薩爾達風草原）：① 風 — 整片往固定風向傾 + 大尺度行進陣風（波一陣陣掃過整片）+ 每葉細抖；h*h 遮罩（根固定、越往尖擺越多）、×桿高（高草擺更大）；
 //   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
 //   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
 const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
-const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) } }; // uPlayer 初始放遠處＝開場無撥動
-function makeGrassMaterial(part, upMix, envI) {                                           // part=撥草開關；upMix=法線往天光混合量（越高越柔但越吃藍天）；envI=天空環境反射量（越高越偏藍）
+const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) }, // uPlayer 初始放遠處＝開場無撥動
+  uSunDir: { value: new THREE.Vector3(48, 72, 32).normalize() },   // 指向主光的世界方向（sun 跟隨 hero、偏移固定 → 算一次即可）
+  uSunCol: { value: new THREE.Color(0xffe6a8).multiplyScalar(0.85) } }; // 透光色×強度（暖金，乘上綠色 diffuse → 暖黃綠逆光＝白天陽光穿過葉；可調）
+function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {               // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度（兩種草分開調）
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
+    sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol;           // 透光/sheen 用：主光方向＋透光色
     sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS };
     const partGLSL = part ? `
     vec2 toBlade = gBase.xz - uPlayer.xz;
@@ -654,7 +766,7 @@ function makeGrassMaterial(part, upMix, envI) {                                 
     float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
     vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
     gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
-    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nvarying vec3 vGrassUp;\n' +
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
       sh.vertexShader.replace('#include <project_vertex>', `
     vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
     vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
@@ -662,22 +774,37 @@ function makeGrassMaterial(part, upMix, envI) {                                 
     float bladeH = length(instanceMatrix[1].xyz);                                        // 此叢實際高度（y 軸縮放）→ 擺幅依高度成比例
     float gH = clamp(position.y, 0.0, 1.0);                                              // 0＝根 → 1＝葉尖
     float arc = gH * gH;                                                                 // 弧形遮罩：根固定、越往尖擺得越多
-    float ph = gBase.x * 0.35 + gBase.z * 0.28;                                          // 每葉相位
+    float ph = gBase.x * 0.35 + gBase.z * 0.28 + aBlade * 1.7;                           // 每葉相位（+aBlade：十字兩片 flutter 相位錯開 → 不像剛體一起抖；大風 gust 仍整株一致）
     vec2 wdir = vec2(0.86, 0.5);                                                          // 固定風向
-    float gust = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.05 - uTime * 1.0);              // 大尺度行進陣風（波一陣陣掃過整片草原）
+    float g1 = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.05 - uTime * 1.0);                // 主風向波
+    float g2 = 0.5 + 0.5 * sin(dot(gBase.xz, vec2(-wdir.y, wdir.x)) * 0.11 - uTime * 1.7); // 交錯方向、不同波長的副波
+    float swell = 0.55 + 0.45 * sin(uTime * 0.23 + gBase.x * 0.004);                     // 慢速大起伏 envelope（陣風一陣陣）
+    float gust = (g1 * 0.7 + g2 * 0.3) * swell;                                          // 多頻疊加 → 去掉雨刷/電扇般的等幅感
     vec2 flutter = vec2(sin(uTime * 1.6 + ph), cos(uTime * 1.3 + ph * 1.3)) * 0.04;      // 每葉細抖
-    gWorld.xz += (wdir * (0.10 + 0.22 * gust) + flutter) * uWind * arc * bladeH;         // 整片往風向傾、隨陣風起伏（×桿高 → 高草擺更大）
+    vec2 disp = (wdir * (0.10 + 0.22 * gust) + flutter) * uWind * arc * bladeH;          // 本幀水平位移（×桿高 → 高草擺更大）
+    gWorld.xz += disp;
+    gWorld.y  -= dot(disp, disp) * 0.5 / max(bladeH, 0.001);                             // 倒下時尖端下沉 → 假裝弧長守恆（彎，不是被拉長）
+    vViewW = normalize(cameraPosition - gWorld.xyz);                                     // 世界空間視線（透光/sheen 用）；位移後算才準
+    vGH = gH;                                                                            // 0=根 1=尖 → 尖端透光加權
     ${partGLSL}
     vec4 mvPosition = viewMatrix * gWorld;
     gl_Position = projectionMatrix * mvPosition;
   `);
-    sh.fragmentShader = 'varying vec3 vGrassUp;\n' +
-      sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, ' + upMix.toFixed(3) + ')); // 葉法線往天光混合 → 柔軟整片受光（lights 用 geometryNormal，會由 normal copy）');
+    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\nuniform vec3 uSunDir, uSunCol;\n' +
+      sh.fragmentShader
+        .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, ' + upMix.toFixed(3) + ')); // 葉法線往天光混合 → 柔軟整片受光（lights 用 geometryNormal，會由 normal copy）')
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  {
+    float back = pow(max(dot(-vViewW, uSunDir), 0.0), 2.5);                              // 望向光源、穿過草 → 最亮（逆光透光/假 SSS）
+    totalEmissiveRadiance += uSunCol * back * (0.20 + 0.80 * vGH) * ${transI.toFixed(3)} * diffuseColor.rgb; // 尖端薄→透最多；加進 emissive 不被陰影/衰減吃掉＝stylized 穩定背光
+    float rim = pow(max(dot(-vViewW, uSunDir), 0.0), 6.0) * vGH * ${sheenI.toFixed(3)};  // 尖端 sheen：比透光更聚焦、只在尖端（芒草銀穗逆光發亮）
+    totalEmissiveRadiance += uSunCol * rim;
+  }`);
   };
   return mat;
 }
-const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06);                              // 薩爾達綠草：少混天光、幾乎不反射藍天 → 純綠不偏青；風 + 撥草（只側推）
-const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30);                              // 芒草：較柔（金黃色不怕藍天影響）；風 + 撥草
+const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06, 0.85, 0.0);                   // 薩爾達綠草：少混天光、純綠不偏青；風 + 撥草 + 中等逆光透光（碳水綠葉，sheen 關以免整片過亮）
+const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30, 1.25, 0.5);                   // 芒草：較柔；風 + 撥草 + 較強透光 + 尖端 sheen（銀白穗頭逆光發亮）
 // 只在「綠地」長草：沿用地形上色判定 —— 沙岸/黃土（y<water+1.2）、高地岩石（y>15）、陡坡（坡度>0.5）都不長。
 function isGrassGround(x, z) {
   const y = terrainHeight(x, z);
@@ -784,7 +911,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=1dcc95ad', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=85907760', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1037,7 +1164,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=1dcc95ad'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=85907760'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1160,7 +1287,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=1dcc95ad'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=85907760'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -1517,8 +1644,11 @@ function heroNearNPC() {
 }
 
 // ── 控制 ────────────────────────────────────────────────────────
+// ── 幀率管理：互動 60fps、閒置 30fps（降溫省電）。整數抽幀鎖原生 vsync（幀距均勻、不用累積器 → 避免 CSS2D 標籤抖動）──
+let activeUntil = 0; const bumpActive = () => { activeUntil = performance.now() + 600; }; // 任意操作後 0.6s 維持 60fps，之後無動作才降 30fps
+let nativeHz = 60, lastRaf = 0, frameTick = 0;                                            // 平滑推估的原生更新率 + native tick 計數
 const keys = new Set();
-addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); });
+addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); bumpActive(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); });
 let yaw = Math.PI, pitch = 0.6, dist = 24;
 // 開場就把鏡頭擺到跟隨位置，避免從原點 (0,0,0) 起始＝卡在中央水晶光束裡（遺跡全通後光束很亮會洗版）
@@ -1527,12 +1657,12 @@ const moveTarget = new THREE.Vector3(); let hasTarget = false;
 const ndc = new THREE.Vector2(); const raycaster = new THREE.Raycaster(); const hitPoint = new THREE.Vector3();
 let pDown = false, dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
 const dom = renderer.domElement;
-dom.addEventListener('pointerdown', (e) => { pDown = true; dragging = false; lastX = downX = e.clientX; lastY = downY = e.clientY; dom.setPointerCapture(e.pointerId); });
+dom.addEventListener('pointerdown', (e) => { pDown = true; dragging = false; lastX = downX = e.clientX; lastY = downY = e.clientY; dom.setPointerCapture(e.pointerId); bumpActive(); });
 dom.addEventListener('pointermove', (e) => {
   if (!pDown) return;
   const dx = e.clientX - lastX, dy = e.clientY - lastY;
   if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) > 6) dragging = true;
-  if (dragging) { yaw -= dx * 0.005; pitch = THREE.MathUtils.clamp(pitch - dy * 0.004, 0.16, 1.2); }
+  if (dragging) { yaw -= dx * 0.005; pitch = THREE.MathUtils.clamp(pitch - dy * 0.004, 0.16, 1.2); bumpActive(); }
   lastX = e.clientX; lastY = e.clientY;
 });
 dom.addEventListener('pointerup', (e) => {
@@ -1549,7 +1679,7 @@ dom.addEventListener('pointerup', (e) => {
   }
   pDown = false; dragging = false;
 });
-addEventListener('wheel', (e) => { dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 14, 56); }, { passive: true });
+addEventListener('wheel', (e) => { dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 14, 56); bumpActive(); }, { passive: true });
 // 首次互動解鎖音訊（瀏覽器自動播放限制；iOS 需多種手勢）
 ['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => addEventListener(ev, () => SFX.unlock(), { passive: true }));
 document.addEventListener('visibilitychange', () => { if (!document.hidden) SFX.unlock(); });
@@ -1565,6 +1695,7 @@ function joyMove(e) {
   if (len > JOY_R) { dx *= JOY_R / len; dy *= JOY_R / len; }
   joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
   joyX = dx / JOY_R; joyZ = -dy / JOY_R;   // 上推 = 前進
+  bumpActive();
 }
 joyEl.addEventListener('pointerdown', (e) => { joyId = e.pointerId; joyEl.setPointerCapture(joyId); SFX.unlock(); joyMove(e); e.preventDefault(); });
 joyEl.addEventListener('pointermove', (e) => { if (e.pointerId === joyId) joyMove(e); });
@@ -2176,10 +2307,16 @@ function doScreenshot() {
 addEventListener('keydown', (e) => { if (e.code === 'KeyP' && !(document.activeElement && document.activeElement.tagName === 'INPUT')) { e.preventDefault(); requestScreenshot(); } }); // P＝截圖
 
 let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
-function animate() {
+function animate(time) {
   if (!started) return;     // landing 仍在最前：完全跳過模擬與渲染（場景被不透明 landing 蓋住，不需畫）
-  // 註：不做幀率上限。先前以累積器限到 60fps 會造成幀距不均，讓 CSS2D 地標標籤相對 3D 錨點「游移」抖動；
-  //     依顯示器原生更新率渲染最平順。降溫主要靠像素比 3×→2×（填充率減半）＋陰影縮小＋landing 暫停。
+  // 幀率閘門（降溫）：互動時 60fps、閒置時 30fps。用「整數抽幀」鎖原生 vsync（每 N 個 native tick 才畫 1 幀）
+  //   → 幀距均勻、不用累積器，避免先前累積器限速造成 CSS2D 地標標籤「游移」抖動的回歸；timer 只在實際渲染幀前進，dt 仍為真實經過時間。
+  if (lastRaf) { const d = time - lastRaf; if (d > 4 && d < 100) nativeHz += (1000 / d - nativeHz) * 0.1; } // 平滑推估顯示器原生更新率
+  lastRaf = time;
+  const _busy = battle.active || finaleActive || egg.active || archFade.on;             // 戰鬥/終局/彩蛋/轉場一律 60fps
+  const _active = _busy || keys.size > 0 || joyX !== 0 || joyZ !== 0 || hasTarget || performance.now() < activeUntil; // 移動中/操作後 0.6s 內＝互動
+  const _stride = Math.max(1, Math.round(nativeHz / (_active ? 60 : 30)));
+  if (frameTick++ % _stride !== 0) return;  // 跳過此 native tick（不模擬、不渲染）
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
   fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 原始幀時間估 FPS
@@ -2370,7 +2507,7 @@ function animate() {
 
   // 撞樹擺動（純視覺，非真實碰撞）：玩家進入樹範圍 → 被推離 + 彈簧回擺數次站直
   {
-    const hx = hero.position.x, hz = hero.position.z; let dirty = false;
+    const hx = hero.position.x, hz = hero.position.z; const dirtyF = [];
     for (let i = 0; i < trees.length; i++) {
       const tr = trees[i], sw = treeSway[i];
       if (!finaleActive) {
@@ -2385,10 +2522,10 @@ function animate() {
         _tAx.set(sw.dz, 0, -sw.dx); if (_tAx.lengthSq() < 1e-6) _tAx.set(1, 0, 0); else _tAx.normalize();
         _tQ.setFromAxisAngle(_tAx, sw.ang).multiply(_tQy);
         _tObj.position.set(tr.x, tr.y, tr.z); _tObj.quaternion.copy(_tQ); _tObj.scale.set(tr.s, tr.sy || tr.s, tr.s); _tObj.updateMatrix();
-        treeFoliage.setMatrixAt(i, _tObj.matrix); treeTrunk.setMatrixAt(i, _tObj.matrix); dirty = true;
+        foliageMeshes[tr.sp].setMatrixAt(tr.li, _tObj.matrix); trunkMeshes[tr.sp].setMatrixAt(tr.li, _tObj.matrix); dirtyF[tr.sp] = true; // 依樹種分組更新
       }
     }
-    if (dirty) { treeFoliage.instanceMatrix.needsUpdate = true; treeTrunk.instanceMatrix.needsUpdate = true; }
+    for (let s = 0; s < foliageMeshes.length; s++) if (dirtyF[s]) { foliageMeshes[s].instanceMatrix.needsUpdate = true; trunkMeshes[s].instanceMatrix.needsUpdate = true; }
   }
   // 特效更新
   tuftFX.uTime.value = t; tuftFX.uPlayer.value.copy(hero.position); // 草飄＋撥草：時間推進 + 玩家世界座標（撥開效果在 shader 內逐頂點計算）
@@ -2663,22 +2800,47 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   // 沉浸感更新：環境音景＋天氣＋蝴蝶＋魚影＋飛鳥
   if (!archiveActive) SFX.ambient(dt, vibrancy);
   if (weather) {
-    if (archiveActive) { weather.rmat.opacity = 0; for (const m of weather.mists) m.m.opacity = 0; }
+    if (archiveActive) { weather.rmat.opacity = 0; for (const m of weather.mists) m.m.opacity = 0; weather.rgeo.setDrawRange(0, 0); renderer.toneMappingExposure = weather.baseExp; }
     else {
+      // 模式排程：晴 ↔ 降雨（小雨/大雨/大雷雨，加權隨機）
       weather.timer -= dt;
-      if (weather.timer <= 0) { const raining = weather.target > 0.5; weather.target = raining ? 0 : rand(0.65, 1.0); weather.timer = raining ? rand(45, 95) : rand(16, 32); }
-      weather.amt += (weather.target - weather.amt) * Math.min(1, 0.4 * dt);
+      if (weather.timer <= 0) {
+        if (weather.mode === 'clear') { const r = Math.random(); weather.mode = r < 0.45 ? 'light' : r < 0.78 ? 'heavy' : 'storm'; weather.timer = rand(18, 38); }
+        else { weather.mode = 'clear'; weather.timer = rand(45, 95); }
+      }
+      const tgt = weather.mode === 'clear' ? 0 : weather.mode === 'light' ? 0.38 : weather.mode === 'heavy' ? 0.82 : 1.0;
+      weather.amt += (tgt - weather.amt) * Math.min(1, 0.5 * dt);
+      weather.storm += ((weather.mode === 'storm' ? 1 : 0) - weather.storm) * Math.min(1, 0.6 * dt);
       const night = 1 - vibrancy, cam = camera.position;
       for (const m of weather.mists) {
         const mx = cam.x + m.ox + Math.sin(t * m.sp + m.ph) * 16, mz = cam.z + m.oz + Math.cos(t * m.sp * 0.8 + m.ph) * 16;
         m.s.position.set(mx, terrainHeight(mx, mz) + m.h, mz);
-        m.m.opacity = 0.03 + 0.05 * night + weather.amt * 0.08;
+        m.m.opacity = 0.03 + 0.05 * night + weather.amt * 0.06;   // 飄霧維持淡（雷雨陰霾改交給平滑的距離霧，避免大張霧 sprite 貼地處的硬邊斷層）
       }
-      const rp = weather.rgeo.attributes.position;
-      for (let i = 0; i < rp.count; i++) { let y = rp.getY(i) - 62 * dt; if (y < 0) y += 42; rp.setY(i, y); }
-      rp.needsUpdate = true;
-      weather.rain.position.set(cam.x, cam.y - 20, cam.z);
-      weather.rmat.opacity = weather.amt * 0.85;
+      // 雨：密度(drawRange)、落速、不透明度、尺寸隨強度遞增；雷雨偏灰
+      const arr = weather.rgeo.attributes.position.array, fall = (45 + weather.amt * 72 + weather.storm * 45) * dt; // 雷雨落得更急
+      for (let i = 1; i < arr.length; i += 3) { arr[i] -= fall; if (arr[i] < 0) arr[i] += 46; }                   // 直接讀 typed array（5000 滴仍便宜）
+      weather.rgeo.attributes.position.needsUpdate = true;
+      weather.rgeo.setDrawRange(0, Math.floor(weather.amt * weather.RN));                                          // 雷雨 amt≈1 → 吃滿全池＝最密
+      weather.rain.position.set(cam.x, cam.y - 22, cam.z);
+      weather.rmat.opacity = Math.min(1, weather.amt * 0.9 + weather.storm * 0.1);                                 // 雷雨幾近不透明
+      weather.rmat.size = 8 + weather.amt * 6 + weather.storm * 3;                                                 // 雷雨雨絲更粗長
+      weather.rmat.color.copy(weather.baseCol).lerp(weather.stormCol, weather.storm * 0.55);          // 雷雨：雨絲轉亮白 → 在壓暗的場景中更明顯（不再偏灰沒入背景）
+      // 大雷雨：閃電（偶發、有時雙閃）＋延遲雷聲（聲慢於光）
+      if (weather.storm > 0.25) {
+        weather.strikeTimer -= dt;
+        if (weather.strikeTimer <= 0) {
+          weather.flash = 0.9 + Math.random() * 0.6; weather.strikeTimer = rand(4, 11);
+          weather.reStrike = Math.random() < 0.45 ? rand(0.08, 0.18) : 0;
+          weather.thunderDelay = rand(1.8, 4.0);   // 遠雷：聲音明顯慢於閃光（距離感）
+        }
+        if (weather.reStrike > 0) { weather.reStrike -= dt; if (weather.reStrike <= 0) { weather.flash = 0.7 + Math.random() * 0.4; weather.reStrike = 0; } }
+        if (weather.thunderDelay > 0) { weather.thunderDelay -= dt; if (weather.thunderDelay <= 0) SFX.thunder(); }
+      }
+      weather.flash = Math.max(0, weather.flash - dt * 6);
+      scene.fog.color.lerp(weather.fogStorm, weather.storm * 0.6);                                   // 雷雨：霧色轉陰沉灰（平滑距離霧、無硬邊；疊在日夜霧之上、每幀重算不累積）
+      scene.fog.far -= weather.storm * 70;                                                            // 雷雨：遠處能見度下降（只動 far、不拉近 near → 不會在鏡頭前出現霧圈/斷層）
+      renderer.toneMappingExposure = weather.baseExp * (1 - weather.storm * 0.45) + weather.flash;    // 雷雨調暗＋閃電瞬間提亮（曝光，不動日夜光源）
     }
   }
   for (const b of butterflies) {
