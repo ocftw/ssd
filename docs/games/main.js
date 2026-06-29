@@ -336,7 +336,7 @@ if (Q.weather) {
     x.fillStyle = g; x.fillRect(6, 0, 4, 64);
     const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
   })();
-  const RN = 2600, rpos = new Float32Array(RN * 3);                              // 大池：靠 drawRange 控制密度（小雨/大雨/大雷雨）
+  const RN = 5000, rpos = new Float32Array(RN * 3);                              // 大池：靠 drawRange 控制密度（小雨/大雨/大雷雨；雷雨吃滿全池＝最密）
   for (let i = 0; i < RN; i++) { rpos[i * 3] = rand(-44, 44); rpos[i * 3 + 1] = rand(0, 46); rpos[i * 3 + 2] = rand(-44, 44); }
   const rgeo = new THREE.BufferGeometry(); rgeo.setAttribute('position', new THREE.BufferAttribute(rpos, 3)); rgeo.setDrawRange(0, 0);
   const rmat = new THREE.PointsMaterial({ map: rainTex, color: 0xcdd9e6, size: 9, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false }); // 螢幕固定垂直雨絲
@@ -344,7 +344,7 @@ if (Q.weather) {
   // mode：clear晴／light小雨／heavy大雨／storm大雷雨。amt=整體強度(0..1)、storm=雷雨程度(調光+閃電)、flash=閃電亮度
   weather = { mists, rain, rgeo, rmat, RN, amt: 0, mode: 'clear', storm: 0, timer: rand(18, 40),
     flash: 0, reStrike: 0, strikeTimer: rand(3, 8), thunderDelay: 0,
-    baseExp: renderer.toneMappingExposure, baseCol: new THREE.Color(0xcdd9e6), grey: new THREE.Color(0xa9b6c6), fogStorm: new THREE.Color(0x7e8b99) };
+    baseExp: renderer.toneMappingExposure, baseCol: new THREE.Color(0xcdd9e6), stormCol: new THREE.Color(0xeaf0f8), fogStorm: new THREE.Color(0x7e8b99) };
 }
 // T 鍵：手動循環天氣（晴→小雨→大雨→大雷雨→晴），方便展示／測試；保持所選 60 秒後恢復自動排程
 addEventListener('keydown', (e) => {
@@ -2818,14 +2818,14 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
         m.m.opacity = 0.03 + 0.05 * night + weather.amt * (0.10 + 0.12 * weather.storm);   // 降雨/雷雨時霧更濃
       }
       // 雨：密度(drawRange)、落速、不透明度、尺寸隨強度遞增；雷雨偏灰
-      const rp = weather.rgeo.attributes.position, fall = (45 + weather.amt * 72) * dt;
-      for (let i = 0; i < rp.count; i++) { let y = rp.getY(i) - fall; if (y < 0) y += 46; rp.setY(i, y); }
-      rp.needsUpdate = true;
-      weather.rgeo.setDrawRange(0, Math.floor(weather.amt * weather.RN));
+      const arr = weather.rgeo.attributes.position.array, fall = (45 + weather.amt * 72 + weather.storm * 45) * dt; // 雷雨落得更急
+      for (let i = 1; i < arr.length; i += 3) { arr[i] -= fall; if (arr[i] < 0) arr[i] += 46; }                   // 直接讀 typed array（5000 滴仍便宜）
+      weather.rgeo.attributes.position.needsUpdate = true;
+      weather.rgeo.setDrawRange(0, Math.floor(weather.amt * weather.RN));                                          // 雷雨 amt≈1 → 吃滿全池＝最密
       weather.rain.position.set(cam.x, cam.y - 22, cam.z);
-      weather.rmat.opacity = weather.amt * 0.9;
-      weather.rmat.size = 8 + weather.amt * 6;
-      weather.rmat.color.copy(weather.baseCol).lerp(weather.grey, weather.storm * 0.6);
+      weather.rmat.opacity = Math.min(1, weather.amt * 0.9 + weather.storm * 0.1);                                 // 雷雨幾近不透明
+      weather.rmat.size = 8 + weather.amt * 6 + weather.storm * 3;                                                 // 雷雨雨絲更粗長
+      weather.rmat.color.copy(weather.baseCol).lerp(weather.stormCol, weather.storm * 0.55);          // 雷雨：雨絲轉亮白 → 在壓暗的場景中更明顯（不再偏灰沒入背景）
       // 大雷雨：閃電（偶發、有時雙閃）＋延遲雷聲（聲慢於光）
       if (weather.storm > 0.25) {
         weather.strikeTimer -= dt;
