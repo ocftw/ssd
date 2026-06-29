@@ -640,7 +640,12 @@ function curvedBlade(seg, o) {                                                  
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.setIndex(idx); return g;
 }
-function crossBlade(seg, o) { const a = curvedBlade(seg, o), b = curvedBlade(seg, o); b.rotateY(Math.PI / 2); const g = mergeGeometries([a, b]); g.computeVertexNormals(); return g; } // 十字交叉＝有體積
+function crossBlade(seg, o) {
+  const a = curvedBlade(seg, o), b = curvedBlade(seg, o); b.rotateY(Math.PI / 2);
+  const tag = (geo, v) => geo.setAttribute('aBlade', new THREE.Float32BufferAttribute(new Array(geo.attributes.position.count).fill(v), 1)); // 標記十字兩片葉(0/1)→shader 錯開 flutter 相位
+  tag(a, 0); tag(b, 1);
+  const g = mergeGeometries([a, b]); g.computeVertexNormals(); return g;            // 十字交叉＝有體積
+}
 const cGrassBlade = new THREE.Color().copy(cGrass).lerp(cGrass2, 0.5);                                                                  // 草根要融入的「地面草地綠」＝地形草地頂點色中點（linear，與地形上色同基準）
 const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95, gnd: cGrassBlade });                  // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠（根部漸融地面綠）
 const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5, gnd: cGrassBlade }); // 芒草：金綠桿→金黃→銀白穗頭、前傾（根部漸融地面綠）
@@ -650,7 +655,7 @@ const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wSta
 const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
 const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) }, // uPlayer 初始放遠處＝開場無撥動
   uSunDir: { value: new THREE.Vector3(48, 72, 32).normalize() },   // 指向主光的世界方向（sun 跟隨 hero、偏移固定 → 算一次即可）
-  uSunCol: { value: new THREE.Color(0xbcd2ff).multiplyScalar(0.9) } }; // 透光色×強度（偏冷，可調；日夜變化時可在 animate 內插值）
+  uSunCol: { value: new THREE.Color(0xffe6a8).multiplyScalar(0.85) } }; // 透光色×強度（暖金，乘上綠色 diffuse → 暖黃綠逆光＝白天陽光穿過葉；可調）
 function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {               // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度（兩種草分開調）
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
   mat.onBeforeCompile = (sh) => {
@@ -663,7 +668,7 @@ function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {     
     float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
     vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
     gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
-    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
       sh.vertexShader.replace('#include <project_vertex>', `
     vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
     vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
@@ -671,7 +676,7 @@ function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {     
     float bladeH = length(instanceMatrix[1].xyz);                                        // 此叢實際高度（y 軸縮放）→ 擺幅依高度成比例
     float gH = clamp(position.y, 0.0, 1.0);                                              // 0＝根 → 1＝葉尖
     float arc = gH * gH;                                                                 // 弧形遮罩：根固定、越往尖擺得越多
-    float ph = gBase.x * 0.35 + gBase.z * 0.28;                                          // 每葉相位
+    float ph = gBase.x * 0.35 + gBase.z * 0.28 + aBlade * 1.7;                           // 每葉相位（+aBlade：十字兩片 flutter 相位錯開 → 不像剛體一起抖；大風 gust 仍整株一致）
     vec2 wdir = vec2(0.86, 0.5);                                                          // 固定風向
     float g1 = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.05 - uTime * 1.0);                // 主風向波
     float g2 = 0.5 + 0.5 * sin(dot(gBase.xz, vec2(-wdir.y, wdir.x)) * 0.11 - uTime * 1.7); // 交錯方向、不同波長的副波
