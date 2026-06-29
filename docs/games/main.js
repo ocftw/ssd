@@ -569,17 +569,103 @@ function scatter(n, rMin, rMax, minH, avoidRuin) {
   }
   return out;
 }
-// 樹（針葉）：樹冠 + 樹幹兩個 instanced mesh 共用座標
-const foliageGeo = mergeGeometries([0, 1, 2].map((k) => {
-  const c = new THREE.ConeGeometry(1.7 - k * 0.42, 1.8, 12); c.translate(0, 2.4 + k * 1.0 + 0.9, 0); return c;
-}));
-const trunkGeo = new THREE.CylinderGeometry(0.3, 0.42, 2.4, 10); trunkGeo.translate(0, 1.2, 0);
+// 樹：5 種「葉叢卡片」樹冠（闊葉＋針葉混合），沿用草的卡片美學＝逆光透光＋風；每種＝葉冠 InstancedMesh＋樹幹 InstancedMesh。
+const leafMap = (() => {                                   // 程序化葉叢 alpha 貼圖：白底亮度，靠頂點色染成各樹種綠（一片＝一小叢葉）
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  for (let i = 0; i < 12; i++) {
+    const a = rand(0, TAU), rr = rand(4, 20), lx = 32 + Math.cos(a) * rr, ly = 32 + Math.sin(a) * rr, rad = rand(9, 16);
+    const g = x.createRadialGradient(lx, ly, 0.5, lx, ly, rad);  // 漸層中心＝圓心（不可在 fill 前 transform，否則漸層位移→整圖 alpha≈0）
+    g.addColorStop(0, 'rgba(255,255,255,0.98)'); g.addColorStop(0.55, 'rgba(238,247,228,0.9)'); g.addColorStop(1, 'rgba(225,240,210,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(lx, ly, rad, 0, TAU); x.fill();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso; return t;
+})();
+const _leafQuad = new THREE.PlaneGeometry(1, 1);
+function canopyPoint(o) {                                   // 在樹冠形狀內取一點 → {x,y,z, rad(離心0..1), hgt(高度0..1)}
+  const ang = rand(0, TAU);
+  if (o.type === 'cone') {                                  // 針葉：錐形、偏下密
+    const hh = Math.pow(Math.random(), 0.85), r = o.R * (1 - hh) * rand(0.4, 1.0);
+    return { x: Math.cos(ang) * r, y: o.cy + hh * o.H, z: Math.sin(ang) * r, rad: 1 - hh * 0.5, hgt: hh };
+  }
+  const u = Math.acos(rand(-1, 1)), rr = Math.pow(Math.random(), 0.5), r = o.R * rr, sy = Math.cos(u); // 球/扁球
+  let y = o.cy + sy * r * o.flatY;
+  if (o.type === 'weep' && sy < 0.25) y -= rand(0.6, 2.2) * o.R * 0.6;                                 // 垂枝下襬
+  return { x: Math.sin(u) * Math.cos(ang) * r, y, z: Math.sin(u) * Math.sin(ang) * r, rad: rr, hgt: sy * 0.5 + 0.5 };
+}
+function leafCanopy(o) {                                    // 灑 o.cards 片葉卡組成樹冠；烤入 頂點色(內暗外亮)＋aLeaf(相位)＋aSway(擺動權重：底固定、頂/外擺最多)
+  const geos = [], cc = new THREE.Color(), c0 = new THREE.Color(o.c0), c1 = new THREE.Color(o.c1);
+  for (let i = 0; i < o.cards; i++) {
+    const p = canopyPoint(o), g = _leafQuad.clone();
+    g.rotateX(rand(-1.3, 1.3)); g.rotateY(rand(0, TAU)); g.rotateZ(rand(-0.6, 0.6));
+    const sc = o.card * rand(0.7, 1.25); g.scale(sc, o.type === 'weep' ? sc * 1.7 : sc, sc);
+    g.translate(p.x, p.y, p.z);
+    const n = g.attributes.position.count, lite = Math.min(1, Math.max(0, p.hgt * 0.55 + p.rad * 0.5 + rand(-0.08, 0.08)));
+    cc.copy(c0).lerp(c1, lite);
+    const sw = Math.min(1, Math.max(0, p.hgt) * 0.7 + p.rad * 0.4), phase = rand(0, TAU), col = [], aS = [], aL = [];
+    for (let v = 0; v < n; v++) { col.push(cc.r, cc.g, cc.b); aS.push(sw); aL.push(phase); }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setAttribute('aSway', new THREE.Float32BufferAttribute(aS, 1));
+    g.setAttribute('aLeaf', new THREE.Float32BufferAttribute(aL, 1));
+    geos.push(g);
+  }
+  return mergeGeometries(geos);
+}
+const FOLIAGE_WIND = 0.5;
+function makeFoliageMaterial() {                            // 葉冠材質：alpha 葉卡＋風＋逆光透光＋法線往天光柔化（共用 tuftFX 的 uSunDir/uSunCol）
+  const m = new THREE.MeshStandardMaterial({ map: leafMap, alphaTest: 0.42, vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.08 });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol; sh.uniforms.uWind = { value: FOLIAGE_WIND };
+    sh.vertexShader = 'uniform float uTime, uWind;\nattribute float aSway, aLeaf;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vSway;\n' +
+      sh.vertexShader.replace('#include <project_vertex>', `
+    vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+    vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+    vec3 gBase = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    float ph = gBase.x * 0.25 + gBase.z * 0.25 + aLeaf * 1.7;
+    vec2 wdir = vec2(0.86, 0.5);
+    float gust = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.04 - uTime * 0.8);              // 整片陣風
+    vec2 flutter = vec2(sin(uTime * 1.3 + ph), cos(uTime * 1.1 + ph)) * 0.06;            // 每叢細抖
+    gWorld.xz += (wdir * (0.12 + 0.10 * gust) + flutter) * uWind * aSway;                // 頂/外層擺最多、樹幹基部不動
+    vViewW = normalize(cameraPosition - gWorld.xyz); vSway = aSway;
+    vec4 mvPosition = viewMatrix * gWorld; gl_Position = projectionMatrix * mvPosition;
+  `);
+    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vSway;\nuniform vec3 uSunDir, uSunCol;\n' +
+      sh.fragmentShader
+        .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, 0.55)); // 整冠像柔軟受光體、不是一片片各自反光')
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  {
+    float back = pow(max(dot(-vViewW, uSunDir), 0.0), 2.5);
+    totalEmissiveRadiance += uSunCol * back * (0.25 + 0.75 * vSway) * 0.9 * diffuseColor.rgb; // 逆光透光：外/上層葉透最多
+  }`);
+  };
+  return m;
+}
+const foliageMat = makeFoliageMaterial();
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp', 3, 2, true), normalMap: tex('./tex/bark_n.webp', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+// 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
+const TREE_SPECIES = [
+  { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
+  { type: 'umbrella', R: 2.9, cy: 4.9, flatY: 0.50, cards: 52, card: 1.7, c0: 0x356b2e, c1: 0x8fc864, tr: [0.32, 0.46, 4.2] },
+  { type: 'cone',     R: 1.7, cy: 1.8, H: 4.8, flatY: 1, cards: 56, card: 1.1, c0: 0x224c28, c1: 0x4e8a44, tr: [0.28, 0.40, 2.0] },
+  { type: 'weep',     R: 2.3, cy: 4.4, flatY: 0.80, cards: 54, card: 1.4, c0: 0x4a6b32, c1: 0xbcc66a, tr: [0.30, 0.44, 3.6] },
+  { type: 'round',    R: 1.5, cy: 2.5, flatY: 0.95, cards: 30, card: 1.2, c0: 0x335f2c, c1: 0x7fb858, tr: [0.26, 0.40, 1.7] },
+];
 const trees = scatter(Q.rich ? 480 : 300, WORLD.villageR + 8, 172, WORLD.water + 0.8, true); // rMax 172＝夜/日地形相同的內圈，群山沉降時不會浮空
-const treeFoliage = instance(foliageGeo, mat(0x4e9d54), trees);
-const treeTrunk = instance(trunkGeo, mat(0xc9b79c, { map: tex('./tex/bark.webp', 3, 2, true), normalMap: tex('./tex/bark_n.webp', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) }), trees);
-// 撞樹擺動會每幀更新 instanceMatrix（搖晃 ~2-3 秒才靜止）→ 標記為 DynamicDrawUsage，否則每幀重傳「靜態」緩衝會造成驅動層 stall／卡頓（走過樹叢時水面等大平面上抖動的主因）
-treeFoliage.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-treeTrunk.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+trees.forEach((p) => { p.sp = (Math.random() * TREE_SPECIES.length) | 0; });                 // 隨機指派樹種 → 地圖上混生
+const foliageMeshes = [], trunkMeshes = [];                                                  // 依樹種分組（撞樹擺動用 p.sp/p.li 索引）
+TREE_SPECIES.forEach((sp, si) => {
+  const bucket = trees.filter((p) => p.sp === si); bucket.forEach((p, k) => { p.li = k; });
+  const trunkGeo = new THREE.CylinderGeometry(sp.tr[0], sp.tr[1], sp.tr[2], 9); trunkGeo.translate(0, sp.tr[2] / 2, 0);
+  const fm = new THREE.InstancedMesh(leafCanopy(sp), foliageMat, bucket.length); fm.castShadow = true;
+  fm.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: leafMap, alphaTest: 0.42 }); // 葉形鏤空陰影（非實心方塊）
+  const tm = new THREE.InstancedMesh(trunkGeo, barkMat, bucket.length); tm.castShadow = true;
+  bucket.forEach((p, k) => {
+    dummy.position.set(p.x, p.y, p.z); dummy.rotation.set(0, p.ry, 0); dummy.scale.set(p.s, p.s, p.s); dummy.updateMatrix();
+    fm.setMatrixAt(k, dummy.matrix); tm.setMatrixAt(k, dummy.matrix);
+  });
+  // 撞樹擺動每幀更新 instanceMatrix → DynamicDrawUsage，否則每幀重傳「靜態」緩衝造成驅動層 stall／卡頓
+  fm.instanceMatrix.setUsage(THREE.DynamicDrawUsage); tm.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  scene.add(fm); scene.add(tm); foliageMeshes.push(fm); trunkMeshes.push(tm);
+});
 // 撞樹擺動（純視覺）：每棵的傾斜彈簧狀態；玩家走進範圍 → 往遠離方向被推、再回擺站直
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
@@ -2409,7 +2495,7 @@ function animate(time) {
 
   // 撞樹擺動（純視覺，非真實碰撞）：玩家進入樹範圍 → 被推離 + 彈簧回擺數次站直
   {
-    const hx = hero.position.x, hz = hero.position.z; let dirty = false;
+    const hx = hero.position.x, hz = hero.position.z; const dirtyF = [];
     for (let i = 0; i < trees.length; i++) {
       const tr = trees[i], sw = treeSway[i];
       if (!finaleActive) {
@@ -2424,10 +2510,10 @@ function animate(time) {
         _tAx.set(sw.dz, 0, -sw.dx); if (_tAx.lengthSq() < 1e-6) _tAx.set(1, 0, 0); else _tAx.normalize();
         _tQ.setFromAxisAngle(_tAx, sw.ang).multiply(_tQy);
         _tObj.position.set(tr.x, tr.y, tr.z); _tObj.quaternion.copy(_tQ); _tObj.scale.set(tr.s, tr.sy || tr.s, tr.s); _tObj.updateMatrix();
-        treeFoliage.setMatrixAt(i, _tObj.matrix); treeTrunk.setMatrixAt(i, _tObj.matrix); dirty = true;
+        foliageMeshes[tr.sp].setMatrixAt(tr.li, _tObj.matrix); trunkMeshes[tr.sp].setMatrixAt(tr.li, _tObj.matrix); dirtyF[tr.sp] = true; // 依樹種分組更新
       }
     }
-    if (dirty) { treeFoliage.instanceMatrix.needsUpdate = true; treeTrunk.instanceMatrix.needsUpdate = true; }
+    for (let s = 0; s < foliageMeshes.length; s++) if (dirtyF[s]) { foliageMeshes[s].instanceMatrix.needsUpdate = true; trunkMeshes[s].instanceMatrix.needsUpdate = true; }
   }
   // 特效更新
   tuftFX.uTime.value = t; tuftFX.uPlayer.value.copy(hero.position); // 草飄＋撥草：時間推進 + 玩家世界座標（撥開效果在 shader 內逐頂點計算）
