@@ -336,13 +336,24 @@ if (Q.weather) {
     x.fillStyle = g; x.fillRect(6, 0, 4, 64);
     const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
   })();
-  const RN = 800, rpos = new Float32Array(RN * 3);
-  for (let i = 0; i < RN; i++) { rpos[i * 3] = rand(-40, 40); rpos[i * 3 + 1] = rand(0, 42); rpos[i * 3 + 2] = rand(-40, 40); }
-  const rgeo = new THREE.BufferGeometry(); rgeo.setAttribute('position', new THREE.BufferAttribute(rpos, 3));
+  const RN = 2600, rpos = new Float32Array(RN * 3);                              // 大池：靠 drawRange 控制密度（小雨/大雨/大雷雨）
+  for (let i = 0; i < RN; i++) { rpos[i * 3] = rand(-44, 44); rpos[i * 3 + 1] = rand(0, 46); rpos[i * 3 + 2] = rand(-44, 44); }
+  const rgeo = new THREE.BufferGeometry(); rgeo.setAttribute('position', new THREE.BufferAttribute(rpos, 3)); rgeo.setDrawRange(0, 0);
   const rmat = new THREE.PointsMaterial({ map: rainTex, color: 0xcdd9e6, size: 9, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false }); // 螢幕固定垂直雨絲
   const rain = new THREE.Points(rgeo, rmat); rain.frustumCulled = false; wg.add(rain);
-  weather = { mists, rain, rgeo, rmat, amt: 0, target: 0, timer: rand(20, 45) };
+  // mode：clear晴／light小雨／heavy大雨／storm大雷雨。amt=整體強度(0..1)、storm=雷雨程度(調光+閃電)、flash=閃電亮度
+  weather = { mists, rain, rgeo, rmat, RN, amt: 0, mode: 'clear', storm: 0, timer: rand(18, 40),
+    flash: 0, reStrike: 0, strikeTimer: rand(3, 8), thunderDelay: 0, thunderNear: false,
+    baseExp: renderer.toneMappingExposure, baseCol: new THREE.Color(0xcdd9e6), grey: new THREE.Color(0xa9b6c6), fogStorm: new THREE.Color(0x7e8b99) };
 }
+// T 鍵：手動循環天氣（晴→小雨→大雨→大雷雨→晴），方便展示／測試；保持所選 60 秒後恢復自動排程
+addEventListener('keydown', (e) => {
+  if (e.code !== 'KeyT' || !weather || (document.activeElement && document.activeElement.tagName === 'INPUT')) return;
+  const order = ['clear', 'light', 'heavy', 'storm'];
+  weather.mode = order[(order.indexOf(weather.mode) + 1) % order.length];
+  weather.timer = 60;
+  if (weather.mode === 'storm') weather.strikeTimer = 0.5;   // 進雷雨很快來一道閃電
+});
 
 // A3 蝴蝶：白天於草地飄舞、拍翅（兩檔位、數量少；繫於 vibrancy → 全村甦醒的白天才現身）
 const butterflies = [];
@@ -2789,22 +2800,47 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   // 沉浸感更新：環境音景＋天氣＋蝴蝶＋魚影＋飛鳥
   if (!archiveActive) SFX.ambient(dt, vibrancy);
   if (weather) {
-    if (archiveActive) { weather.rmat.opacity = 0; for (const m of weather.mists) m.m.opacity = 0; }
+    if (archiveActive) { weather.rmat.opacity = 0; for (const m of weather.mists) m.m.opacity = 0; weather.rgeo.setDrawRange(0, 0); renderer.toneMappingExposure = weather.baseExp; }
     else {
+      // 模式排程：晴 ↔ 降雨（小雨/大雨/大雷雨，加權隨機）
       weather.timer -= dt;
-      if (weather.timer <= 0) { const raining = weather.target > 0.5; weather.target = raining ? 0 : rand(0.65, 1.0); weather.timer = raining ? rand(45, 95) : rand(16, 32); }
-      weather.amt += (weather.target - weather.amt) * Math.min(1, 0.4 * dt);
+      if (weather.timer <= 0) {
+        if (weather.mode === 'clear') { const r = Math.random(); weather.mode = r < 0.45 ? 'light' : r < 0.78 ? 'heavy' : 'storm'; weather.timer = rand(18, 38); }
+        else { weather.mode = 'clear'; weather.timer = rand(45, 95); }
+      }
+      const tgt = weather.mode === 'clear' ? 0 : weather.mode === 'light' ? 0.38 : weather.mode === 'heavy' ? 0.82 : 1.0;
+      weather.amt += (tgt - weather.amt) * Math.min(1, 0.5 * dt);
+      weather.storm += ((weather.mode === 'storm' ? 1 : 0) - weather.storm) * Math.min(1, 0.6 * dt);
       const night = 1 - vibrancy, cam = camera.position;
       for (const m of weather.mists) {
         const mx = cam.x + m.ox + Math.sin(t * m.sp + m.ph) * 16, mz = cam.z + m.oz + Math.cos(t * m.sp * 0.8 + m.ph) * 16;
         m.s.position.set(mx, terrainHeight(mx, mz) + m.h, mz);
-        m.m.opacity = 0.03 + 0.05 * night + weather.amt * 0.08;
+        m.m.opacity = 0.03 + 0.05 * night + weather.amt * (0.10 + 0.12 * weather.storm);   // 降雨/雷雨時霧更濃
       }
-      const rp = weather.rgeo.attributes.position;
-      for (let i = 0; i < rp.count; i++) { let y = rp.getY(i) - 62 * dt; if (y < 0) y += 42; rp.setY(i, y); }
+      // 雨：密度(drawRange)、落速、不透明度、尺寸隨強度遞增；雷雨偏灰
+      const rp = weather.rgeo.attributes.position, fall = (45 + weather.amt * 72) * dt;
+      for (let i = 0; i < rp.count; i++) { let y = rp.getY(i) - fall; if (y < 0) y += 46; rp.setY(i, y); }
       rp.needsUpdate = true;
-      weather.rain.position.set(cam.x, cam.y - 20, cam.z);
-      weather.rmat.opacity = weather.amt * 0.85;
+      weather.rgeo.setDrawRange(0, Math.floor(weather.amt * weather.RN));
+      weather.rain.position.set(cam.x, cam.y - 22, cam.z);
+      weather.rmat.opacity = weather.amt * 0.9;
+      weather.rmat.size = 8 + weather.amt * 6;
+      weather.rmat.color.copy(weather.baseCol).lerp(weather.grey, weather.storm * 0.6);
+      // 大雷雨：閃電（偶發、有時雙閃）＋延遲雷聲（聲慢於光）
+      if (weather.storm > 0.25) {
+        weather.strikeTimer -= dt;
+        if (weather.strikeTimer <= 0) {
+          weather.flash = 0.9 + Math.random() * 0.6; weather.strikeTimer = rand(4, 11);
+          weather.reStrike = Math.random() < 0.45 ? rand(0.08, 0.18) : 0;
+          weather.thunderNear = Math.random() < 0.5; weather.thunderDelay = weather.thunderNear ? rand(0.3, 1.0) : rand(1.6, 3.4);
+        }
+        if (weather.reStrike > 0) { weather.reStrike -= dt; if (weather.reStrike <= 0) { weather.flash = 0.7 + Math.random() * 0.4; weather.reStrike = 0; } }
+        if (weather.thunderDelay > 0) { weather.thunderDelay -= dt; if (weather.thunderDelay <= 0) SFX.thunder(weather.thunderNear); }
+      }
+      weather.flash = Math.max(0, weather.flash - dt * 6);
+      scene.fog.color.lerp(weather.fogStorm, weather.storm * 0.6);                                   // 雷雨：霧色轉陰沉灰（疊在日夜霧之上、每幀重算不累積）
+      scene.fog.near *= (1 - weather.storm * 0.32);                                                   // 拉近霧幕 → 陰霾、能見度下降
+      renderer.toneMappingExposure = weather.baseExp * (1 - weather.storm * 0.45) + weather.flash;    // 雷雨調暗＋閃電瞬間提亮（曝光，不動日夜光源）
     }
   }
   for (const b of butterflies) {

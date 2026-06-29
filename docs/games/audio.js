@@ -112,6 +112,13 @@ export const SFX = {
     noise({ dur: 0.14, peak: 0.08, type: 'highpass', freq: 4000 });
     tone({ freq: 1500, type: 'sine', dur: 0.10, peak: 0.10, slideTo: 2600, at: 0.05 });
   },
+  // 雷聲：低頻隆隆（lowpass 噪音長尾）＋極低 sine 餘震；near=近距離雷擊（更響、帶高頻劈啪脆裂）
+  thunder(near = false) {
+    const peak = near ? 0.55 : 0.32, dur = near ? 1.7 : 2.4;
+    noise({ dur, peak, type: 'lowpass', freq: near ? 340 : 170 });
+    tone({ freq: near ? 95 : 62, type: 'sine', dur: dur * 0.7, peak: peak * 0.55, slideTo: 34 });
+    if (near) { noise({ dur: 0.14, peak: 0.45, type: 'highpass', freq: 1900 }); noise({ dur: 0.6, peak: 0.3, type: 'bandpass', freq: 600, at: 0.1 }); }
+  },
 
   // 戰鬥
   battleStart() { tone({ freq: 140, type: 'sawtooth', dur: 0.5, peak: 0.42, slideTo: 90 }); noise({ dur: 0.4, peak: 0.28, type: 'lowpass', freq: 240 }); },
