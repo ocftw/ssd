@@ -648,11 +648,14 @@ const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wSta
 //   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
 //   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
 const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
-const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) } }; // uPlayer 初始放遠處＝開場無撥動
-function makeGrassMaterial(part, upMix, envI) {                                           // part=撥草開關；upMix=法線往天光混合量（越高越柔但越吃藍天）；envI=天空環境反射量（越高越偏藍）
+const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) }, // uPlayer 初始放遠處＝開場無撥動
+  uSunDir: { value: new THREE.Vector3(48, 72, 32).normalize() },   // 指向主光的世界方向（sun 跟隨 hero、偏移固定 → 算一次即可）
+  uSunCol: { value: new THREE.Color(0xbcd2ff).multiplyScalar(0.9) } }; // 透光色×強度（偏冷，可調；日夜變化時可在 animate 內插值）
+function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {               // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度（兩種草分開調）
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
+    sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol;           // 透光/sheen 用：主光方向＋透光色
     sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS };
     const partGLSL = part ? `
     vec2 toBlade = gBase.xz - uPlayer.xz;
@@ -660,7 +663,7 @@ function makeGrassMaterial(part, upMix, envI) {                                 
     float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
     vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
     gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
-    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nvarying vec3 vGrassUp;\n' +
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
       sh.vertexShader.replace('#include <project_vertex>', `
     vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
     vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
@@ -670,20 +673,35 @@ function makeGrassMaterial(part, upMix, envI) {                                 
     float arc = gH * gH;                                                                 // 弧形遮罩：根固定、越往尖擺得越多
     float ph = gBase.x * 0.35 + gBase.z * 0.28;                                          // 每葉相位
     vec2 wdir = vec2(0.86, 0.5);                                                          // 固定風向
-    float gust = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.05 - uTime * 1.0);              // 大尺度行進陣風（波一陣陣掃過整片草原）
+    float g1 = 0.5 + 0.5 * sin(dot(gBase.xz, wdir) * 0.05 - uTime * 1.0);                // 主風向波
+    float g2 = 0.5 + 0.5 * sin(dot(gBase.xz, vec2(-wdir.y, wdir.x)) * 0.11 - uTime * 1.7); // 交錯方向、不同波長的副波
+    float swell = 0.55 + 0.45 * sin(uTime * 0.23 + gBase.x * 0.004);                     // 慢速大起伏 envelope（陣風一陣陣）
+    float gust = (g1 * 0.7 + g2 * 0.3) * swell;                                          // 多頻疊加 → 去掉雨刷/電扇般的等幅感
     vec2 flutter = vec2(sin(uTime * 1.6 + ph), cos(uTime * 1.3 + ph * 1.3)) * 0.04;      // 每葉細抖
-    gWorld.xz += (wdir * (0.10 + 0.22 * gust) + flutter) * uWind * arc * bladeH;         // 整片往風向傾、隨陣風起伏（×桿高 → 高草擺更大）
+    vec2 disp = (wdir * (0.10 + 0.22 * gust) + flutter) * uWind * arc * bladeH;          // 本幀水平位移（×桿高 → 高草擺更大）
+    gWorld.xz += disp;
+    gWorld.y  -= dot(disp, disp) * 0.5 / max(bladeH, 0.001);                             // 倒下時尖端下沉 → 假裝弧長守恆（彎，不是被拉長）
+    vViewW = normalize(cameraPosition - gWorld.xyz);                                     // 世界空間視線（透光/sheen 用）；位移後算才準
+    vGH = gH;                                                                            // 0=根 1=尖 → 尖端透光加權
     ${partGLSL}
     vec4 mvPosition = viewMatrix * gWorld;
     gl_Position = projectionMatrix * mvPosition;
   `);
-    sh.fragmentShader = 'varying vec3 vGrassUp;\n' +
-      sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, ' + upMix.toFixed(3) + ')); // 葉法線往天光混合 → 柔軟整片受光（lights 用 geometryNormal，會由 normal copy）');
+    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\nuniform vec3 uSunDir, uSunCol;\n' +
+      sh.fragmentShader
+        .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, ' + upMix.toFixed(3) + ')); // 葉法線往天光混合 → 柔軟整片受光（lights 用 geometryNormal，會由 normal copy）')
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  {
+    float back = pow(max(dot(-vViewW, uSunDir), 0.0), 2.5);                              // 望向光源、穿過草 → 最亮（逆光透光/假 SSS）
+    totalEmissiveRadiance += uSunCol * back * (0.20 + 0.80 * vGH) * ${transI.toFixed(3)} * diffuseColor.rgb; // 尖端薄→透最多；加進 emissive 不被陰影/衰減吃掉＝stylized 穩定背光
+    float rim = pow(max(dot(-vViewW, uSunDir), 0.0), 6.0) * vGH * ${sheenI.toFixed(3)};  // 尖端 sheen：比透光更聚焦、只在尖端（芒草銀穗逆光發亮）
+    totalEmissiveRadiance += uSunCol * rim;
+  }`);
   };
   return mat;
 }
-const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06);                              // 薩爾達綠草：少混天光、幾乎不反射藍天 → 純綠不偏青；風 + 撥草（只側推）
-const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30);                              // 芒草：較柔（金黃色不怕藍天影響）；風 + 撥草
+const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06, 0.85, 0.0);                   // 薩爾達綠草：少混天光、純綠不偏青；風 + 撥草 + 中等逆光透光（碳水綠葉，sheen 關以免整片過亮）
+const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30, 1.25, 0.5);                   // 芒草：較柔；風 + 撥草 + 較強透光 + 尖端 sheen（銀白穗頭逆光發亮）
 // 只在「綠地」長草：沿用地形上色判定 —— 沙岸/黃土（y<water+1.2）、高地岩石（y>15）、陡坡（坡度>0.5）都不長。
 function isGrassGround(x, z) {
   const y = terrainHeight(x, z);
