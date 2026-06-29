@@ -91,7 +91,7 @@ const Q = ({
   // high＝桌機精緻：解除為手機而設的限制＋開啟寫實後製（光暈、大氣天空＋星空、電影色調）
   // 註：maxPR 1.5（由 2.0 再降）＝把填充率砍約 44%，緩解 GPU 滿載造成的風扇狂轉與幀距不均（高刷新/高DPI 螢幕上水面等大平面最容易顯出抖動）；SMAA 在 1.5 下仍可接受。弱機可手動切「精簡」走 low 路徑
   high: { maxPR: 1.5, smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
-          sunShadow: 4096, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true,
+          sunShadow: 2048, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true, // 太陽陰影 4096→2048：texel 砍 3/4 降填充/頻寬，PCFSoft 下幾乎無感
           bloom: true, richSky: true, rich: true, weather: true },
 })[TIER];
 
@@ -1523,8 +1523,11 @@ function heroNearNPC() {
 }
 
 // ── 控制 ────────────────────────────────────────────────────────
+// ── 幀率管理：互動 60fps、閒置 30fps（降溫省電）。整數抽幀鎖原生 vsync（幀距均勻、不用累積器 → 避免 CSS2D 標籤抖動）──
+let activeUntil = 0; const bumpActive = () => { activeUntil = performance.now() + 600; }; // 任意操作後 0.6s 維持 60fps，之後無動作才降 30fps
+let nativeHz = 60, lastRaf = 0, frameTick = 0;                                            // 平滑推估的原生更新率 + native tick 計數
 const keys = new Set();
-addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); });
+addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); bumpActive(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); });
 let yaw = Math.PI, pitch = 0.6, dist = 24;
 // 開場就把鏡頭擺到跟隨位置，避免從原點 (0,0,0) 起始＝卡在中央水晶光束裡（遺跡全通後光束很亮會洗版）
@@ -1533,12 +1536,12 @@ const moveTarget = new THREE.Vector3(); let hasTarget = false;
 const ndc = new THREE.Vector2(); const raycaster = new THREE.Raycaster(); const hitPoint = new THREE.Vector3();
 let pDown = false, dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
 const dom = renderer.domElement;
-dom.addEventListener('pointerdown', (e) => { pDown = true; dragging = false; lastX = downX = e.clientX; lastY = downY = e.clientY; dom.setPointerCapture(e.pointerId); });
+dom.addEventListener('pointerdown', (e) => { pDown = true; dragging = false; lastX = downX = e.clientX; lastY = downY = e.clientY; dom.setPointerCapture(e.pointerId); bumpActive(); });
 dom.addEventListener('pointermove', (e) => {
   if (!pDown) return;
   const dx = e.clientX - lastX, dy = e.clientY - lastY;
   if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) > 6) dragging = true;
-  if (dragging) { yaw -= dx * 0.005; pitch = THREE.MathUtils.clamp(pitch - dy * 0.004, 0.16, 1.2); }
+  if (dragging) { yaw -= dx * 0.005; pitch = THREE.MathUtils.clamp(pitch - dy * 0.004, 0.16, 1.2); bumpActive(); }
   lastX = e.clientX; lastY = e.clientY;
 });
 dom.addEventListener('pointerup', (e) => {
@@ -1555,7 +1558,7 @@ dom.addEventListener('pointerup', (e) => {
   }
   pDown = false; dragging = false;
 });
-addEventListener('wheel', (e) => { dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 14, 56); }, { passive: true });
+addEventListener('wheel', (e) => { dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 14, 56); bumpActive(); }, { passive: true });
 // 首次互動解鎖音訊（瀏覽器自動播放限制；iOS 需多種手勢）
 ['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => addEventListener(ev, () => SFX.unlock(), { passive: true }));
 document.addEventListener('visibilitychange', () => { if (!document.hidden) SFX.unlock(); });
@@ -1571,6 +1574,7 @@ function joyMove(e) {
   if (len > JOY_R) { dx *= JOY_R / len; dy *= JOY_R / len; }
   joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
   joyX = dx / JOY_R; joyZ = -dy / JOY_R;   // 上推 = 前進
+  bumpActive();
 }
 joyEl.addEventListener('pointerdown', (e) => { joyId = e.pointerId; joyEl.setPointerCapture(joyId); SFX.unlock(); joyMove(e); e.preventDefault(); });
 joyEl.addEventListener('pointermove', (e) => { if (e.pointerId === joyId) joyMove(e); });
@@ -2182,10 +2186,16 @@ function doScreenshot() {
 addEventListener('keydown', (e) => { if (e.code === 'KeyP' && !(document.activeElement && document.activeElement.tagName === 'INPUT')) { e.preventDefault(); requestScreenshot(); } }); // P＝截圖
 
 let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
-function animate() {
+function animate(time) {
   if (!started) return;     // landing 仍在最前：完全跳過模擬與渲染（場景被不透明 landing 蓋住，不需畫）
-  // 註：不做幀率上限。先前以累積器限到 60fps 會造成幀距不均，讓 CSS2D 地標標籤相對 3D 錨點「游移」抖動；
-  //     依顯示器原生更新率渲染最平順。降溫主要靠像素比 3×→2×（填充率減半）＋陰影縮小＋landing 暫停。
+  // 幀率閘門（降溫）：互動時 60fps、閒置時 30fps。用「整數抽幀」鎖原生 vsync（每 N 個 native tick 才畫 1 幀）
+  //   → 幀距均勻、不用累積器，避免先前累積器限速造成 CSS2D 地標標籤「游移」抖動的回歸；timer 只在實際渲染幀前進，dt 仍為真實經過時間。
+  if (lastRaf) { const d = time - lastRaf; if (d > 4 && d < 100) nativeHz += (1000 / d - nativeHz) * 0.1; } // 平滑推估顯示器原生更新率
+  lastRaf = time;
+  const _busy = battle.active || finaleActive || egg.active || archFade.on;             // 戰鬥/終局/彩蛋/轉場一律 60fps
+  const _active = _busy || keys.size > 0 || joyX !== 0 || joyZ !== 0 || hasTarget || performance.now() < activeUntil; // 移動中/操作後 0.6s 內＝互動
+  const _stride = Math.max(1, Math.round(nativeHz / (_active ? 60 : 30)));
+  if (frameTick++ % _stride !== 0) return;  // 跳過此 native tick（不模擬、不渲染）
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
   fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 原始幀時間估 FPS
