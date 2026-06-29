@@ -588,16 +588,17 @@ function canopyPoint(o) {                                   // 在樹冠形狀�
     return { x: Math.cos(ang) * r, y: o.cy + hh * o.H, z: Math.sin(ang) * r, rad: 1 - hh * 0.5, hgt: hh };
   }
   const u = Math.acos(rand(-1, 1)), rr = Math.pow(Math.random(), 0.5), r = o.R * rr, sy = Math.cos(u); // 球/扁球
+  const px = Math.sin(u) * Math.cos(ang) * r, pz = Math.sin(u) * Math.sin(ang) * r;
   let y = o.cy + sy * r * o.flatY;
-  if (o.type === 'weep' && sy < 0.25) y -= rand(0.6, 2.2) * o.R * 0.6;                                 // 垂枝下襬
-  return { x: Math.sin(u) * Math.cos(ang) * r, y, z: Math.sin(u) * Math.sin(ang) * r, rad: rr, hgt: sy * 0.5 + 0.5 };
+  if (o.type === 'weep') { const hr = Math.sin(u) * rr; y -= Math.pow(hr, 1.6) * o.R * rand(0.9, 1.5); } // 垂枝：外緣依離心半徑平滑下垂成連續垂簾（非隨機長腳）
+  return { x: px, y, z: pz, rad: rr, hgt: Math.max(0, Math.min(1, sy * 0.5 + 0.5)) };
 }
 function leafCanopy(o) {                                    // 灑 o.cards 片葉卡組成樹冠；烤入 頂點色(內暗外亮)＋aLeaf(相位)＋aSway(擺動權重：底固定、頂/外擺最多)
   const geos = [], cc = new THREE.Color(), c0 = new THREE.Color(o.c0), c1 = new THREE.Color(o.c1);
   for (let i = 0; i < o.cards; i++) {
     const p = canopyPoint(o), g = _leafQuad.clone();
     g.rotateX(rand(-1.3, 1.3)); g.rotateY(rand(0, TAU)); g.rotateZ(rand(-0.6, 0.6));
-    const sc = o.card * rand(0.7, 1.25); g.scale(sc, o.type === 'weep' ? sc * 1.7 : sc, sc);
+    const sc = o.card * rand(0.7, 1.25); g.scale(sc, o.type === 'weep' ? sc * 1.5 : sc, sc);
     g.translate(p.x, p.y, p.z);
     const n = g.attributes.position.count, lite = Math.min(1, Math.max(0, p.hgt * 0.55 + p.rad * 0.5 + rand(-0.08, 0.08)));
     cc.copy(c0).lerp(c1, lite);
@@ -646,7 +647,7 @@ const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
   { type: 'umbrella', R: 2.9, cy: 4.9, flatY: 0.50, cards: 52, card: 1.7, c0: 0x356b2e, c1: 0x8fc864, tr: [0.32, 0.46, 4.2] },
   { type: 'cone',     R: 1.7, cy: 1.8, H: 4.8, flatY: 1, cards: 56, card: 1.1, c0: 0x224c28, c1: 0x4e8a44, tr: [0.28, 0.40, 2.0] },
-  { type: 'weep',     R: 2.3, cy: 4.4, flatY: 0.80, cards: 54, card: 1.4, c0: 0x4a6b32, c1: 0xbcc66a, tr: [0.30, 0.44, 3.6] },
+  { type: 'weep',     R: 2.4, cy: 4.5, flatY: 0.80, cards: 72, card: 1.3, c0: 0x4a6b32, c1: 0xbcc66a, tr: [0.30, 0.44, 3.6] },
   { type: 'round',    R: 1.5, cy: 2.5, flatY: 0.95, cards: 30, card: 1.2, c0: 0x335f2c, c1: 0x7fb858, tr: [0.26, 0.40, 1.7] },
 ];
 const trees = scatter(Q.rich ? 480 : 300, WORLD.villageR + 8, 172, WORLD.water + 0.8, true); // rMax 172＝夜/日地形相同的內圈，群山沉降時不會浮空
