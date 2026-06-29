@@ -627,7 +627,12 @@ function curvedBlade(seg, o) {                                                  
     pos.push(-bw, t, z, bw, t, z);
     if (t < hf) c.copy(c0).lerp(c1, t / hf); else c.copy(c1).lerp(c2, hf < 1 ? (t - hf) / (1 - hf) : 0); // 根→中→（穗）漸層；hf=1（綠草無穗）時避免 0/0=NaN
     const br = 0.5 + 0.68 * t;                                                            // 根暗尖亮：根 0.5 → 尖 1.18
-    col.push(c.r * br, c.g * br, c.b * br, c.r * br, c.g * br, c.b * br);
+    let cr = c.r * br, cg = c.g * br, cb = c.b * br;
+    if (o.gnd) {                                                                          // 底段融入地面草地綠：草根烤色（c0×0.5）遠暗於草地頂點色 → 草根貼亮草地會有色斷層
+      const u = Math.min(1, t / 0.42), sm = u * u * (3 - 2 * u), k = (1 - sm) * 0.9;      // 底 0~42% smoothstep 漸融、根部 0.9 強度（同 linear 空間、與地形上色同基準）
+      cr += (o.gnd.r - cr) * k; cg += (o.gnd.g - cg) * k; cb += (o.gnd.b - cb) * k;
+    }
+    col.push(cr, cg, cb, cr, cg, cb);
   }
   for (let i = 0; i < seg; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
   const g = new THREE.BufferGeometry();
@@ -636,8 +641,9 @@ function curvedBlade(seg, o) {                                                  
   g.setIndex(idx); return g;
 }
 function crossBlade(seg, o) { const a = curvedBlade(seg, o), b = curvedBlade(seg, o); b.rotateY(Math.PI / 2); const g = mergeGeometries([a, b]); g.computeVertexNormals(); return g; } // 十字交叉＝有體積
-const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95 });                                   // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠
-const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5 }); // 芒草：金綠桿→金黃→銀白穗頭、前傾
+const cGrassBlade = new THREE.Color().copy(cGrass).lerp(cGrass2, 0.5);                                                                  // 草根要融入的「地面草地綠」＝地形草地頂點色中點（linear，與地形上色同基準）
+const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95, gnd: cGrassBlade });                  // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠（根部漸融地面綠）
+const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5, gnd: cGrassBlade }); // 芒草：金綠桿→金黃→銀白穗頭、前傾（根部漸融地面綠）
 // 風飄＋撥草（純 GPU vertex shader，薩爾達風草原）：① 風 — 整片往固定風向傾 + 大尺度行進陣風（波一陣陣掃過整片）+ 每葉細抖；h*h 遮罩（根固定、越往尖擺越多）、×桿高（高草擺更大）；
 //   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
 //   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
