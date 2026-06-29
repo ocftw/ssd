@@ -343,7 +343,7 @@ if (Q.weather) {
   const rain = new THREE.Points(rgeo, rmat); rain.frustumCulled = false; wg.add(rain);
   // mode：clear晴／light小雨／heavy大雨／storm大雷雨。amt=整體強度(0..1)、storm=雷雨程度(調光+閃電)、flash=閃電亮度
   weather = { mists, rain, rgeo, rmat, RN, amt: 0, mode: 'clear', storm: 0, timer: rand(18, 40),
-    flash: 0, reStrike: 0, strikeTimer: rand(3, 8), thunderDelay: 0, thunderNear: false,
+    flash: 0, reStrike: 0, strikeTimer: rand(3, 8), thunderDelay: 0,
     baseExp: renderer.toneMappingExposure, baseCol: new THREE.Color(0xcdd9e6), grey: new THREE.Color(0xa9b6c6), fogStorm: new THREE.Color(0x7e8b99) };
 }
 // T 鍵：手動循環天氣（晴→小雨→大雨→大雷雨→晴），方便展示／測試；保持所選 60 秒後恢復自動排程
@@ -2832,10 +2832,10 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
         if (weather.strikeTimer <= 0) {
           weather.flash = 0.9 + Math.random() * 0.6; weather.strikeTimer = rand(4, 11);
           weather.reStrike = Math.random() < 0.45 ? rand(0.08, 0.18) : 0;
-          weather.thunderNear = Math.random() < 0.5; weather.thunderDelay = weather.thunderNear ? rand(0.3, 1.0) : rand(1.6, 3.4);
+          weather.thunderDelay = rand(1.8, 4.0);   // 遠雷：聲音明顯慢於閃光（距離感）
         }
         if (weather.reStrike > 0) { weather.reStrike -= dt; if (weather.reStrike <= 0) { weather.flash = 0.7 + Math.random() * 0.4; weather.reStrike = 0; } }
-        if (weather.thunderDelay > 0) { weather.thunderDelay -= dt; if (weather.thunderDelay <= 0) SFX.thunder(weather.thunderNear); }
+        if (weather.thunderDelay > 0) { weather.thunderDelay -= dt; if (weather.thunderDelay <= 0) SFX.thunder(); }
       }
       weather.flash = Math.max(0, weather.flash - dt * 6);
       scene.fog.color.lerp(weather.fogStorm, weather.storm * 0.6);                                   // 雷雨：霧色轉陰沉灰（疊在日夜霧之上、每幀重算不累積）

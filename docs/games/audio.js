@@ -112,12 +112,11 @@ export const SFX = {
     noise({ dur: 0.14, peak: 0.08, type: 'highpass', freq: 4000 });
     tone({ freq: 1500, type: 'sine', dur: 0.10, peak: 0.10, slideTo: 2600, at: 0.05 });
   },
-  // 雷聲：低頻隆隆（lowpass 噪音長尾）＋極低 sine 餘震；near=近距離雷擊（更響、帶高頻劈啪脆裂）
-  thunder(near = false) {
-    const peak = near ? 0.55 : 0.32, dur = near ? 1.7 : 2.4;
-    noise({ dur, peak, type: 'lowpass', freq: near ? 340 : 170 });
-    tone({ freq: near ? 95 : 62, type: 'sine', dur: dur * 0.7, peak: peak * 0.55, slideTo: 34 });
-    if (near) { noise({ dur: 0.14, peak: 0.45, type: 'highpass', freq: 1900 }); noise({ dur: 0.6, peak: 0.3, type: 'bandpass', freq: 600, at: 0.1 }); }
+  // 雷聲：遠方低沉悶雷——低通噪音長隆隆＋後段二次滾動餘韻＋極低 sine 餘震（不帶近距離高頻脆裂）
+  thunder() {
+    noise({ dur: 2.8, peak: 0.30, type: 'lowpass', freq: 130 });           // 主隆隆（悶、低）
+    noise({ dur: 1.8, peak: 0.16, type: 'lowpass', freq: 90, at: 0.45 });   // 後段二次滾動（遠雷餘韻）
+    tone({ freq: 52, type: 'sine', dur: 2.2, peak: 0.18, slideTo: 26 });    // 極低頻餘震
   },
 
   // 戰鬥
