@@ -2815,7 +2815,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       for (const m of weather.mists) {
         const mx = cam.x + m.ox + Math.sin(t * m.sp + m.ph) * 16, mz = cam.z + m.oz + Math.cos(t * m.sp * 0.8 + m.ph) * 16;
         m.s.position.set(mx, terrainHeight(mx, mz) + m.h, mz);
-        m.m.opacity = 0.03 + 0.05 * night + weather.amt * (0.10 + 0.12 * weather.storm);   // 降雨/雷雨時霧更濃
+        m.m.opacity = 0.03 + 0.05 * night + weather.amt * 0.06;   // 飄霧維持淡（雷雨陰霾改交給平滑的距離霧，避免大張霧 sprite 貼地處的硬邊斷層）
       }
       // 雨：密度(drawRange)、落速、不透明度、尺寸隨強度遞增；雷雨偏灰
       const arr = weather.rgeo.attributes.position.array, fall = (45 + weather.amt * 72 + weather.storm * 45) * dt; // 雷雨落得更急
@@ -2838,8 +2838,8 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
         if (weather.thunderDelay > 0) { weather.thunderDelay -= dt; if (weather.thunderDelay <= 0) SFX.thunder(); }
       }
       weather.flash = Math.max(0, weather.flash - dt * 6);
-      scene.fog.color.lerp(weather.fogStorm, weather.storm * 0.6);                                   // 雷雨：霧色轉陰沉灰（疊在日夜霧之上、每幀重算不累積）
-      scene.fog.near *= (1 - weather.storm * 0.32);                                                   // 拉近霧幕 → 陰霾、能見度下降
+      scene.fog.color.lerp(weather.fogStorm, weather.storm * 0.6);                                   // 雷雨：霧色轉陰沉灰（平滑距離霧、無硬邊；疊在日夜霧之上、每幀重算不累積）
+      scene.fog.far -= weather.storm * 70;                                                            // 雷雨：遠處能見度下降（只動 far、不拉近 near → 不會在鏡頭前出現霧圈/斷層）
       renderer.toneMappingExposure = weather.baseExp * (1 - weather.storm * 0.45) + weather.flash;    // 雷雨調暗＋閃電瞬間提亮（曝光，不動日夜光源）
     }
   }
