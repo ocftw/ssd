@@ -12,16 +12,16 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=b3f9c3e2';
-import { BATTLES_ALL } from './i18n/battles.js?v=b3f9c3e2';
-import { UI_ALL } from './i18n/ui.js?v=b3f9c3e2';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=b3f9c3e2';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=b3f9c3e2';
-import { BattleSystem } from './battle.js?v=b3f9c3e2';
+import { CONTENT } from './i18n/content.js?v=11eee50a';
+import { BATTLES_ALL } from './i18n/battles.js?v=11eee50a';
+import { UI_ALL } from './i18n/ui.js?v=11eee50a';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=11eee50a';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=11eee50a';
+import { BattleSystem } from './battle.js?v=11eee50a';
 import { FISHING_ALL } from './i18n/fishing.js';
 import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
-import { SFX } from './audio.js?v=b3f9c3e2';
+import { SFX } from './audio.js?v=11eee50a';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -121,7 +121,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=b3f9c3e2', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=b3f9c3e2', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=11eee50a', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=11eee50a', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -138,7 +138,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=b3f9c3e2', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=b3f9c3e2', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=11eee50a', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=11eee50a', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -490,8 +490,8 @@ function resolveHeroCollision() {
   hero.position.x = px; hero.position.z = pz;
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=b3f9c3e2', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=b3f9c3e2', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=11eee50a', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=11eee50a', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -842,7 +842,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   return m;
 }
 const foliageMat = makeFoliageMaterial();
-const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=b3f9c3e2', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=b3f9c3e2', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=11eee50a', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=11eee50a', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
 // 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
 const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
@@ -872,7 +872,7 @@ TREE_SPECIES.forEach((sp, si) => {
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=b3f9c3e2', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=b3f9c3e2', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=11eee50a', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=11eee50a', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -1219,7 +1219,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=b3f9c3e2', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=11eee50a', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1472,7 +1472,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=b3f9c3e2'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=11eee50a'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1665,7 +1665,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=b3f9c3e2'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=11eee50a'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -2127,6 +2127,71 @@ const guideMark = (() => {
   const lab = makeLabel(UI.labelGuideNext); lab.o.position.set(0, 1.6, 0); g.add(lab.o);
   g.visible = false; scene.add(g);
   return { group: g, gem };
+})();
+
+// ── 光影引路：把玩家的腳從村口牽向「建議下一站」遺跡（承 #8 夜色語彙）──
+// 三層都繫 nextRecommendedRuinId()（完成一個自動改指下一個）、取該遺跡主題色、夜晚淡入（白天/探索/室內熄）：
+//   ① 螢火引路：主題色光靈從玩家附近貼地朝遺跡方向流動（用「動」表達方向、不畫永久軌道）
+//   ② 主題色信標光柱：只在建議遺跡上方、穿霧可見的脈動光柱（遠場「它在那邊」）
+//   ③ 月光步道：村口沿遺跡方位的一排冷白月光地磚（近村起點提示，承 #8 月亮）
+const guideLight = (() => {
+  const softTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.45, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  // ① 螢火引路
+  const wisps = [];
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.SpriteMaterial({ map: softTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+    const s = new THREE.Sprite(m); s.scale.setScalar(rand(1.1, 1.6)); scene.add(s);
+    wisps.push({ s, m, off: i / 6, rate: rand(0.26, 0.36), lat: rand(-1, 1), seed: rand(0, TAU) });
+  }
+  // ② 主題色信標光柱（穿霧可見：fog:false）
+  const beaconMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+  const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.6, 64, 14, 1, true), beaconMat);
+  beacon.visible = false; scene.add(beacon);
+  // ③ 月光步道
+  const lane = [];
+  for (let i = 0; i < 7; i++) {
+    const m = new THREE.MeshBasicMaterial({ map: softTex, color: 0xdbe8ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), m); pl.rotation.x = -Math.PI / 2; pl.visible = false; scene.add(pl);
+    lane.push({ pl, m });
+  }
+  return {
+    // recPos：建議遺跡（{x,y,z}，null＝無 → 全熄）；recColor：其主題色 hex
+    update(t, dt, night, recPos, recColor) {
+      const on = night > 0.01 && !!recPos;
+      let dx = 0, dz = 1, dist = 0;
+      if (recPos) { dx = recPos.x - hero.position.x; dz = recPos.z - hero.position.z; dist = Math.hypot(dx, dz) || 1; dx /= dist; dz /= dist; }
+      const arrive = Math.max(0, Math.min(1, (dist - 10) / 8)); // 距遺跡 <10 淡出螢火（已抵達）
+      // ① 螢火引路：每幀以玩家「當前」位置為錨、沿遺跡方向連續向外流動（近生遠滅＝動就是方向；無狀態機、不會卡住）
+      const px = -dz, pz = dx; // 水平垂直向
+      for (const w of wisps) {
+        const cyc = (t * w.rate + w.off) % 1;               // 0（貼近玩家）→ 1（前方遠處淡出）
+        const d = 2.5 + cyc * 11, lateral = w.lat * (1 - cyc) * 1.4; // 近玩家散開、沿路收束成一束
+        const wx = hero.position.x + dx * d + px * lateral, wz = hero.position.z + dz * d + pz * lateral;
+        w.s.position.set(wx, groundY(wx, wz) + 0.95 + Math.sin(t * 1.5 + w.seed) * 0.25, wz);
+        if (recColor) w.m.color.setHex(recColor);
+        w.m.opacity = on ? night * arrive * Math.sin(cyc * Math.PI) * 0.85 : 0;
+      }
+      // ② 信標光柱：立在建議遺跡上方、主題色脈動
+      beacon.visible = on;
+      if (on) { beacon.position.set(recPos.x, recPos.y + 33, recPos.z); beaconMat.color.setHex(recColor); beaconMat.opacity = night * (0.1 + 0.035 * Math.sin(t * 1.4)); }
+      // ③ 月光步道：以村中心(原點)為起點、沿遺跡方位外推的一排冷白地磚
+      let ox = 0, oz = 1;
+      if (recPos) { const dm = Math.hypot(recPos.x, recPos.z) || 1; ox = recPos.x / dm; oz = recPos.z / dm; }
+      for (let i = 0; i < lane.length; i++) {
+        const seg = lane[i]; seg.pl.visible = on;
+        if (!on) { seg.m.opacity = 0; continue; }
+        const r = WORLD.villageR - 4 + i * 5.5, gx = ox * r, gz = oz * r;
+        seg.pl.position.set(gx, groundY(gx, gz) + 0.12, gz);
+        seg.m.opacity = night * (0.22 + 0.06 * Math.sin(t * 0.9 + i)) * (1 - (i / lane.length) * 0.45);
+      }
+    },
+  };
 })();
 function showPanel(p) {
   const d = p.data; panelId = d.id;
@@ -3209,6 +3274,9 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       guideMark.group.position.set(rp.x, rp.y + 10 + Math.sin(t * 1.6) * 0.5, rp.z);
       guideMark.gem.rotation.y += dt * 1.2; guideMark.gem.rotation.x = Math.sin(t * 0.9) * 0.3;
     }
+    // 光影引路（螢火／信標／月光步道）：與路標同一 recId、夜晚淡入
+    const rr = recId ? ruinAt.find((r) => r.id === recId) : null;
+    guideLight.update(t, dt, archiveActive ? 0 : (1 - vibrancy), rr, rr ? rr.color : 0);
   }
   // OCF 紀念碑：每次進來都未點亮，靠近才點燃（本次遊玩保持點亮）＝給 OCF 添柴火
   {
