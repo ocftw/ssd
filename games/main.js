@@ -12,16 +12,16 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=51a693a9';
-import { BATTLES_ALL } from './i18n/battles.js?v=51a693a9';
-import { UI_ALL } from './i18n/ui.js?v=51a693a9';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=51a693a9';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=51a693a9';
-import { BattleSystem } from './battle.js?v=51a693a9';
+import { CONTENT } from './i18n/content.js?v=125a477b';
+import { BATTLES_ALL } from './i18n/battles.js?v=125a477b';
+import { UI_ALL } from './i18n/ui.js?v=125a477b';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=125a477b';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=125a477b';
+import { BattleSystem } from './battle.js?v=125a477b';
 import { FISHING_ALL } from './i18n/fishing.js';
 import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
-import { SFX } from './audio.js?v=51a693a9';
+import { SFX } from './audio.js?v=125a477b';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -121,7 +121,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=51a693a9', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=51a693a9', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=125a477b', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=125a477b', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -138,7 +138,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=51a693a9', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=51a693a9', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=125a477b', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=125a477b', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -490,8 +490,8 @@ function resolveHeroCollision() {
   hero.position.x = px; hero.position.z = pz;
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=51a693a9', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=51a693a9', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=125a477b', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=125a477b', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -660,7 +660,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   return m;
 }
 const foliageMat = makeFoliageMaterial();
-const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=51a693a9', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=51a693a9', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=125a477b', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=125a477b', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
 // 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
 const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
@@ -690,7 +690,7 @@ TREE_SPECIES.forEach((sp, si) => {
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=51a693a9', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=51a693a9', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=125a477b', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=125a477b', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -756,25 +756,37 @@ const cGrassBlade = new THREE.Color().copy(cGrass).lerp(cGrass2, 0.5);          
 const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95, gnd: cGrassBlade });                  // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠（根部漸融地面綠）
 const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5, gnd: cGrassBlade }); // 芒草：金綠桿→金黃→銀白穗頭、前傾（根部漸融地面綠）
 // 風飄＋撥草（純 GPU vertex shader，薩爾達風草原）：① 風 — 整片往固定風向傾 + 大尺度行進陣風（波一陣陣掃過整片）+ 每葉細抖；h*h 遮罩（根固定、越往尖擺越多）、×桿高（高草擺更大）；
-//   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
+//   ② 撥草 — 貼身距離場（非單一圓形力場）：身體膠囊（尾點彈性跟隨 → 移動時沿路徑拉長）＋左右腳兩個小圓（隨步伐前後擺）疊加，
+//      每叢半徑抖動破掉正圓輪廓、跳離地面時草鬆回；只側推、不壓低 → 撥開形狀貼著角色身形與腳步，不是一圈刻意的圓；
 //   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
-const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
+const GRASS_WIND = 0.85, GRASS_PARTR = 1.7, GRASS_PARTPUSH = 0.8, GRASS_PARTPRESS = 0.0, GRASS_FOOTR = 1.05; // ←可調：風幅／身體撥開半徑／推開量／壓低量（0=只側推）／腳邊撥開半徑
 const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) }, // uPlayer 初始放遠處＝開場無撥動
+  uTrail: { value: new THREE.Vector2(0, 1e4) },                    // 身體膠囊尾點（CPU 端彈性跟隨主角 → 移動時膠囊沿路徑拉長成短尾）
+  uFeet: { value: new THREE.Vector4(0, 1e4, 0, 1e4) },             // 左右腳世界座標 (Lx,Lz,Rx,Rz)，隨步伐前後擺
   uSunDir: { value: new THREE.Vector3(48, 72, 32).normalize() },   // 指向主光的世界方向（sun 跟隨 hero、偏移固定 → 算一次即可）
   uSunCol: { value: new THREE.Color(0xffe6a8).multiplyScalar(0.85) } }; // 透光色×強度（暖金，乘上綠色 diffuse → 暖黃綠逆光＝白天陽光穿過葉；可調）
+const grassTrail = new THREE.Vector3(0, 0, 1e4);                   // 撥草膠囊尾點（世界座標，只用 xz；初始放遠處＝開場無撥動）
 function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {               // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度（兩種草分開調）
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
+    sh.uniforms.uTrail = tuftFX.uTrail; sh.uniforms.uFeet = tuftFX.uFeet;                 // 貼身撥草用：身體膠囊尾點＋雙腳位置
     sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol;           // 透光/sheen 用：主光方向＋透光色
-    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS };
+    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS }; sh.uniforms.uFootR = { value: GRASS_FOOTR };
     const partGLSL = part ? `
-    vec2 toBlade = gBase.xz - uPlayer.xz;
-    float pd = length(toBlade);
-    float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
-    vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
-    gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
-    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
+    float rj = 0.78 + 0.44 * fract(sin(gBase.x * 12.9898 + gBase.z * 78.233) * 3758.5453); // 每叢半徑抖動 ±22% → 撥開輪廓毛邊、不是圓規畫的正圓
+    vec2 segAB = uPlayer.xz - uTrail;                                                     // 身體膠囊：uTrail(尾)→uPlayer(頭)；站定時兩點重合＝縮回貼身小圓
+    float segT = clamp(dot(gBase.xz - uTrail, segAB) / max(dot(segAB, segAB), 1e-4), 0.0, 1.0);
+    vec2 dB = gBase.xz - (uTrail + segAB * segT); float lB = max(length(dB), 1e-3);       // 草根到膠囊最近點
+    vec2 dL = gBase.xz - uFeet.xy; float lL = max(length(dL), 1e-3);
+    vec2 dR = gBase.xz - uFeet.zw; float lR = max(length(dR), 1e-3);
+    vec2 fSum = dB / lB * smoothstep(uPartR * rj, 0.25, lB)                               // 身體膠囊場 + 兩腳小圓場，取向量和 → 各 lobe 平滑相融、方向自然過渡
+              + (dL / lL * smoothstep(uFootR * rj, 0.1, lL) + dR / lR * smoothstep(uFootR * rj, 0.1, lR)) * 0.8;
+    float push = min(length(fSum), 1.2) * (1.0 - smoothstep(0.9, 2.2, uPlayer.y - gBase.y)); // 場疊加處小幅過推；跳離地面 → 草鬆回
+    vec2 pDisp = fSum / max(length(fSum), 1e-4) * push * uPartPush * arc * bladeH;
+    gWorld.xz += pDisp;
+    gWorld.y  -= dot(pDisp, pDisp) * 0.5 / max(bladeH, 0.001);` : '';                     // 側撥也弧長守恆（同風飄）→ 葉是「彎開」不是被拉長；只側推不壓低、走過不留消失圈
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress, uFootR;\nuniform vec3 uPlayer;\nuniform vec2 uTrail;\nuniform vec4 uFeet;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
       sh.vertexShader.replace('#include <project_vertex>', `
     vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
     vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
@@ -1025,7 +1037,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=51a693a9', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=125a477b', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1278,7 +1290,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=51a693a9'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=125a477b'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1471,7 +1483,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=51a693a9'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=125a477b'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -2895,6 +2907,15 @@ function animate(time) {
   }
   // 特效更新
   tuftFX.uTime.value = t; tuftFX.uPlayer.value.copy(hero.position); // 草飄＋撥草：時間推進 + 玩家世界座標（撥開效果在 shader 內逐頂點計算）
+  // 撥草貼身形：尾點彈性跟隨主角（移動→身體膠囊沿路徑拉長成短尾、站定→縮回貼身）；雙腳世界座標由腿擺角推算 → 撥開形狀跟著步伐呼吸
+  grassTrail.lerp(hero.position, Math.min(1, 9 * dt));
+  { const tdx = grassTrail.x - hero.position.x, tdz = grassTrail.z - hero.position.z, td = Math.hypot(tdx, tdz);
+    if (td > 2) { grassTrail.x = hero.position.x + tdx / td * 2; grassTrail.z = hero.position.z + tdz / td * 2; } // 尾長上限＝衝刺也不會拖太遠
+    tuftFX.uTrail.value.set(grassTrail.x, grassTrail.z); }
+  { const gc = Math.cos(hero.rotation.y), gs = Math.sin(hero.rotation.y);
+    const fL = -Math.sin(legL.rotation.x) * 0.7, fR = -Math.sin(legR.rotation.x) * 0.7;   // 腳掌前後位移 ≈ sin(腿擺角)×腿長
+    tuftFX.uFeet.value.set(hero.position.x - gc * 0.26 + gs * fL, hero.position.z + gs * 0.26 + gc * fL,
+                           hero.position.x + gc * 0.26 + gs * fR, hero.position.z - gs * 0.26 + gc * fR); }
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
   // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
