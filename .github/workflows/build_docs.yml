@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - shield
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
