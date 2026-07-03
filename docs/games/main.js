@@ -2132,7 +2132,7 @@ function refreshQuestHint() {
   const dir = UI.compass[Math.round(ang / (Math.PI / 4)) % 8];
   questHintEl.innerHTML = `🧭 ${UI.questDir(dir, Math.max(1, Math.round(Math.hypot(dx, dz) / 1.5)))}`;
 }
-logBtn.addEventListener('click', () => { const showing = logEl.classList.toggle('show'); if (showing) { refreshQuestHint(); document.getElementById('achpanel')?.classList.remove('show'); } });
+logBtn.addEventListener('click', () => { const showing = logEl.classList.toggle('show'); if (showing) { logEl.style.top = panelTop(); refreshQuestHint(); document.getElementById('achpanel')?.classList.remove('show'); } });
 // 靜音開關
 const soundBtn = document.getElementById('soundbtn');
 const refreshSound = () => { soundBtn.textContent = SFX.isMuted() ? '🔇' : '🔊'; soundBtn.setAttribute('aria-pressed', String(SFX.isMuted())); };
@@ -2446,8 +2446,23 @@ function checkAchievements() {
     toast(UI.achToast(info.t), info.d); SFX.complete(); renderAchPanel();
   }
 }
-if (achBtnEl) achBtnEl.addEventListener('click', () => { const showing = achPanelEl.classList.toggle('show'); if (showing) { renderAchPanel(); logEl.classList.remove('show'); } });
+if (achBtnEl) achBtnEl.addEventListener('click', () => { const showing = achPanelEl.classList.toggle('show'); if (showing) { achPanelEl.style.top = panelTop(); renderAchPanel(); logEl.classList.remove('show'); } });
 renderAchPanel();
+
+// 面板關閉：右上角 ✕、點面板外、Esc 都可關。
+// 小螢幕（≤560px）右上按鈕群會換行往下堆，展開的任務/成就面板（同 z-index、DOM 在後）會蓋住「任務／成就」鈕，
+// 導致無法再點該鈕收起 → 面板改為「開在按鈕群下方」＋自帶關閉途徑，確保任何螢幕都關得掉。
+function panelTop() { const tr = document.getElementById('topright'); const b = tr ? tr.getBoundingClientRect().bottom : 56; return Math.max(60, Math.round(b) + 8) + 'px'; }
+function closePanels() { logEl.classList.remove('show'); if (achPanelEl) achPanelEl.classList.remove('show'); }
+document.querySelectorAll('#questlog .panelx, #achpanel .panelx').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); closePanels(); }));
+addEventListener('pointerdown', (e) => {
+  const openEl = logEl.classList.contains('show') ? logEl : (achPanelEl && achPanelEl.classList.contains('show')) ? achPanelEl : null;
+  if (!openEl) return;
+  const tr = document.getElementById('topright');
+  if (openEl.contains(e.target) || (tr && tr.contains(e.target))) return; // 面板內與右上按鈕群照常運作
+  closePanels(); e.preventDefault(); e.stopPropagation();   // 點面板外＝只收面板，不順帶觸發點地面走過去
+}, true);
+addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanels(); });
 
 // ── 分享成果卡片：終局以 canvas 合成一張成果圖，可下載／（行動裝置）系統分享。零外部資產 ──
 function buildShareCard() {
