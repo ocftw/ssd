@@ -65,7 +65,7 @@ function showUnsupported() {
   if (btn) { btn.disabled = true; btn.textContent = UI.cantPlayBtn; }
   if (root) {
     const prep = root.querySelector('.prep'); if (prep) prep.style.display = 'none';   // 收起「世界生成中」轉圈
-    root.querySelectorAll('.topics-hd, .topics, .landingquality').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質區塊
+    root.querySelectorAll('.topics-hd, .topics, .landingquality, .landingexplore').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質/探索區塊
     const card = root.querySelector('.card');
     if (card && !card.querySelector('.cantplay')) {
       const p = document.createElement('p'); p.className = 'cantplay';
@@ -96,6 +96,12 @@ const Q = ({
           sunShadow: 2048, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true, // 太陽陰影 4096→2048：texel 砍 3/4 降填充/頻寬，PCFSoft 下幾乎無感
           bloom: true, richSky: true, rich: true, weather: true },
 })[TIER];
+
+// ── 探索模式（?explore=1 或 landing 次要按鈕）：直接以白天自由探索 ──
+// 只「借光」＋開放白天內容（花海/海岸/釣魚台/拍照點/日之碎片…）；故事狀態照實呈現：
+// 遺跡水晶、維護者石化、中央大水晶、螢火蟲仍依真實進度，課程任務照常可玩、全完成仍觸發終局。
+let EXPLORE = false;
+try { EXPLORE = new URLSearchParams(location.search).get('explore') === '1'; } catch (e) { /* ignore */ }
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -1902,9 +1908,9 @@ const met = { docs: new Set(), villagers: new Set(), capsule: false, mole: false
 // 世界繁榮度（0 破敗 → 1 繁榮）：發現各 0.3、進化各 0.7
 let vibrancy = 0, vibrancyTarget = 0, greatGlow = 0;
 function computeVibrancy() {
-  // 世界亮度為二元：全部遺跡完成前維持夜晚(0)，全部完成才切到白天(1)。
+  // 世界亮度為二元：全部遺跡完成前維持夜晚(0)，全部完成才切到白天(1)；探索模式（EXPLORE）直接白天。
   // 個別遺跡的發現／完成不改變世界亮度（只改變該遺跡自身的水晶／光束）。
-  vibrancyTarget = ruinAt.every((r) => isDone(r.id)) ? 1 : 0;
+  vibrancyTarget = (EXPLORE || ruinAt.every((r) => isDone(r.id))) ? 1 : 0;
 }
 
 // ── HUD ─────────────────────────────────────────────────────────
@@ -2061,6 +2067,7 @@ function renderConfCompare() {
   el.textContent = UI.confCompare(CONF_FACES[a], CONF_FACES[b], msg);
 }
 function maybeShowPreConfidence() {
+  if (EXPLORE) return;                       // 前後測是課程成效量測：探索模式進來的人不計，避免污染數據
   if (localStorage.getItem(CONF_PRE) != null) return;
   setTimeout(() => showConfidence('pre'), 800);
 }
@@ -2120,6 +2127,14 @@ const refreshSound = () => { soundBtn.textContent = SFX.isMuted() ? '🔇' : '�
 soundBtn.addEventListener('click', () => { SFX.unlock(); SFX.toggle(); refreshSound(); });
 refreshSound();
 const shotBtn = document.getElementById('shotbtn'); if (shotBtn) shotBtn.addEventListener('click', requestScreenshot); // 📷 截圖（亦可按 P）
+// 探索模式標籤（右上）：提示目前在白天自由探索；點一下回到故事模式（去掉 ?explore 重載＝夜晚開場）
+const exploreBadgeEl = document.getElementById('explorebadge');
+function refreshExploreBadge() { if (exploreBadgeEl) exploreBadgeEl.style.display = EXPLORE ? '' : 'none'; }
+if (exploreBadgeEl) exploreBadgeEl.addEventListener('click', () => {
+  if (!EXPLORE) return;
+  try { const u = new URL(location.href); u.searchParams.delete('explore'); location.href = u.toString(); } catch (e) { location.search = ''; }
+});
+refreshExploreBadge();
 
 // 重置進度：清空 localStorage，所有遺跡回到未發現狀態
 function resetRuinVisual(p) {
@@ -2140,14 +2155,14 @@ function resetProgress() {
   const cc = document.querySelector('#finale .confcompare'); if (cc) cc.textContent = '';
   allDoneShown = false; pinnedId = null; suppressed.clear(); hidePanel();
   POIS.forEach((p) => { if (p.isRuin) resetRuinVisual(p); });
-  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; setWorldOpen(false); updateHud(); computeVibrancy(); assignFireflies(); renderAchPanel();
+  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; setWorldOpen(EXPLORE); updateHud(); computeVibrancy(); assignFireflies(); renderAchPanel(); // 探索模式重置後維持白天
   toast(UI.resetToastTitle, UI.resetToastSub);
 }
 document.getElementById('resetbtn').addEventListener('click', resetProgress);
 // 還原已發現遺跡的外觀
 POIS.forEach((p) => { if (p.isRuin && isDisc(p.data.id)) lightRuin(p); });
 updateHud(); allDoneShown = ruinAt.every((r) => isDone(r.id)); computeVibrancy(); vibrancy = vibrancyTarget; assignFireflies();
-if (allDoneShown) setWorldOpen(true);   // 載入已完成存檔：直接是白天敞開狀態
+if (allDoneShown || EXPLORE) setWorldOpen(true);   // 載入已完成存檔或探索模式：直接是白天敞開狀態
 
 // 擴散光環（mul=擴張倍率、dur=持續秒數）
 const bursts = [];
@@ -3386,11 +3401,25 @@ function setupLanding() {
     await frame(); await frame();                              // 先讓「載入中」畫面上屏
     try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) {} // 非阻塞預編譯場景著色器（支援並行編譯時轉圈不卡）
     started = true;                                            // 開始模擬與渲染
-    track('game_start');
+    track('game_start', { mode: EXPLORE ? 'explore' : 'story' });
     for (let i = 0; i < 3; i++) await frame();                 // 暖機數幀（後製 pass 著色器/貼圖上傳），landing 仍蓋著
     root.classList.add('hide');                                // 平順淡出 → 進入遊戲
     maybeShowPreConfidence();
   });
+  // 探索模式入口（次要按鈕）：免重載直接以白天開場；URL 補上 ?explore=1 → 重新整理不會掉回夜晚、連結可分享
+  const exBtn = document.getElementById('explorebtn');
+  if (exBtn) {
+    if (EXPLORE) exBtn.style.display = 'none';                 // 已由網址進入探索模式：不重複顯示
+    exBtn.addEventListener('click', () => {
+      if (!btn || btn.disabled || started) return;             // 世界還在生成或已開始：無作用
+      EXPLORE = true;
+      try { const u = new URL(location.href); u.searchParams.set('explore', '1'); history.replaceState(null, '', u); } catch (e) { /* ignore */ }
+      setWorldOpen(true); computeVibrancy(); vibrancy = vibrancyTarget; // 立即切白天（重算地形被 landing 蓋住）
+      refreshExploreBadge();
+      exBtn.disabled = true;
+      btn.click();                                             // 沿用主按鈕同一套載入／暖機／淡出流程
+    });
+  }
 }
 function landingReady() {
   const root = document.getElementById('landing'); if (!root) return;

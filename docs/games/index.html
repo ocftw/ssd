@@ -105,9 +105,10 @@
 
     /* 任務按鈕 + 清單 */
     #topright { position:fixed; right:16px; top:16px; z-index:12; display:flex; gap:8px; align-items:flex-start; }
-    #logbtn, #soundbtn, #achbtn, #shotbtn { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
+    #logbtn, #soundbtn, #achbtn, #shotbtn, #explorebadge { cursor:pointer; border:0; font:inherit; font-size:13px; font-weight:700; color:var(--ink);
       background:rgba(251,247,239,.93); padding:9px 14px; border-radius:999px; box-shadow:var(--shadow); }
     #soundbtn, #shotbtn { padding:9px 12px; }
+    #explorebadge { color:#8a6d1f; background:rgba(255,224,130,.95); } /* 探索模式標籤：日光金；點一下回到故事模式 */
     /* 語言切換器（由 main.js 動態插入，少於 2 種語言時不顯示） */
     #langsw { display:flex; gap:3px; background:rgba(251,247,239,.93); padding:4px; border-radius:999px; box-shadow:var(--shadow); }
     #langsw button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
@@ -321,6 +322,11 @@
       background:var(--brand); padding:13px 30px; border-radius:999px; box-shadow:0 8px 20px -8px rgba(255,122,69,.85); transition:filter .15s ease; }
     #landing .start:hover:not(:disabled) { filter:brightness(1.06); }
     #landing .start:disabled { background:#c7c2b8; color:#fff; cursor:default; box-shadow:none; }
+    /* 探索模式次要入口：直接白天自由探索（課程任務照常可玩） */
+    #landing .landingexplore { margin-top:10px; border:0; cursor:pointer; font:inherit; font-size:13px; font-weight:700; color:#8a6d1f;
+      background:rgba(255,210,75,.22); padding:9px 18px; border-radius:999px; transition:filter .12s ease; -webkit-tap-highlight-color:transparent; }
+    #landing .landingexplore:hover:not(:disabled) { filter:brightness(1.05); }
+    #landing .landingexplore:disabled { opacity:.55; cursor:default; }
     @media (max-width:560px) {
       #landing .card { padding:18px 18px; } #landing h1 { font-size:19px; } #landing .desc { font-size:13px; line-height:1.65; }
       #landing .lead { font-size:38px; }
@@ -477,6 +483,7 @@
   </div>
 
   <div id="topright">
+    <button id="explorebadge" style="display:none" data-i18n="exploreBadge" data-i18n-title="exploreBadgeHint" title="">☀️ 探索模式</button>
     <button id="soundbtn" title="音效開關" data-i18n-title="soundToggle" aria-pressed="false">🔊</button>
     <button id="shotbtn" title="截圖（P）｜高解析柔邊美景圖（自動隱藏介面）">📷</button>
     <button id="logbtn" data-i18n="logBtn">📜 任務</button>
@@ -595,6 +602,7 @@
       <div class="landingquality"></div>
       <div class="prep"><div class="spin"></div></div>
       <button id="startbtn" class="start" disabled data-i18n="landingPreparing">世界生成中…</button>
+      <button id="explorebtn" class="landingexplore" data-i18n="landingExplore" data-i18n-title="landingExploreHint" title="">☀️ 白天自由探索</button>
     </div>
   </div>
 
