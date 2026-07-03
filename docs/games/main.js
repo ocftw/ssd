@@ -756,25 +756,37 @@ const cGrassBlade = new THREE.Color().copy(cGrass).lerp(cGrass2, 0.5);          
 const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95, gnd: cGrassBlade });                  // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠（根部漸融地面綠）
 const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5, gnd: cGrassBlade }); // 芒草：金綠桿→金黃→銀白穗頭、前傾（根部漸融地面綠）
 // 風飄＋撥草（純 GPU vertex shader，薩爾達風草原）：① 風 — 整片往固定風向傾 + 大尺度行進陣風（波一陣陣掃過整片）+ 每葉細抖；h*h 遮罩（根固定、越往尖擺越多）、×桿高（高草擺更大）；
-//   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
+//   ② 撥草 — 貼身距離場（非單一圓形力場）：身體膠囊（尾點彈性跟隨 → 移動時沿路徑拉長）＋左右腳兩個小圓（隨步伐前後擺）疊加，
+//      每叢半徑抖動破掉正圓輪廓、跳離地面時草鬆回；只側推、不壓低 → 撥開形狀貼著角色身形與腳步，不是一圈刻意的圓；
 //   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
-const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
+const GRASS_WIND = 0.85, GRASS_PARTR = 1.7, GRASS_PARTPUSH = 0.8, GRASS_PARTPRESS = 0.0, GRASS_FOOTR = 1.05; // ←可調：風幅／身體撥開半徑／推開量／壓低量（0=只側推）／腳邊撥開半徑
 const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) }, // uPlayer 初始放遠處＝開場無撥動
+  uTrail: { value: new THREE.Vector2(0, 1e4) },                    // 身體膠囊尾點（CPU 端彈性跟隨主角 → 移動時膠囊沿路徑拉長成短尾）
+  uFeet: { value: new THREE.Vector4(0, 1e4, 0, 1e4) },             // 左右腳世界座標 (Lx,Lz,Rx,Rz)，隨步伐前後擺
   uSunDir: { value: new THREE.Vector3(48, 72, 32).normalize() },   // 指向主光的世界方向（sun 跟隨 hero、偏移固定 → 算一次即可）
   uSunCol: { value: new THREE.Color(0xffe6a8).multiplyScalar(0.85) } }; // 透光色×強度（暖金，乘上綠色 diffuse → 暖黃綠逆光＝白天陽光穿過葉；可調）
+const grassTrail = new THREE.Vector3(0, 0, 1e4);                   // 撥草膠囊尾點（世界座標，只用 xz；初始放遠處＝開場無撥動）
 function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {               // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度（兩種草分開調）
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
+    sh.uniforms.uTrail = tuftFX.uTrail; sh.uniforms.uFeet = tuftFX.uFeet;                 // 貼身撥草用：身體膠囊尾點＋雙腳位置
     sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol;           // 透光/sheen 用：主光方向＋透光色
-    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS };
+    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS }; sh.uniforms.uFootR = { value: GRASS_FOOTR };
     const partGLSL = part ? `
-    vec2 toBlade = gBase.xz - uPlayer.xz;
-    float pd = length(toBlade);
-    float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
-    vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
-    gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
-    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
+    float rj = 0.78 + 0.44 * fract(sin(gBase.x * 12.9898 + gBase.z * 78.233) * 3758.5453); // 每叢半徑抖動 ±22% → 撥開輪廓毛邊、不是圓規畫的正圓
+    vec2 segAB = uPlayer.xz - uTrail;                                                     // 身體膠囊：uTrail(尾)→uPlayer(頭)；站定時兩點重合＝縮回貼身小圓
+    float segT = clamp(dot(gBase.xz - uTrail, segAB) / max(dot(segAB, segAB), 1e-4), 0.0, 1.0);
+    vec2 dB = gBase.xz - (uTrail + segAB * segT); float lB = max(length(dB), 1e-3);       // 草根到膠囊最近點
+    vec2 dL = gBase.xz - uFeet.xy; float lL = max(length(dL), 1e-3);
+    vec2 dR = gBase.xz - uFeet.zw; float lR = max(length(dR), 1e-3);
+    vec2 fSum = dB / lB * smoothstep(uPartR * rj, 0.25, lB)                               // 身體膠囊場 + 兩腳小圓場，取向量和 → 各 lobe 平滑相融、方向自然過渡
+              + (dL / lL * smoothstep(uFootR * rj, 0.1, lL) + dR / lR * smoothstep(uFootR * rj, 0.1, lR)) * 0.8;
+    float push = min(length(fSum), 1.2) * (1.0 - smoothstep(0.9, 2.2, uPlayer.y - gBase.y)); // 場疊加處小幅過推；跳離地面 → 草鬆回
+    vec2 pDisp = fSum / max(length(fSum), 1e-4) * push * uPartPush * arc * bladeH;
+    gWorld.xz += pDisp;
+    gWorld.y  -= dot(pDisp, pDisp) * 0.5 / max(bladeH, 0.001);` : '';                     // 側撥也弧長守恆（同風飄）→ 葉是「彎開」不是被拉長；只側推不壓低、走過不留消失圈
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress, uFootR;\nuniform vec3 uPlayer;\nuniform vec2 uTrail;\nuniform vec4 uFeet;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
       sh.vertexShader.replace('#include <project_vertex>', `
     vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
     vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
@@ -2895,6 +2907,15 @@ function animate(time) {
   }
   // 特效更新
   tuftFX.uTime.value = t; tuftFX.uPlayer.value.copy(hero.position); // 草飄＋撥草：時間推進 + 玩家世界座標（撥開效果在 shader 內逐頂點計算）
+  // 撥草貼身形：尾點彈性跟隨主角（移動→身體膠囊沿路徑拉長成短尾、站定→縮回貼身）；雙腳世界座標由腿擺角推算 → 撥開形狀跟著步伐呼吸
+  grassTrail.lerp(hero.position, Math.min(1, 9 * dt));
+  { const tdx = grassTrail.x - hero.position.x, tdz = grassTrail.z - hero.position.z, td = Math.hypot(tdx, tdz);
+    if (td > 2) { grassTrail.x = hero.position.x + tdx / td * 2; grassTrail.z = hero.position.z + tdz / td * 2; } // 尾長上限＝衝刺也不會拖太遠
+    tuftFX.uTrail.value.set(grassTrail.x, grassTrail.z); }
+  { const gc = Math.cos(hero.rotation.y), gs = Math.sin(hero.rotation.y);
+    const fL = -Math.sin(legL.rotation.x) * 0.7, fR = -Math.sin(legR.rotation.x) * 0.7;   // 腳掌前後位移 ≈ sin(腿擺角)×腿長
+    tuftFX.uFeet.value.set(hero.position.x - gc * 0.26 + gs * fL, hero.position.z + gs * 0.26 + gc * fL,
+                           hero.position.x + gc * 0.26 + gs * fR, hero.position.z - gs * 0.26 + gc * fR); }
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
   // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
