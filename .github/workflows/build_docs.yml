@@ -39,3 +39,36 @@ jobs:
         run: uv sync
       - name: Build and Deploy Docs
         run: uv run mkdocs gh-deploy --force
+      - name: Purge Cloudflare cache (ssd.ocf.tw)
+        if: success()
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE_NAME: ocf.tw
+          CF_PURGE_HOST: ssd.ocf.tw
+        run: |
+          set -euo pipefail
+          if [ -z "${CF_API_TOKEN}" ]; then
+            echo "::notice::未設定 CLOUDFLARE_API_TOKEN，略過 Cloudflare 快取清除"
+            exit 0
+          fi
+          # 以 token 自動查出 zone id，毋須另外提供 ocf.tw 的 zone id
+          zone_id=$(curl -fsS \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/zones?name=${CF_ZONE_NAME}&status=active" \
+            | jq -r '.result[0].id // empty')
+          if [ -z "${zone_id}" ]; then
+            echo "::error::找不到 ${CF_ZONE_NAME} zone；請確認 API token 具備 Zone:Read 權限且涵蓋 ${CF_ZONE_NAME}"
+            exit 1
+          fi
+          echo "Zone ${CF_ZONE_NAME} -> ${zone_id}"
+          # 僅清除 ssd.ocf.tw 這個 hostname 的快取，不影響 ocf.tw 其他子網域
+          resp=$(curl -fsS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${zone_id}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"hosts\":[\"${CF_PURGE_HOST}\"]}")
+          if [ "$(echo "${resp}" | jq -r '.success')" != "true" ]; then
+            echo "::error::Cloudflare 快取清除失敗：${resp}"
+            exit 1
+          fi
+          echo "✅ 已清除 ${CF_PURGE_HOST} 的 Cloudflare 快取"
