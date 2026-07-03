@@ -2,8 +2,8 @@
 // 答對 → 出招扣怪血；答錯 → 失去一顆防護心、揭曉正解與解說，再點正解學起來反擊。
 // 怪血歸零 = 勝（淨化遺跡）；防護心歸零 = 敗（先去讀章節再來，可重來）。
 import * as THREE from 'three';
-import { groundY } from './terrain.js?v=85907760';
-import { SFX } from './audio.js?v=85907760';
+import { groundY } from './terrain.js?v=51a693a9';
+import { SFX } from './audio.js?v=51a693a9';
 
 const TAU = Math.PI * 2;
 const sm = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, ...o });
@@ -98,10 +98,16 @@ export class BattleSystem {
     this.el.flee.addEventListener('click', () => this._finish(false));
   }
 
-  start(poi, data) {
+  start(poi, data, opts = {}) {                                     // opts：試煉模式用（hearts=起始血量、shuffle=題目洗牌）
     return new Promise((resolve) => {
-      this._resolve = resolve; this.poi = poi; this.data = data;
-      this.qi = 0; this.hearts = 3; this.maxHearts = 3; this.monHP = data.questions.length; this.monMax = this.monHP;
+      let d = data;
+      if (opts.shuffle) {                                           // Fisher–Yates 淺拷貝洗牌（四種題型皆自足物件，安全）
+        const qs = [...data.questions];
+        for (let i = qs.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [qs[i], qs[j]] = [qs[j], qs[i]]; }
+        d = { ...data, questions: qs };
+      }
+      this._resolve = resolve; this.poi = poi; this.data = d;
+      this.qi = 0; this.hearts = this.maxHearts = opts.hearts ?? 3; this.monHP = d.questions.length; this.monMax = this.monHP;
       // 怪物位置：在玩家與遺跡之間，面向玩家
       // 戰鬥方向：從遺跡往「外」佈陣，讓遺跡退到鏡頭後方，不擋到怪物
       this.dir.set(this.hero.position.x - poi.pos.x, 0, this.hero.position.z - poi.pos.z);
