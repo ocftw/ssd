@@ -2128,6 +2128,71 @@ const guideMark = (() => {
   g.visible = false; scene.add(g);
   return { group: g, gem };
 })();
+
+// ── 光影引路：把玩家的腳從村口牽向「建議下一站」遺跡（承 #8 夜色語彙）──
+// 三層都繫 nextRecommendedRuinId()（完成一個自動改指下一個）、取該遺跡主題色、夜晚淡入（白天/探索/室內熄）：
+//   ① 螢火引路：主題色光靈從玩家附近貼地朝遺跡方向流動（用「動」表達方向、不畫永久軌道）
+//   ② 主題色信標光柱：只在建議遺跡上方、穿霧可見的脈動光柱（遠場「它在那邊」）
+//   ③ 月光步道：村口沿遺跡方位的一排冷白月光地磚（近村起點提示，承 #8 月亮）
+const guideLight = (() => {
+  const softTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.45, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  // ① 螢火引路
+  const wisps = [];
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.SpriteMaterial({ map: softTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+    const s = new THREE.Sprite(m); s.scale.setScalar(rand(1.1, 1.6)); scene.add(s);
+    wisps.push({ s, m, off: i / 6, rate: rand(0.26, 0.36), lat: rand(-1, 1), seed: rand(0, TAU) });
+  }
+  // ② 主題色信標光柱（穿霧可見：fog:false）
+  const beaconMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+  const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.6, 64, 14, 1, true), beaconMat);
+  beacon.visible = false; scene.add(beacon);
+  // ③ 月光步道
+  const lane = [];
+  for (let i = 0; i < 7; i++) {
+    const m = new THREE.MeshBasicMaterial({ map: softTex, color: 0xdbe8ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), m); pl.rotation.x = -Math.PI / 2; pl.visible = false; scene.add(pl);
+    lane.push({ pl, m });
+  }
+  return {
+    // recPos：建議遺跡（{x,y,z}，null＝無 → 全熄）；recColor：其主題色 hex
+    update(t, dt, night, recPos, recColor) {
+      const on = night > 0.01 && !!recPos;
+      let dx = 0, dz = 1, dist = 0;
+      if (recPos) { dx = recPos.x - hero.position.x; dz = recPos.z - hero.position.z; dist = Math.hypot(dx, dz) || 1; dx /= dist; dz /= dist; }
+      const arrive = Math.max(0, Math.min(1, (dist - 10) / 8)); // 距遺跡 <10 淡出螢火（已抵達）
+      // ① 螢火引路：每幀以玩家「當前」位置為錨、沿遺跡方向連續向外流動（近生遠滅＝動就是方向；無狀態機、不會卡住）
+      const px = -dz, pz = dx; // 水平垂直向
+      for (const w of wisps) {
+        const cyc = (t * w.rate + w.off) % 1;               // 0（貼近玩家）→ 1（前方遠處淡出）
+        const d = 2.5 + cyc * 11, lateral = w.lat * (1 - cyc) * 1.4; // 近玩家散開、沿路收束成一束
+        const wx = hero.position.x + dx * d + px * lateral, wz = hero.position.z + dz * d + pz * lateral;
+        w.s.position.set(wx, groundY(wx, wz) + 0.95 + Math.sin(t * 1.5 + w.seed) * 0.25, wz);
+        if (recColor) w.m.color.setHex(recColor);
+        w.m.opacity = on ? night * arrive * Math.sin(cyc * Math.PI) * 0.85 : 0;
+      }
+      // ② 信標光柱：立在建議遺跡上方、主題色脈動
+      beacon.visible = on;
+      if (on) { beacon.position.set(recPos.x, recPos.y + 33, recPos.z); beaconMat.color.setHex(recColor); beaconMat.opacity = night * (0.1 + 0.035 * Math.sin(t * 1.4)); }
+      // ③ 月光步道：以村中心(原點)為起點、沿遺跡方位外推的一排冷白地磚
+      let ox = 0, oz = 1;
+      if (recPos) { const dm = Math.hypot(recPos.x, recPos.z) || 1; ox = recPos.x / dm; oz = recPos.z / dm; }
+      for (let i = 0; i < lane.length; i++) {
+        const seg = lane[i]; seg.pl.visible = on;
+        if (!on) { seg.m.opacity = 0; continue; }
+        const r = WORLD.villageR - 4 + i * 5.5, gx = ox * r, gz = oz * r;
+        seg.pl.position.set(gx, groundY(gx, gz) + 0.12, gz);
+        seg.m.opacity = night * (0.22 + 0.06 * Math.sin(t * 0.9 + i)) * (1 - (i / lane.length) * 0.45);
+      }
+    },
+  };
+})();
 function showPanel(p) {
   const d = p.data; panelId = d.id;
   POIS.forEach((x) => x.el.classList.toggle('is-active', x === p));
@@ -3209,6 +3274,9 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       guideMark.group.position.set(rp.x, rp.y + 10 + Math.sin(t * 1.6) * 0.5, rp.z);
       guideMark.gem.rotation.y += dt * 1.2; guideMark.gem.rotation.x = Math.sin(t * 0.9) * 0.3;
     }
+    // 光影引路（螢火／信標／月光步道）：與路標同一 recId、夜晚淡入
+    const rr = recId ? ruinAt.find((r) => r.id === recId) : null;
+    guideLight.update(t, dt, archiveActive ? 0 : (1 - vibrancy), rr, rr ? rr.color : 0);
   }
   // OCF 紀念碑：每次進來都未點亮，靠近才點燃（本次遊玩保持點亮）＝給 OCF 添柴火
   {
