@@ -18,6 +18,8 @@ import { UI_ALL } from './i18n/ui.js';
 import { LANGS, resolveLang, setLang } from './i18n/lang.js';
 import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js';
 import { BattleSystem } from './battle.js';
+import { FISHING_ALL } from './i18n/fishing.js';
+import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
 import { SFX } from './audio.js';
 
@@ -892,6 +894,112 @@ const dayMeadow = plantTurf(greenGeo, grassMatGreen, Q.rich ? 6 : 2, 165, 202, g
 const daySusuki = plantGrass(susukiGeo, grassMatSusuki, Q.rich ? 4200 : 1000, 184, 236, 1.4, 2.6, (c) => c.setRGB(rand(0.88, 1.06), rand(0.92, 1.08), rand(0.85, 1.05))); // 靠海金色芒草帶：開闊海岸的自然優勢種、隨海風成浪
 setTerrainOpenness(worldOpen ? 1 : 0);                                                    // 還原 openness（載入時＝夜 0）
 dayMeadow.visible = daySusuki.visible = worldOpen;                                        // 僅白天現身（animate 隨 worldOpen 切換；夜晚此處是山牆，藏起避免穿插）
+// ── 野花花海（白天限定）：世界重生的直觀符號 ──
+//   純幾何零貼圖：莖＝curvedBlade、花頭＝5 瓣蓮座＋微黃花心；花瓣頂點色近白 → instance color 決定花色。
+//   共用草的風／撥草 shader（makeGrassMaterial 再一個變體、一次編譯）；花頭在 y≈1 → 隨風點頭、走過會被撥開。
+function makeFlowerGeo() {
+  const stem = curvedBlade(4, { c0: 0x2f5d1e, c1: 0x63913a, wStalk: 0.03, bow: 0.16, taper: 0.75, gnd: cGrassBlade });
+  const pos = [], col = [], idx = [];
+  const v = (x, y, z, r, g, b) => { pos.push(x, y, z); col.push(r, g, b); return pos.length / 3 - 1; };
+  const P = 5, y0 = 0.99, L = 0.085, W = 0.052, lift = 0.32;                              // 花瓣數／長／寬／上翹（頂視最清楚）
+  for (let i = 0; i < P; i++) {
+    const a = (i / P) * TAU + 0.4, cx = Math.cos(a), sx = Math.sin(a), px = -sx, pz = cx; // 徑向＋側向基底
+    const b0 = v(cx * 0.012, y0, sx * 0.012, 0.8, 0.8, 0.8);                              // 瓣基略暗（AO 感）
+    const l1 = v(cx * L * 0.55 + px * W * 0.5, y0 + L * lift * 0.55, sx * L * 0.55 + pz * W * 0.5, 1, 1, 1);
+    const r1 = v(cx * L * 0.55 - px * W * 0.5, y0 + L * lift * 0.55, sx * L * 0.55 - pz * W * 0.5, 1, 1, 1);
+    const tp = v(cx * L, y0 + L * lift, sx * L, 1.12, 1.12, 1.12);                        // 瓣尖最亮
+    idx.push(b0, l1, tp, b0, tp, r1);
+  }
+  const c0 = v(0, y0 + 0.02, 0, 1.15, 1.0, 0.42);                                         // 花心微黃（乘上花色 → 暖色花心）
+  for (let i = 0; i < 6; i++) {
+    const a1 = (i / 6) * TAU, a2 = ((i + 1) / 6) * TAU, r = 0.024;
+    idx.push(c0, v(Math.cos(a1) * r, y0 + 0.012, Math.sin(a1) * r, 1.1, 0.95, 0.4), v(Math.cos(a2) * r, y0 + 0.012, Math.sin(a2) * r, 1.1, 0.95, 0.4));
+  }
+  const head = new THREE.BufferGeometry();
+  head.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  head.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  head.setIndex(idx);
+  const tag = (geo, val) => geo.setAttribute('aBlade', new THREE.Float32BufferAttribute(new Array(geo.attributes.position.count).fill(val), 1));
+  tag(stem, 0); tag(head, 1);                                                             // 花頭 flutter 相位與莖錯開
+  const g = mergeGeometries([stem, head]); g.computeVertexNormals(); return g;
+}
+const flowerGeo = makeFlowerGeo();
+const flowerMat = makeGrassMaterial(true, 0.5, 0.08, 0.6, 0.0);                           // 風＋撥花＋中等逆光透光（花瓣薄）
+const FLOWER_HUES = [0xffa8c0, 0xfff0b0, 0xd9c4ff, 0xffffff, 0xa8d4ff];                   // 粉白色系（乘上綠莖仍近原色、不顯髒）
+const flowerClusters = [];                                                                // 簇心 {x,z}：蜜蜂的巡花錨點
+function plantWildflowers(cap, rMin, rMax) {
+  const m = new THREE.InstancedMesh(flowerGeo, flowerMat, cap), d = new THREE.Object3D(), col = new THREE.Color();
+  let n = 0, guard = 0;
+  while (n < cap && guard < cap) {                                                        // 以「簇」為單位散佈（自然野花斑塊，非均勻灑點）
+    guard++;
+    const a = rand(0, TAU), r = rMin + Math.sqrt(rand(0, 1)) * (rMax - rMin);
+    const cx = Math.cos(a) * r, cz = Math.sin(a) * r;
+    if (!isGrassGround(cx, cz) || !ruinGrassPass(cx, cz)) continue;                       // 簇心只落綠地、避遺跡
+    flowerClusters.push({ x: cx, z: cz });
+    const per = 8 + ((Math.random() * 10) | 0), hue = FLOWER_HUES[(Math.random() * FLOWER_HUES.length) | 0]; // 同簇同色系
+    for (let k = 0; k < per && n < cap; k++) {
+      const rr = Math.sqrt(rand(0, 1)) * rand(2.2, 4.2), aa = rand(0, TAU);
+      const x = cx + Math.cos(aa) * rr, z = cz + Math.sin(aa) * rr;
+      if (!isGrassGround(x, z)) continue;
+      d.position.set(x, terrainHeight(x, z) - 0.03, z);
+      d.rotation.set(rand(-0.08, 0.08), rand(0, TAU), rand(-0.08, 0.08));
+      d.scale.set(rand(0.85, 1.2), rand(0.3, 0.55), rand(0.85, 1.2));                     // 花高 30–55cm，簇集自成花圃
+      d.updateMatrix(); m.setMatrixAt(n, d.matrix);
+      col.set(hue).offsetHSL(rand(-0.02, 0.02), 0, rand(-0.05, 0.05));
+      m.setColorAt(n, col); n++;
+    }
+  }
+  m.count = n; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  m.frustumCulled = false; scene.add(m); return m;
+}
+const flowersVillage = plantWildflowers(Q.rich ? 900 : 300, 38, 92);                      // 村莊環（r<172 夜/日地形相同）
+setTerrainOpenness(1);                                                                    // 白天草原花海：用白天地形高度擺放（同 dayMeadow 手法）
+const flowersMeadow = plantWildflowers(Q.rich ? 700 : 250, 168, 215);
+setTerrainOpenness(worldOpen ? 1 : 0);
+flowersVillage.visible = flowersMeadow.visible = worldOpen;                               // 僅白天綻放（animate 隨 worldOpen 切換）
+// ── 日行昆蟲（白天限定、純裝飾）：蜜蜂巡花簇、蜻蜓點水（沿用蝴蝶 sprite 手法）──
+const bees = [], dragonflies = [];
+{
+  const beeTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    x.fillStyle = 'rgba(240,246,255,0.85)';                                               // 雙翅
+    x.beginPath(); x.ellipse(22, 18, 10, 7, -0.5, 0, TAU); x.fill();
+    x.beginPath(); x.ellipse(42, 18, 10, 7, 0.5, 0, TAU); x.fill();
+    x.fillStyle = '#ffce3a'; x.beginPath(); x.ellipse(32, 38, 13, 9, 0, 0, TAU); x.fill(); // 黃身
+    x.fillStyle = '#3a3125'; x.fillRect(25, 30, 4, 17); x.fillRect(33, 30, 4, 17);         // 黑紋
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const dfTex = (() => {                                                                   // 蜻蜓：細長雙翅＋青色身
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    x.fillStyle = 'rgba(235,248,255,0.8)';
+    x.beginPath(); x.ellipse(20, 26, 15, 4, 0, 0, TAU); x.fill();
+    x.beginPath(); x.ellipse(44, 26, 15, 4, 0, 0, TAU); x.fill();
+    x.strokeStyle = '#4ec3d8'; x.lineWidth = 4; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(32, 14); x.lineTo(32, 54); x.stroke();
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const ig = new THREE.Group(); scene.add(ig);
+  const BN = Q.rich ? 6 : 3;
+  for (let i = 0; i < BN; i++) {
+    const m = new THREE.SpriteMaterial({ map: beeTex, transparent: true, opacity: 0, depthWrite: false, fog: true });
+    const s = new THREE.Sprite(m); s.scale.setScalar(0.32); ig.add(s);
+    const anchor = flowerClusters.length ? flowerClusters[(Math.random() * flowerClusters.length) | 0] : { x: rand(-40, 40), z: rand(-40, 40) }; // 錨定花簇
+    bees.push({ s, m, cx: anchor.x, cz: anchor.z, ph: rand(0, TAU), sp: rand(1.2, 2.0), rad: rand(0.7, 1.8), h: rand(0.5, 1.1) });
+  }
+  const wspots = [];                                                                       // 蜻蜓錨點：湖面（找法同魚影）
+  const DN = Q.rich ? 4 : 2;
+  for (let k = 0; k < 400 && wspots.length < DN; k++) {
+    const a = rand(0, TAU), r = rand(WORLD.villageR + 8, WORLD.maxR - 6);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (terrainHeight(x, z) < WORLD.water - 0.8) wspots.push({ x, z });
+  }
+  for (let i = 0; i < DN && wspots.length; i++) {
+    const m = new THREE.SpriteMaterial({ map: dfTex, transparent: true, opacity: 0, depthWrite: false, fog: true });
+    const s = new THREE.Sprite(m); s.scale.setScalar(0.5); ig.add(s);
+    const sp0 = wspots[i % wspots.length];
+    dragonflies.push({ s, m, cx: sp0.x, cz: sp0.z, x: sp0.x, z: sp0.z, tx: sp0.x, tz: sp0.z, wait: rand(0.5, 2), ph: rand(0, TAU) });
+  }
+}
 
 // ── 村莊 ────────────────────────────────────────────────────────
 const village = new THREE.Group();
@@ -1275,6 +1383,76 @@ const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, WALL_AT.x, 
 addCircleCol(60, 224, 3, true);                                                          // 燈塔實體（dayOnly）
 addBoxCol(WALL_AT.x, WALL_AT.z, 2.5, 0.6, Math.atan2(-WALL_AT.x, -WALL_AT.z), true);      // 夥伴牆實體（dayOnly）
 addBoxCol(STELE_AT.x, STELE_AT.z, 1.3, 0.8, Math.atan2(-STELE_AT.x, -STELE_AT.z), true);  // 守護者紀念碑實體（dayOnly）
+
+// ── 白天天空／海面點綴：熱氣球、遠海帆船、燈塔海鷗、雨後彩虹（皆 worldOpen 限定、純裝飾零玩法）──
+function buildBalloon() {                                            // 熱氣球：OCF 金×米白直條紋球皮＋藤籃，白天高空緩慢繞圈
+  const g = new THREE.Group();
+  const gore = (() => {                                              // 直條紋球皮貼圖（程序化 canvas）
+    const c = document.createElement('canvas'); c.width = 256; c.height = 32; const x = c.getContext('2d');
+    for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? '#ffd24b' : '#ede7da'; x.fillRect(i * 32, 0, 32, 32); }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  const env = new THREE.Mesh(new THREE.SphereGeometry(3.2, 16, 12), new THREE.MeshStandardMaterial({ map: gore, roughness: 0.7 }));
+  env.scale.set(1, 1.15, 1); env.position.y = 6.2; env.castShadow = true; g.add(env);
+  const skirt = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.6, 12, 1, true), mat(0xc9a25a)); skirt.rotation.x = Math.PI; skirt.position.y = 2.6; g.add(skirt);
+  const basket = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.8, 1.1), applyWood(mat(0xc9a877))); basket.position.y = 0.4; basket.castShadow = true; g.add(basket);
+  for (const [sx, sz] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.1, 4), mat(0x6e5230));
+    rope.position.set(sx * 0.45, 1.7, sz * 0.45); g.add(rope);
+  }
+  g.visible = false; scene.add(g);
+  return { group: g, ang: rand(0, TAU) };
+}
+const balloon = buildBalloon();
+function buildSailboat() {                                           // 小帆船：木殼＋雙三角帆＋紅旗，白天在 DAY_MAXR 外的遠海緩慢巡航
+  const g = new THREE.Group();
+  const hullM = applyWood(mat(0xc9a877));
+  const sailM = new THREE.MeshStandardMaterial({ color: 0xf2ede2, side: THREE.DoubleSide, roughness: 0.9 });
+  const tri = (a, b, c) => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute([...a, ...b, ...c], 3)); geo.computeVertexNormals(); return geo; };
+  const hullGeo = new THREE.BoxGeometry(3.4, 0.7, 1.2); boxUV(hullGeo, 1.6);
+  const hull = new THREE.Mesh(hullGeo, hullM); hull.position.y = 0.35; g.add(hull);
+  const bowGeo = new THREE.ConeGeometry(0.62, 1.2, 4); bowGeo.rotateY(Math.PI / 4); bowGeo.rotateZ(-Math.PI / 2); boxUV(bowGeo, 1.6);
+  const bow = new THREE.Mesh(bowGeo, hullM); bow.position.set(2.25, 0.35, 0); g.add(bow); // 船艏（朝局部 +x＝航向）
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 4.6, 8), mat(0x6e5230)); mast.position.set(0.3, 2.9, 0); g.add(mast);
+  g.add(new THREE.Mesh(tri([0.25, 1.2, 0], [0.25, 4.9, 0], [-2.1, 1.35, 0]), sailM));     // 主帆（桅後）
+  g.add(new THREE.Mesh(tri([0.5, 4.4, 0], [0.5, 1.2, 0], [2.15, 1.2, 0]), sailM));        // 前帆（桅前到船艏）
+  g.add(new THREE.Mesh(tri([0.25, 5.0, 0], [0.25, 5.25, 0], [-0.85, 5.12, 0]), new THREE.MeshBasicMaterial({ color: 0xc0433a, side: THREE.DoubleSide }))); // 桅頂紅旗
+  g.visible = false; scene.add(g);
+  return { group: g, ang: rand(0, TAU) };
+}
+const sailboat = buildSailboat();
+// 海鷗：繞燈塔盤旋的白色剪影（沿用飛鳥 sprite 手法；白天隨 vibrancy 現身）
+const gulls = [];
+{
+  const gullTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    x.strokeStyle = '#f2f5f7'; x.lineWidth = 6; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(10, 40); x.quadraticCurveTo(32, 20, 32, 36); x.quadraticCurveTo(32, 20, 54, 40); x.stroke();
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  setTerrainOpenness(1); const gy = groundY(60, 224); setTerrainOpenness(worldOpen ? 1 : 0); // 燈塔腳的白天地面高度
+  const gg = new THREE.Group(); scene.add(gg);
+  const GN = Q.rich ? 5 : 3;
+  for (let i = 0; i < GN; i++) {
+    const m = new THREE.SpriteMaterial({ map: gullTex, color: 0xf5f8fa, transparent: true, opacity: 0, depthWrite: false, fog: false });
+    const s = new THREE.Sprite(m); s.scale.setScalar(rand(2.0, 3.2)); gg.add(s);
+    gulls.push({ s, m, base: s.scale.x, ph: rand(0, TAU), sp: rand(0.05, 0.1) * (Math.random() < 0.5 ? 1 : -1), r: rand(12, 30), h: gy + rand(14, 24), fl: rand(6, 10) });
+  }
+}
+// 雨後彩虹（桌機限定）：白天雨停後遠方浮現半弧、漸顯漸隱。獨立加法貼片＋fog:false → 完全不碰天氣的霧/曝光管線。
+let rainbow = null;
+if (Q.weather) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d');
+  const g2 = x.createRadialGradient(256, 256, 0, 256, 256, 250);     // 底部中心放射 → 上半圓弧帶
+  for (const [o, col] of [[0.70, 'rgba(150,90,240,0)'], [0.745, 'rgba(150,100,255,0.75)'], [0.79, 'rgba(90,160,255,0.8)'], [0.835, 'rgba(90,230,175,0.8)'], [0.88, 'rgba(252,242,95,0.82)'], [0.925, 'rgba(255,168,72,0.82)'], [0.965, 'rgba(255,95,95,0.78)'], [1.0, 'rgba(255,95,95,0)']]) g2.addColorStop(o, col);
+  x.fillStyle = g2; x.fillRect(0, 0, 512, 256);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(340, 170),   // 一般透明混合（加法混合疊在白亮天空/霧上會隱形）
+    new THREE.MeshBasicMaterial({ map: tx, transparent: true, opacity: 0, depthWrite: false, fog: false }));
+  mesh.position.set(-262, 86, -175); mesh.lookAt(0, 40, 0); mesh.visible = false; scene.add(mesh); // 反日方位（太陽偏移固定 +48,+72,+32）、抬高到藍天區（貼地平線的白霧會吃掉對比）
+  rainbow = { mesh, m: mesh.material, phase: 'off', t: 0, wet: 0, prev: 'clear' };
+}
+
 // 英雄紀念碑：首頁主視覺壁畫 + 傳說（非課程、不計進度）
 function buildMonument() {
   const g = new THREE.Group();
@@ -1430,25 +1608,27 @@ function buildKeeper(r) {
     const mesh = new THREE.Mesh(geo, m); mesh.position.set(x, y, z); mesh.castShadow = true; g.add(mesh);
     parts.push({ m, alive: new THREE.Color(aliveHex) }); return mesh;
   };
-  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.0, 0.5, 12), mat(0x8a847a)); ped.position.y = 0.25; ped.castShadow = ped.receiveShadow = true; g.add(ped);
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.0, 0.5, 12), mat(0x8a847a)); ped.castShadow = ped.receiveShadow = true; // 石台不進 group：甦醒漫步時石台留在原地
   part(new THREE.CapsuleGeometry(0.42, 0.7, 6, 12), r.color, 0, 1.25, 0);                            // 身體（披風＝主題色）
   part(new THREE.SphereGeometry(0.4, 14, 12), 0xf2c79b, 0, 2.05, 0);                                // 頭
   part(new THREE.SphereGeometry(0.42, 14, 12, 0, TAU, 0, Math.PI * 0.55), 0x5a4a36, 0, 2.12, 0);     // 髮
   part(new THREE.CapsuleGeometry(0.14, 0.45, 5, 10), r.color, -0.5, 1.3, 0.05);
   part(new THREE.CapsuleGeometry(0.14, 0.45, 5, 10), r.color, 0.5, 1.3, 0.05);
   for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), mat(0x2a2630)); e.position.set(sx * 0.15, 2.08, 0.36); g.add(e); }
-  return { group: g, parts };
+  return { group: g, parts, ped };
 }
 const keepers = ruinAt.map((r) => {
   const inv = 1 - 8 / r.radius;                 // 從遺跡往村中心退 8
   const x = r.x * inv, z = r.z * inv, y = groundY(x, z);
   const built = buildKeeper(r);
   built.group.position.set(x, y, z); built.group.rotation.y = Math.atan2(-x, -z); scene.add(built.group);
+  built.ped.position.set(x, y + 0.25, z); scene.add(built.ped);   // 石台獨立擺在錨點
   const el = document.createElement('div'); el.className = 'bubble'; const o = new CSS2DObject(el); o.position.set(0, 3.1, 0); built.group.add(o);
-  return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1, open: false, line: 0 };
+  return { ...built, ruin: r, pos: new THREE.Vector3(x, y, z), el, life: 0, baseY: y, mode: -1, open: false, line: 0,
+    wx: x, wz: z, wtx: x, wtz: z, wwait: rand(2, 5), face: Math.atan2(-x, -z) }; // 甦醒漫步狀態（錨點 k.pos 不動）
 });
-// 維護者台詞＝劇情開場（keeperLore）＋原本的資安重點（review）；不變動 review 本體
-const keeperLines = (k) => [((UI.keeperLore && UI.keeperLore[k.ruin.id]) || k.ruin.tip), ...(k.ruin.review || [])];
+// 維護者台詞＝白天甦醒的新台詞（keeperAwake）＋劇情開場（keeperLore）＋原本的資安重點（review）；不變動 review 本體
+const keeperLines = (k) => [...(worldOpen && UI.keeperAwake ? [UI.keeperAwake[k.ruin.id]] : []), ((UI.keeperLore && UI.keeperLore[k.ruin.id]) || k.ruin.tip), ...(k.ruin.review || [])];
 // 維護者對話：恢復後靠近先出現小圖示，點圖示展開第一則；展開中再點則輪替到下一則（複習重點）
 keepers.forEach((k) => {
   k.el.addEventListener('click', (e) => {
@@ -1708,6 +1888,11 @@ const SAVE_KEY = 'ssd-village-v1';
 let progress = { discovered: [], completed: [] };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.discovered) progress = s; } catch (e) { /* ignore */ }
 if (!Array.isArray(progress.seen)) progress.seen = []; // 小地圖：固定地標/NPC 探索揭示清單（向後相容：舊存檔自動補空陣列，不影響進度/通關條件）
+progress.dayShards = progress.dayShards || [];          // 白天世界：日之碎片收集（向後相容）
+progress.photos = progress.photos || [];                // 白天世界：拍照任務點（向後相容）
+progress.trials = progress.trials || [];                // 白天世界：遺跡試煉重挑戰（向後相容）
+progress.fishing = progress.fishing || { best: 0 };     // 白天世界：湖畔釣魚最佳成績（向後相容）
+const DAY_SHARD_N = 10;                                 // 日之碎片總數（HUD 於 worldOpen 顯示計數）
 const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(progress)); } catch (e) { /* ignore */ } };
 const isDisc = (id) => progress.discovered.includes(id);
 const isDone = (id) => progress.completed.includes(id);
@@ -1750,7 +1935,10 @@ function showPanel(p) {
   pDesc.textContent = d.desc; pGo.href = d.url;
   pChips.innerHTML = ''; d.chips.forEach((c) => { const s = document.createElement('span'); s.className = 'chip'; s.textContent = c; pChips.appendChild(s); });
   const hasBattle = p.isRuin && !!BATTLES[d.id];
-  pFight.style.display = (hasBattle && !isDone(d.id)) ? '' : 'none';
+  const trial = hasBattle && isDone(d.id) && worldOpen;               // 白天：已淨化遺跡可重挑戰強化怪（試煉）
+  const isFish = d.id === 'fishing';                                  // 湖畔釣魚台：挑戰鈕＝開始釣魚
+  pFight.style.display = ((hasBattle && (!isDone(d.id) || trial)) || isFish) ? '' : 'none';
+  pFight.textContent = isFish ? ((UI.fishing && UI.fishing.start) || '🎣') : trial ? (UI.trialFight || UI.fightBtn) : UI.fightBtn;
   if (!p.isRuin) { pState.textContent = d.stateText || UI.stateVillageQuest; pGo.textContent = d.goText || UI.goLearnHow; }
   else if (hasBattle) { pState.textContent = isDone(d.id) ? UI.statePurified : UI.stateHasMonster; pGo.textContent = UI.goReadBeforeBattle; }
   else { pState.textContent = isDone(d.id) ? UI.stateReadDone : UI.stateNotRead; pGo.textContent = isDone(d.id) ? UI.goReadAgain : UI.goReadCourse; }
@@ -1780,6 +1968,7 @@ function lightRuin(p) {
 // 戰鬥
 const battle = new BattleSystem({ scene, camera, hero, ui: UI });
 const egg = new EggGame({ ui: UI });   // 彩蛋小遊戲「揮刀求生」：由創世之核對話選單啟動
+const fishing = new FishingGame({ ui: UI.fishing, bank: FISHING_ALL[LANG] || FISHING_ALL['zh-Hant'] }); // 湖畔釣魚信（白天、碼頭 POI 啟動）
 function startBattle(p) {
   hidePanel(); suppressed.add(p.data.id); pinnedId = null;
   battle.start(p, BATTLES[p.data.id]).then(({ won }) => {
@@ -1791,7 +1980,24 @@ function startBattle(p) {
     suppressed.delete(p.data.id);
   });
 }
-pFight.addEventListener('click', () => { const p = poiById(panelId); if (p && BATTLES[p.data.id]) startBattle(p); });
+// 試煉：白天重挑戰已淨化遺跡的強化怪（血少一顆、題目洗牌）；勝利只記 progress.trials＋toast，
+//   絕不重跑完成副作用（progress.completed/computeVibrancy/spawnBurst/checkAllDone）——遺跡早已完成。
+function startTrial(p) {
+  hidePanel(); suppressed.add(p.data.id); pinnedId = null;
+  battle.start(p, BATTLES[p.data.id], { hearts: 2, shuffle: true }).then(({ won }) => {
+    if (won && !progress.trials.includes(p.data.id)) { progress.trials.push(p.data.id); save(); }
+    if (won) toast(UI.trialWon(p.data.title), UI.trialWonSub || '');
+    suppressed.delete(p.data.id);
+  });
+}
+function startFishing() {
+  hidePanel(); suppressed.add('fishing'); pinnedId = null;
+  fishing.start().then(({ best }) => {
+    if (best > (progress.fishing.best || 0)) { progress.fishing.best = best; save(); } // 成就 angler 由 checkAchievements 依 best 頒發
+    suppressed.delete('fishing');
+  });
+}
+pFight.addEventListener('click', () => { const p = poiById(panelId); if (!p) return; if (p.data.id === 'fishing') { startFishing(); return; } if (!BATTLES[p.data.id]) return; if (isDone(p.data.id) && worldOpen) startTrial(p); else startBattle(p); });
 
 function discover(p) {
   progress.discovered.push(p.data.id); save(); SFX.discover();
@@ -1884,7 +2090,7 @@ function toast(title, sub) { toastEl.querySelector('.t').textContent = title; to
 function updateHud() {
   const d = progress.discovered.filter((id) => ruinAt.some((r) => r.id === id)).length;
   const c = progress.completed.length;
-  badge.innerHTML = UI.badge(d, c, ruinAt.length);
+  badge.innerHTML = UI.badge(d, c, ruinAt.length) + (worldOpen && UI.dayShardBadge ? UI.dayShardBadge(progress.dayShards.length, DAY_SHARD_N) : ''); // 白天加掛日之碎片計數
   logList.innerHTML = '';
   ruinAt.forEach((r) => {
     const row = document.createElement('div'); row.className = 'q';
@@ -1925,12 +2131,16 @@ function resetRuinVisual(p) {
 }
 function resetProgress() {
   if (!window.confirm(UI.resetConfirm)) return;
-  progress = { discovered: [], completed: [] }; save();
+  // 重置後把所有擴充鍵也重建（原本只留 discovered/completed → 重置後當場撿碎片/成就會因 undefined 而丟例外）
+  progress = { discovered: [], completed: [], seen: [], shards: {}, achievements: [], dayShards: [], photos: [], trials: [], fishing: { best: 0 } };
+  ruinAt.forEach((r) => { progress.shards[r.id] = []; }); save();
+  knowledgeShards.forEach((s) => { s.got = false; s.mesh.visible = true; });   // 遺跡碎片重新出現
+  dayShardMeshes.forEach((s) => { s.got = false; s.mesh.visible = false; });   // 日之碎片：回夜晚先藏、再開白天才現
   try { localStorage.removeItem(CONF_PRE); localStorage.removeItem(CONF_POST); } catch (e) { /* ignore */ }
   const cc = document.querySelector('#finale .confcompare'); if (cc) cc.textContent = '';
   allDoneShown = false; pinnedId = null; suppressed.clear(); hidePanel();
   POIS.forEach((p) => { if (p.isRuin) resetRuinVisual(p); });
-  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; setWorldOpen(false); updateHud(); computeVibrancy(); assignFireflies();
+  logEl.classList.remove('show'); document.getElementById('finale').classList.remove('show'); finaleActive = false; finaleShown = false; setWorldOpen(false); updateHud(); computeVibrancy(); assignFireflies(); renderAchPanel();
   toast(UI.resetToastTitle, UI.resetToastSub);
 }
 document.getElementById('resetbtn').addEventListener('click', resetProgress);
@@ -2012,6 +2222,41 @@ function mothRespawn() {
 }
 mothRespawn();
 
+// ── 野生小動物（可見的實體小獸，非光點彩蛋）：草原兔子、外圈小鹿。啄食/小跳、靠近就背向逃跑；日夜都在、不存檔 ──
+function buildRabbit() {
+  const g = new THREE.Group();
+  const fur = mat(0xd8cfc2), furDk = mat(0xb9a58c);
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CapsuleGeometry(0.16, 0.16, 5, 10), fur, 0, 0.22, 0);            // 圓身
+  add(new THREE.SphereGeometry(0.13, 12, 10), fur, 0, 0.42, 0.12);               // 頭（+z＝面向）
+  for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.16, 4, 8), furDk); e.position.set(sx * 0.06, 0.6, 0.08); e.rotation.x = -0.15; e.castShadow = true; g.add(e); } // 長耳
+  add(new THREE.SphereGeometry(0.06, 8, 6), mat(0xf5efe6), 0, 0.24, -0.18);      // 白尾球
+  return g;
+}
+function buildDeer() {
+  const g = new THREE.Group();
+  const tan = mat(0xb98a5a), tanDk = mat(0x8f6a42);
+  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  const body = add(new THREE.CapsuleGeometry(0.28, 0.6, 6, 12), tan, 0, 0.85, 0); body.rotation.x = Math.PI / 2; // 軀幹沿 +z
+  for (const [sx, sz] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) add(new THREE.CapsuleGeometry(0.05, 0.5, 4, 8), tanDk, sx * 0.14, 0.4, sz * 0.3);
+  const neck = add(new THREE.CapsuleGeometry(0.09, 0.4, 4, 8), tan, 0, 1.25, 0.42); neck.rotation.x = 0.5;
+  add(new THREE.BoxGeometry(0.22, 0.18, 0.3), tan, 0, 1.5, 0.62);                // 頭
+  for (const sx of [-1, 1]) { const h = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.35, 6), tanDk); h.position.set(sx * 0.08, 1.72, 0.56); h.rotation.z = sx * -0.4; h.castShadow = true; g.add(h); } // 角
+  return g;
+}
+const RABBIT_FLEE = 7;
+const rabbits = [], deers = [];
+for (let i = 0, n = Q.rich ? 4 : 2; i < n; i++) {
+  const g = buildRabbit(); scene.add(g);
+  const s = wildSpot(10);
+  rabbits.push({ g, x: s.x, z: s.z, face: rand(0, TAU), state: 'idle', t: rand(2, 5), dx: 0, dz: 1 });
+}
+if (Q.rich) {                                                                     // 小鹿：桌機限定一隻、外圈
+  const g = buildDeer(); scene.add(g);
+  const s = wildSpot(20);
+  deers.push({ g, x: s.x, z: s.z, face: rand(0, TAU), state: 'idle', t: rand(2, 5), dx: 0, dz: 1 });
+}
+
 // ── 知識碎片：每座遺跡周邊散落 3 枚，走近自動拾取；集滿一主題解鎖「心法」（純加分，不 gate 進度，存檔向後相容）──
 const SHARD_PER = 3, SHARD_PICK = 2.6;
 progress.shards = progress.shards || {};
@@ -2039,6 +2284,105 @@ function collectShard(s) {
   else { SFX.collect(); toast(UI.shardGot(arr.length, SHARD_PER), r.title || ''); }
 }
 
+// ── 日之碎片（白天限定收集）：全清後在新開放的外圈/海岸帶散佈 10 枚，每枚一句帶得走的資安小提示；
+//   集滿得成就。與遺跡「知識碎片」(progress.shards) 各自獨立、命名分開避免相撞。──
+const dayShardMeshes = [];
+{
+  setTerrainOpenness(1);                                             // 外圈 r>172 用白天地形擺放（夜晚同處是山牆）
+  for (let i = 0; i < DAY_SHARD_N; i++) {
+    const a = (i / DAY_SHARD_N) * TAU + 0.7;
+    let rr = 178 + (i % 2) * 34;                                     // 178／212 兩圈交錯（確定性位置、免存座標）
+    let x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+    for (let k = 0; k < 10 && terrainHeight(x, z) < WORLD.water + 0.5; k++) { rr -= 6; x = Math.cos(a) * rr; z = Math.sin(a) * rr; } // 落水就往內收
+    const y = groundY(x, z) + 1.2;
+    const m = mat(0x8fe3ff, { emissive: 0x4ab9e8, emissiveIntensity: 0.9, roughness: 0.25, metalness: 0.2 });
+    const mesh = new THREE.Mesh(kShardGeo, m);
+    mesh.add(new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 10), new THREE.MeshBasicMaterial({ color: 0x8fe3ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })));
+    mesh.position.set(x, y, z); mesh.visible = false; scene.add(mesh); // 可見性隨 worldOpen（animate 切換）
+    dayShardMeshes.push({ mesh, m, idx: i, x, z, y, ph: rand(0, TAU), got: progress.dayShards.includes(i) });
+  }
+  setTerrainOpenness(worldOpen ? 1 : 0);
+}
+function collectDayShard(s) {
+  s.got = true; s.mesh.visible = false;
+  if (!progress.dayShards.includes(s.idx)) progress.dayShards.push(s.idx);
+  save(); ringBurst(s.x, s.y, s.z, 0x8fe3ff, 3, 0.6);
+  const n = progress.dayShards.length, tip = (UI.dayTips && UI.dayTips[s.idx]) || '';
+  if (n >= DAY_SHARD_N) { SFX.complete(); toast(UI.dayShardDone || '', tip); }
+  else { SFX.collect(); toast(UI.dayShardGot(n, DAY_SHARD_N), tip); }
+  updateHud();
+}
+
+// ── 拍照任務點（白天）：4 個景點（石堆＋金環＋標籤）；站在點位 12 內用 📷/P 截圖即收進「攝影集」，集滿得成就 ──
+const PHOTO_SPOTS = [
+  { id: 'lighthouse', x: 52, z: 214 },   // 守護燈塔海岸
+  { id: 'coast', x: -170, z: 130 },      // 西岸望帆船
+  { id: 'meadow', x: 120, z: -175 },     // 金色芒草原
+  { id: 'monument', x: 6, z: -24 },      // 英雄紀念碑前
+];
+const photoSpotGroups = [];
+{
+  setTerrainOpenness(1);
+  for (const sp of PHOTO_SPOTS) {
+    for (let k = 0; k < 10 && terrainHeight(sp.x, sp.z) < WORLD.water + 0.5; k++) { sp.x *= 0.94; sp.z *= 0.94; } // 避水往內收
+    const g = new THREE.Group(); g.position.set(sp.x, groundY(sp.x, sp.z), sp.z);
+    for (let i = 0; i < 4; i++) {                                    // 小石堆疊石（旅人記號）
+      const st = new THREE.Mesh(new THREE.BoxGeometry(rand(0.3, 0.5), rand(0.22, 0.4), rand(0.3, 0.5)), RUIN.stone);
+      st.position.set(Math.cos(i * 2.2) * 0.28, 0.16 + i * 0.3, Math.sin(i * 2.2) * 0.28); st.rotation.y = rand(0, TAU); st.castShadow = true; g.add(st);
+    }
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.6, 2.0, 28), new THREE.MeshBasicMaterial({ color: 0xffd24b, transparent: true, opacity: 0.32, side: THREE.DoubleSide, depthWrite: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06; g.add(ring);
+    const lab = makeLabel(`📷 ${UI.photoSpotLabel || ''}`); lab.o.position.set(0, 2.4, 0); g.add(lab.o);
+    g.visible = false; scene.add(g);
+    photoSpotGroups.push({ id: sp.id, g, ring, x: sp.x, z: sp.z });
+  }
+  setTerrainOpenness(worldOpen ? 1 : 0);
+}
+function checkPhotoSpots() {                                         // doScreenshot 成功擷取後呼叫
+  if (!worldOpen) return;
+  for (const sp of photoSpotGroups) {
+    if (progress.photos.includes(sp.id)) continue;
+    if (Math.hypot(hero.position.x - sp.x, hero.position.z - sp.z) > 12) continue;
+    progress.photos.push(sp.id); save(); SFX.complete();
+    toast(UI.photoGot(progress.photos.length, PHOTO_SPOTS.length), (UI.photoSpotNames && UI.photoSpotNames[sp.id]) || '');
+    break;                                                           // 一次收一點
+  }
+}
+
+// ── 湖畔釣魚台（白天）：市集遺跡旁最近的湖邊木碼頭；走近開面板 → 「開始釣魚」玩釣魚信辨識 ──
+const fishingDock = (() => {
+  const tr = ruinAt.find((x) => x.id === 'tools') || { x: 63, z: -80 };
+  let fx = 0, fz = 0, fd = 1e9, fang = 0;                            // 找離市集最近的水面（地形確定性 → 每次載入相同）
+  for (let a = 0; a < 96; a++) {
+    const aa = (a / 96) * TAU;
+    for (let rr = 5; rr <= 70; rr += 1.5) {
+      const x = tr.x + Math.cos(aa) * rr, z = tr.z + Math.sin(aa) * rr;
+      if (Math.hypot(x, z) > WORLD.maxR - 4) break;
+      if (terrainHeight(x, z) < WORLD.water - 0.7) { if (rr < fd) { fd = rr; fx = x; fz = z; fang = aa; } break; }
+    }
+  }
+  if (fd === 1e9) {                                                  // 保險：市集附近沒湖 → 用魚群湖點
+    const s = fishSchools[0] || { cx: 0, cz: -60 }; fx = s.cx; fz = s.cz; fang = Math.atan2(fz - tr.z, fx - tr.x);
+  }
+  let bx = fx, bz = fz;                                              // 岸點：從水面往回退到岸上
+  for (let k = 0; k < 50 && terrainHeight(bx, bz) < WORLD.water + 0.15; k++) { bx -= Math.cos(fang) * 0.8; bz -= Math.sin(fang) * 0.8; }
+  const g = new THREE.Group();
+  const woodM = applyWood(mat(0xc9a877));
+  g.position.set(bx, WORLD.water + 0.45, bz); g.rotation.y = -fang;  // 板面略高於水面；局部 +x＝伸向湖心
+  for (let i = 0; i < 5; i++) { const p = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.12, 1.6), woodM); p.position.set(0.9 + i * 1.2, 0, 0); p.castShadow = p.receiveShadow = true; g.add(p); }
+  for (const [px, pz] of [[0.6, -0.65], [0.6, 0.65], [5.6, -0.65], [5.6, 0.65]]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 1.7, 8), woodM); post.position.set(px, -0.72, pz); g.add(post); }
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 2.6, 6), mat(0x6e5230)); rod.position.set(5.2, 0.9, 0.45); rod.rotation.z = -0.7; g.add(rod); // 立在碼頭尾的釣竿
+  const lampM = new THREE.MeshStandardMaterial({ color: 0xffe9a8, emissive: 0xffcf6b, emissiveIntensity: 1.0, roughness: 0.4 });
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), lampM); lamp.position.set(5.6, 0.55, -0.65); g.add(lamp); regNightGlow(lamp);
+  g.visible = false; scene.add(g);
+  const F = UI.fishing || {};
+  const lab = makeLabel(`🎣 ${F.title || ''}`); lab.o.position.set(2.8, 2.2, 0); g.add(lab.o);
+  const FISHING_POI = { id: 'fishing', emoji: '🎣', noLink: true, chips: [], title: F.title || '', sub: F.sub || '', desc: F.desc || '', stateText: F.state || '' };
+  POIS.push({ data: FISHING_POI, isRuin: false, pos: new THREE.Vector3(bx, 0, bz), el: lab.el, openDist: 5.5, dayOnly: true });
+  addBoxCol(bx + Math.cos(fang) * 3.2, bz + Math.sin(fang) * 3.2, 3.4, 1.0, -fang, true);  // 碼頭實體（dayOnly）：玩家沿岸互動、不穿模
+  return { group: g };
+})();
+
 // ── 成就系統：偵測解鎖→toast＋音效；面板從右上角「🏅 成就」開啟。存檔擴充 progress.achievements（向後相容）──
 progress.achievements = progress.achievements || [];
 const ACHIEVEMENTS = [
@@ -2050,6 +2394,11 @@ const ACHIEVEMENTS = [
   { id: 'villageFriend', cond: () => met.villagers.size >= villagers.length },
   { id: 'capsule', cond: () => met.capsule },
   { id: 'critterHunter', cond: () => met.capsule && met.mole && met.moth },
+  // 白天世界（worldOpen）新內容
+  { id: 'dayTips', cond: () => progress.dayShards.length >= DAY_SHARD_N },
+  { id: 'photographer', cond: () => PHOTO_SPOTS.every((s) => progress.photos.includes(s.id)) },
+  { id: 'trialMaster', cond: () => ruinAt.every((r) => progress.trials.includes(r.id)) },
+  { id: 'angler', cond: () => (progress.fishing.best || 0) >= 9 },
 ];
 const achPanelEl = document.getElementById('achpanel');
 const achBtnEl = document.getElementById('achbtn');
@@ -2296,6 +2645,7 @@ function doScreenshot() {
     const a = document.createElement('a'), d = new Date(), p = (n) => String(n).padStart(2, '0');
     a.download = `資安新手村-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
     a.href = renderer.domElement.toDataURL('image/png'); a.click();                       // 同步讀回 canvas → 下載
+    checkPhotoSpots();                                                                    // 站在拍照點上截圖 → 收進攝影集
   } catch (err) { /* 截圖失敗不影響遊戲 */ }
   finally {                                                                               // 還原 MSAA／解析度，並立即重畫一張避免閃一幀
     composer.renderTarget1.samples = composer.renderTarget2.samples = prevSamples;
@@ -2313,7 +2663,7 @@ function animate(time) {
   //   → 幀距均勻、不用累積器，避免先前累積器限速造成 CSS2D 地標標籤「游移」抖動的回歸；timer 只在實際渲染幀前進，dt 仍為真實經過時間。
   if (lastRaf) { const d = time - lastRaf; if (d > 4 && d < 100) nativeHz += (1000 / d - nativeHz) * 0.1; } // 平滑推估顯示器原生更新率
   lastRaf = time;
-  const _busy = battle.active || finaleActive || egg.active || archFade.on;             // 戰鬥/終局/彩蛋/轉場一律 60fps
+  const _busy = battle.active || finaleActive || egg.active || fishing.active || archFade.on; // 戰鬥/終局/彩蛋/釣魚/轉場一律 60fps
   const _active = _busy || keys.size > 0 || joyX !== 0 || joyZ !== 0 || hasTarget || performance.now() < activeUntil; // 移動中/操作後 0.6s 內＝互動
   const _stride = Math.max(1, Math.round(nativeHz / (_active ? 60 : 30)));
   if (frameTick++ % _stride !== 0) return;  // 跳過此 native tick（不模擬、不渲染）
@@ -2321,9 +2671,10 @@ function animate(time) {
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
   fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 原始幀時間估 FPS
 
-  joyEl.classList.toggle('hide', battle.active || finaleActive || egg.active);
-  jumpBtn.classList.toggle('hide', battle.active || finaleActive || egg.active || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
+  joyEl.classList.toggle('hide', battle.active || finaleActive || egg.active || fishing.active);
+  jumpBtn.classList.toggle('hide', battle.active || finaleActive || egg.active || fishing.active || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
   if (egg.active) { labelRenderer.domElement.style.display = 'none'; egg.update(dt); return; } // 彩蛋小遊戲：凍結 3D 世界，僅跑 2D 覆蓋層（不透明、免 renderScene）
+  if (fishing.active) { labelRenderer.domElement.style.display = 'none'; fishing.update(dt); return; } // 釣魚小遊戲：同彩蛋，凍結 3D 世界
   if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); renderScene(); return; }
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
@@ -2580,8 +2931,25 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   for (const k of keepers) {
     k.life += ((allDone ? 1 : 0) - k.life) * Math.min(1, 1.0 * dt);
     for (const pt of k.parts) pt.m.color.lerpColors(STONE, pt.alive, k.life);
+    const dk = Math.hypot(hero.position.x - k.group.position.x, hero.position.z - k.group.position.z);
+    // 甦醒後走下石台、在錨點（k.pos）周邊 ≤5 小範圍漫步（螢火蟲/建議路線/小地圖仍讀 k.pos，其他系統零改動）；
+    //   玩家靠近或交談中則停步、轉身面向玩家；重置回夜晚時瞬回石台。
+    if (k.life > 0.9 && !finaleActive) {
+      if (dk < 7 || k.open) {
+        k.face += ((Math.atan2(hero.position.x - k.wx, hero.position.z - k.wz) - k.face + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 8 * dt);
+      } else if (k.wwait > 0) k.wwait -= dt;
+      else {
+        const dxw = k.wtx - k.wx, dzw = k.wtz - k.wz, dw = Math.hypot(dxw, dzw);
+        if (dw < 0.3) { k.wwait = rand(2, 6); const aw = rand(0, TAU), rw = Math.sqrt(rand(0, 1)) * 5; k.wtx = k.pos.x + Math.cos(aw) * rw; k.wtz = k.pos.z + Math.sin(aw) * rw; }
+        else { const inv = 1 / dw; k.wx += dxw * inv * 1.0 * dt; k.wz += dzw * inv * 1.0 * dt; k.face += ((Math.atan2(dxw, dzw) - k.face + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 8 * dt); }
+      }
+      k.group.position.x = k.wx; k.group.position.z = k.wz; k.group.rotation.y = k.face;
+      k.baseY += ((groundY(k.wx, k.wz) - 0.48) - k.baseY) * Math.min(1, 2 * dt);  // 腳掌相對原點 +0.48（站台高）→ 平滑「走下石台」
+    } else if (k.life < 0.5 && (k.wx !== k.pos.x || k.wz !== k.pos.z)) {           // 重置回夜晚：瞬回石台石化
+      k.wx = k.wtx = k.pos.x; k.wz = k.wtz = k.pos.z; k.baseY = k.pos.y; k.face = Math.atan2(-k.pos.x, -k.pos.z);
+      k.group.position.set(k.pos.x, k.pos.y, k.pos.z); k.group.rotation.y = k.face;
+    }
     k.group.position.y = k.baseY + (k.life > 0.5 ? Math.sin(t * 1.8 + k.pos.x) * 0.07 : 0);
-    const dk = Math.hypot(hero.position.x - k.pos.x, hero.position.z - k.pos.z);
     const near = !battle.active && !finaleActive && dk < 7, restored = k.life > 0.6;
     if (!near || !restored) { k.open = false; k.line = 0; }
     const state = !near ? 0 : (!restored ? 1 : (k.open ? 3 : 2)); // 0隱藏 1石化提示 2小圖示 3展開
@@ -2679,12 +3047,13 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     }
   }
   // 通關後白天世界三建物：僅 worldOpen 現身（紀念碑/燈塔/夥伴牆）
-  if (lessonStele.group.visible !== worldOpen) { lessonStele.group.visible = lighthouse.group.visible = partnerWall.group.visible = worldOpen; dayMeadow.visible = daySusuki.visible = worldOpen; } // 外圈白天草原/海岸芒草也隨之現身/隱藏
+  if (lessonStele.group.visible !== worldOpen) { lessonStele.group.visible = lighthouse.group.visible = partnerWall.group.visible = worldOpen; dayMeadow.visible = daySusuki.visible = worldOpen; flowersVillage.visible = flowersMeadow.visible = worldOpen; balloon.group.visible = sailboat.group.visible = worldOpen; dayShardMeshes.forEach((s) => { s.mesh.visible = worldOpen && !s.got; }); photoSpotGroups.forEach((sp) => { sp.g.visible = worldOpen; }); fishingDock.group.visible = worldOpen; } // 白天草原/芒草/花海/熱氣球/帆船/日之碎片/拍照點/釣魚碼頭 隨之現身/隱藏
   if (worldOpen) {
     lessonStele.gem.rotation.y = t * 0.5; lessonStele.gemMat.emissiveIntensity = 1.2 + Math.sin(t * 2) * 0.3;
     lighthouse.beamPivot.rotation.y = t * 0.6;                               // 光束緩掃海面
     lighthouse.lampMat.emissiveIntensity = 1.4 + Math.sin(t * 1.6) * 0.35;   // 燈室脈動
     if (lighthouse.lampLight) lighthouse.lampLight.intensity = 1.4 + Math.sin(t * 1.6) * 0.5;
+    for (const sp of photoSpotGroups) sp.ring.material.opacity = 0.26 + Math.sin(t * 2 + sp.x) * 0.08; // 拍照點金環脈動
   }
   // 灰龍：荒野上空慢慢繞圈 + 拍翅 + 偶爾吐藍火（背上白貓跟著）
   dragon.ang += dt * 0.12;
@@ -2699,6 +3068,18 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     const firing = t < dragon.fireUntil;
     dragon.flameMat.opacity += ((firing ? 0.8 : 0) - dragon.flameMat.opacity) * Math.min(1, 6 * dt);
     dragon.flame.scale.set(1, 0.7 + (firing ? 0.4 + Math.sin(t * 30) * 0.15 : 0), 1);
+  }
+  // 熱氣球＋遠海帆船：白天限定（隱藏時跳過運算）
+  if (worldOpen) {
+    balloon.ang += dt * 0.03;                                                    // 比龍更高更慢（角速度 0.12 → 0.03）
+    const br = 128 + Math.sin(t * 0.1) * 18;
+    balloon.group.position.set(Math.cos(balloon.ang) * br, 54 + Math.sin(t * 0.23) * 4, Math.sin(balloon.ang) * br);
+    balloon.group.rotation.y = balloon.ang * 0.5;                                // 緩慢自轉
+    sailboat.ang += dt * 0.01;                                                   // 遠海巡航：r≈270–286（DAY_MAXR 245 外、白天霧距 440 內）
+    const sr = 278 + Math.sin(t * 0.07) * 8;
+    sailboat.group.position.set(Math.cos(sailboat.ang) * sr, WORLD.water + 0.32 + Math.sin(t * 0.8) * 0.06, Math.sin(sailboat.ang) * sr);
+    sailboat.group.rotation.y = -sailboat.ang - Math.PI / 2;                     // 船艏朝切線（同龍的航向式）
+    sailboat.group.rotation.z = Math.sin(t * 0.9) * 0.03;                        // 微側搖
   }
   // 黃貓：村裡漫遊（到點待一會兒再選新目標）
   {
@@ -2770,12 +3151,42 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     c.mat.emissiveIntensity = (lit ? 1.4 : 0) * (0.85 + Math.sin(t * 4 + c.ph) * 0.15);
     if (c.light) c.light.intensity = (lit ? 1 : 0) * (1 - vibrancy) * 24 * (0.8 + Math.sin(t * 5) * 0.2);
   }
+  // 野生小動物：idle 啄食/小跳換位；玩家靠近 → 背向逃跑；跑進水裡/出界/夠遠 → 他處重生（帶塵土）；遠離玩家時跳過
+  if (!archiveActive) {
+    const wildStep = (a, fleeR, run, hop) => {
+      const dh = Math.hypot(hero.position.x - a.x, hero.position.z - a.z);
+      if (dh > 120) return;                                                   // 太遠：完全跳過（省每幀成本）
+      if (a.state === 'idle') {
+        if (dh < fleeR && !finaleActive) { a.state = 'flee'; a.t = 1.4; const inv = 1 / (dh || 1); a.dx = (a.x - hero.position.x) * inv; a.dz = (a.z - hero.position.z) * inv; }
+        else { a.t -= dt; if (a.t <= 0) { a.t = rand(2.5, 6); const an = rand(0, TAU); a.dx = Math.sin(an); a.dz = Math.cos(an); a.x += a.dx * 0.6; a.z += a.dz * 0.6; a.face = an; } }
+      } else {
+        a.t -= dt; a.x += a.dx * run * dt; a.z += a.dz * run * dt; a.face = Math.atan2(a.dx, a.dz);
+        if (a.t <= 0) { a.state = 'idle'; a.t = rand(2, 5); }
+        if (terrainHeight(a.x, a.z) < WORLD.water + 1 || Math.hypot(a.x, a.z) > worldLim() - 4 || dh > 70) {
+          const s = wildSpot(24); a.x = s.x; a.z = s.z; a.state = 'idle'; a.t = rand(2, 5);
+          spawnDust(a.x, groundY(a.x, a.z), a.z, 0.5, { n: 7 });
+        }
+      }
+      const gy = groundY(a.x, a.z);
+      a.g.position.set(a.x, gy + (a.state === 'flee' ? Math.abs(Math.sin(t * hop)) * 0.25 : Math.abs(Math.sin(t * 2.2)) * 0.02), a.z);
+      a.g.rotation.y = a.face;
+    };
+    for (const r of rabbits) wildStep(r, RABBIT_FLEE, 10, 12);
+    for (const d of deers) wildStep(d, 12, 13, 9);
+  }
   // 知識碎片：旋轉漂浮＋走近自動拾取
   for (const s of knowledgeShards) {
     if (s.got) continue;
     s.mesh.rotation.y += dt * 1.5; s.mesh.position.y = s.y + Math.sin(t * 1.8 + s.ph) * 0.18;
     s.m.emissiveIntensity = 0.8 + Math.sin(t * 3 + s.ph) * 0.3;
     if (!battle.active && !finaleActive && !archiveActive && Math.hypot(hero.position.x - s.x, hero.position.z - s.z) < SHARD_PICK) collectShard(s);
+  }
+  // 日之碎片：白天限定，同款旋轉漂浮＋走近拾取
+  if (worldOpen) for (const s of dayShardMeshes) {
+    if (s.got) continue;
+    s.mesh.rotation.y += dt * 1.5; s.mesh.position.y = s.y + Math.sin(t * 1.8 + s.ph) * 0.18;
+    s.m.emissiveIntensity = 0.8 + Math.sin(t * 3 + s.ph) * 0.3;
+    if (!battle.active && !finaleActive && !archiveActive && Math.hypot(hero.position.x - s.x, hero.position.z - s.z) < SHARD_PICK) collectDayShard(s);
   }
   // 環境村民：村裡漫步＋靠近點擊出資安撇步泡泡
   for (const v of villagers) {
@@ -2798,7 +3209,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     }
   }
   // 沉浸感更新：環境音景＋天氣＋蝴蝶＋魚影＋飛鳥
-  if (!archiveActive) SFX.ambient(dt, vibrancy);
+  if (!archiveActive) SFX.ambient(dt, vibrancy, worldOpen && Math.hypot(hero.position.x, hero.position.z) > 195); // 白天走到海岸帶 → 偶有海鷗叫
   if (weather) {
     if (archiveActive) { weather.rmat.opacity = 0; for (const m of weather.mists) m.m.opacity = 0; weather.rgeo.setDrawRange(0, 0); renderer.toneMappingExposure = weather.baseExp; }
     else {
@@ -2841,6 +3252,24 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       scene.fog.color.lerp(weather.fogStorm, weather.storm * 0.6);                                   // 雷雨：霧色轉陰沉灰（平滑距離霧、無硬邊；疊在日夜霧之上、每幀重算不累積）
       scene.fog.far -= weather.storm * 70;                                                            // 雷雨：遠處能見度下降（只動 far、不拉近 near → 不會在鏡頭前出現霧圈/斷層）
       renderer.toneMappingExposure = weather.baseExp * (1 - weather.storm * 0.45) + weather.flash;    // 雷雨調暗＋閃電瞬間提亮（曝光，不動日夜光源）
+      // 雨後彩虹：夠久的雨（wet>6s）在白天轉晴的「瞬間」觸發。以前一幀 mode 比較偵測轉晴 → 自動排程與 T 鍵手動切換都涵蓋；
+      //   純觀察、只動自己的貼片 opacity，不寫入霧色/far/曝光/天氣欄位（不干擾剛調好的雷雨陰霾）。
+      if (rainbow) {
+        if (weather.mode !== 'clear' && weather.amt > 0.45) rainbow.wet += dt;                        // 只累計「真的在下」的時間
+        if (rainbow.prev !== 'clear' && weather.mode === 'clear') {
+          if (rainbow.wet > 6 && vibrancy > 0.6) { rainbow.phase = 'in'; rainbow.t = 0; }
+          rainbow.wet = 0;
+        }
+        rainbow.prev = weather.mode;
+        if (rainbow.phase !== 'off') {
+          rainbow.t += dt;
+          if ((weather.mode !== 'clear' || vibrancy < 0.5) && rainbow.phase !== 'out') { rainbow.phase = 'out'; rainbow.t = 0; } // 再下雨/轉夜 → 提前收
+          if (rainbow.phase === 'in') { rainbow.m.opacity = Math.min(1, rainbow.t / 2.5) * 0.55; if (rainbow.t >= 2.5) { rainbow.phase = 'hold'; rainbow.t = 0; } }
+          else if (rainbow.phase === 'hold') { rainbow.m.opacity = 0.55 + Math.sin(t * 0.7) * 0.04; if (rainbow.t >= 14) { rainbow.phase = 'out'; rainbow.t = 0; } }
+          else { rainbow.m.opacity = Math.max(0, 1 - rainbow.t / 4) * 0.55; if (rainbow.t >= 4) { rainbow.phase = 'off'; rainbow.m.opacity = 0; } }
+          rainbow.mesh.visible = rainbow.m.opacity > 0.001;
+        }
+      }
     }
   }
   for (const b of butterflies) {
@@ -2848,6 +3277,22 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     b.s.position.set(bx, groundY(bx, bz) + b.h + Math.sin(t * 1.5 + b.ph) * 0.4, bz);
     b.s.scale.set(0.18 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.5, 0.55, 1); // 拍翅：水平縮放
     b.m.opacity = archiveActive ? 0 : vibrancy * 0.9;
+  }
+  for (const b of bees) {                                                     // 蜜蜂：花簇上小半徑快速繞飛（白天）
+    const bx = b.cx + Math.sin(t * b.sp + b.ph) * b.rad, bz = b.cz + Math.cos(t * b.sp * 1.3 + b.ph) * b.rad;
+    b.s.position.set(bx, groundY(bx, bz) + b.h + Math.sin(t * 7 + b.ph) * 0.12, bz);
+    b.s.scale.set(0.26 + Math.abs(Math.sin(t * 14 + b.ph)) * 0.1, 0.3, 1);    // 快速振翅
+    b.m.opacity = (worldOpen && !archiveActive) ? vibrancy * 0.95 : 0;
+  }
+  for (const d of dragonflies) {                                              // 蜻蜓：水面定點懸停 → 快速換位（dart，白天）
+    if (d.wait > 0) d.wait -= dt;
+    else {
+      const dx = d.tx - d.x, dz = d.tz - d.z, dd = Math.hypot(dx, dz);
+      if (dd < 0.2) { d.wait = rand(1, 2.5); const a = rand(0, TAU), rr = rand(1, 4); d.tx = d.cx + Math.cos(a) * rr; d.tz = d.cz + Math.sin(a) * rr; }
+      else { const inv = 1 / dd; d.x += dx * inv * 7 * dt; d.z += dz * inv * 7 * dt; }
+    }
+    d.s.position.set(d.x, WORLD.water + 0.7 + Math.sin(t * 5 + d.ph) * 0.1, d.z);
+    d.m.opacity = (worldOpen && !archiveActive) ? vibrancy * 0.9 : 0;
   }
   for (const f of fishSchools) {
     const ang = t * f.sp + f.ph, fx = f.cx + Math.cos(ang) * f.rad, fz = f.cz + Math.sin(ang) * f.rad;
@@ -2859,6 +3304,12 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     b.s.position.set(Math.cos(ang) * b.r, b.h + Math.sin(t * 0.3 + b.ph) * 3, Math.sin(ang) * b.r);
     b.s.scale.y = b.base * (0.4 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.3); // 拍翅：垂直壓縮
     b.m.opacity = archiveActive ? 0 : vibrancy * 0.5;
+  }
+  for (const b of gulls) {                                                    // 海鷗：繞燈塔 (60,224) 盤旋（白天）
+    const ang = t * b.sp + b.ph;
+    b.s.position.set(60 + Math.cos(ang) * b.r, b.h + Math.sin(t * 0.5 + b.ph) * 2, 224 + Math.sin(ang) * b.r);
+    b.s.scale.y = b.base * (0.4 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.3);
+    b.m.opacity = (worldOpen && !archiveActive) ? vibrancy * 0.85 : 0;
   }
   for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; const k = b.t / b.dur; b.ring.scale.setScalar(1 + k * b.mul); b.ring.material.opacity = Math.max(0, 0.85 * (1 - k)); if (k >= 1) { scene.remove(b.ring); b.ring.material.dispose(); b.ring.geometry.dispose(); bursts.splice(i, 1); } }
   // 落地塵土更新

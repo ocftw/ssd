@@ -377,6 +377,38 @@
     #confidence .opt .e { font-size:30px; }
     #confidence .opt .l { font-size:12px; font-weight:700; color:#51596b; }
 
+    /* 釣魚小遊戲「湖畔釣魚信」：不透明全螢幕覆蓋層（水色漸層）＋置中卡片；信件卡沿用 .phish-card */
+    #fishing { position:fixed; inset:0; z-index:30; opacity:0; pointer-events:none; transition:opacity .3s ease;
+      display:grid; place-items:center; padding:18px; background:linear-gradient(180deg,#9ed7ea 0%, #5fb2d4 42%, #2e7ea6 100%); }
+    #fishing.show { opacity:1; pointer-events:auto; }
+    #fishing .fish-quit { position:absolute; top:calc(12px + env(safe-area-inset-top)); right:14px; width:40px; height:40px; border:0; border-radius:50%;
+      background:rgba(0,0,0,.35); color:#fff; font-size:18px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    #fishing .fish-body { width:min(94vw,440px); max-height:86vh; overflow-y:auto; background:rgba(251,247,239,.97);
+      border-radius:22px; padding:18px 20px; box-shadow:var(--shadow); text-align:center; }
+    #fishing .fish-hd { font-weight:800; font-size:16px; color:var(--ink); }
+    #fishing .fish-scene { height:104px; position:relative; overflow:hidden; border-radius:14px; margin:12px 0 10px;
+      background:linear-gradient(180deg,#cfeaf4 0%, #7cc3de 55%, #4d9fc4 100%); }
+    #fishing .bobber { position:absolute; left:50%; top:50%; font-size:36px; transform:translate(-50%,-50%); }
+    #fishing .bobber.waiting { animation:fishbob 1.6s ease-in-out infinite; }
+    #fishing .bobber.hooked { animation:fishtug .18s ease-in-out infinite; }
+    @keyframes fishbob { 0%,100%{ transform:translate(-50%,-56%); } 50%{ transform:translate(-50%,-44%); } }
+    @keyframes fishtug { 0%,100%{ transform:translate(-50%,-42%) rotate(-9deg); } 50%{ transform:translate(-50%,-32%) rotate(9deg); } }
+    #fishing .fish-status { min-height:22px; font-size:15px; color:var(--ink); }
+    #fishing .fish-btn { border:0; cursor:pointer; font:inherit; font-weight:800; font-size:15px; color:#fff; background:var(--brand);
+      border-radius:999px; padding:12px 24px; margin-top:12px; -webkit-tap-highlight-color:transparent; transition:filter .12s ease; }
+    #fishing .fish-btn:hover { filter:brightness(1.07); }
+    #fishing .fish-btn.alt { background:#1d6fb8; }
+    #fishing .fish-btn.no { background:#c0433a; }
+    #fishing .fish-btn.ok { background:#3aa45b; }
+    #fishing .fish-btns2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+    #fishing .fish-btns2 .fish-btn { margin-top:0; }
+    #fishing .fish-mail { text-align:left; margin-top:10px; }
+    #fishing .fish-verdict { margin-top:12px; font-weight:800; font-size:16px; color:var(--ink); }
+    #fishing .fish-verdict.ok { color:#3aa45b; } #fishing .fish-verdict.no { color:#c0433a; }
+    #fishing .fish-why { margin-top:8px; font-size:12.5px; line-height:1.65; color:#51596b; text-align:left;
+      background:rgba(29,36,51,.05); border-radius:10px; padding:9px 11px; }
+    #fishing .fish-score { margin-top:10px; font-size:12px; color:#6b7488; font-weight:700; }
+
     /* 彩蛋小遊戲「揮刀求生」：不透明全螢幕覆蓋層（蓋掉 HUD/搖桿），2D canvas + 結算面板 */
     #egg { position:fixed; inset:0; z-index:30; opacity:0; pointer-events:none; transition:opacity .3s ease; background:#10131c; }
     #egg.show { opacity:1; pointer-events:auto; }
@@ -531,6 +563,11 @@
       <p class="csub"></p>
       <div class="opts"></div>
     </div>
+  </div>
+
+  <div id="fishing">
+    <button class="fish-quit" aria-label="close">✕</button>
+    <div class="fish-body"></div>
   </div>
 
   <div id="egg">

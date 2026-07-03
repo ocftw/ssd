@@ -56,10 +56,14 @@ function noise({ dur = 0.2, peak = 0.3, type = 'lowpass', freq = 1000, at = 0 })
 }
 
 // ── 環境音景：依機率排程極短、極低音量的音粒；全部走 master（自動受靜音控制）。由主迴圈每幀呼叫 ──
-let birdTimer = 2, cricketTimer = 1.5;
+let birdTimer = 2, cricketTimer = 1.5, gullTimer = 5;
 function birdChirp() { // 兩三聲快速上揚的小鳥啁啾
   const base = 1700 + Math.random() * 1500, n = 2 + ((Math.random() * 2) | 0);
   for (let i = 0; i < n; i++) { const f = base * (1 + i * 0.1); tone({ freq: f, type: 'triangle', dur: 0.06 + Math.random() * 0.05, peak: 0.05, slideTo: f * (1.25 + Math.random() * 0.4), at: i * 0.09 }); }
+}
+function gullCry() { // 海鷗：一兩聲下滑的長鳴（遠、低音量）
+  const n = 1 + ((Math.random() * 2) | 0);
+  for (let i = 0; i < n; i++) { const f = 1050 + Math.random() * 250; tone({ freq: f, type: 'sawtooth', dur: 0.22, peak: 0.045, slideTo: f * 0.58, at: i * 0.28 }); }
 }
 function cricket() { // 蟋蟀：高頻顫音（數個極短脈衝）
   const f = 4200 + Math.random() * 700;
@@ -75,13 +79,14 @@ export const SFX = {
     try { localStorage.setItem('ssd-village-mute', muted ? '1' : '0'); } catch (e) { /* ignore */ }
     return muted;
   },
-  // 環境音景：白天稀疏鳥鳴、夜晚蟋蟀（vibrancy 0=夜→1=日）。靜音或音訊尚未解鎖則完全不排程。
-  ambient(dt, vibrancy = 0) {
+  // 環境音景：白天稀疏鳥鳴、夜晚蟋蟀（vibrancy 0=夜→1=日）；coast=玩家在白天海岸帶 → 偶有海鷗叫。靜音或音訊尚未解鎖則完全不排程。
+  ambient(dt, vibrancy = 0, coast = false) {
     if (muted || !ctx) return;
     const day = vibrancy > 0.55;
     birdTimer -= dt; cricketTimer -= dt;
     if (birdTimer <= 0) { birdTimer = day ? 2.2 + Math.random() * 4 : 8 + Math.random() * 8; if (day) birdChirp(); }
     if (cricketTimer <= 0) { cricketTimer = day ? 9 + Math.random() * 9 : 1.0 + Math.random() * 2.0; if (!day) cricket(); }
+    if (coast) { gullTimer -= dt; if (gullTimer <= 0) { gullTimer = 6 + Math.random() * 8; if (day) gullCry(); } }
   },
 
   // 探索
@@ -118,6 +123,11 @@ export const SFX = {
     noise({ dur: 1.8, peak: 0.16, type: 'lowpass', freq: 90, at: 0.45 });   // 後段二次滾動（遠雷餘韻）
     tone({ freq: 52, type: 'sine', dur: 2.2, peak: 0.18, slideTo: 26 });    // 極低頻餘震
   },
+
+  // 釣魚小遊戲：拋竿咻聲／浮標落水／收線捲軸聲
+  cast() { noise({ dur: 0.25, peak: 0.14, type: 'highpass', freq: 1800 }); tone({ freq: 520, type: 'sine', dur: 0.3, peak: 0.12, slideTo: 180 }); },
+  splash() { noise({ dur: 0.28, peak: 0.22, type: 'lowpass', freq: 700 }); tone({ freq: 300, type: 'sine', dur: 0.18, peak: 0.14, slideTo: 90 }); },
+  reel() { for (let i = 0; i < 5; i++) tone({ freq: 900 + i * 60, type: 'square', dur: 0.03, peak: 0.07, at: i * 0.07 }); },
 
   // 戰鬥
   battleStart() { tone({ freq: 140, type: 'sawtooth', dur: 0.5, peak: 0.42, slideTo: 90 }); noise({ dur: 0.4, peak: 0.28, type: 'lowpass', freq: 240 }); },
