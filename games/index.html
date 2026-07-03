@@ -134,6 +134,11 @@
       opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .2s ease, transform .2s ease; }
     #achpanel.show { opacity:1; transform:translateY(0); pointer-events:auto; }
     #achpanel .hd { font-size:12px; font-weight:700; color:#6b7488; padding:6px 8px; }
+    /* 面板關閉鈕（右上角 ✕）：小螢幕右上按鈕換行後會被展開的面板蓋住，面板需自帶關閉途徑 */
+    #questlog .hd, #achpanel .hd { padding-right:32px; }
+    #questlog .panelx, #achpanel .panelx { position:absolute; right:5px; top:5px; z-index:1; border:0; background:transparent;
+      cursor:pointer; font-size:15px; line-height:1; color:#9aa1b0; padding:8px; border-radius:8px; -webkit-tap-highlight-color:transparent; }
+    #questlog .panelx:hover, #achpanel .panelx:hover { color:#5b6472; background:rgba(29,36,51,.06); }
     .ach { display:flex; align-items:flex-start; gap:9px; padding:8px; border-radius:10px; }
     .ach .ai { width:26px; text-align:center; font-size:18px; flex:none; }
     .ach .at { flex:1; font-size:13px; font-weight:700; line-height:1.25; }
@@ -489,8 +494,8 @@
     <button id="logbtn" data-i18n="logBtn">📜 任務</button>
     <button id="achbtn" data-i18n="achBtn">🏅 成就</button>
   </div>
-  <div id="questlog"><div class="hd" data-i18n="questHd">遺跡課程</div><div class="list"></div><button id="resetbtn" data-i18n="resetBtn">🔄 重置進度</button></div>
-  <div id="achpanel"><div class="hd" data-i18n="achHd">成就徽章</div><div class="alist"></div><button id="sharebtn2" data-i18n="shareBtn">📸 分享成果</button></div>
+  <div id="questlog"><button class="panelx" type="button" aria-label="關閉 / Close">✕</button><div class="hd" data-i18n="questHd">遺跡課程</div><div class="list"></div><button id="resetbtn" data-i18n="resetBtn">🔄 重置進度</button></div>
+  <div id="achpanel"><button class="panelx" type="button" aria-label="關閉 / Close">✕</button><div class="hd" data-i18n="achHd">成就徽章</div><div class="alist"></div><button id="sharebtn2" data-i18n="shareBtn">📸 分享成果</button></div>
 
   <div id="joystick"><div class="knob"></div></div>
 
@@ -606,6 +611,6 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=125a477b"></script>
+  <script type="module" src="./main.js?v=b3f9c3e2"></script>
 </body>
 </html>
