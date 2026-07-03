@@ -79,7 +79,7 @@ export class FishingGame {
     this.state = 'mail';
     const u = this.ui, m = this.deck[this.round];
     this.body.innerHTML = `<div class="fish-hd">🎣 ${esc(u.title)}</div>
-      <div class="fish-mail"><div class="phish-card">
+      <div class="fish-mail">${m.scene ? `<div class="ph-scene">📌 ${esc(m.scene)}</div>` : ''}<div class="phish-card">
         <div class="ph-row"><span class="ph-k">${esc(u.phFrom)}</span><span class="ph-v">${esc(m.from)}</span></div>
         <div class="ph-row"><span class="ph-k">${esc(u.phSubject)}</span><span class="ph-v">${esc(m.subject)}</span></div>
         <div class="ph-body">${esc(m.body)}</div>
