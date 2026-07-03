@@ -559,6 +559,188 @@ function nearAnyRuin(x, z, d) {
   return false;
 }
 
+// ── 夜晚美感層 ───────────────────────────────────────────────────
+// 針對「主題遺跡尚未全清＝夜晚」時，替夜色補上：月亮＋月光倒影＋流星＋各遺跡主題夜輝光＋遺跡星座＋生態夜光。
+// 全部加法混合、opacity∝(1-vibrancy)：夜晚淡入、白天（全清/探索）淡出；純裝飾、不參與碰撞與玩法。
+// 天空類（流星/星座）僅桌機（Q.richSky）；月亮與地面/水面光點兩檔位皆有（皆極輕量）。
+const nightBeauty = (() => {
+  const SKY = Q.richSky;
+  const radialTex = (stops) => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    for (const s of stops) g.addColorStop(s[0], s[1]);
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  const softTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.45, 'rgba(255,255,255,0.35)'], [1, 'rgba(255,255,255,0)']]);
+  const moonTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.62, 'rgba(255,253,247,0.97)'], [0.8, 'rgba(246,248,255,0.42)'], [0.93, 'rgba(238,243,255,0.1)'], [1, 'rgba(238,243,255,0)']]);
+  const haloTex = radialTex([[0, 'rgba(206,222,255,0.5)'], [0.4, 'rgba(198,214,255,0.2)'], [1, 'rgba(198,214,255,0)']]);
+
+  // 跟隨鏡頭的天空群（永遠以鏡頭為中心，與星空同法 → 不因角色遠離原點而位移）
+  const skyGroup = new THREE.Group(); scene.add(skyGroup);
+
+  // 月亮：柔光月盤＋外圈光暈（固定方位仰角、隨鏡頭平移不隨視角轉；配色偏暖白，經夜晚冷藍分級後回中性月色）
+  const moonAz = 0.72, moonElev = 0.3, MOON_R = 520;   // 仰角壓低到可見天帶（第三人稱俯角有限，太高會被切出畫面）
+  const moonDir = new THREE.Vector3(Math.sin(moonAz) * Math.cos(moonElev), Math.sin(moonElev), Math.cos(moonAz) * Math.cos(moonElev));
+  const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: moonTex, color: 0xf4f1e6, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  moon.scale.setScalar(48); moon.position.copy(moonDir).multiplyScalar(MOON_R); skyGroup.add(moon);
+  const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color: 0xbcd0ff, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  moonHalo.scale.setScalar(150); moonHalo.position.copy(moon.position); skyGroup.add(moonHalo);
+
+  // 湖點（沿用魚影湖區；地形確定性 → 每次載入相同）
+  const lakeSpots = [];
+  for (const f of fishSchools) if (!lakeSpots.some((s) => Math.abs(s.x - f.cx) < 0.1 && Math.abs(s.z - f.cz) < 0.1)) lakeSpots.push({ x: f.cx, z: f.cz });
+
+  // 月光倒影：各湖面一抹柔光池（長軸朝月亮水平方位），世界固定、隨波輕搖
+  const reflections = [];
+  for (const s of lakeSpots) {
+    const rgp = new THREE.Group(); rgp.position.set(s.x, WORLD.water + 0.06, s.z); rgp.rotation.y = Math.atan2(moonDir.x, moonDir.z); scene.add(rgp);
+    const m = new THREE.MeshBasicMaterial({ map: softTex, color: 0xdbe8ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(9, 24), m); pl.rotation.x = -Math.PI / 2; rgp.add(pl);   // 沿月亮方位拉長成一道月光路徑
+    reflections.push({ m, ph: rand(0, TAU) });
+  }
+
+  // 生態夜光——湖面生物螢光（青綠柔光點，緩慢明滅＋隨水面漂移）
+  const lakeGlow = [];
+  for (const s of lakeSpots) for (let i = 0; i < 6; i++) {
+    const m = new THREE.SpriteMaterial({ map: softTex, color: 0x46f0c6, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+    const sp = new THREE.Sprite(m); sp.scale.setScalar(rand(0.5, 1.1)); scene.add(sp);
+    lakeGlow.push({ sp, m, x: s.x + rand(-6, 6), z: s.z + rand(-6, 6), ph: rand(0, TAU), tw: rand(0.5, 1.1), drift: rand(0.1, 0.25) });
+  }
+
+  // 遺跡主題夜輝光：每座「尚未淨化」遺跡在夜裡透出一圈主題色柔光池＋同色浮塵（預告淨化後的顏色）；淨化後淡出交棒給螢火蟲
+  const heralds = ruinAt.map((r) => {
+    const col = new THREE.Color(r.color);
+    const poolMat = new THREE.MeshBasicMaterial({ map: softTex, color: col, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(13, 13), poolMat); pool.rotation.x = -Math.PI / 2; pool.position.set(r.x, r.y + 0.2, r.z); scene.add(pool);
+    const motes = [];
+    for (let i = 0; i < 5; i++) {
+      const m = new THREE.SpriteMaterial({ map: softTex, color: col, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+      const sp = new THREE.Sprite(m); sp.scale.setScalar(rand(0.4, 0.8)); scene.add(sp);
+      motes.push({ sp, m, ph: rand(0, TAU), ang: rand(0, TAU), rad: rand(2.2, 4.2), spd: rand(0.15, 0.4) * (Math.random() < 0.5 ? 1 : -1), h: rand(1.0, 3.0), bob: rand(0.5, 1.1) });
+    }
+    return { r, poolMat, motes, off: 0 };  // seed 0; 動畫迴圈每幀以 isDone 收斂（isDone 於此 IIFE 之後才宣告）
+  });
+
+  // 生態夜光——不繫遺跡的環境螢火蟲（湖畔與村外，隨處微光；與繞維護者的那批分離）
+  const ambient = [];
+  {
+    const anchors = lakeSpots.slice();
+    for (let i = 0; i < 6; i++) { const a = rand(0, TAU), rr = rand(WORLD.villageR - 6, WORLD.villageR + 24); anchors.push({ x: Math.cos(a) * rr, z: Math.sin(a) * rr }); }
+    for (let i = 0; i < 12; i++) {
+      const an = anchors[i % anchors.length];
+      const m = new THREE.SpriteMaterial({ map: softTex, color: 0xfff0a0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+      const sp = new THREE.Sprite(m); sp.scale.setScalar(rand(0.4, 0.8)); scene.add(sp);
+      ambient.push({ sp, m, cx: an.x + rand(-8, 8), cz: an.z + rand(-8, 8), ph: rand(0, TAU),
+        sx: rand(0.1, 0.28), sz: rand(0.1, 0.28), ax: rand(2, 5), az: rand(2, 5), h: rand(0.6, 2.6), bob: rand(0.4, 1.0), tw: rand(1.4, 2.8) });
+    }
+  }
+
+  // 遺跡星座（桌機）：天上 5 個小星座各對應一座遺跡，淨化即以主題色亮起連線 → 夜空＝進度地圖
+  const constellations = [];
+  if (SKY) {
+    const SHAPES = {
+      personal: { pts: [[-0.9, -0.7], [0.9, -0.7], [0.9, 0.3], [0, 1.0], [-0.9, 0.3]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0]] },       // 家屋
+      org: { pts: [[-0.5, -1.0], [0.5, -1.0], [0.5, 0.1], [0.5, 1.0], [-0.5, 1.0], [-0.5, 0.1]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]] }, // 高樓
+      common: { pts: [[0, 1.0], [-0.95, -0.7], [0.95, -0.7], [0, -0.15]], edges: [[0, 1], [1, 2], [2, 0]] },                                    // 警示三角
+      guide: { pts: [[0, 1.0], [0.72, 0], [0, -1.0], [-0.72, 0]], edges: [[0, 1], [1, 2], [2, 3], [3, 0]] },                                    // 方尖菱形
+      tools: { pts: [[-0.9, 0.9], [0.9, -0.9], [0.9, 0.9], [-0.9, -0.9], [0, 0]], edges: [[0, 4], [4, 1], [2, 4], [4, 3]] },                    // 交叉工具
+    };
+    const R = 500, SP = 42, up0 = new THREE.Vector3(0, 1, 0);
+    ruinAt.forEach((r, i) => {
+      const shp = SHAPES[r.id] || SHAPES.common;
+      const az = (i / ruinAt.length) * TAU + 0.35, elev = 0.32 + (i % 2) * 0.14;   // 環繞地平線、高低錯落於可見天帶
+      const dir = new THREE.Vector3(Math.sin(az) * Math.cos(elev), Math.sin(elev), Math.cos(az) * Math.cos(elev));
+      const right = new THREE.Vector3().crossVectors(up0, dir).normalize();
+      const up = new THREE.Vector3().crossVectors(dir, right).normalize();
+      const world = shp.pts.map(([px, py]) => new THREE.Vector3().copy(dir).multiplyScalar(R).addScaledVector(right, px * SP).addScaledVector(up, py * SP));
+      const col = new THREE.Color(r.color);
+      const pmat = new THREE.PointsMaterial({ map: softTex, color: col, size: 5.5, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+      const pts = new THREE.Points(new THREE.BufferGeometry().setFromPoints(world), pmat); skyGroup.add(pts);
+      const lp = []; for (const [a, b] of shp.edges) { lp.push(world[a], world[b]); }
+      const lmat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+      skyGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp), lmat));
+      constellations.push({ id: r.id, pmat, lmat, lit: 0 });  // seed 0; 動畫迴圈每幀以 isDone 收斂（isDone 於此 IIFE 之後才宣告）
+    });
+  }
+
+  // 流星（桌機）：偶發、稀疏、緩淡；單一 sprite 重複利用
+  let meteor = null;
+  if (SKY) {
+    const meteorTex = (() => {
+      const c = document.createElement('canvas'); c.width = 128; c.height = 16; const x = c.getContext('2d');
+      const g = x.createLinearGradient(0, 0, 128, 0);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.8, 'rgba(214,228,255,0.55)'); g.addColorStop(0.96, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(0, 6, 128, 4);
+      const rg = x.createRadialGradient(120, 8, 0, 120, 8, 7); rg.addColorStop(0, 'rgba(255,255,255,1)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = rg; x.fillRect(113, 1, 14, 14);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })();
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: meteorTex, color: 0xdfe8ff, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+    sp.center.set(0.9, 0.5); sp.scale.set(38, 4.6, 1); skyGroup.add(sp);
+    meteor = { sp, m: sp.material, timer: rand(4, 12), prog: 1, az0: 0, elev0: 0, daz: 0, delev: 0, dur: 1, rot: 0, R: 480 };
+  }
+
+  const _v = new THREE.Vector3();
+  const dirTo = (az, elev, R) => _v.set(Math.sin(az) * Math.cos(elev), Math.sin(elev), Math.cos(az) * Math.cos(elev)).multiplyScalar(R);
+  let synced = false; // 首幀把 off/lit 直接吸附到 isDone 真值（存檔已完成的遺跡不會在載入時閃一下 herald）
+
+  return {
+    // night：夜晚強度 0..1（＝archiveActive?0:(1-vibrancy)）→ 全部元素統一淡入淡出
+    update(t, dt, night) {
+      skyGroup.position.copy(camera.position);
+      moon.material.opacity = night * 0.92;
+      moonHalo.material.opacity = night * (0.4 + 0.06 * Math.sin(t * 0.7));
+      for (const rf of reflections) rf.m.opacity = night * (0.26 + 0.09 * Math.sin(t * 0.8 + rf.ph));
+      for (const lg of lakeGlow) {
+        lg.sp.position.set(lg.x + Math.sin(t * lg.drift + lg.ph) * 1.5, WORLD.water + 0.12 + Math.sin(t * 0.6 + lg.ph) * 0.05, lg.z + Math.cos(t * lg.drift * 0.8 + lg.ph) * 1.5);
+        lg.m.opacity = night * (0.12 + 0.5 * (0.5 + 0.5 * Math.sin(t * lg.tw + lg.ph)));
+      }
+      for (const h of heralds) {
+        const tgt = isDone(h.r.id) ? 1 : 0;
+        h.off = synced ? h.off + (tgt - h.off) * Math.min(1, 1.6 * dt) : tgt;   // 淨化後淡出（首幀吸附）
+        const k = night * (1 - h.off);
+        h.poolMat.opacity = k * (0.15 + 0.04 * Math.sin(t * 0.9 + h.r.x));
+        for (const mo of h.motes) {
+          mo.ang += mo.spd * dt;
+          mo.sp.position.set(h.r.x + Math.cos(mo.ang) * mo.rad, h.r.y + mo.h + Math.sin(t * mo.bob + mo.ph) * 0.5, h.r.z + Math.sin(mo.ang) * mo.rad);
+          mo.m.opacity = k * (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(t * 2.2 + mo.ph)));
+        }
+      }
+      for (const f of ambient) {
+        f.sp.position.set(f.cx + Math.sin(t * f.sx + f.ph) * f.ax, f.h + Math.sin(t * f.bob + f.ph) * 0.5, f.cz + Math.cos(t * f.sz + f.ph) * f.az);
+        f.m.opacity = night * 0.7 * (0.16 + 0.84 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph * 2.1)));
+      }
+      for (const c of constellations) {
+        const ltgt = isDone(c.id) ? 1 : 0;
+        c.lit = synced ? c.lit + (ltgt - c.lit) * Math.min(1, 1.2 * dt) : ltgt;  // 淨化後連線亮起（首幀吸附）
+        const tw = 0.5 + 0.5 * Math.sin(t * 1.3 + c.lit * 3);
+        c.pmat.opacity = night * (0.12 + c.lit * (0.55 + 0.3 * tw));
+        c.lmat.opacity = night * c.lit * (0.32 + 0.12 * tw);
+      }
+      if (meteor) {
+        const mt = meteor;
+        if (mt.prog >= 1) {
+          mt.timer -= dt;
+          if (mt.timer <= 0 && night > 0.35) {                                  // 夠暗才劃過
+            mt.prog = 0; mt.az0 = rand(-1.1, 1.1); mt.elev0 = rand(0.72, 1.12);
+            mt.daz = rand(0.35, 0.6) * (Math.random() < 0.5 ? 1 : -1); mt.delev = rand(0.34, 0.52);
+            mt.dur = rand(0.9, 1.4); mt.rot = -rand(0.45, 0.95) * Math.sign(mt.daz || 1);
+            mt.timer = rand(7, 18);
+          } else { mt.m.opacity = 0; }
+        }
+        if (mt.prog < 1) {
+          mt.prog += dt / mt.dur;
+          const p = Math.min(1, mt.prog);
+          mt.sp.position.copy(dirTo(mt.az0 + mt.daz * p, mt.elev0 - mt.delev * p, mt.R));
+          mt.m.rotation = mt.rot;
+          mt.m.opacity = night * Math.sin(p * Math.PI) * 0.95;
+        }
+      }
+      synced = true;
+    },
+  };
+})();
+
 // ── 植被（InstancedMesh）─────────────────────────────────────────
 const dummy = new THREE.Object3D();
 function instance(geo, material, placements) {
@@ -2851,6 +3033,8 @@ function animate(time) {
       f.m.opacity = ffBright * (0.18 + 0.82 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph * 2.3)));
     }
   }
+  // 夜晚美感層：月亮／月光倒影／流星／遺跡主題夜輝光／遺跡星座／生態夜光（夜晚淡入、白天淡出、室內關閉）
+  nightBeauty.update(t, dt, archiveActive ? 0 : (1 - vibrancy));
 
   // POI 鄰近 / 發現 / 面板
   let near = null, nd = Infinity;
