@@ -48,6 +48,11 @@ export const UI_ALL = {
       photographer: { t: '風景攝影師', d: '收齊 4 個拍照點的攝影集' },
       trialMaster: { t: '試煉王者', d: '白天打贏全部 5 隻強化怪' },
       angler: { t: '識詐釣手', d: '湖畔釣魚一局答對 9 封以上' },
+      forger: { t: '密碼鑄劍師', d: '在密碼鍛造爐打造 3 組夠強的密語' },
+      sleuth: { t: '網址獵人', d: '網址擂台一局至少答對 5 題' },
+      twolock: { t: '雙鎖守衛', d: '雙鎖封印儀式四道全過' },
+      backupPro: { t: '備份聖泉守護者', d: '為 3 種資料都湊出 3-2-1' },
+      deepfakeBuster: { t: '識破深偽', d: '深偽擂台一局至少答對 4 通' },
     },
     fishing: {
       title: '湖畔釣魚台', sub: '把「釣魚信」釣出來', state: '白天限定小遊戲', start: '🎣 開始釣魚',
@@ -57,6 +62,41 @@ export const UI_ALL = {
       right: '答對！', wrong: '答錯了…', next: '下一竿', over: '收竿！', replay: '再釣一輪', exit: '離開',
       score: (n, m) => `成績 ${n}/${m}`,
       phFrom: '寄件者', phSubject: '主旨',
+    },
+    // 白天支線站台（5 種小站）：共用 right/wrong/next/over/replay/exit/score，各站自帶介面字串
+    stations: {
+      right: '過關！', wrong: '再想想…', next: '下一題', over: '完成！', replay: '再挑戰一次', exit: '離開',
+      score: (n, m) => `成績 ${n}/${m}`,
+      forge: {
+        icon: '🔨', title: '密碼鍛造爐', sub: '打造夠強的通行密語', state: '白天限定小站', start: '🔨 開始鍛造',
+        desc: '走進鍛造爐，親手打造三組夠強的通行密語：一邊打字，強度爐火就一邊亮起。鍛成三組就能拿下「密碼鑄劍師」徽章。',
+        forFor: '要鍛造的鑰匙：', hint: '訣竅：把 4 個不相關的詞串起來（例如「海龜-綠茶-路燈-37」），比 Ab#3 這種又短又難記的更強。',
+        placeholder: '在這裡打一組密語試試…', go: '🔨 鍛造這組 →',
+        pwMsg: { empty: '在上面輸入一組密語試試…', common: '⚠️ 這是常見或可預測的密碼，太容易被猜中', short: '太短了——長度是密碼最重要的防線', mid: '再長一點（建議 12 字以上）會更難破解', variety: '夠長了！再加點變化（大小寫／數字／符號），或湊到 16 字以上', ok: '✓ 又長又難猜——這組可以鍛造！' },
+      },
+      urlhunt: {
+        icon: '🔍', title: '網址獵人擂台', sub: '揪出唯一真正的官方網址', state: '白天限定小站', start: '🔍 上場獵網址',
+        desc: '一排長得很像的網址，只有一個是真的官方站。看清「最右邊的主網域」，把李鬼揪出來。一局六題，至少答對五題就能拿下「網址獵人」徽章。',
+        prompt: '下列哪一個是「真正的」官方網址？（看最右邊的主網域）',
+      },
+      twolock: {
+        icon: '🔐', title: '雙鎖封印儀式', sub: '挑兩道不同種類的鎖', state: '白天限定小站', start: '🔐 開始封印',
+        desc: '好的帳號要上「兩道不同種類」的鎖：你知道的、你持有的、你本人的。挑錯種類就等於只上了一道鎖。四道全過就能拿下「雙鎖守衛」徽章。',
+        scene: '情境：', prompt: '挑「兩個」不同種類的因子當登入的兩道鎖：', confirm: '🔐 封印（選好兩個）',
+        cat: { know: '你知道的', have: '你持有的', are: '你本人的', bad: '不可靠' },
+      },
+      backup: {
+        icon: '💧', title: '備份聖泉 3-2-1', sub: '湊齊 3 份、2 種媒介、1 份異地', state: '白天限定小站', start: '💧 開始備份',
+        desc: '把重要資料放進聖泉：至少 3 份備份、存在 2 種不同媒介、其中 1 份放在異地或離線。三種資料都湊齊就能拿下「備份聖泉守護者」徽章。',
+        dataFor: '要保護的資料：', prompt: '挑出備份去處，湊齊 3-2-1：', confirm: '💧 就這樣備份',
+        media: { device: '裝置本機', ext: '外接／USB', cloud: '雲端', nas: 'NAS' }, offsite: '異地/離線',
+        tally: (c, m, o) => `目前：<b>${c}</b> 份備份 · <b>${m}</b> 種媒介 · <b>${o}</b> 份異地　<span style="color:${c >= 3 && m >= 2 && o >= 1 ? '#3aa45b' : '#c0433a'}">(目標 3 / 2 / 1)</span>`,
+      },
+      deepfake: {
+        icon: '🎭', title: '深偽擂台', sub: '一通來電，該照做還是先查證？', state: '白天限定小站', start: '🎭 接起電話',
+        desc: 'AI 能複製人聲、換臉。聽到「急、要錢、要保密、繞流程」就先當可疑處理，用另一個管道向本人查證。一局五通，至少答對四通就能拿下「識破深偽」徽章。',
+        human: '✅ 正常，可照做', fake: '🚩 可疑，先查證',
+      },
     },
     // 白天世界新內容：日之碎片／拍照點／試煉
     dayTips: [
@@ -205,6 +245,7 @@ export const UI_ALL = {
     landingStart: '開始探險 →',
     landingExplore: '☀️ 白天自由探索',
     landingExploreHint: '跳過夜晚直接進入白天的世界；課程任務照常可玩',
+    landingAbout: '📖 遊戲簡介',
     exploreBadge: '☀️ 探索模式',
     exploreBadgeHint: '白天自由探索中；點一下回到故事模式（夜晚開場）',
     landingPreparing: '世界生成中…',
@@ -386,6 +427,11 @@ export const UI_ALL = {
       photographer: { t: '风景摄影师', d: '收齐 4 个拍照点的摄影集' },
       trialMaster: { t: '试炼王者', d: '白天打赢全部 5 只强化怪' },
       angler: { t: '识诈钓手', d: '湖畔钓鱼一局答对 9 封以上' },
+      forger: { t: '密码铸剑师', d: '在密码锻造炉打造 3 组够强的密语' },
+      sleuth: { t: '网址猎人', d: '网址擂台一局至少答对 5 题' },
+      twolock: { t: '双锁守卫', d: '双锁封印仪式四道全过' },
+      backupPro: { t: '备份圣泉守护者', d: '为 3 种资料都凑出 3-2-1' },
+      deepfakeBuster: { t: '识破深伪', d: '深伪擂台一局至少答对 4 通' },
     },
     fishing: {
       title: '湖畔钓鱼台', sub: '把“钓鱼信”钓出来', state: '白天限定小游戏', start: '🎣 开始钓鱼',
@@ -395,6 +441,41 @@ export const UI_ALL = {
       right: '答对！', wrong: '答错了…', next: '下一竿', over: '收竿！', replay: '再钓一轮', exit: '离开',
       score: (n, m) => `成绩 ${n}/${m}`,
       phFrom: '发件人', phSubject: '主题',
+    },
+    // 白天支线站台（5 种小站）：共用 right/wrong/next/over/replay/exit/score，各站自带界面字串
+    stations: {
+      right: '过关！', wrong: '再想想…', next: '下一题', over: '完成！', replay: '再挑战一次', exit: '离开',
+      score: (n, m) => `成绩 ${n}/${m}`,
+      forge: {
+        icon: '🔨', title: '密码锻造炉', sub: '打造够强的通行密语', state: '白天限定小站', start: '🔨 开始锻造',
+        desc: '走进锻造炉，亲手打造三组够强的通行密语：一边打字，强度炉火就一边亮起。锻成三组就能拿下"密码铸剑师"徽章。',
+        forFor: '要锻造的钥匙：', hint: '诀窍：把 4 个不相关的词串起来（例如"海龟-绿茶-路灯-37"），比 Ab#3 这种又短又难记的更强。',
+        placeholder: '在这里打一组密语试试…', go: '🔨 锻造这组 →',
+        pwMsg: { empty: '在上面输入一组密语试试…', common: '⚠️ 这是常见或可预测的密码，太容易被猜中', short: '太短了——长度是密码最重要的防线', mid: '再长一点（建议 12 字以上）会更难破解', variety: '够长了！再加点变化（大小写／数字／符号），或凑到 16 字以上', ok: '✓ 又长又难猜——这组可以锻造！' },
+      },
+      urlhunt: {
+        icon: '🔍', title: '网址猎人擂台', sub: '揪出唯一真正的官方网址', state: '白天限定小站', start: '🔍 上场猎网址',
+        desc: '一排长得很像的网址，只有一个是真的官方站。看清"最右边的主域名"，把李鬼揪出来。一局六题，至少答对五题就能拿下"网址猎人"徽章。',
+        prompt: '下列哪一个是"真正的"官方网址？（看最右边的主域名）',
+      },
+      twolock: {
+        icon: '🔐', title: '双锁封印仪式', sub: '挑两道不同种类的锁', state: '白天限定小站', start: '🔐 开始封印',
+        desc: '好的账号要上"两道不同种类"的锁：你知道的、你持有的、你本人的。挑错种类就等于只上了一道锁。四道全过就能拿下"双锁守卫"徽章。',
+        scene: '情境：', prompt: '挑"两个"不同种类的因子当登录的两道锁：', confirm: '🔐 封印（选好两个）',
+        cat: { know: '你知道的', have: '你持有的', are: '你本人的', bad: '不可靠' },
+      },
+      backup: {
+        icon: '💧', title: '备份圣泉 3-2-1', sub: '凑齐 3 份、2 种介质、1 份异地', state: '白天限定小站', start: '💧 开始备份',
+        desc: '把重要资料放进圣泉：至少 3 份备份、存在 2 种不同介质、其中 1 份放在异地或离线。三种资料都凑齐就能拿下"备份圣泉守护者"徽章。',
+        dataFor: '要保护的资料：', prompt: '挑出备份去处，凑齐 3-2-1：', confirm: '💧 就这样备份',
+        media: { device: '设备本机', ext: '外接／USB', cloud: '云端', nas: 'NAS' }, offsite: '异地/离线',
+        tally: (c, m, o) => `目前：<b>${c}</b> 份备份 · <b>${m}</b> 种介质 · <b>${o}</b> 份异地　<span style="color:${c >= 3 && m >= 2 && o >= 1 ? '#3aa45b' : '#c0433a'}">(目标 3 / 2 / 1)</span>`,
+      },
+      deepfake: {
+        icon: '🎭', title: '深伪擂台', sub: '一通来电，该照做还是先查证？', state: '白天限定小站', start: '🎭 接起电话',
+        desc: 'AI 能复制人声、换脸。听到"急、要钱、要保密、绕流程"就先当可疑处理，用另一个渠道向本人查证。一局五通，至少答对四通就能拿下"识破深伪"徽章。',
+        human: '✅ 正常，可照做', fake: '🚩 可疑，先查证',
+      },
     },
     // 白天世界新内容：日之碎片／拍照点／试炼
     dayTips: [
@@ -539,6 +620,7 @@ export const UI_ALL = {
     landingStart: '开始探险 →',
     landingExplore: '☀️ 白天自由探索',
     landingExploreHint: '跳过夜晚直接进入白天的世界；课程任务照常可玩',
+    landingAbout: '📖 游戏简介',
     exploreBadge: '☀️ 探索模式',
     exploreBadgeHint: '白天自由探索中；点一下回到故事模式（夜晚开场）',
     landingPreparing: '世界生成中…',
@@ -711,6 +793,11 @@ export const UI_ALL = {
       photographer: { t: `Landscape Photographer`, d: `Fill the album at all 4 photo spots` },
       trialMaster: { t: `Trial Champion`, d: `Beat all 5 empowered monsters in daylight` },
       angler: { t: `Phish Angler`, d: `Score 9+ in one round of lakeside fishing` },
+      forger: { t: `Forge Smith`, d: `Forge 3 strong passphrases at the Password Forge` },
+      sleuth: { t: `URL Sleuth`, d: `Get 5+ right in one round of the URL arena` },
+      twolock: { t: `Two-Lock Guard`, d: `Pass all four rounds of the Two-Lock rite` },
+      backupPro: { t: `Backup Spring Keeper`, d: `Build 3-2-1 for all three kinds of data` },
+      deepfakeBuster: { t: `Deepfake Buster`, d: `Get 4+ right in one round of the deepfake arena` },
     },
     fishing: {
       title: `Lakeside Fishing Dock`, sub: `Reel in the phishing mail`, state: `Daytime mini-game`, start: `🎣 Start fishing`,
@@ -720,6 +807,41 @@ export const UI_ALL = {
       right: `Correct!`, wrong: `Wrong…`, next: `Next cast`, over: `Round over!`, replay: `Fish again`, exit: `Leave`,
       score: (n, m) => `Score ${n}/${m}`,
       phFrom: `From`, phSubject: `Subject`,
+    },
+    // Daytime side-stations (5 mini-stations): share right/wrong/next/over/replay/exit/score; each carries its own UI strings
+    stations: {
+      right: `Cleared!`, wrong: `Think again…`, next: `Next`, over: `Done!`, replay: `Try again`, exit: `Leave`,
+      score: (n, m) => `Score ${n}/${m}`,
+      forge: {
+        icon: '🔨', title: `The Password Forge`, sub: `Forge a strong passphrase`, state: `Daytime mini-station`, start: `🔨 Start forging`,
+        desc: `Step into the forge and craft three strong passphrases by hand: as you type, the strength-fire flares up. Forge three to earn the "Forge Smith" badge.`,
+        forFor: `Key to forge:`, hint: `Tip: string together 4 unrelated words (e.g. "turtle-greentea-streetlamp-37") — stronger than something short and hard to remember like Ab#3.`,
+        placeholder: `Type a passphrase here to try…`, go: `🔨 Forge this one →`,
+        pwMsg: { empty: `Type a passphrase above to try…`, common: `⚠️ This is a common or predictable password — too easy to guess`, short: `Too short — length is a password's most important defense`, mid: `A bit longer (12+ characters) makes it much harder to crack`, variety: `Long enough! Add some variety (upper/lowercase, numbers, symbols) or reach 16+ characters`, ok: `✓ Long and hard to guess — this one's ready to forge!` },
+      },
+      urlhunt: {
+        icon: '🔍', title: `URL Hunter Arena`, sub: `Spot the one real official URL`, state: `Daytime mini-station`, start: `🔍 Hunt URLs`,
+        desc: `A row of look-alike URLs, and only one is the real official site. Read the "rightmost root domain" and catch the impostors. Six per round; get five or more right to earn the "URL Sleuth" badge.`,
+        prompt: `Which one is the "real" official URL? (look at the rightmost root domain)`,
+      },
+      twolock: {
+        icon: '🔐', title: `Two-Lock Sealing Rite`, sub: `Pick two locks of different kinds`, state: `Daytime mini-station`, start: `🔐 Begin the seal`,
+        desc: `A good account gets two locks of "different kinds": something you know, something you have, something you are. Pick the same kind twice and it's really just one lock. Pass all four to earn the "Two-Lock Guard" badge.`,
+        scene: `Scenario:`, prompt: `Pick "two" factors of different kinds as your two sign-in locks:`, confirm: `🔐 Seal it (pick two)`,
+        cat: { know: `Something you know`, have: `Something you have`, are: `Something you are`, bad: `Unreliable` },
+      },
+      backup: {
+        icon: '💧', title: `Backup Spring 3-2-1`, sub: `Gather 3 copies, 2 media, 1 off-site`, state: `Daytime mini-station`, start: `💧 Start backing up`,
+        desc: `Place important data in the spring: at least 3 copies, on 2 different media, with 1 kept off-site or offline. Complete all three data sets to earn the "Backup Spring Keeper" badge.`,
+        dataFor: `Data to protect:`, prompt: `Pick backup destinations to complete 3-2-1:`, confirm: `💧 Back up like this`,
+        media: { device: `Device`, ext: `External / USB`, cloud: `Cloud`, nas: `NAS` }, offsite: `Off-site/offline`,
+        tally: (c, m, o) => `So far: <b>${c}</b> copies · <b>${m}</b> media · <b>${o}</b> off-site　<span style="color:${c >= 3 && m >= 2 && o >= 1 ? '#3aa45b' : '#c0433a'}">(goal 3 / 2 / 1)</span>`,
+      },
+      deepfake: {
+        icon: '🎭', title: `Deepfake Arena`, sub: `A call comes in — comply, or verify first?`, state: `Daytime mini-station`, start: `🎭 Answer the call`,
+        desc: `AI can clone voices and swap faces. If you hear "urgent, money, secrecy, skip the process," treat it as suspicious first and verify with the person through another channel. Five per round; get four or more right to earn the "Deepfake Buster" badge.`,
+        human: `✅ Normal, go ahead`, fake: `🚩 Suspicious, verify first`,
+      },
     },
     // Day-world content: sun shards / photo spots / trials
     dayTips: [
@@ -864,6 +986,7 @@ export const UI_ALL = {
     landingStart: `Start the adventure →`,
     landingExplore: `☀️ Free-roam in daylight`,
     landingExploreHint: `Skip the night and start in daylight; course quests stay fully playable`,
+    landingAbout: `📖 About this game`,
     exploreBadge: `☀️ Explore mode`,
     exploreBadgeHint: `Free-roaming in daylight — tap to return to story mode (night opening)`,
     landingPreparing: `Generating world…`,
