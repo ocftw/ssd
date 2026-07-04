@@ -8,24 +8,9 @@
 // 仿 fishing.js/egg.js 合約：start(id)→Promise、active 旗標、update(dt) 由主迴圈每幀呼叫（凍結 3D 世界）。
 // ⚠️ 各站題目與解說屬資安教育素材，正式採用前請審閱正確性（內容集中在 i18n/stations.js）。
 import { SFX } from './audio.js';
+import { esc, shuffle, scorePw } from './util.js';
 
-const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const TAKE = { forge: 3, urlhunt: 6, twolock: 4, backup: 3, deepfake: 5 };   // 每局題數（不足則取全部）
-
-// 密碼強度啟發式評分（教育用，非真正密碼學強度估算）；與 battle.js 同一套規則，回傳 level 鍵。
-function scorePw(pw, common) {
-  const len = pw.length;
-  if (!len) return { pct: 6, color: '#9aa1b0', ok: false, level: 'empty' };
-  const lc = pw.toLowerCase();
-  const isCommon = common.some((c) => lc.includes(c)) || /^(.)\1+$/.test(pw) || /^(0123|1234|2345|3456|4567|5678|6789|abcd|qwer)/.test(lc);
-  const variety = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((re) => re.test(pw)).length;
-  if (isCommon) return { pct: 28, color: '#d0433a', ok: false, level: 'common' };
-  if (len < 8) return { pct: 30, color: '#d0433a', ok: false, level: 'short' };
-  if (len < 12) return { pct: 58, color: '#f0a500', ok: false, level: 'mid' };
-  if (variety < 2 && len < 16) return { pct: 72, color: '#f0a500', ok: false, level: 'variety' };
-  return { pct: 100, color: '#3aa45b', ok: true, level: 'ok' };
-}
 
 export class Stations {
   constructor({ ui, banks }) {
@@ -113,9 +98,8 @@ export class Stations {
         <button class="st-btn pw-go" disabled>${esc(g.go || '')}</button>
       </div>${this._scoreLine()}`;
     const input = this.body.querySelector('.pw-input'), bar = this.body.querySelector('.pw-meter i'), tip = this.body.querySelector('.pw-tip'), go = this.body.querySelector('.pw-go');
-    const common = item.common || ['12345678', 'password', 'qwerty', '111111', 'abc123', 'iloveyou', '000000', 'letmein', 'admin', '123456'];
     const pm = g.pwMsg || {};
-    const refresh = () => { const r = scorePw(input.value, common); bar.style.width = r.pct + '%'; bar.style.background = r.color; tip.textContent = pm[r.level] || ''; tip.style.color = r.color; go.disabled = !r.ok; };
+    const refresh = () => { const r = scorePw(input.value, item.common); bar.style.width = r.pct + '%'; bar.style.background = r.color; tip.textContent = pm[r.level] || ''; tip.style.color = r.color; go.disabled = !r.ok; };
     input.addEventListener('input', refresh); refresh();
     go.addEventListener('click', () => { if (go.disabled) return; input.disabled = true; go.disabled = true; SFX.reel(); this._verdict(true, item.tip || ''); });
   }
