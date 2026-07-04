@@ -327,6 +327,9 @@
       background:rgba(255,210,75,.22); padding:9px 18px; border-radius:999px; transition:filter .12s ease; -webkit-tap-highlight-color:transparent; }
     #landing .landingexplore:hover:not(:disabled) { filter:brightness(1.05); }
     #landing .landingexplore:disabled { opacity:.55; cursor:default; }
+    #landing .landingabout { display:inline-block; margin-top:12px; font-size:12.5px; font-weight:700; color:#6b7488;
+      text-decoration:none; -webkit-tap-highlight-color:transparent; }
+    #landing .landingabout:hover { color:var(--brand); text-decoration:underline; }
     @media (max-width:560px) {
       #landing .card { padding:18px 18px; } #landing h1 { font-size:19px; } #landing .desc { font-size:13px; line-height:1.65; }
       #landing .lead { font-size:38px; }
@@ -667,6 +670,7 @@
       <div class="prep"><div class="spin"></div></div>
       <button id="startbtn" class="start" disabled data-i18n="landingPreparing">世界生成中…</button>
       <button id="explorebtn" class="landingexplore" data-i18n="landingExplore" data-i18n-title="landingExploreHint" title="">☀️ 白天自由探索</button>
+      <a id="aboutlink" class="landingabout" href="https://ssd.ocf.tw/play/" target="_blank" rel="noopener" data-i18n="landingAbout">📖 遊戲簡介</a>
     </div>
   </div>
 
