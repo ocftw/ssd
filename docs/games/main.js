@@ -2213,7 +2213,7 @@ actbtnEl.addEventListener('click', () => { if (panelId) suppressed.add(panelId);
 let jumpPending = false;
 const jumpBtn = document.getElementById('jumpbtn');
 jumpBtn.addEventListener('pointerdown', (e) => { jumpPending = true; SFX.unlock(); e.preventDefault(); });
-pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); } });
+pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); afterRuinComplete(p); } });
 
 // 點亮遺跡外觀（水晶、光束、標籤）
 function lightRuin(p) {
@@ -2241,7 +2241,7 @@ function startBattle(p) {
     if (won) {
       if (!isDisc(p.data.id)) progress.discovered.push(p.data.id);
       if (!isDone(p.data.id)) progress.completed.push(p.data.id);
-      save(); lightRuin(p); updateHud(); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone();
+      save(); lightRuin(p); updateHud(); afterRuinComplete(p);
     }
     suppressed.delete(p.data.id);
   });
@@ -2280,11 +2280,15 @@ function discover(p) {
   spawnBurst(p); updateHud(); computeVibrancy();
 }
 let allDoneShown = false, finaleActive = false, finaleT = 0, finaleShown = false;
+// 「忙碌中」＝任一全畫面互動進行中（戰鬥／終局／彩蛋／釣魚／支線站台）：主迴圈據此凍結 3D 世界、收起搖桿與跳躍鈕、鎖 60fps。
+const isBusy = () => battle.active || finaleActive || egg.active || fishing.active || stations.active;
 function afterCompleteToast(p) {
   const left = ruinAt.length - progress.completed.length;
   const title = p.data.defense ? UI.toastDefense(p.data.defense) : UI.toastPurified;
   if (left > 0) toast(title, UI.toastProgress(p.data.title, left));
 }
+// 遺跡點亮後的共用收尾（繁榮度重算→螢火→爆點→提示→是否全清）。兩處完成入口（閱讀即完成 / 打贏怪物）共用，避免各抄一份漂移。
+function afterRuinComplete(p) { computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); }
 function showFinaleOverlay() {
   const f = document.getElementById('finale');
   f.querySelector('.badges').innerHTML = ruinAt.map((r) => `<span title="${r.title}">${r.emoji}</span>`).join('');
@@ -3002,7 +3006,7 @@ function animate(time) {
   //   → 幀距均勻、不用累積器，避免先前累積器限速造成 CSS2D 地標標籤「游移」抖動的回歸；timer 只在實際渲染幀前進，dt 仍為真實經過時間。
   if (lastRaf) { const d = time - lastRaf; if (d > 4 && d < 100) nativeHz += (1000 / d - nativeHz) * 0.1; } // 平滑推估顯示器原生更新率
   lastRaf = time;
-  const _busy = battle.active || finaleActive || egg.active || fishing.active || stations.active; // 戰鬥/終局/彩蛋/釣魚/支線站台一律 60fps
+  const _busy = isBusy(); // 戰鬥/終局/彩蛋/釣魚/支線站台一律 60fps
   const _active = _busy || keys.size > 0 || joyX !== 0 || joyZ !== 0 || hasTarget || performance.now() < activeUntil; // 移動中/操作後 0.6s 內＝互動
   const _stride = Math.max(1, Math.round(nativeHz / (_active ? 60 : 30)));
   if (frameTick++ % _stride !== 0) return;  // 跳過此 native tick（不模擬、不渲染）
@@ -3010,8 +3014,8 @@ function animate(time) {
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
   fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 原始幀時間估 FPS
 
-  joyEl.classList.toggle('hide', battle.active || finaleActive || egg.active || fishing.active || stations.active);
-  jumpBtn.classList.toggle('hide', battle.active || finaleActive || egg.active || fishing.active || stations.active || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
+  joyEl.classList.toggle('hide', isBusy());
+  jumpBtn.classList.toggle('hide', isBusy() || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
   if (egg.active) { labelRenderer.domElement.style.display = 'none'; egg.update(dt); return; } // 彩蛋小遊戲：凍結 3D 世界，僅跑 2D 覆蓋層（不透明、免 renderScene）
   if (fishing.active) { labelRenderer.domElement.style.display = 'none'; fishing.update(dt); return; } // 釣魚小遊戲：同彩蛋，凍結 3D 世界
   if (stations.active) { labelRenderer.domElement.style.display = 'none'; stations.update(dt); return; } // 支線站台：同上，凍結 3D 世界，僅跑 DOM 覆蓋層
