@@ -11,6 +11,8 @@ social:
 
 <div class="play-narrow" hidden></div>
 
+🌐 **正體中文**　·　[简体中文](zh-hans.md)　·　[English](en.md)
+
 # 🎮 資安防護新手村・探險
 
 ![被重新點亮的個人資安遺跡：翠綠能量水晶懸浮在祭壇上方，光束直上夜空](shots/village-grove.webp){ loading=lazy }
