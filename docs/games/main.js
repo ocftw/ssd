@@ -2109,12 +2109,15 @@ const guideMark = (() => {
   return { group: g, gem };
 })();
 
-// ── 光影引路：把玩家的腳從村口牽向「建議下一站」遺跡（承 #8 夜色語彙）──
-// 三層都繫 nextRecommendedRuinId()（完成一個自動改指下一個）、取該遺跡主題色、夜晚淡入（白天/探索/室內熄）：
-//   ① 螢火引路：主題色光靈從玩家附近貼地朝遺跡方向流動（用「動」表達方向、不畫永久軌道）
-//   ② 主題色信標光柱：只在建議遺跡上方、穿霧可見的脈動光柱（遠場「它在那邊」）
-//   ③ 月光步道：村口沿遺跡方位的一排冷白月光地磚（近村起點提示，承 #8 月亮）
+// ── 光影引路：只在「快要抵達建議下一站」時，才把玩家牽進遺跡（承 #8 夜色語彙）──
+// 修正 PR#10 三個手感：① 螢火改世界座標定錨（沿「遺跡→村莊」走廊由遠而近流向遺跡，不再黏著鏡頭平移＝像真螢火）
+//   ② 加「近遺跡才現身」的距離閘＋「人在村莊內一律全熄」，村莊與遠處都乾淨（不再持續出現、不再一出村就亂）
+//   ③ 月光步道自村莊中心改為貼著遺跡的一小段短引道。三層仍繫 nextRecommendedRuinId()、取主題色、夜晚淡入。
+// 距離閘（世界單位；1 步≈4.4u，遺跡距村心 102–162、村莊半徑 58）：距遺跡 >FAR 全熄、≤NEAR 全亮、<HIDE 抵達淡出；
+// 另：玩家在村莊半徑內一律壓掉（村莊絕不顯示）。想更早/更晚現身就改 GUIDE_FAR / GUIDE_NEAR。
+const GUIDE_FAR = 72, GUIDE_NEAR = 46, GUIDE_HIDE = 10, GUIDE_HIDE2 = 20;
 const guideLight = (() => {
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
   const softTex = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
     const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -2122,20 +2125,21 @@ const guideLight = (() => {
     x.fillStyle = g; x.fillRect(0, 0, 64, 64);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
   })();
-  // ① 螢火引路
+  // ① 螢火引路（世界座標定錨：沿「遺跡→村莊」走廊由村莊側往遺跡漂流；不再以玩家為錨，故走動時像留在原地的真螢火）
+  const CORR = 30;                         // 引路走廊長度：自遺跡往村莊側延伸的世界距離
   const wisps = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 10; i++) {
     const m = new THREE.SpriteMaterial({ map: softTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
-    const s = new THREE.Sprite(m); s.scale.setScalar(rand(1.1, 1.6)); scene.add(s);
-    wisps.push({ s, m, off: i / 6, rate: rand(0.26, 0.36), lat: rand(-1, 1), seed: rand(0, TAU) });
+    const s = new THREE.Sprite(m); s.scale.setScalar(rand(1.0, 1.5)); s.visible = false; scene.add(s);
+    wisps.push({ s, m, off: i / 10, rate: rand(0.05, 0.09), amp: rand(1.0, 2.2), seed: rand(0, TAU) });
   }
   // ② 主題色信標光柱（穿霧可見：fog:false）
   const beaconMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
   const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.6, 64, 14, 1, true), beaconMat);
   beacon.visible = false; scene.add(beacon);
-  // ③ 月光步道
+  // ③ 月光步道（改貼著遺跡、沿同一走廊往村莊側鋪的一小段冷白引道）
   const lane = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 5; i++) {
     const m = new THREE.MeshBasicMaterial({ map: softTex, color: 0xdbe8ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
     const pl = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), m); pl.rotation.x = -Math.PI / 2; pl.visible = false; scene.add(pl);
     lane.push({ pl, m });
@@ -2143,32 +2147,40 @@ const guideLight = (() => {
   return {
     // recPos：建議遺跡（{x,y,z}，null＝無 → 全熄）；recColor：其主題色 hex
     update(t, dt, night, recPos, recColor) {
-      const on = night > 0.01 && !!recPos;
-      let dx = 0, dz = 1, dist = 0;
-      if (recPos) { dx = recPos.x - hero.position.x; dz = recPos.z - hero.position.z; dist = Math.hypot(dx, dz) || 1; dx /= dist; dz /= dist; }
-      const arrive = Math.max(0, Math.min(1, (dist - 10) / 8)); // 距遺跡 <10 淡出螢火（已抵達）
-      // ① 螢火引路：每幀以玩家「當前」位置為錨、沿遺跡方向連續向外流動（近生遠滅＝動就是方向；無狀態機、不會卡住）
-      const px = -dz, pz = dx; // 水平垂直向
+      const dist = recPos ? (Math.hypot(recPos.x - hero.position.x, recPos.z - hero.position.z) || 1) : 0;
+      const playerR = Math.hypot(hero.position.x, hero.position.z);
+      // 距離閘：近遺跡淡入(FAR→NEAR)、抵達淡出(HIDE2→HIDE)；人在村莊半徑內一律壓掉；再乘夜色
+      const near = clamp01((GUIDE_FAR - dist) / (GUIDE_FAR - GUIDE_NEAR));
+      const arrive = clamp01((dist - GUIDE_HIDE) / (GUIDE_HIDE2 - GUIDE_HIDE));
+      const outV = clamp01((playerR - (WORLD.villageR - 2)) / 10);
+      const gain = (recPos ? night : 0) * near * arrive * outV;
+      const on = gain > 0.001;
+      // 走廊方向：遺跡→村莊(原點)。玩家多半自村莊來，螢火沿此走廊「流向」遺跡（純世界座標＝不黏鏡頭）
+      let cvx = 0, cvz = -1;
+      if (recPos) { const dm = Math.hypot(recPos.x, recPos.z) || 1; cvx = -recPos.x / dm; cvz = -recPos.z / dm; }
+      const cpx = -cvz, cpz = cvx;          // 走廊的水平垂直向（螢火左右散開用）
+      // ① 螢火：沿走廊由村莊側往遺跡漂流、頭尾淡出（sin(cyc·π)）
       for (const w of wisps) {
-        const cyc = (t * w.rate + w.off) % 1;               // 0（貼近玩家）→ 1（前方遠處淡出）
-        const d = 2.5 + cyc * 11, lateral = w.lat * (1 - cyc) * 1.4; // 近玩家散開、沿路收束成一束
-        const wx = hero.position.x + dx * d + px * lateral, wz = hero.position.z + dz * d + pz * lateral;
-        w.s.position.set(wx, groundY(wx, wz) + 0.95 + Math.sin(t * 1.5 + w.seed) * 0.25, wz);
+        w.s.visible = on;
+        if (!on) { w.m.opacity = 0; continue; }
+        const cyc = (t * w.rate + w.off) % 1;         // 0→1 循環
+        const along = CORR * (1 - cyc);               // 村莊側(遠) → 遺跡(近)：流向遺跡
+        const lateral = Math.sin(cyc * TAU + w.seed) * w.amp;
+        const wx = recPos.x + cvx * along + cpx * lateral, wz = recPos.z + cvz * along + cpz * lateral;
+        w.s.position.set(wx, groundY(wx, wz) + 0.95 + Math.sin(t * 1.4 + w.seed) * 0.35, wz);
         if (recColor) w.m.color.setHex(recColor);
-        w.m.opacity = on ? night * arrive * Math.sin(cyc * Math.PI) * 0.85 : 0;
+        w.m.opacity = gain * Math.sin(cyc * Math.PI) * 0.8;
       }
       // ② 信標光柱：立在建議遺跡上方、主題色脈動
       beacon.visible = on;
-      if (on) { beacon.position.set(recPos.x, recPos.y + 33, recPos.z); beaconMat.color.setHex(recColor); beaconMat.opacity = night * (0.1 + 0.035 * Math.sin(t * 1.4)); }
-      // ③ 月光步道：以村中心(原點)為起點、沿遺跡方位外推的一排冷白地磚
-      let ox = 0, oz = 1;
-      if (recPos) { const dm = Math.hypot(recPos.x, recPos.z) || 1; ox = recPos.x / dm; oz = recPos.z / dm; }
+      if (on) { beacon.position.set(recPos.x, recPos.y + 33, recPos.z); beaconMat.color.setHex(recColor); beaconMat.opacity = gain * (0.11 + 0.04 * Math.sin(t * 1.4)); }
+      // ③ 月光步道：貼著遺跡、沿走廊往村莊側鋪的一小段冷白引道
       for (let i = 0; i < lane.length; i++) {
         const seg = lane[i]; seg.pl.visible = on;
         if (!on) { seg.m.opacity = 0; continue; }
-        const r = WORLD.villageR - 4 + i * 5.5, gx = ox * r, gz = oz * r;
+        const along = 6 + i * 5.5, gx = recPos.x + cvx * along, gz = recPos.z + cvz * along;
         seg.pl.position.set(gx, groundY(gx, gz) + 0.12, gz);
-        seg.m.opacity = night * (0.22 + 0.06 * Math.sin(t * 0.9 + i)) * (1 - (i / lane.length) * 0.45);
+        seg.m.opacity = gain * (0.24 + 0.06 * Math.sin(t * 0.9 + i)) * (1 - (i / lane.length) * 0.5);
       }
     },
   };
