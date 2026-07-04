@@ -12,16 +12,16 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=11eee50a';
-import { BATTLES_ALL } from './i18n/battles.js?v=11eee50a';
-import { UI_ALL } from './i18n/ui.js?v=11eee50a';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=11eee50a';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=11eee50a';
-import { BattleSystem } from './battle.js?v=11eee50a';
+import { CONTENT } from './i18n/content.js?v=66aa3470';
+import { BATTLES_ALL } from './i18n/battles.js?v=66aa3470';
+import { UI_ALL } from './i18n/ui.js?v=66aa3470';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=66aa3470';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=66aa3470';
+import { BattleSystem } from './battle.js?v=66aa3470';
 import { FISHING_ALL } from './i18n/fishing.js';
 import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
-import { SFX } from './audio.js?v=11eee50a';
+import { SFX } from './audio.js?v=66aa3470';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -121,7 +121,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=11eee50a', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=11eee50a', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=66aa3470', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=66aa3470', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -138,7 +138,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=11eee50a', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=11eee50a', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=66aa3470', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=66aa3470', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -490,8 +490,8 @@ function resolveHeroCollision() {
   hero.position.x = px; hero.position.z = pz;
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=11eee50a', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=11eee50a', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=66aa3470', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=66aa3470', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -842,7 +842,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   return m;
 }
 const foliageMat = makeFoliageMaterial();
-const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=11eee50a', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=11eee50a', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=66aa3470', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=66aa3470', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
 // 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
 const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
@@ -872,7 +872,7 @@ TREE_SPECIES.forEach((sp, si) => {
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=11eee50a', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=11eee50a', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=66aa3470', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=66aa3470', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -1219,7 +1219,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=11eee50a', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=66aa3470', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1472,7 +1472,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=11eee50a'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=66aa3470'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1665,7 +1665,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=11eee50a'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=66aa3470'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -1740,14 +1740,9 @@ ARCHIVE.face = Math.atan2(ARCHIVE.pos.z, -ARCHIVE.pos.x);
 ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
 ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
 ARCHIVE.back = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 5);
-const ARCHIVE_FLOOR = ARCHIVE.roomY + 0.2;
-const ARCHIVE_FOV = 86;   // 室內用更廣的視角：手機直式畫面水平 FOV 很窄，廣角才能一進門就看到三份文件並排
-let archiveActive = false, archEnterArmed = true, archExitArmed = true;
-const archFadeEl = document.getElementById('fade');
-const archFade = { on: false, t: 0, dur: 0.7, mid: false, go: null };
-const startArchFade = (go) => { archFade.on = true; archFade.t = 0; archFade.mid = false; archFade.go = go; };
-function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLOOR, 6); hero.rotation.y = Math.PI; archiveActive = true; archiveRoom.visible = true; archExitArmed = false; hero.visible = false; yaw = 0; pitch = 0.12; camera.fov = ARCHIVE_FOV; camera.updateProjectionMatrix(); if (panelId) hidePanel(); }); } // 從門口(+z)往內看三份文件
-function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; hero.visible = true; yaw = Math.PI; pitch = 0.6; camera.fov = 52; camera.updateProjectionMatrix(); if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
+// 檔案室改為「原地藝廊面板」（見 openArchivePanel）：不再傳送進第一人稱房間 → 操作與主世界一致、手機也好用。
+const archiveActive = false;   // 恆為 false：既有各處 `archiveActive ? …` 分支一律走室外路徑（保留變數以免大改各處）
+let archEnterArmed = true;      // 走近入口的一次性觸發旗標
 // 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
 {
   const g = new THREE.Group(); g.position.copy(ARCHIVE.pos); g.rotation.y = ARCHIVE.face; // 門面朝中央水晶
@@ -1765,37 +1760,22 @@ function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x,
   scene.add(g);
 }
 addBoxCol(ARCHIVE.pos.x, ARCHIVE.pos.z, 2.0, 2.9, ARCHIVE.face);   // 檔案室實體（門在 +x 側；入口 trigger 半徑 1.7 > 停止距離 → 仍能進入）
-// 隱藏室內房間（世界下方，平時 visible=false）
-const archiveRoom = new THREE.Group(); archiveRoom.position.set(0, ARCHIVE.roomY, 0); archiveRoom.visible = false; scene.add(archiveRoom);
-{
-  const g = archiveRoom, wallMat = applyStone(mat(0xffffff)), woodM = RUIN.wood;
-  const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  // 放大的展示廳：22(寬) × 20(深) × 5(高)。三份文件一字排開靠後牆，從前方門口(+z)進入即可一覽
-  add(new THREE.BoxGeometry(22, 0.4, 20), wallMat, 0, 0, 0);            // 地板
-  add(new THREE.BoxGeometry(22, 0.4, 20), wallMat, 0, 5, 0);            // 天花
-  add(new THREE.BoxGeometry(0.4, 5, 20), wallMat, -10.7, 2.5, 0);      // 左牆
-  add(new THREE.BoxGeometry(0.4, 5, 20), wallMat, 10.7, 2.5, 0);       // 右牆
-  add(new THREE.BoxGeometry(22, 5, 0.4), wallMat, 0, 2.5, -9.7);       // 後牆（文件靠這面）
-  add(new THREE.BoxGeometry(8.2, 5, 0.4), wallMat, -6.9, 2.5, 9.7);    // 前牆左段
-  add(new THREE.BoxGeometry(8.2, 5, 0.4), wallMat, 6.9, 2.5, 9.7);     // 前牆右段（中間留門）
-  add(new THREE.BoxGeometry(5.6, 1.2, 0.4), wallMat, 0, 4.4, 9.7);     // 前牆門楣
-  for (const bx of [-9.2, 9.2]) add(new THREE.BoxGeometry(2.4, 4, 0.7), woodM, bx, 2, -9.0); // 兩側書架（靠後牆）
-  // 兩盞吊燈把長廳照勻（前、後各一）
-  for (const lz of [3, -7]) {
-    const lamp = new THREE.PointLight(0xffe6b8, 55, 60, 1.5); lamp.position.set(0, 4.2, lz); g.add(lamp);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0xfff0cf })); bulb.position.set(0, 4.3, lz); g.add(bulb);
-  }
-  ARCHIVE_DOCS.forEach((d, i) => {
-    const dx = (i - 1) * 3.5;                                                // 三份一字排開（間距 3.5），靠後牆、正面朝門口(+z)
-    add(new THREE.BoxGeometry(1.9, 1.0, 0.7), woodM, dx, 0.5, -8.7);         // 展示基座
-    const cw = 1.6, tilt = -0.12;                                           // 封面（正方形、略後仰、正面朝玩家 +z）
-    const frame = new THREE.Mesh(new THREE.PlaneGeometry(cw + 0.16, cw + 0.16), new THREE.MeshStandardMaterial({ color: 0x2b2620, roughness: 0.6 }));
-    frame.position.set(dx, 1.95, -8.56); frame.rotation.x = tilt; g.add(frame);
-    const cover = new THREE.Mesh(new THREE.PlaneGeometry(cw, cw), new THREE.MeshBasicMaterial({ map: tex(d.cover, 1, 1, true) }));
-    cover.position.set(dx, 1.95, -8.55); cover.rotation.x = tilt; g.add(cover);
-    const lab = makeLabel(`${d.emoji} ${d.title}`); lab.o.position.set(dx, 3.15, -8.56); g.add(lab.o);
-    POIS.push({ data: d, isRuin: false, area: 'archive', pos: new THREE.Vector3(dx, ARCHIVE.roomY, -6.5), el: lab.el, openDist: 3.6 });
-  });
+// 檔案室藝廊面板：走近入口 → 原地開一個置中面板，三份文件做成展示卡，點卡即在新分頁開 PDF。
+// 取代舊的「傳送進世界下方第一人稱房間走路看文件」——消除轉場與第一人稱轉向操作問題。
+const archModalEl = document.getElementById('archivemodal');
+function openArchivePanel() {
+  archModalEl.querySelector('.am-title').textContent = UI.labelArchive || '📚';
+  archModalEl.querySelector('.am-sub').textContent = UI.archiveIntro || '';
+  archModalEl.querySelector('.am-grid').innerHTML = ARCHIVE_DOCS.map((d) =>
+    `<a class="am-card" href="${d.url}" target="_blank" rel="noopener"><img src="${d.cover}" alt="" loading="lazy"><div class="am-tx"><b>${d.emoji || '📄'} ${d.title || ''}</b><span class="am-d">${d.desc || ''}</span><span class="am-go">${d.goText || 'PDF →'}</span></div></a>`).join('');
+  archModalEl.classList.add('show');
+  ARCHIVE_DOCS.forEach((d) => met.docs.add(d.id)); checkAchievements();  // 開啟＝看過三份文件（成就：檔案管理員）
+}
+function closeArchivePanel() { archModalEl.classList.remove('show'); } // 走離入口才會重新 arm，不會立即重開
+if (archModalEl) {
+  archModalEl.querySelector('.am-x').addEventListener('click', closeArchivePanel);
+  archModalEl.querySelector('.am-bd').addEventListener('click', closeArchivePanel);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && archModalEl.classList.contains('show')) closeArchivePanel(); });
 }
 
 // ── 石化村民（遺跡維護者）：大水晶啟動後解除石化、靠近給提醒 ──────
@@ -2952,7 +2932,7 @@ function animate(time) {
   //   → 幀距均勻、不用累積器，避免先前累積器限速造成 CSS2D 地標標籤「游移」抖動的回歸；timer 只在實際渲染幀前進，dt 仍為真實經過時間。
   if (lastRaf) { const d = time - lastRaf; if (d > 4 && d < 100) nativeHz += (1000 / d - nativeHz) * 0.1; } // 平滑推估顯示器原生更新率
   lastRaf = time;
-  const _busy = battle.active || finaleActive || egg.active || fishing.active || archFade.on; // 戰鬥/終局/彩蛋/釣魚/轉場一律 60fps
+  const _busy = battle.active || finaleActive || egg.active || fishing.active; // 戰鬥/終局/彩蛋/釣魚一律 60fps
   const _active = _busy || keys.size > 0 || joyX !== 0 || joyZ !== 0 || hasTarget || performance.now() < activeUntil; // 移動中/操作後 0.6s 內＝互動
   const _stride = Math.max(1, Math.round(nativeHz / (_active ? 60 : 30)));
   if (frameTick++ % _stride !== 0) return;  // 跳過此 native tick（不模擬、不渲染）
@@ -2976,7 +2956,7 @@ function animate(time) {
   if (keys.has('KeyA') || keys.has('ArrowLeft')) kx -= 1;
   kx += joyX; kz += joyZ;   // 虛擬搖桿
   const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
-  if (finaleActive || archFade.on) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡／檔案室轉場時凍結玩家
+  if (finaleActive) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡時凍結玩家
 
   moveDir.set(0, 0, 0);
   if (kx || kz) { hasTarget = false; moveDir.addScaledVector(fwd, kz).addScaledVector(right, kx); }
@@ -3040,21 +3020,10 @@ function animate(time) {
   }
   if (airborne) { legL.rotation.x = -0.6; legR.rotation.x = -0.9; armL.rotation.x = -1.1; armR.rotation.x = -1.1; } // 滯空收腿擺手
 
-  // 檔案室：淡入淡出轉場 + 走進門/走到出口的觸發
-  if (archFade.on) {
-    archFade.t += dt; const half = archFade.dur / 2;
-    archFadeEl.style.opacity = (archFade.t < half ? archFade.t / half : Math.max(0, 1 - (archFade.t - half) / half)).toFixed(3);
-    if (archFade.t >= half && !archFade.mid) { archFade.mid = true; archFade.go(); }
-    if (archFade.t >= archFade.dur) { archFade.on = false; archFadeEl.style.opacity = '0'; }
-  } else if (!archiveActive) {
-    if (Math.hypot(hero.position.x - ARCHIVE.enter.x, hero.position.z - ARCHIVE.enter.z) < 1.7) { if (archEnterArmed) { archEnterArmed = false; enterArchive(); } } else archEnterArmed = true;
-  } else {
-    // 檔案室內：夾住左右與後方（不會誤穿牆離開），只有從前方門口往外走(+z)才離開——避免左右看文件時不小心碰邊界就出去
-    hero.position.x = Math.max(-10, Math.min(10, hero.position.x));
-    if (hero.position.z < -8) hero.position.z = -8;     // 後方停在文件前
-    if (hero.position.z > 9) { if (archExitArmed) { archExitArmed = false; exitArchive(); } } else archExitArmed = true;
-  }
-  if (archiveActive) hero.position.y = ARCHIVE_FLOOR + jumpOff; // 室內地板高度（覆蓋地形跟隨）
+  // 檔案室：走近入口 → 開藝廊面板（一次性；走離入口才重新 arm，避免站在門口一直重開）
+  if (Math.hypot(hero.position.x - ARCHIVE.enter.x, hero.position.z - ARCHIVE.enter.z) < 1.7) {
+    if (archEnterArmed) { archEnterArmed = false; openArchivePanel(); }
+  } else archEnterArmed = true;
 
   // 對話泡：踩水反應 + 漫步自言自語
   const nearNPC = heroNearNPC();   // 靠近可對話 NPC 時，主角先不自言自語（並立即收起正在顯示的台詞）
@@ -3068,13 +3037,8 @@ function animate(time) {
   }
   wasInWater = inWater;
 
-  // 鏡頭：檔案室內＝第一人稱（鏡頭在頭部、滑動視角看四周）；室外＝第三人稱（避免穿地）
-  if (archiveActive) {
-    const ey = hero.position.y + 1.8;
-    camera.position.set(hero.position.x, ey, hero.position.z);
-    lookAt.set(hero.position.x - Math.sin(yaw) * Math.cos(pitch), ey - Math.sin(pitch), hero.position.z - Math.cos(yaw) * Math.cos(pitch));
-    camera.lookAt(lookAt);
-  } else {
+  // 鏡頭：第三人稱（避免穿地）——檔案室已改原地面板，不再有第一人稱模式
+  {
     camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, hero.position.y + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
     const camGround = terrainHeight(camPos.x, camPos.z) + 3;
     if (camPos.y < camGround) camPos.y = camGround;

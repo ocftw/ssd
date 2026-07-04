@@ -139,6 +139,31 @@
     #questlog .panelx, #achpanel .panelx { position:absolute; right:5px; top:5px; z-index:1; border:0; background:transparent;
       cursor:pointer; font-size:15px; line-height:1; color:#9aa1b0; padding:8px; border-radius:8px; -webkit-tap-highlight-color:transparent; }
     #questlog .panelx:hover, #achpanel .panelx:hover { color:#5b6472; background:rgba(29,36,51,.06); }
+    /* 檔案室藝廊面板（原地開啟，取代第一人稱走入房間）*/
+    #archivemodal { position:fixed; inset:0; z-index:30; display:none; }
+    #archivemodal.show { display:block; }
+    #archivemodal .am-bd { position:absolute; inset:0; background:rgba(18,22,32,.55); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
+    #archivemodal .am-box { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(92vw,860px); max-height:88dvh; overflow-y:auto;
+      background:rgba(251,247,239,.98); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.42); padding:20px; }
+    #archivemodal .am-x { position:absolute; right:10px; top:10px; border:0; background:transparent; cursor:pointer; font-size:18px; color:#9aa1b0; line-height:1; padding:8px; border-radius:8px; -webkit-tap-highlight-color:transparent; }
+    #archivemodal .am-x:hover { color:#5b6472; background:rgba(29,36,51,.06); }
+    #archivemodal .am-title { margin:0 2px 2px; font-size:20px; }
+    #archivemodal .am-sub { margin:0 2px 16px; font-size:13px; color:#6b7488; line-height:1.5; padding-right:26px; }
+    #archivemodal .am-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    #archivemodal .am-card { display:flex; flex-direction:column; background:#fff; border:1px solid rgba(29,36,51,.08); border-radius:14px; overflow:hidden;
+      text-decoration:none; color:var(--ink); box-shadow:0 3px 10px rgba(0,0,0,.06); transition:transform .12s ease, box-shadow .12s ease; }
+    #archivemodal .am-card:hover { transform:translateY(-3px); box-shadow:0 12px 26px rgba(0,0,0,.15); }
+    #archivemodal .am-card img { width:100%; aspect-ratio:1/1; object-fit:cover; background:#eceae4; display:block; }
+    #archivemodal .am-tx { padding:11px 12px 13px; display:flex; flex-direction:column; gap:5px; flex:1; }
+    #archivemodal .am-tx b { font-size:14px; line-height:1.3; }
+    #archivemodal .am-tx .am-d { font-size:11.5px; color:#6b7488; line-height:1.55; flex:1; }
+    #archivemodal .am-tx .am-go { margin-top:4px; font-size:12px; font-weight:700; color:var(--brand); }
+    @media (max-width:560px) {
+      #archivemodal .am-box { width:94vw; padding:16px; border-radius:16px; }
+      #archivemodal .am-grid { grid-template-columns:1fr; gap:10px; }
+      #archivemodal .am-card { flex-direction:row; align-items:stretch; }
+      #archivemodal .am-card img { width:92px; height:auto; aspect-ratio:1/1; flex:none; }
+    }
     .ach { display:flex; align-items:flex-start; gap:9px; padding:8px; border-radius:10px; }
     .ach .ai { width:26px; text-align:center; font-size:18px; flex:none; }
     .ach .at { flex:1; font-size:13px; font-weight:700; line-height:1.25; }
@@ -496,6 +521,7 @@
   </div>
   <div id="questlog"><button class="panelx" type="button" aria-label="關閉 / Close">✕</button><div class="hd" data-i18n="questHd">遺跡課程</div><div class="list"></div><button id="resetbtn" data-i18n="resetBtn">🔄 重置進度</button></div>
   <div id="achpanel"><button class="panelx" type="button" aria-label="關閉 / Close">✕</button><div class="hd" data-i18n="achHd">成就徽章</div><div class="alist"></div><button id="sharebtn2" data-i18n="shareBtn">📸 分享成果</button></div>
+  <div id="archivemodal"><div class="am-bd"></div><div class="am-box"><button class="am-x" type="button" aria-label="關閉 / Close">✕</button><h2 class="am-title">📚 檔案室</h2><p class="am-sub"></p><div class="am-grid"></div></div></div>
 
   <div id="joystick"><div class="knob"></div></div>
 
@@ -611,6 +637,6 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=11eee50a"></script>
+  <script type="module" src="./main.js?v=66aa3470"></script>
 </body>
 </html>
