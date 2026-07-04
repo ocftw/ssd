@@ -561,6 +561,188 @@ function nearAnyRuin(x, z, d) {
   return false;
 }
 
+// ── 夜晚美感層 ───────────────────────────────────────────────────
+// 針對「主題遺跡尚未全清＝夜晚」時，替夜色補上：月亮＋月光倒影＋流星＋各遺跡主題夜輝光＋遺跡星座＋生態夜光。
+// 全部加法混合、opacity∝(1-vibrancy)：夜晚淡入、白天（全清/探索）淡出；純裝飾、不參與碰撞與玩法。
+// 天空類（流星/星座）僅桌機（Q.richSky）；月亮與地面/水面光點兩檔位皆有（皆極輕量）。
+const nightBeauty = (() => {
+  const SKY = Q.richSky;
+  const radialTex = (stops) => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    for (const s of stops) g.addColorStop(s[0], s[1]);
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  const softTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.45, 'rgba(255,255,255,0.35)'], [1, 'rgba(255,255,255,0)']]);
+  const moonTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.62, 'rgba(255,253,247,0.97)'], [0.8, 'rgba(246,248,255,0.42)'], [0.93, 'rgba(238,243,255,0.1)'], [1, 'rgba(238,243,255,0)']]);
+  const haloTex = radialTex([[0, 'rgba(206,222,255,0.5)'], [0.4, 'rgba(198,214,255,0.2)'], [1, 'rgba(198,214,255,0)']]);
+
+  // 跟隨鏡頭的天空群（永遠以鏡頭為中心，與星空同法 → 不因角色遠離原點而位移）
+  const skyGroup = new THREE.Group(); scene.add(skyGroup);
+
+  // 月亮：柔光月盤＋外圈光暈（固定方位仰角、隨鏡頭平移不隨視角轉；配色偏暖白，經夜晚冷藍分級後回中性月色）
+  const moonAz = 0.72, moonElev = 0.3, MOON_R = 520;   // 仰角壓低到可見天帶（第三人稱俯角有限，太高會被切出畫面）
+  const moonDir = new THREE.Vector3(Math.sin(moonAz) * Math.cos(moonElev), Math.sin(moonElev), Math.cos(moonAz) * Math.cos(moonElev));
+  const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: moonTex, color: 0xf4f1e6, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  moon.scale.setScalar(48); moon.position.copy(moonDir).multiplyScalar(MOON_R); skyGroup.add(moon);
+  const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color: 0xbcd0ff, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  moonHalo.scale.setScalar(150); moonHalo.position.copy(moon.position); skyGroup.add(moonHalo);
+
+  // 湖點（沿用魚影湖區；地形確定性 → 每次載入相同）
+  const lakeSpots = [];
+  for (const f of fishSchools) if (!lakeSpots.some((s) => Math.abs(s.x - f.cx) < 0.1 && Math.abs(s.z - f.cz) < 0.1)) lakeSpots.push({ x: f.cx, z: f.cz });
+
+  // 月光倒影：各湖面一抹柔光池（長軸朝月亮水平方位），世界固定、隨波輕搖
+  const reflections = [];
+  for (const s of lakeSpots) {
+    const rgp = new THREE.Group(); rgp.position.set(s.x, WORLD.water + 0.06, s.z); rgp.rotation.y = Math.atan2(moonDir.x, moonDir.z); scene.add(rgp);
+    const m = new THREE.MeshBasicMaterial({ map: softTex, color: 0xdbe8ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(9, 24), m); pl.rotation.x = -Math.PI / 2; rgp.add(pl);   // 沿月亮方位拉長成一道月光路徑
+    reflections.push({ m, ph: rand(0, TAU) });
+  }
+
+  // 生態夜光——湖面生物螢光（青綠柔光點，緩慢明滅＋隨水面漂移）
+  const lakeGlow = [];
+  for (const s of lakeSpots) for (let i = 0; i < 6; i++) {
+    const m = new THREE.SpriteMaterial({ map: softTex, color: 0x46f0c6, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+    const sp = new THREE.Sprite(m); sp.scale.setScalar(rand(0.5, 1.1)); scene.add(sp);
+    lakeGlow.push({ sp, m, x: s.x + rand(-6, 6), z: s.z + rand(-6, 6), ph: rand(0, TAU), tw: rand(0.5, 1.1), drift: rand(0.1, 0.25) });
+  }
+
+  // 遺跡主題夜輝光：每座「尚未淨化」遺跡在夜裡透出一圈主題色柔光池＋同色浮塵（預告淨化後的顏色）；淨化後淡出交棒給螢火蟲
+  const heralds = ruinAt.map((r) => {
+    const col = new THREE.Color(r.color);
+    const poolMat = new THREE.MeshBasicMaterial({ map: softTex, color: col, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(13, 13), poolMat); pool.rotation.x = -Math.PI / 2; pool.position.set(r.x, r.y + 0.2, r.z); scene.add(pool);
+    const motes = [];
+    for (let i = 0; i < 5; i++) {
+      const m = new THREE.SpriteMaterial({ map: softTex, color: col, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+      const sp = new THREE.Sprite(m); sp.scale.setScalar(rand(0.4, 0.8)); scene.add(sp);
+      motes.push({ sp, m, ph: rand(0, TAU), ang: rand(0, TAU), rad: rand(2.2, 4.2), spd: rand(0.15, 0.4) * (Math.random() < 0.5 ? 1 : -1), h: rand(1.0, 3.0), bob: rand(0.5, 1.1) });
+    }
+    return { r, poolMat, motes, off: 0 };  // seed 0; 動畫迴圈每幀以 isDone 收斂（isDone 於此 IIFE 之後才宣告）
+  });
+
+  // 生態夜光——不繫遺跡的環境螢火蟲（湖畔與村外，隨處微光；與繞維護者的那批分離）
+  const ambient = [];
+  {
+    const anchors = lakeSpots.slice();
+    for (let i = 0; i < 6; i++) { const a = rand(0, TAU), rr = rand(WORLD.villageR - 6, WORLD.villageR + 24); anchors.push({ x: Math.cos(a) * rr, z: Math.sin(a) * rr }); }
+    for (let i = 0; i < 12; i++) {
+      const an = anchors[i % anchors.length];
+      const m = new THREE.SpriteMaterial({ map: softTex, color: 0xfff0a0, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+      const sp = new THREE.Sprite(m); sp.scale.setScalar(rand(0.4, 0.8)); scene.add(sp);
+      ambient.push({ sp, m, cx: an.x + rand(-8, 8), cz: an.z + rand(-8, 8), ph: rand(0, TAU),
+        sx: rand(0.1, 0.28), sz: rand(0.1, 0.28), ax: rand(2, 5), az: rand(2, 5), h: rand(0.6, 2.6), bob: rand(0.4, 1.0), tw: rand(1.4, 2.8) });
+    }
+  }
+
+  // 遺跡星座（桌機）：天上 5 個小星座各對應一座遺跡，淨化即以主題色亮起連線 → 夜空＝進度地圖
+  const constellations = [];
+  if (SKY) {
+    const SHAPES = {
+      personal: { pts: [[-0.9, -0.7], [0.9, -0.7], [0.9, 0.3], [0, 1.0], [-0.9, 0.3]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0]] },       // 家屋
+      org: { pts: [[-0.5, -1.0], [0.5, -1.0], [0.5, 0.1], [0.5, 1.0], [-0.5, 1.0], [-0.5, 0.1]], edges: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]] }, // 高樓
+      common: { pts: [[0, 1.0], [-0.95, -0.7], [0.95, -0.7], [0, -0.15]], edges: [[0, 1], [1, 2], [2, 0]] },                                    // 警示三角
+      guide: { pts: [[0, 1.0], [0.72, 0], [0, -1.0], [-0.72, 0]], edges: [[0, 1], [1, 2], [2, 3], [3, 0]] },                                    // 方尖菱形
+      tools: { pts: [[-0.9, 0.9], [0.9, -0.9], [0.9, 0.9], [-0.9, -0.9], [0, 0]], edges: [[0, 4], [4, 1], [2, 4], [4, 3]] },                    // 交叉工具
+    };
+    const R = 500, SP = 42, up0 = new THREE.Vector3(0, 1, 0);
+    ruinAt.forEach((r, i) => {
+      const shp = SHAPES[r.id] || SHAPES.common;
+      const az = (i / ruinAt.length) * TAU + 0.35, elev = 0.32 + (i % 2) * 0.14;   // 環繞地平線、高低錯落於可見天帶
+      const dir = new THREE.Vector3(Math.sin(az) * Math.cos(elev), Math.sin(elev), Math.cos(az) * Math.cos(elev));
+      const right = new THREE.Vector3().crossVectors(up0, dir).normalize();
+      const up = new THREE.Vector3().crossVectors(dir, right).normalize();
+      const world = shp.pts.map(([px, py]) => new THREE.Vector3().copy(dir).multiplyScalar(R).addScaledVector(right, px * SP).addScaledVector(up, py * SP));
+      const col = new THREE.Color(r.color);
+      const pmat = new THREE.PointsMaterial({ map: softTex, color: col, size: 5.5, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+      const pts = new THREE.Points(new THREE.BufferGeometry().setFromPoints(world), pmat); skyGroup.add(pts);
+      const lp = []; for (const [a, b] of shp.edges) { lp.push(world[a], world[b]); }
+      const lmat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+      skyGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp), lmat));
+      constellations.push({ id: r.id, pmat, lmat, lit: 0 });  // seed 0; 動畫迴圈每幀以 isDone 收斂（isDone 於此 IIFE 之後才宣告）
+    });
+  }
+
+  // 流星（桌機）：偶發、稀疏、緩淡；單一 sprite 重複利用
+  let meteor = null;
+  if (SKY) {
+    const meteorTex = (() => {
+      const c = document.createElement('canvas'); c.width = 128; c.height = 16; const x = c.getContext('2d');
+      const g = x.createLinearGradient(0, 0, 128, 0);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.8, 'rgba(214,228,255,0.55)'); g.addColorStop(0.96, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(0, 6, 128, 4);
+      const rg = x.createRadialGradient(120, 8, 0, 120, 8, 7); rg.addColorStop(0, 'rgba(255,255,255,1)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = rg; x.fillRect(113, 1, 14, 14);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })();
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: meteorTex, color: 0xdfe8ff, transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+    sp.center.set(0.9, 0.5); sp.scale.set(38, 4.6, 1); skyGroup.add(sp);
+    meteor = { sp, m: sp.material, timer: rand(4, 12), prog: 1, az0: 0, elev0: 0, daz: 0, delev: 0, dur: 1, rot: 0, R: 480 };
+  }
+
+  const _v = new THREE.Vector3();
+  const dirTo = (az, elev, R) => _v.set(Math.sin(az) * Math.cos(elev), Math.sin(elev), Math.cos(az) * Math.cos(elev)).multiplyScalar(R);
+  let synced = false; // 首幀把 off/lit 直接吸附到 isDone 真值（存檔已完成的遺跡不會在載入時閃一下 herald）
+
+  return {
+    // night：夜晚強度 0..1（＝archiveActive?0:(1-vibrancy)）→ 全部元素統一淡入淡出
+    update(t, dt, night) {
+      skyGroup.position.copy(camera.position);
+      moon.material.opacity = night * 0.92;
+      moonHalo.material.opacity = night * (0.4 + 0.06 * Math.sin(t * 0.7));
+      for (const rf of reflections) rf.m.opacity = night * (0.26 + 0.09 * Math.sin(t * 0.8 + rf.ph));
+      for (const lg of lakeGlow) {
+        lg.sp.position.set(lg.x + Math.sin(t * lg.drift + lg.ph) * 1.5, WORLD.water + 0.12 + Math.sin(t * 0.6 + lg.ph) * 0.05, lg.z + Math.cos(t * lg.drift * 0.8 + lg.ph) * 1.5);
+        lg.m.opacity = night * (0.12 + 0.5 * (0.5 + 0.5 * Math.sin(t * lg.tw + lg.ph)));
+      }
+      for (const h of heralds) {
+        const tgt = isDone(h.r.id) ? 1 : 0;
+        h.off = synced ? h.off + (tgt - h.off) * Math.min(1, 1.6 * dt) : tgt;   // 淨化後淡出（首幀吸附）
+        const k = night * (1 - h.off);
+        h.poolMat.opacity = k * (0.15 + 0.04 * Math.sin(t * 0.9 + h.r.x));
+        for (const mo of h.motes) {
+          mo.ang += mo.spd * dt;
+          mo.sp.position.set(h.r.x + Math.cos(mo.ang) * mo.rad, h.r.y + mo.h + Math.sin(t * mo.bob + mo.ph) * 0.5, h.r.z + Math.sin(mo.ang) * mo.rad);
+          mo.m.opacity = k * (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(t * 2.2 + mo.ph)));
+        }
+      }
+      for (const f of ambient) {
+        f.sp.position.set(f.cx + Math.sin(t * f.sx + f.ph) * f.ax, f.h + Math.sin(t * f.bob + f.ph) * 0.5, f.cz + Math.cos(t * f.sz + f.ph) * f.az);
+        f.m.opacity = night * 0.7 * (0.16 + 0.84 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph * 2.1)));
+      }
+      for (const c of constellations) {
+        const ltgt = isDone(c.id) ? 1 : 0;
+        c.lit = synced ? c.lit + (ltgt - c.lit) * Math.min(1, 1.2 * dt) : ltgt;  // 淨化後連線亮起（首幀吸附）
+        const tw = 0.5 + 0.5 * Math.sin(t * 1.3 + c.lit * 3);
+        c.pmat.opacity = night * (0.12 + c.lit * (0.55 + 0.3 * tw));
+        c.lmat.opacity = night * c.lit * (0.32 + 0.12 * tw);
+      }
+      if (meteor) {
+        const mt = meteor;
+        if (mt.prog >= 1) {
+          mt.timer -= dt;
+          if (mt.timer <= 0 && night > 0.35) {                                  // 夠暗才劃過
+            mt.prog = 0; mt.az0 = rand(-1.1, 1.1); mt.elev0 = rand(0.72, 1.12);
+            mt.daz = rand(0.35, 0.6) * (Math.random() < 0.5 ? 1 : -1); mt.delev = rand(0.34, 0.52);
+            mt.dur = rand(0.9, 1.4); mt.rot = -rand(0.45, 0.95) * Math.sign(mt.daz || 1);
+            mt.timer = rand(7, 18);
+          } else { mt.m.opacity = 0; }
+        }
+        if (mt.prog < 1) {
+          mt.prog += dt / mt.dur;
+          const p = Math.min(1, mt.prog);
+          mt.sp.position.copy(dirTo(mt.az0 + mt.daz * p, mt.elev0 - mt.delev * p, mt.R));
+          mt.m.rotation = mt.rot;
+          mt.m.opacity = night * Math.sin(p * Math.PI) * 0.95;
+        }
+      }
+      synced = true;
+    },
+  };
+})();
+
 // ── 植被（InstancedMesh）─────────────────────────────────────────
 const dummy = new THREE.Object3D();
 function instance(geo, material, placements) {
@@ -758,25 +940,37 @@ const cGrassBlade = new THREE.Color().copy(cGrass).lerp(cGrass2, 0.5);          
 const greenGeo  = crossBlade(6, { c0: 0x356b1a, c1: 0x9ad038, wStalk: 0.05, bow: 0.2, taper: 0.95, gnd: cGrassBlade });                  // 薩爾達風高草：細、收尖、彎拱；根深綠 → 尖鮮黃綠（根部漸融地面綠）
 const susukiGeo = crossBlade(6, { c0: 0x6f7d3a, c1: 0xbcab63, c2: 0xe9e3cd, wStalk: 0.03, wHead: 0.075, headFrom: 0.6, bow: 0.34, taper: 0.5, gnd: cGrassBlade }); // 芒草：金綠桿→金黃→銀白穗頭、前傾（根部漸融地面綠）
 // 風飄＋撥草（純 GPU vertex shader，薩爾達風草原）：① 風 — 整片往固定風向傾 + 大尺度行進陣風（波一陣陣掃過整片）+ 每葉細抖；h*h 遮罩（根固定、越往尖擺越多）、×桿高（高草擺更大）；
-//   ② 撥草 — 玩家走近時葉身往「遠離玩家」方向被撥開；只側推、不壓低 → 不會出現走過時一圈被壓平消失的刻意感；
+//   ② 撥草 — 貼身距離場（非單一圓形力場）：身體膠囊（尾點彈性跟隨 → 移動時沿路徑拉長）＋左右腳兩個小圓（隨步伐前後擺）疊加，
+//      每叢半徑抖動破掉正圓輪廓、跳離地面時草鬆回；只側推、不壓低 → 撥開形狀貼著角色身形與腳步，不是一圈刻意的圓；
 //   光照 — fragment 法線往天光混合 → 柔和整片受光、無暗背面。
-const GRASS_WIND = 0.85, GRASS_PARTR = 3.0, GRASS_PARTPUSH = 0.7, GRASS_PARTPRESS = 0.0; // ←可調：風幅／撥開半徑／推開量／（壓低量=0：只側推不壓低）
+const GRASS_WIND = 0.85, GRASS_PARTR = 1.7, GRASS_PARTPUSH = 0.8, GRASS_PARTPRESS = 0.0, GRASS_FOOTR = 1.05; // ←可調：風幅／身體撥開半徑／推開量／壓低量（0=只側推）／腳邊撥開半徑
 const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -100, 1e4) }, // uPlayer 初始放遠處＝開場無撥動
+  uTrail: { value: new THREE.Vector2(0, 1e4) },                    // 身體膠囊尾點（CPU 端彈性跟隨主角 → 移動時膠囊沿路徑拉長成短尾）
+  uFeet: { value: new THREE.Vector4(0, 1e4, 0, 1e4) },             // 左右腳世界座標 (Lx,Lz,Rx,Rz)，隨步伐前後擺
   uSunDir: { value: new THREE.Vector3(48, 72, 32).normalize() },   // 指向主光的世界方向（sun 跟隨 hero、偏移固定 → 算一次即可）
   uSunCol: { value: new THREE.Color(0xffe6a8).multiplyScalar(0.85) } }; // 透光色×強度（暖金，乘上綠色 diffuse → 暖黃綠逆光＝白天陽光穿過葉；可調）
+const grassTrail = new THREE.Vector3(0, 0, 1e4);                   // 撥草膠囊尾點（世界座標，只用 xz；初始放遠處＝開場無撥動）
 function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {               // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度（兩種草分開調）
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
+    sh.uniforms.uTrail = tuftFX.uTrail; sh.uniforms.uFeet = tuftFX.uFeet;                 // 貼身撥草用：身體膠囊尾點＋雙腳位置
     sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol;           // 透光/sheen 用：主光方向＋透光色
-    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS };
+    sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS }; sh.uniforms.uFootR = { value: GRASS_FOOTR };
     const partGLSL = part ? `
-    vec2 toBlade = gBase.xz - uPlayer.xz;
-    float pd = length(toBlade);
-    float push = smoothstep(uPartR, 0.3, pd);                                            // 草根離玩家越近 → 撥得越開
-    vec2 pdir = pd > 1e-3 ? toBlade / pd : vec2(0.0, 1.0);
-    gWorld.xz += pdir * push * uPartPush * arc * bladeH;` : '';                          // 只側推（不壓低）→ 葉身往遠離玩家方向撥開、走過不留消失圈
-    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress;\nuniform vec3 uPlayer;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
+    float rj = 0.78 + 0.44 * fract(sin(gBase.x * 12.9898 + gBase.z * 78.233) * 3758.5453); // 每叢半徑抖動 ±22% → 撥開輪廓毛邊、不是圓規畫的正圓
+    vec2 segAB = uPlayer.xz - uTrail;                                                     // 身體膠囊：uTrail(尾)→uPlayer(頭)；站定時兩點重合＝縮回貼身小圓
+    float segT = clamp(dot(gBase.xz - uTrail, segAB) / max(dot(segAB, segAB), 1e-4), 0.0, 1.0);
+    vec2 dB = gBase.xz - (uTrail + segAB * segT); float lB = max(length(dB), 1e-3);       // 草根到膠囊最近點
+    vec2 dL = gBase.xz - uFeet.xy; float lL = max(length(dL), 1e-3);
+    vec2 dR = gBase.xz - uFeet.zw; float lR = max(length(dR), 1e-3);
+    vec2 fSum = dB / lB * smoothstep(uPartR * rj, 0.25, lB)                               // 身體膠囊場 + 兩腳小圓場，取向量和 → 各 lobe 平滑相融、方向自然過渡
+              + (dL / lL * smoothstep(uFootR * rj, 0.1, lL) + dR / lR * smoothstep(uFootR * rj, 0.1, lR)) * 0.8;
+    float push = min(length(fSum), 1.2) * (1.0 - smoothstep(0.9, 2.2, uPlayer.y - gBase.y)); // 場疊加處小幅過推；跳離地面 → 草鬆回
+    vec2 pDisp = fSum / max(length(fSum), 1e-4) * push * uPartPush * arc * bladeH;
+    gWorld.xz += pDisp;
+    gWorld.y  -= dot(pDisp, pDisp) * 0.5 / max(bladeH, 0.001);` : '';                     // 側撥也弧長守恆（同風飄）→ 葉是「彎開」不是被拉長；只側推不壓低、走過不留消失圈
+    sh.vertexShader = 'uniform float uTime, uWind, uPartR, uPartPush, uPartPress, uFootR;\nuniform vec3 uPlayer;\nuniform vec2 uTrail;\nuniform vec4 uFeet;\nattribute float aBlade;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\n' +
       sh.vertexShader.replace('#include <project_vertex>', `
     vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);                   // 天光方向（view space）→ fragment 柔化法線用
     vec4 gWorld = modelMatrix * instanceMatrix * vec4(transformed, 1.0);                 // 此頂點的世界座標
@@ -1548,14 +1742,9 @@ ARCHIVE.face = Math.atan2(ARCHIVE.pos.z, -ARCHIVE.pos.x);
 ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
 ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
 ARCHIVE.back = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 5);
-const ARCHIVE_FLOOR = ARCHIVE.roomY + 0.2;
-const ARCHIVE_FOV = 86;   // 室內用更廣的視角：手機直式畫面水平 FOV 很窄，廣角才能一進門就看到三份文件並排
-let archiveActive = false, archEnterArmed = true, archExitArmed = true;
-const archFadeEl = document.getElementById('fade');
-const archFade = { on: false, t: 0, dur: 0.7, mid: false, go: null };
-const startArchFade = (go) => { archFade.on = true; archFade.t = 0; archFade.mid = false; archFade.go = go; };
-function enterArchive() { startArchFade(() => { hero.position.set(0, ARCHIVE_FLOOR, 6); hero.rotation.y = Math.PI; archiveActive = true; archiveRoom.visible = true; archExitArmed = false; hero.visible = false; yaw = 0; pitch = 0.12; camera.fov = ARCHIVE_FOV; camera.updateProjectionMatrix(); if (panelId) hidePanel(); }); } // 從門口(+z)往內看三份文件
-function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x, 0, ARCHIVE.back.z); hero.rotation.y = Math.PI / 2; archiveActive = false; archiveRoom.visible = false; archEnterArmed = false; hero.visible = true; yaw = Math.PI; pitch = 0.6; camera.fov = 52; camera.updateProjectionMatrix(); if (panelId) hidePanel(); camera.position.set(ARCHIVE.back.x + 6, 4, ARCHIVE.back.z + 4); }); }
+// 檔案室改為「原地藝廊面板」（見 openArchivePanel）：不再傳送進第一人稱房間 → 操作與主世界一致、手機也好用。
+const archiveActive = false;   // 恆為 false：既有各處 `archiveActive ? …` 分支一律走室外路徑（保留變數以免大改各處）
+let archEnterArmed = true;      // 走近入口的一次性觸發旗標
 // 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
 {
   const g = new THREE.Group(); g.position.copy(ARCHIVE.pos); g.rotation.y = ARCHIVE.face; // 門面朝中央水晶
@@ -1573,37 +1762,22 @@ function exitArchive() { startArchFade(() => { hero.position.set(ARCHIVE.back.x,
   scene.add(g);
 }
 addBoxCol(ARCHIVE.pos.x, ARCHIVE.pos.z, 2.0, 2.9, ARCHIVE.face);   // 檔案室實體（門在 +x 側；入口 trigger 半徑 1.7 > 停止距離 → 仍能進入）
-// 隱藏室內房間（世界下方，平時 visible=false）
-const archiveRoom = new THREE.Group(); archiveRoom.position.set(0, ARCHIVE.roomY, 0); archiveRoom.visible = false; scene.add(archiveRoom);
-{
-  const g = archiveRoom, wallMat = applyStone(mat(0xffffff)), woodM = RUIN.wood;
-  const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  // 放大的展示廳：22(寬) × 20(深) × 5(高)。三份文件一字排開靠後牆，從前方門口(+z)進入即可一覽
-  add(new THREE.BoxGeometry(22, 0.4, 20), wallMat, 0, 0, 0);            // 地板
-  add(new THREE.BoxGeometry(22, 0.4, 20), wallMat, 0, 5, 0);            // 天花
-  add(new THREE.BoxGeometry(0.4, 5, 20), wallMat, -10.7, 2.5, 0);      // 左牆
-  add(new THREE.BoxGeometry(0.4, 5, 20), wallMat, 10.7, 2.5, 0);       // 右牆
-  add(new THREE.BoxGeometry(22, 5, 0.4), wallMat, 0, 2.5, -9.7);       // 後牆（文件靠這面）
-  add(new THREE.BoxGeometry(8.2, 5, 0.4), wallMat, -6.9, 2.5, 9.7);    // 前牆左段
-  add(new THREE.BoxGeometry(8.2, 5, 0.4), wallMat, 6.9, 2.5, 9.7);     // 前牆右段（中間留門）
-  add(new THREE.BoxGeometry(5.6, 1.2, 0.4), wallMat, 0, 4.4, 9.7);     // 前牆門楣
-  for (const bx of [-9.2, 9.2]) add(new THREE.BoxGeometry(2.4, 4, 0.7), woodM, bx, 2, -9.0); // 兩側書架（靠後牆）
-  // 兩盞吊燈把長廳照勻（前、後各一）
-  for (const lz of [3, -7]) {
-    const lamp = new THREE.PointLight(0xffe6b8, 55, 60, 1.5); lamp.position.set(0, 4.2, lz); g.add(lamp);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0xfff0cf })); bulb.position.set(0, 4.3, lz); g.add(bulb);
-  }
-  ARCHIVE_DOCS.forEach((d, i) => {
-    const dx = (i - 1) * 3.5;                                                // 三份一字排開（間距 3.5），靠後牆、正面朝門口(+z)
-    add(new THREE.BoxGeometry(1.9, 1.0, 0.7), woodM, dx, 0.5, -8.7);         // 展示基座
-    const cw = 1.6, tilt = -0.12;                                           // 封面（正方形、略後仰、正面朝玩家 +z）
-    const frame = new THREE.Mesh(new THREE.PlaneGeometry(cw + 0.16, cw + 0.16), new THREE.MeshStandardMaterial({ color: 0x2b2620, roughness: 0.6 }));
-    frame.position.set(dx, 1.95, -8.56); frame.rotation.x = tilt; g.add(frame);
-    const cover = new THREE.Mesh(new THREE.PlaneGeometry(cw, cw), new THREE.MeshBasicMaterial({ map: tex(d.cover, 1, 1, true) }));
-    cover.position.set(dx, 1.95, -8.55); cover.rotation.x = tilt; g.add(cover);
-    const lab = makeLabel(`${d.emoji} ${d.title}`); lab.o.position.set(dx, 3.15, -8.56); g.add(lab.o);
-    POIS.push({ data: d, isRuin: false, area: 'archive', pos: new THREE.Vector3(dx, ARCHIVE.roomY, -6.5), el: lab.el, openDist: 3.6 });
-  });
+// 檔案室藝廊面板：走近入口 → 原地開一個置中面板，三份文件做成展示卡，點卡即在新分頁開 PDF。
+// 取代舊的「傳送進世界下方第一人稱房間走路看文件」——消除轉場與第一人稱轉向操作問題。
+const archModalEl = document.getElementById('archivemodal');
+function openArchivePanel() {
+  archModalEl.querySelector('.am-title').textContent = UI.labelArchive || '📚';
+  archModalEl.querySelector('.am-sub').textContent = UI.archiveIntro || '';
+  archModalEl.querySelector('.am-grid').innerHTML = ARCHIVE_DOCS.map((d) =>
+    `<a class="am-card" href="${d.url}" target="_blank" rel="noopener"><img src="${d.cover}" alt="" loading="lazy"><div class="am-tx"><b>${d.emoji || '📄'} ${d.title || ''}</b><span class="am-d">${d.desc || ''}</span><span class="am-go">${d.goText || 'PDF →'}</span></div></a>`).join('');
+  archModalEl.classList.add('show');
+  ARCHIVE_DOCS.forEach((d) => met.docs.add(d.id)); checkAchievements();  // 開啟＝看過三份文件（成就：檔案管理員）
+}
+function closeArchivePanel() { archModalEl.classList.remove('show'); } // 走離入口才會重新 arm，不會立即重開
+if (archModalEl) {
+  archModalEl.querySelector('.am-x').addEventListener('click', closeArchivePanel);
+  archModalEl.querySelector('.am-bd').addEventListener('click', closeArchivePanel);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && archModalEl.classList.contains('show')) closeArchivePanel(); });
 }
 
 // ── 石化村民（遺跡維護者）：大水晶啟動後解除石化、靠近給提醒 ──────
@@ -1937,6 +2111,83 @@ const guideMark = (() => {
   g.visible = false; scene.add(g);
   return { group: g, gem };
 })();
+
+// ── 光影引路：只在「快要抵達建議下一站」時，才把玩家牽進遺跡（承 #8 夜色語彙）──
+// 修正 PR#10 三個手感：① 螢火改世界座標定錨（沿「遺跡→村莊」走廊由遠而近流向遺跡，不再黏著鏡頭平移＝像真螢火）
+//   ② 加「近遺跡才現身」的距離閘＋「人在村莊內一律全熄」，村莊與遠處都乾淨（不再持續出現、不再一出村就亂）
+//   ③ 月光步道自村莊中心改為貼著遺跡的一小段短引道。三層仍繫 nextRecommendedRuinId()、取主題色、夜晚淡入。
+// 距離閘（世界單位；1 步≈4.4u，遺跡距村心 102–162、村莊半徑 58）：距遺跡 >FAR 全熄、≤NEAR 全亮、<HIDE 抵達淡出；
+// 另：玩家在村莊半徑內一律壓掉（村莊絕不顯示）。想更早/更晚現身就改 GUIDE_FAR / GUIDE_NEAR。
+const GUIDE_FAR = 72, GUIDE_NEAR = 46, GUIDE_HIDE = 10, GUIDE_HIDE2 = 20;
+const guideLight = (() => {
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+  const softTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.45, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  // ① 螢火引路（世界座標定錨：沿「遺跡→村莊」走廊由村莊側往遺跡漂流；不再以玩家為錨，故走動時像留在原地的真螢火）
+  const CORR = 30;                         // 引路走廊長度：自遺跡往村莊側延伸的世界距離
+  const wisps = [];
+  for (let i = 0; i < 10; i++) {
+    const m = new THREE.SpriteMaterial({ map: softTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+    const s = new THREE.Sprite(m); s.scale.setScalar(rand(1.0, 1.5)); s.visible = false; scene.add(s);
+    wisps.push({ s, m, off: i / 10, rate: rand(0.05, 0.09), amp: rand(1.0, 2.2), seed: rand(0, TAU) });
+  }
+  // ② 主題色信標光柱（穿霧可見：fog:false）
+  const beaconMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+  const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.6, 64, 14, 1, true), beaconMat);
+  beacon.visible = false; scene.add(beacon);
+  // ③ 月光步道（改貼著遺跡、沿同一走廊往村莊側鋪的一小段冷白引道）
+  const lane = [];
+  for (let i = 0; i < 5; i++) {
+    const m = new THREE.MeshBasicMaterial({ map: softTex, color: 0xdbe8ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: true });
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), m); pl.rotation.x = -Math.PI / 2; pl.visible = false; scene.add(pl);
+    lane.push({ pl, m });
+  }
+  return {
+    // recPos：建議遺跡（{x,y,z}，null＝無 → 全熄）；recColor：其主題色 hex
+    update(t, dt, night, recPos, recColor) {
+      const dist = recPos ? (Math.hypot(recPos.x - hero.position.x, recPos.z - hero.position.z) || 1) : 0;
+      const playerR = Math.hypot(hero.position.x, hero.position.z);
+      // 距離閘：近遺跡淡入(FAR→NEAR)、抵達淡出(HIDE2→HIDE)；人在村莊半徑內一律壓掉；再乘夜色
+      const near = clamp01((GUIDE_FAR - dist) / (GUIDE_FAR - GUIDE_NEAR));
+      const arrive = clamp01((dist - GUIDE_HIDE) / (GUIDE_HIDE2 - GUIDE_HIDE));
+      const outV = clamp01((playerR - (WORLD.villageR - 2)) / 10);
+      const gain = (recPos ? night : 0) * near * arrive * outV;
+      const on = gain > 0.001;
+      // 走廊方向：遺跡→村莊(原點)。玩家多半自村莊來，螢火沿此走廊「流向」遺跡（純世界座標＝不黏鏡頭）
+      let cvx = 0, cvz = -1;
+      if (recPos) { const dm = Math.hypot(recPos.x, recPos.z) || 1; cvx = -recPos.x / dm; cvz = -recPos.z / dm; }
+      const cpx = -cvz, cpz = cvx;          // 走廊的水平垂直向（螢火左右散開用）
+      // ① 螢火：沿走廊由村莊側往遺跡漂流、頭尾淡出（sin(cyc·π)）
+      for (const w of wisps) {
+        w.s.visible = on;
+        if (!on) { w.m.opacity = 0; continue; }
+        const cyc = (t * w.rate + w.off) % 1;         // 0→1 循環
+        const along = CORR * (1 - cyc);               // 村莊側(遠) → 遺跡(近)：流向遺跡
+        const lateral = Math.sin(cyc * TAU + w.seed) * w.amp;
+        const wx = recPos.x + cvx * along + cpx * lateral, wz = recPos.z + cvz * along + cpz * lateral;
+        w.s.position.set(wx, groundY(wx, wz) + 0.95 + Math.sin(t * 1.4 + w.seed) * 0.35, wz);
+        if (recColor) w.m.color.setHex(recColor);
+        w.m.opacity = gain * Math.sin(cyc * Math.PI) * 0.8;
+      }
+      // ② 信標光柱：立在建議遺跡上方、主題色脈動
+      beacon.visible = on;
+      if (on) { beacon.position.set(recPos.x, recPos.y + 33, recPos.z); beaconMat.color.setHex(recColor); beaconMat.opacity = gain * (0.11 + 0.04 * Math.sin(t * 1.4)); }
+      // ③ 月光步道：貼著遺跡、沿走廊往村莊側鋪的一小段冷白引道
+      for (let i = 0; i < lane.length; i++) {
+        const seg = lane[i]; seg.pl.visible = on;
+        if (!on) { seg.m.opacity = 0; continue; }
+        const along = 6 + i * 5.5, gx = recPos.x + cvx * along, gz = recPos.z + cvz * along;
+        seg.pl.position.set(gx, groundY(gx, gz) + 0.12, gz);
+        seg.m.opacity = gain * (0.24 + 0.06 * Math.sin(t * 0.9 + i)) * (1 - (i / lane.length) * 0.5);
+      }
+    },
+  };
+})();
 function showPanel(p) {
   const d = p.data; panelId = d.id;
   POIS.forEach((x) => x.el.classList.toggle('is-active', x === p));
@@ -2140,7 +2391,7 @@ function refreshQuestHint() {
   const dir = UI.compass[Math.round(ang / (Math.PI / 4)) % 8];
   questHintEl.innerHTML = `🧭 ${UI.questDir(dir, Math.max(1, Math.round(Math.hypot(dx, dz) / 1.5)))}`;
 }
-logBtn.addEventListener('click', () => { const showing = logEl.classList.toggle('show'); if (showing) { refreshQuestHint(); document.getElementById('achpanel')?.classList.remove('show'); } });
+logBtn.addEventListener('click', () => { const showing = logEl.classList.toggle('show'); if (showing) { logEl.style.top = panelTop(); refreshQuestHint(); document.getElementById('achpanel')?.classList.remove('show'); } });
 // 靜音開關
 const soundBtn = document.getElementById('soundbtn');
 const refreshSound = () => { soundBtn.textContent = SFX.isMuted() ? '🔇' : '🔊'; soundBtn.setAttribute('aria-pressed', String(SFX.isMuted())); };
@@ -2495,8 +2746,23 @@ function checkAchievements() {
     toast(UI.achToast(info.t), info.d); SFX.complete(); renderAchPanel();
   }
 }
-if (achBtnEl) achBtnEl.addEventListener('click', () => { const showing = achPanelEl.classList.toggle('show'); if (showing) { renderAchPanel(); logEl.classList.remove('show'); } });
+if (achBtnEl) achBtnEl.addEventListener('click', () => { const showing = achPanelEl.classList.toggle('show'); if (showing) { achPanelEl.style.top = panelTop(); renderAchPanel(); logEl.classList.remove('show'); } });
 renderAchPanel();
+
+// 面板關閉：右上角 ✕、點面板外、Esc 都可關。
+// 小螢幕（≤560px）右上按鈕群會換行往下堆，展開的任務/成就面板（同 z-index、DOM 在後）會蓋住「任務／成就」鈕，
+// 導致無法再點該鈕收起 → 面板改為「開在按鈕群下方」＋自帶關閉途徑，確保任何螢幕都關得掉。
+function panelTop() { const tr = document.getElementById('topright'); const b = tr ? tr.getBoundingClientRect().bottom : 56; return Math.max(60, Math.round(b) + 8) + 'px'; }
+function closePanels() { logEl.classList.remove('show'); if (achPanelEl) achPanelEl.classList.remove('show'); }
+document.querySelectorAll('#questlog .panelx, #achpanel .panelx').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); closePanels(); }));
+addEventListener('pointerdown', (e) => {
+  const openEl = logEl.classList.contains('show') ? logEl : (achPanelEl && achPanelEl.classList.contains('show')) ? achPanelEl : null;
+  if (!openEl) return;
+  const tr = document.getElementById('topright');
+  if (openEl.contains(e.target) || (tr && tr.contains(e.target))) return; // 面板內與右上按鈕群照常運作
+  closePanels(); e.preventDefault(); e.stopPropagation();   // 點面板外＝只收面板，不順帶觸發點地面走過去
+}, true);
+addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanels(); });
 
 // ── 分享成果卡片：終局以 canvas 合成一張成果圖，可下載／（行動裝置）系統分享。零外部資產 ──
 function buildShareCard() {
@@ -2739,7 +3005,7 @@ function animate(time) {
   //   → 幀距均勻、不用累積器，避免先前累積器限速造成 CSS2D 地標標籤「游移」抖動的回歸；timer 只在實際渲染幀前進，dt 仍為真實經過時間。
   if (lastRaf) { const d = time - lastRaf; if (d > 4 && d < 100) nativeHz += (1000 / d - nativeHz) * 0.1; } // 平滑推估顯示器原生更新率
   lastRaf = time;
-  const _busy = battle.active || finaleActive || egg.active || fishing.active || stations.active || archFade.on; // 戰鬥/終局/彩蛋/釣魚/支線站台/轉場一律 60fps
+  const _busy = battle.active || finaleActive || egg.active || fishing.active || stations.active; // 戰鬥/終局/彩蛋/釣魚/支線站台一律 60fps
   const _active = _busy || keys.size > 0 || joyX !== 0 || joyZ !== 0 || hasTarget || performance.now() < activeUntil; // 移動中/操作後 0.6s 內＝互動
   const _stride = Math.max(1, Math.round(nativeHz / (_active ? 60 : 30)));
   if (frameTick++ % _stride !== 0) return;  // 跳過此 native tick（不模擬、不渲染）
@@ -2764,7 +3030,7 @@ function animate(time) {
   if (keys.has('KeyA') || keys.has('ArrowLeft')) kx -= 1;
   kx += joyX; kz += joyZ;   // 虛擬搖桿
   const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
-  if (finaleActive || archFade.on) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡／檔案室轉場時凍結玩家
+  if (finaleActive) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡時凍結玩家
 
   moveDir.set(0, 0, 0);
   if (kx || kz) { hasTarget = false; moveDir.addScaledVector(fwd, kz).addScaledVector(right, kx); }
@@ -2828,21 +3094,10 @@ function animate(time) {
   }
   if (airborne) { legL.rotation.x = -0.6; legR.rotation.x = -0.9; armL.rotation.x = -1.1; armR.rotation.x = -1.1; } // 滯空收腿擺手
 
-  // 檔案室：淡入淡出轉場 + 走進門/走到出口的觸發
-  if (archFade.on) {
-    archFade.t += dt; const half = archFade.dur / 2;
-    archFadeEl.style.opacity = (archFade.t < half ? archFade.t / half : Math.max(0, 1 - (archFade.t - half) / half)).toFixed(3);
-    if (archFade.t >= half && !archFade.mid) { archFade.mid = true; archFade.go(); }
-    if (archFade.t >= archFade.dur) { archFade.on = false; archFadeEl.style.opacity = '0'; }
-  } else if (!archiveActive) {
-    if (Math.hypot(hero.position.x - ARCHIVE.enter.x, hero.position.z - ARCHIVE.enter.z) < 1.7) { if (archEnterArmed) { archEnterArmed = false; enterArchive(); } } else archEnterArmed = true;
-  } else {
-    // 檔案室內：夾住左右與後方（不會誤穿牆離開），只有從前方門口往外走(+z)才離開——避免左右看文件時不小心碰邊界就出去
-    hero.position.x = Math.max(-10, Math.min(10, hero.position.x));
-    if (hero.position.z < -8) hero.position.z = -8;     // 後方停在文件前
-    if (hero.position.z > 9) { if (archExitArmed) { archExitArmed = false; exitArchive(); } } else archExitArmed = true;
-  }
-  if (archiveActive) hero.position.y = ARCHIVE_FLOOR + jumpOff; // 室內地板高度（覆蓋地形跟隨）
+  // 檔案室：走近入口 → 開藝廊面板（一次性；走離入口才重新 arm，避免站在門口一直重開）
+  if (Math.hypot(hero.position.x - ARCHIVE.enter.x, hero.position.z - ARCHIVE.enter.z) < 1.7) {
+    if (archEnterArmed) { archEnterArmed = false; openArchivePanel(); }
+  } else archEnterArmed = true;
 
   // 對話泡：踩水反應 + 漫步自言自語
   const nearNPC = heroNearNPC();   // 靠近可對話 NPC 時，主角先不自言自語（並立即收起正在顯示的台詞）
@@ -2856,13 +3111,8 @@ function animate(time) {
   }
   wasInWater = inWater;
 
-  // 鏡頭：檔案室內＝第一人稱（鏡頭在頭部、滑動視角看四周）；室外＝第三人稱（避免穿地）
-  if (archiveActive) {
-    const ey = hero.position.y + 1.8;
-    camera.position.set(hero.position.x, ey, hero.position.z);
-    lookAt.set(hero.position.x - Math.sin(yaw) * Math.cos(pitch), ey - Math.sin(pitch), hero.position.z - Math.cos(yaw) * Math.cos(pitch));
-    camera.lookAt(lookAt);
-  } else {
+  // 鏡頭：第三人稱（避免穿地）——檔案室已改原地面板，不再有第一人稱模式
+  {
     camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, hero.position.y + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
     const camGround = terrainHeight(camPos.x, camPos.z) + 3;
     if (camPos.y < camGround) camPos.y = camGround;
@@ -2901,6 +3151,8 @@ function animate(time) {
       f.m.opacity = ffBright * (0.18 + 0.82 * (0.5 + 0.5 * Math.sin(t * f.tw + f.ph * 2.3)));
     }
   }
+  // 夜晚美感層：月亮／月光倒影／流星／遺跡主題夜輝光／遺跡星座／生態夜光（夜晚淡入、白天淡出、室內關閉）
+  nightBeauty.update(t, dt, archiveActive ? 0 : (1 - vibrancy));
 
   // POI 鄰近 / 發現 / 面板
   let near = null, nd = Infinity;
@@ -2957,6 +3209,15 @@ function animate(time) {
   }
   // 特效更新
   tuftFX.uTime.value = t; tuftFX.uPlayer.value.copy(hero.position); // 草飄＋撥草：時間推進 + 玩家世界座標（撥開效果在 shader 內逐頂點計算）
+  // 撥草貼身形：尾點彈性跟隨主角（移動→身體膠囊沿路徑拉長成短尾、站定→縮回貼身）；雙腳世界座標由腿擺角推算 → 撥開形狀跟著步伐呼吸
+  grassTrail.lerp(hero.position, Math.min(1, 9 * dt));
+  { const tdx = grassTrail.x - hero.position.x, tdz = grassTrail.z - hero.position.z, td = Math.hypot(tdx, tdz);
+    if (td > 2) { grassTrail.x = hero.position.x + tdx / td * 2; grassTrail.z = hero.position.z + tdz / td * 2; } // 尾長上限＝衝刺也不會拖太遠
+    tuftFX.uTrail.value.set(grassTrail.x, grassTrail.z); }
+  { const gc = Math.cos(hero.rotation.y), gs = Math.sin(hero.rotation.y);
+    const fL = -Math.sin(legL.rotation.x) * 0.7, fR = -Math.sin(legR.rotation.x) * 0.7;   // 腳掌前後位移 ≈ sin(腿擺角)×腿長
+    tuftFX.uFeet.value.set(hero.position.x - gc * 0.26 + gs * fL, hero.position.z + gs * 0.26 + gc * fL,
+                           hero.position.x + gc * 0.26 + gs * fR, hero.position.z - gs * 0.26 + gc * fR); }
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
   // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
@@ -3051,6 +3312,9 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       guideMark.group.position.set(rp.x, rp.y + 10 + Math.sin(t * 1.6) * 0.5, rp.z);
       guideMark.gem.rotation.y += dt * 1.2; guideMark.gem.rotation.x = Math.sin(t * 0.9) * 0.3;
     }
+    // 光影引路（螢火／信標／月光步道）：與路標同一 recId、夜晚淡入
+    const rr = recId ? ruinAt.find((r) => r.id === recId) : null;
+    guideLight.update(t, dt, archiveActive ? 0 : (1 - vibrancy), rr, rr ? rr.color : 0);
   }
   // OCF 紀念碑：每次進來都未點亮，靠近才點燃（本次遊玩保持點亮）＝給 OCF 添柴火
   {
