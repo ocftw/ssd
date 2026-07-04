@@ -1,6 +1,6 @@
 ---
 title: Cybersecurity Village · Adventure Game
-description: Learn cybersecurity by playing! "Cybersecurity Village" is a fully offline 3D browser adventure: leave the village, find five security ruins, defeat the guardians and relight the defenses. After dawn, a whole daytime world and five side-practice stations turn passwords, phishing URLs, two-factor, backups and deepfakes into reflexes. No install, three languages, all linking back to the full ssd.ocf.tw materials.
+description: 'Learn cybersecurity by playing! “Cybersecurity Village” is a fully offline 3D browser adventure: leave the village, find five security ruins, defeat the guardians and relight the defenses. After dawn, a whole daytime world and five side-practice stations turn passwords, phishing URLs, two-factor, backups and deepfakes into reflexes. No install, three languages, all linking back to the full ssd.ocf.tw materials.'
 share_image: https://ssd.ocf.tw/play/shots/og-play.jpg
 hide:
   - navigation
