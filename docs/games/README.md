@@ -145,6 +145,7 @@ python3 -m http.server 8000          # 一般用法
 | `fishing.js` | 白天小遊戲「湖畔釣魚信」（碼頭 POI 啟動）；`start()→Promise`／`update(dt)` 合約 |
 | `egg.js` | 彩蛋小遊戲「揮刀求生」（創世之核啟動）；2D canvas、同一套小遊戲合約 |
 | `stations.js` | **白天支線站台（5 座）**：密碼鍛造爐／網址獵人／雙鎖封印／備份聖泉／深偽擂台，共用 DOM 覆蓋層與同一套小遊戲合約 |
+| `util.js` | 共用純函式：`esc`（HTML 跳脫）、`shuffle`（洗牌）、`scorePw`＋`COMMON_PASSWORDS`（密碼強度）——battle／stations／fishing 共用，避免各抄一份 |
 | `audio.js` | 音效：用 Web Audio API 即時合成（走路/開戰/出招/受擊/勝敗/發現），零外部音檔、含靜音開關 |
 | `i18n/lang.js` | 語言偵測／解析／記憶（正體・簡體・英文；存 `localStorage`） |
 | `i18n/content.js` | **內容素材**：村莊告示牌、各遺跡、檔案室文件、地標等 |

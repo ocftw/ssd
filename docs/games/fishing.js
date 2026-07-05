@@ -3,8 +3,8 @@
 // 全 DOM 覆蓋層（版型沿用 battle 的 .phish-card）、無外部資源；音效走 audio.js 即時合成。
 // 仿 egg.js 合約：start()→Promise、active 旗標、update(dt) 由主迴圈每幀呼叫（凍結 3D 世界）。
 import { SFX } from './audio.js';
+import { esc, shuffle } from './util.js';
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ROUND_N = 10;   // 每局釣 10 封
 
 export class FishingGame {
@@ -29,9 +29,7 @@ export class FishingGame {
 
   _reset() {
     this.round = 0; this.correct = 0; this.finished = false;
-    this.deck = [...this.bank];                                   // 洗牌取前 10 → 一局內不重複
-    for (let i = this.deck.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]]; }
-    this.deck = this.deck.slice(0, Math.min(ROUND_N, this.deck.length));
+    this.deck = shuffle([...this.bank]).slice(0, Math.min(ROUND_N, this.bank.length));   // 洗牌取前 10 → 一局內不重複
     this._ready();
   }
 

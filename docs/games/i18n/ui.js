@@ -125,7 +125,6 @@ export const UI_ALL = {
     shareCardWin: '通關！五道防線全部重建 🛡️',
     shareCardProgress: '修復進行中・重建資安防線！',
     shareCardStats: (done, total, shards, shardTotal) => `防線 ${done}/${total}　心法碎片 ${shards}/${shardTotal}`,
-    shareText: '我正在玩「資安防護新手村」，一起來重建資安防線！→ ssd.ocf.tw/games',
     villagerMore: '點一下換一則 →',
     creatorCast: {
       name: '🧑‍💻 Toomore · 遊戲製作者',
@@ -237,7 +236,6 @@ export const UI_ALL = {
     finaleClose: '繼續探索 →',
 
     // 載入
-    loaderText: '正在生成世界…',
 
     // 進場 landing
     landingDesc: '這是一座因資安防線一道道倒下而褪色的村莊。走出新手村，找回散落荒野的五座「資安遺跡」——每一座都是一門資安課程。用學到的知識打敗守關怪物、逐一點亮遺跡，替自己重建五道防線；村子會重新亮起，而這些習慣也能帶回你真實的數位生活。',
@@ -369,7 +367,7 @@ export const UI_ALL = {
       tryAgain: '再試一次',
       wrongLearn: '✗ 中招了！點亮起的正解，學起來反擊 →',
       qCounter: (n, m, qText) => `第 ${n} / ${m} 題　${qText}`,
-      phFrom: '寄件人',
+      phFrom: '寄件者',
       phSubject: '主旨',
       phYes: '🚩 這是釣魚／詐騙',
       phNo: '✅ 這是正常訊息',
@@ -504,7 +502,6 @@ export const UI_ALL = {
     shareCardWin: '通关！五道防线全部重建 🛡️',
     shareCardProgress: '修复进行中・重建安全防线！',
     shareCardStats: (done, total, shards, shardTotal) => `防线 ${done}/${total}　心法碎片 ${shards}/${shardTotal}`,
-    shareText: '我正在玩「安全防护新手村」，一起来重建安全防线！→ ssd.ocf.tw/games',
     villagerMore: '点一下换一则 →',
     creatorCast: {
       name: '🧑‍💻 Toomore · 游戏制作者',
@@ -612,7 +609,6 @@ export const UI_ALL = {
     finaleRank: '荣衔：安全守护者 🛡️',
     finaleClose: '继续探索 →',
 
-    loaderText: '正在生成世界…',
 
     // 进场 landing
     landingDesc: '这是一座因安全防线一道道倒下而褪色的村庄。走出新手村，找回散落荒野的五座「安全遗迹」——每一座都是一门安全课程。用学到的知识打败关卡怪物、逐一点亮遗迹，替自己重建五道防线；村子会重新亮起，而这些习惯也能带回你真实的数字生活。',
@@ -870,7 +866,6 @@ export const UI_ALL = {
     shareCardWin: `Cleared! All five defenses rebuilt 🛡️`,
     shareCardProgress: `In progress — rebuilding the defenses!`,
     shareCardStats: (done, total, shards, shardTotal) => `Defenses ${done}/${total}　Shards ${shards}/${shardTotal}`,
-    shareText: `I'm playing the Cybersecurity Village — come rebuild the defenses! → ssd.ocf.tw/games`,
     villagerMore: `Tap for another →`,
     creatorCast: {
       name: `🧑‍💻 Toomore · The Maker`,
@@ -978,7 +973,6 @@ export const UI_ALL = {
     finaleRank: `Title: Security Guardian 🛡️`,
     finaleClose: `Keep exploring →`,
 
-    loaderText: `Generating world…`,
 
     // landing / intro
     landingDesc: `A village drained of color as its security defenses fell, one by one. Head out of the starter village and recover the five "security ruins" scattered across the wilds — each one a security lesson. Use what you learn to defeat the guardians and light the ruins one by one, rebuilding your five defenses. The village comes back to life — and these habits come back to your real digital life too.`,

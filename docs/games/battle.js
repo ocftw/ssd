@@ -4,8 +4,8 @@
 import * as THREE from 'three';
 import { groundY } from './terrain.js';
 import { SFX } from './audio.js';
+import { esc, shuffle, scorePw } from './util.js';
 
-const TAU = Math.PI * 2;
 const sm = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, flatShading: false, ...o });
 
 function buildMonster(data) {
@@ -67,24 +67,6 @@ function buildMonster(data) {
   return { group: g, body, bodyMat: body.material, glowMat, mats };
 }
 
-// 將使用者可見字串轉義後再放進 innerHTML（避免信件內容中的 < > 被當成 HTML 標籤）
-const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-// 密碼強度啟發式評分（教育用，非真正的密碼學強度估算）
-// 回傳 level 鍵（empty/common/short/mid/variety/ok）；對應的提示文字由 ui.battle.pwMsg 提供（多語系）。
-function scorePw(pw, common) {
-  const len = pw.length;
-  if (!len) return { pct: 6, color: '#9aa1b0', ok: false, level: 'empty' };
-  const lc = pw.toLowerCase();
-  const isCommon = common.some((c) => lc.includes(c)) || /^(.)\1+$/.test(pw) || /^(0123|1234|2345|3456|4567|5678|6789|abcd|qwer)/.test(lc);
-  const variety = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((re) => re.test(pw)).length;
-  if (isCommon) return { pct: 28, color: '#d0433a', ok: false, level: 'common' };
-  if (len < 8) return { pct: 30, color: '#d0433a', ok: false, level: 'short' };
-  if (len < 12) return { pct: 58, color: '#f0a500', ok: false, level: 'mid' };
-  if (variety < 2 && len < 16) return { pct: 72, color: '#f0a500', ok: false, level: 'variety' };
-  return { pct: 100, color: '#3aa45b', ok: true, level: 'ok' };
-}
-
 export class BattleSystem {
   constructor({ scene, camera, hero, ui }) {
     this.scene = scene; this.camera = camera; this.hero = hero;
@@ -102,9 +84,7 @@ export class BattleSystem {
     return new Promise((resolve) => {
       let d = data;
       if (opts.shuffle) {                                           // Fisher–Yates 淺拷貝洗牌（四種題型皆自足物件，安全）
-        const qs = [...data.questions];
-        for (let i = qs.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [qs[i], qs[j]] = [qs[j], qs[i]]; }
-        d = { ...data, questions: qs };
+        d = { ...data, questions: shuffle([...data.questions]) };
       }
       this._resolve = resolve; this.poi = poi; this.data = d;
       this.qi = 0; this.hearts = this.maxHearts = opts.hearts ?? 3; this.monHP = d.questions.length; this.monMax = this.monHP;
@@ -239,8 +219,7 @@ export class BattleSystem {
     const bar = wrap.querySelector('.pw-meter i');
     const tip = wrap.querySelector('.pw-tip');
     const go = wrap.querySelector('.pw-go');
-    const common = q.common || ['12345678', 'password', 'qwerty', '111111', 'abc123', 'iloveyou', '000000', 'letmein', 'admin', '123456'];
-    const refresh = () => { const r = scorePw(input.value, common); bar.style.width = r.pct + '%'; bar.style.background = r.color; tip.textContent = b.pwMsg[r.level]; tip.style.color = r.color; go.disabled = !r.ok; };
+    const refresh = () => { const r = scorePw(input.value, q.common); bar.style.width = r.pct + '%'; bar.style.background = r.color; tip.textContent = b.pwMsg[r.level]; tip.style.color = r.color; go.disabled = !r.ok; };
     input.addEventListener('input', refresh); refresh();
     go.addEventListener('click', () => { if (this.locked || go.disabled) return; this.locked = true; input.disabled = true; go.disabled = true; this._judge(true, q, () => this._renderQuestion()); });
   }
