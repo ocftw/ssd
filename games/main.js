@@ -12,18 +12,18 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=bc267e81';
-import { BATTLES_ALL } from './i18n/battles.js?v=bc267e81';
-import { UI_ALL } from './i18n/ui.js?v=bc267e81';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=bc267e81';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=bc267e81';
-import { BattleSystem } from './battle.js?v=bc267e81';
+import { CONTENT } from './i18n/content.js?v=631ad01f';
+import { BATTLES_ALL } from './i18n/battles.js?v=631ad01f';
+import { UI_ALL } from './i18n/ui.js?v=631ad01f';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=631ad01f';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=631ad01f';
+import { BattleSystem } from './battle.js?v=631ad01f';
 import { FISHING_ALL } from './i18n/fishing.js';
 import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
 import { Stations } from './stations.js';
 import { STATIONS_ALL } from './i18n/stations.js';
-import { SFX } from './audio.js?v=bc267e81';
+import { SFX } from './audio.js?v=631ad01f';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -123,7 +123,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=bc267e81', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=bc267e81', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=631ad01f', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=631ad01f', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -140,7 +140,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=bc267e81', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=bc267e81', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=631ad01f', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=631ad01f', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
@@ -492,8 +492,8 @@ function resolveHeroCollision() {
   hero.position.x = px; hero.position.z = pz;
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
-const grassTex = tex('./tex/grass.webp?v=bc267e81', 1, 1, true);
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=bc267e81', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const grassTex = tex('./tex/grass.webp?v=631ad01f', 1, 1, true);
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=631ad01f', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
@@ -687,7 +687,7 @@ const nightBeauty = (() => {
   let synced = false; // 首幀把 off/lit 直接吸附到 isDone 真值（存檔已完成的遺跡不會在載入時閃一下 herald）
 
   return {
-    // night：夜晚強度 0..1（＝archiveActive?0:(1-vibrancy)）→ 全部元素統一淡入淡出
+    // night：夜晚強度 0..1（＝1-vibrancy）→ 全部元素統一淡入淡出
     update(t, dt, night) {
       skyGroup.position.copy(camera.position);
       moon.material.opacity = night * 0.92;
@@ -844,7 +844,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   return m;
 }
 const foliageMat = makeFoliageMaterial();
-const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=bc267e81', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=bc267e81', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=631ad01f', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=631ad01f', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
 // 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
 const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
@@ -874,7 +874,7 @@ TREE_SPECIES.forEach((sp, si) => {
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=bc267e81', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=bc267e81', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=631ad01f', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=631ad01f', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -1221,7 +1221,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=bc267e81', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=631ad01f', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1474,7 +1474,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=bc267e81'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=631ad01f'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1575,10 +1575,10 @@ function placeDayStruct(built, data, x, z, labelY, openDist, faceOrigin) {
   POIS.push({ data, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist, dayOnly: true });
   return built;
 }
-const LESSON_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
+const RUIN_ORDER = ['personal', 'common', 'tools', 'org', 'guide']; // 五座遺跡＝五門課程的推薦順序（唯一來源；紀念碑心法／推薦遺跡／landing 主題預告共用）
 // 守護者紀念碑與 CSCS 夥伴牆：打散到荒野各方位（不再擠在村莊出口）；面朝村心、座標用 STELE_AT/WALL_AT 單一來源（OCF 紀念碑也已移到外圍，見 content.js ocf）
 const lessonStele = placeDayStruct(buildLessonStele(),
-  { ...MONUMENT, desc: LESSON_ORDER.map((id) => '・' + UI.shardLesson[id]).join('\n') }, // desc＝五則心法（重用既有三語、零新翻譯）
+  { ...MONUMENT, desc: RUIN_ORDER.map((id) => '・' + UI.shardLesson[id]).join('\n') }, // desc＝五則心法（重用既有三語、零新翻譯）
   STELE_AT.x, STELE_AT.z, 7, 5, true);
 const lighthouse = placeDayStruct(buildLighthouse(), LIGHTHOUSE, 60, 224, 16, 6.5, false);
 const partnerWall = placeDayStruct(buildPartnerWall(), PARTNER_WALL, WALL_AT.x, WALL_AT.z, 4.2, 5, true);
@@ -1667,7 +1667,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=bc267e81'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=631ad01f'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -1734,16 +1734,14 @@ const toolkitObj = buildChest(GUIDE_KIT, (top, add) => {
   add(new THREE.BoxGeometry(0.1, 0.13, 1.0), coverMat, 0, -0.03, 0, book);            // 書脊
 });
 
-// ── 檔案室：村莊邊入口建築 → 走進門淡出傳送到隱藏室內房間 → 靠近文件台開 PDF（新分頁）──
-const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5), roomY: -120 };
+// ── 檔案室：村莊邊入口建築 → 走近入口開「原地藝廊面板」（見 openArchivePanel）──
+const ARCHIVE = { pos: new THREE.Vector3(-13, 0, 5) };
 // 入口門朝向中央水晶（村心）：門在建築 +x 側，rotation.y 讓 +x 指向村心；
-// enter（觸發點）/back（離開落點）沿「指向村心」方向排在門外，與旋轉後的門對齊。
+// enter（走近觸發點）沿「指向村心」方向排在門外，與旋轉後的門對齊。
 ARCHIVE.face = Math.atan2(ARCHIVE.pos.z, -ARCHIVE.pos.x);
 ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
 ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
-ARCHIVE.back = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 5);
 // 檔案室改為「原地藝廊面板」（見 openArchivePanel）：不再傳送進第一人稱房間 → 操作與主世界一致、手機也好用。
-const archiveActive = false;   // 恆為 false：既有各處 `archiveActive ? …` 分支一律走室外路徑（保留變數以免大改各處）
 let archEnterArmed = true;      // 走近入口的一次性觸發旗標
 // 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
 {
@@ -2100,7 +2098,6 @@ let panelId = null, pinnedId = null; const suppressed = new Set();
 
 function poiById(id) { return POIS.find((p) => p.data.id === id); }
 // 「建議下一站」：依學習層次的推薦順序，指向第一個尚未完成的遺跡（只引導、不鎖定）
-const RUIN_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
 function nextRecommendedRuinId() { for (const id of RUIN_ORDER) { if (poiById(id) && !isDone(id)) return id; } return null; }
 const guideMark = (() => {
   const g = new THREE.Group();
@@ -2216,7 +2213,7 @@ actbtnEl.addEventListener('click', () => { if (panelId) suppressed.add(panelId);
 let jumpPending = false;
 const jumpBtn = document.getElementById('jumpbtn');
 jumpBtn.addEventListener('pointerdown', (e) => { jumpPending = true; SFX.unlock(); e.preventDefault(); });
-pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); } });
+pGo.addEventListener('click', () => { const p = poiById(panelId); if (p && p.isRuin && !BATTLES[p.data.id] && !isDone(p.data.id)) { progress.completed.push(p.data.id); save(); SFX.complete(); updateHud(); showPanel(p); afterRuinComplete(p); } });
 
 // 點亮遺跡外觀（水晶、光束、標籤）
 function lightRuin(p) {
@@ -2244,7 +2241,7 @@ function startBattle(p) {
     if (won) {
       if (!isDisc(p.data.id)) progress.discovered.push(p.data.id);
       if (!isDone(p.data.id)) progress.completed.push(p.data.id);
-      save(); lightRuin(p); updateHud(); computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone();
+      save(); lightRuin(p); updateHud(); afterRuinComplete(p);
     }
     suppressed.delete(p.data.id);
   });
@@ -2283,11 +2280,15 @@ function discover(p) {
   spawnBurst(p); updateHud(); computeVibrancy();
 }
 let allDoneShown = false, finaleActive = false, finaleT = 0, finaleShown = false;
+// 「忙碌中」＝任一全畫面互動進行中（戰鬥／終局／彩蛋／釣魚／支線站台）：主迴圈據此凍結 3D 世界、收起搖桿與跳躍鈕、鎖 60fps。
+const isBusy = () => battle.active || finaleActive || egg.active || fishing.active || stations.active;
 function afterCompleteToast(p) {
   const left = ruinAt.length - progress.completed.length;
   const title = p.data.defense ? UI.toastDefense(p.data.defense) : UI.toastPurified;
   if (left > 0) toast(title, UI.toastProgress(p.data.title, left));
 }
+// 遺跡點亮後的共用收尾（繁榮度重算→螢火→爆點→提示→是否全清）。兩處完成入口（閱讀即完成 / 打贏怪物）共用，避免各抄一份漂移。
+function afterRuinComplete(p) { computeVibrancy(); assignFireflies(); spawnBurst(p); afterCompleteToast(p); checkAllDone(); }
 function showFinaleOverlay() {
   const f = document.getElementById('finale');
   f.querySelector('.badges').innerHTML = ruinAt.map((r) => `<span title="${r.title}">${r.emoji}</span>`).join('');
@@ -3005,7 +3006,7 @@ function animate(time) {
   //   → 幀距均勻、不用累積器，避免先前累積器限速造成 CSS2D 地標標籤「游移」抖動的回歸；timer 只在實際渲染幀前進，dt 仍為真實經過時間。
   if (lastRaf) { const d = time - lastRaf; if (d > 4 && d < 100) nativeHz += (1000 / d - nativeHz) * 0.1; } // 平滑推估顯示器原生更新率
   lastRaf = time;
-  const _busy = battle.active || finaleActive || egg.active || fishing.active || stations.active; // 戰鬥/終局/彩蛋/釣魚/支線站台一律 60fps
+  const _busy = isBusy(); // 戰鬥/終局/彩蛋/釣魚/支線站台一律 60fps
   const _active = _busy || keys.size > 0 || joyX !== 0 || joyZ !== 0 || hasTarget || performance.now() < activeUntil; // 移動中/操作後 0.6s 內＝互動
   const _stride = Math.max(1, Math.round(nativeHz / (_active ? 60 : 30)));
   if (frameTick++ % _stride !== 0) return;  // 跳過此 native tick（不模擬、不渲染）
@@ -3013,8 +3014,8 @@ function animate(time) {
   const dt = Math.min(timer.getDelta(), 0.05), t = timer.getElapsed();
   fpsAvg += (1 / Math.max(timer.getDelta(), 1e-4) - fpsAvg) * 0.08; // 原始幀時間估 FPS
 
-  joyEl.classList.toggle('hide', battle.active || finaleActive || egg.active || fishing.active || stations.active);
-  jumpBtn.classList.toggle('hide', battle.active || finaleActive || egg.active || fishing.active || stations.active || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
+  joyEl.classList.toggle('hide', isBusy());
+  jumpBtn.classList.toggle('hide', isBusy() || panelId !== null); // 對話框開啟時收起，避免擋到面板的連結
   if (egg.active) { labelRenderer.domElement.style.display = 'none'; egg.update(dt); return; } // 彩蛋小遊戲：凍結 3D 世界，僅跑 2D 覆蓋層（不透明、免 renderScene）
   if (fishing.active) { labelRenderer.domElement.style.display = 'none'; fishing.update(dt); return; } // 釣魚小遊戲：同彩蛋，凍結 3D 世界
   if (stations.active) { labelRenderer.domElement.style.display = 'none'; stations.update(dt); return; } // 支線站台：同上，凍結 3D 世界，僅跑 DOM 覆蓋層
@@ -3042,14 +3043,14 @@ function animate(time) {
     // 邊緣減速：接近可走半徑時，向外的位移漸減 → 滑停而非撞隱形牆（保留 maxR 硬夾作安全網）
     let spd = sprint ? 26 : 14;
     const r0 = Math.hypot(hero.position.x, hero.position.z), EDGE = 14, lim = worldLim();
-    if (!archiveActive && r0 > lim - EDGE) {
+    if (r0 > lim - EDGE) {
       const outward = (moveDir.x * hero.position.x + moveDir.z * hero.position.z) / (r0 || 1);
       if (outward > 0) spd *= Math.max(0.12, (lim - r0) / EDGE);
     }
     hero.position.addScaledVector(moveDir, spd * dt);
     const len = Math.hypot(hero.position.x, hero.position.z);
-    if (!archiveActive && len > worldLim()) hero.position.multiplyScalar(worldLim() / len);
-    if (!archiveActive) resolveHeroCollision();   // 剛體碰撞：把玩家推出重疊的實體（撞牆停住、沿牆滑）；檔案室內停用
+    if (len > worldLim()) hero.position.multiplyScalar(worldLim() / len);
+    resolveHeroCollision();   // 剛體碰撞：把玩家推出重疊的實體（撞牆停住、沿牆滑）
     const tr = Math.atan2(moveDir.x, moveDir.z);
     if (!spinning) hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
     moving = true;
@@ -3104,7 +3105,7 @@ function animate(time) {
   if (nearNPC) { if (sayTimer > 0) { sayTimer = 0; heroBubbleEl.classList.remove('show'); } }
   else if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
   const inWater = groundH < WORLD.water + 0.2;
-  if (!finaleActive && !archiveActive && !nearNPC) {
+  if (!finaleActive && !nearNPC) {
     if (inWater && !wasInWater && sayTimer <= 0) heroSay(pick(WATER_LINES), 2.6);
     idleTalkTimer -= dt;
     if (idleTalkTimer <= 0) { idleTalkTimer = rand(16, 30); if (sayTimer <= 0 && !inWater && moving) heroSay(pick(IDLE_LINES), 3); }
@@ -3134,15 +3135,15 @@ function animate(time) {
   // 隨身火把：朝「主角正面」方向（不跟鏡頭轉）；世界越暗越亮（隨 vibrancy 轉弱）；室內檔案室不需要
   const hfx = Math.sin(hero.rotation.y), hfz = Math.cos(hero.rotation.y); // 主角正面方向（+z 面）
   torch.position.set(hero.position.x + hfx * 2, hero.position.y + 2.4, hero.position.z + hfz * 2);
-  torch.intensity = archiveActive ? 0 : torchTune.ptInt * (1 - vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
+  torch.intensity = torchTune.ptInt * (1 - vibrancy) * (0.92 + Math.sin(t * 6.7) * 0.05 + Math.sin(t * 13.3) * 0.03);
   // 火把地面光錐（探照效果，參數可在座標框即時調整）：從頭頂斜射到主角正面的地面；天亮(vibrancy→1)後關閉
   torchGround.angle = torchTune.spotAng * Math.PI; torchGround.penumbra = torchTune.spotPen; torchGround.distance = torchTune.spotDist;
   torchGround.position.set(hero.position.x, hero.position.y + torchTune.spotH, hero.position.z);
   { const gx = hero.position.x + hfx * torchTune.spotFwd, gz = hero.position.z + hfz * torchTune.spotFwd; torchGround.target.position.set(gx, groundY(gx, gz), gz); torchGround.target.updateMatrixWorld(); }
-  torchGround.intensity = archiveActive ? 0 : torchTune.spotInt * (1 - vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
+  torchGround.intensity = torchTune.spotInt * (1 - vibrancy) * (0.94 + Math.sin(t * 6.7) * 0.04);
   // 螢火蟲：環繞各「已完成」遺跡漂浮閃爍（點綴）；室內關閉
   {
-    const ffBright = archiveActive ? 0 : 1;
+    const ffBright = 1;
     for (const f of fireflies) {
       if (!f.on || ffBright <= 0) { if (f.m.opacity) f.m.opacity = 0; continue; }
       const fx = f.cx + f.ox + Math.sin(t * f.sx + f.ph) * f.ax;
@@ -3152,16 +3153,14 @@ function animate(time) {
     }
   }
   // 夜晚美感層：月亮／月光倒影／流星／遺跡主題夜輝光／遺跡星座／生態夜光（夜晚淡入、白天淡出、室內關閉）
-  nightBeauty.update(t, dt, archiveActive ? 0 : (1 - vibrancy));
+  nightBeauty.update(t, dt, 1 - vibrancy);
 
   // POI 鄰近 / 發現 / 面板
   let near = null, nd = Infinity;
   for (const p of POIS) {
-    if ((p.area || 'world') !== (archiveActive ? 'archive' : 'world')) continue; // 只判定當前空間的 POI
     if (p.dayOnly && !worldOpen) continue;                                      // 通關白天建物：未開放不觸發面板
     const d = Math.hypot(hero.position.x - p.pos.x, hero.position.z - p.pos.z);
     if (d < p.openDist && d < nd) { nd = d; near = p; }
-    if (p.area === 'archive' && d < p.openDist) met.docs.add(p.data.id); // 成就：看過檔案室文件
     if (p.isRuin) {
       const want = (d < p.openDist) ? 1 : 0; p.lift += (want - p.lift) * Math.min(1, 6 * dt);
       const lit = isDisc(p.data.id);
@@ -3224,9 +3223,9 @@ function animate(time) {
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
   water.material.color.lerpColors(WATER_NIGHT, WATER_DAY, vibrancy); // 平海面：白天亮藍、夜晚深藍（MeshBasic 不受光，手動調）
-  gradePass.uniforms.uVibrancy.value = archiveActive ? 1 : vibrancy; // 檔案室內固定滿色
+  gradePass.uniforms.uVibrancy.value = vibrancy;
   gradePass.uniforms.uNightBr.value = torchTune.nightBr;             // 夜晚亮度（座標框可即時調）
-  setWorldLight(archiveActive ? 1 : vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
+  setWorldLight(vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
   for (const L of nightGlowMats) L.m.emissiveIntensity = L.base * (1 - vibrancy); // 村莊夜燈：夜晚發光、白天熄滅（避免白天反光發光）
   for (const L of nightHalo) L.m.opacity = L.base * (1 - vibrancy);                 // 夜燈柔光暈：夜晚淡入
   if (Q.richSky) {
@@ -3245,7 +3244,7 @@ function animate(time) {
   scene.fog.color.lerpColors(FOG_D, FOG_A, vibrancy);
   // 邊緣迷霧：接近可走邊界時把霧收緊，遠方融進薄霧（遮住硬邊界、營造大地盡頭）
   if (worldOpen) { scene.fog.near = 140; scene.fog.far = 440; } // 白天敞開：開闊海景到遠方海霧，不收緊（沒有牆要遮）
-  else { const rr = archiveActive ? 0 : Math.hypot(hero.position.x, hero.position.z), kf = Math.max(0, Math.min(1, (rr - (worldLim() - 45)) / 45)); scene.fog.near = 120 - kf * 40; scene.fog.far = 360 - kf * 150; } // 夜：邊緣收緊迷霧、遮住硬邊界
+  else { const rr = Math.hypot(hero.position.x, hero.position.z), kf = Math.max(0, Math.min(1, (rr - (worldLim() - 45)) / 45)); scene.fog.near = 120 - kf * 40; scene.fog.far = 360 - kf * 150; } // 夜：邊緣收緊迷霧、遮住硬邊界
   // 中央大水晶（全部進化才啟動）
   const allDone = ruinAt.every((r) => isDone(r.id));
   greatGlow += ((allDone ? 1 : 0) - greatGlow) * Math.min(1, 1.0 * dt);
@@ -3305,7 +3304,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   }
   // 「建議下一站」路標：浮在推薦順序中第一個未完成的遺跡上方
   {
-    const recId = (battle.active || finaleActive || archiveActive) ? null : nextRecommendedRuinId();
+    const recId = (battle.active || finaleActive) ? null : nextRecommendedRuinId();
     guideMark.group.visible = !!recId;
     if (recId) {
       const rp = poiById(recId).pos;
@@ -3314,7 +3313,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     }
     // 光影引路（螢火／信標／月光步道）：與路標同一 recId、夜晚淡入
     const rr = recId ? ruinAt.find((r) => r.id === recId) : null;
-    guideLight.update(t, dt, archiveActive ? 0 : (1 - vibrancy), rr, rr ? rr.color : 0);
+    guideLight.update(t, dt, 1 - vibrancy, rr, rr ? rr.color : 0);
   }
   // OCF 紀念碑：每次進來都未點亮，靠近才點燃（本次遊玩保持點亮）＝給 OCF 添柴火
   {
@@ -3345,7 +3344,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   // 綠袍法師：呼吸擺動 + 法杖球脈動 + 靠近顯示提示
   mage.group.position.y = mage.baseY + Math.sin(t * 1.5) * 0.04;
   mage.orbMat.emissiveIntensity = 1.3 + Math.sin(t * 3) * 0.5;
-  if (mage.orbLight) mage.orbLight.intensity = archiveActive ? 0 : (1 - vibrancy) * 48 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉（手機精簡檔無此點光）
+  if (mage.orbLight) mage.orbLight.intensity = (1 - vibrancy) * 48 * (0.85 + Math.sin(t * 2.4) * 0.15); // 手杖球夜晚發紫光、天亮關閉（手機精簡檔無此點光）
   {
     const dm = Math.hypot(hero.position.x - mage.pos.x, hero.position.z - mage.pos.z);
     const near = !battle.active && !finaleActive && dm < 7;
@@ -3368,7 +3367,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     creator.core.rotation.y = t * 0.4; creator.core.rotation.x = t * 0.15; creator.shardGroup.rotation.y = -t * 0.6; // 自轉
     creator.coreMat.emissiveIntensity = 1.3 + Math.sin(t * 2.0) * 0.35; // 脈動
     const dc = Math.hypot(hero.position.x - creator.pos.x, hero.position.z - creator.pos.z);
-    const near = !battle.active && !finaleActive && !archiveActive && dc < 7;
+    const near = !battle.active && !finaleActive && dc < 7;
     if (!near) { creator.open = false; creator.topic = null; creator.qline = 0; }
     const state = !near ? 0 : (creator.open ? 2 : 1);
     if (state !== creator.mode) {
@@ -3446,7 +3445,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       c.mesh.rotation.y += dt * 1.6;
       if (c.scale < 1) { c.scale = Math.min(1, c.scale + dt * 3); c.mesh.scale.setScalar(c.scale); } // 出現彈大
       const d = Math.hypot(hero.position.x - c.ax, hero.position.z - c.az);
-      if (!battle.active && !finaleActive && !archiveActive && d < CAP_TRIGGER) { c.state = 'spin'; c.t = 0; }
+      if (!battle.active && !finaleActive && d < CAP_TRIGGER) { c.state = 'spin'; c.t = 0; }
     } else if (c.state === 'spin') {
       c.t += dt;
       c.mesh.rotation.y += dt * (10 + c.t * 45);                                 // 原地越轉越快
@@ -3463,7 +3462,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   }
   // 膽小地鼠光點：蹲地→靠近鑽地→他處冒出
   {
-    const c = mole, busy = battle.active || finaleActive || archiveActive;
+    const c = mole, busy = battle.active || finaleActive;
     if (c.state === 'rise') { c.t += dt; const k = Math.min(1, c.t / 0.4); c.mesh.scale.setScalar(k); c.mesh.position.set(c.ax, c.ay - 0.4 * (1 - k), c.az); if (k >= 1) { c.state = 'idle'; c.t = 0; } }
     else if (c.state === 'idle') {
       c.mesh.position.set(c.ax, c.ay + Math.sin(t * 3 + c.ph) * 0.08, c.az); c.mesh.scale.setScalar(1);
@@ -3476,7 +3475,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   }
   // 好奇光蝶：飄浮→中距離靠近玩家→太近急閃→他處重生
   {
-    const c = moth, busy = battle.active || finaleActive || archiveActive;
+    const c = moth, busy = battle.active || finaleActive;
     if (c.state === 'idle') {
       const d = Math.hypot(hero.position.x - c.ax, hero.position.z - c.az);
       if (!busy && d < MOTH_NOTICE && d > MOTH_FLEE) { const k = 0.7 * dt; c.ax += (hero.position.x - c.ax) * k; c.az += (hero.position.z - c.az) * k; c.ay = groundY(c.ax, c.az) + 2.6; }
@@ -3493,7 +3492,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     if (c.light) c.light.intensity = (lit ? 1 : 0) * (1 - vibrancy) * 24 * (0.8 + Math.sin(t * 5) * 0.2);
   }
   // 野生小動物：idle 啄食/小跳換位；玩家靠近 → 背向逃跑；跑進水裡/出界/夠遠 → 他處重生（帶塵土）；遠離玩家時跳過
-  if (!archiveActive) {
+  {  // 野生小動物：原 if(!archiveActive) 恆真，改 bare block 以保留 wildStep 區塊作用域
     const wildStep = (a, fleeR, run, hop) => {
       const dh = Math.hypot(hero.position.x - a.x, hero.position.z - a.z);
       if (dh > 120) return;                                                   // 太遠：完全跳過（省每幀成本）
@@ -3520,14 +3519,14 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     if (s.got) continue;
     s.mesh.rotation.y += dt * 1.5; s.mesh.position.y = s.y + Math.sin(t * 1.8 + s.ph) * 0.18;
     s.m.emissiveIntensity = 0.8 + Math.sin(t * 3 + s.ph) * 0.3;
-    if (!battle.active && !finaleActive && !archiveActive && Math.hypot(hero.position.x - s.x, hero.position.z - s.z) < SHARD_PICK) collectShard(s);
+    if (!battle.active && !finaleActive && Math.hypot(hero.position.x - s.x, hero.position.z - s.z) < SHARD_PICK) collectShard(s);
   }
   // 日之碎片：白天限定，同款旋轉漂浮＋走近拾取
   if (worldOpen) for (const s of dayShardMeshes) {
     if (s.got) continue;
     s.mesh.rotation.y += dt * 1.5; s.mesh.position.y = s.y + Math.sin(t * 1.8 + s.ph) * 0.18;
     s.m.emissiveIntensity = 0.8 + Math.sin(t * 3 + s.ph) * 0.3;
-    if (!battle.active && !finaleActive && !archiveActive && Math.hypot(hero.position.x - s.x, hero.position.z - s.z) < SHARD_PICK) collectDayShard(s);
+    if (!battle.active && !finaleActive && Math.hypot(hero.position.x - s.x, hero.position.z - s.z) < SHARD_PICK) collectDayShard(s);
   }
   // 環境村民：村裡漫步＋靠近點擊出資安撇步泡泡
   for (const v of villagers) {
@@ -3539,7 +3538,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     }
     const gy = groundY(v.pos.x, v.pos.z);
     v.group.position.set(v.pos.x, gy + Math.abs(Math.sin(t * 5 + v.face)) * 0.03, v.pos.z); v.group.rotation.y = v.face;
-    const near = !battle.active && !finaleActive && !archiveActive && Math.hypot(hero.position.x - v.pos.x, hero.position.z - v.pos.z) < 6;
+    const near = !battle.active && !finaleActive && Math.hypot(hero.position.x - v.pos.x, hero.position.z - v.pos.z) < 6;
     if (!near) v.open = false;
     const state = !near ? 0 : (v.open ? 2 : 1);
     if (state !== v.mode) {
@@ -3550,10 +3549,9 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     }
   }
   // 沉浸感更新：環境音景＋天氣＋蝴蝶＋魚影＋飛鳥
-  if (!archiveActive) SFX.ambient(dt, vibrancy, worldOpen && Math.hypot(hero.position.x, hero.position.z) > 195); // 白天走到海岸帶 → 偶有海鷗叫
+  SFX.ambient(dt, vibrancy, worldOpen && Math.hypot(hero.position.x, hero.position.z) > 195); // 白天走到海岸帶 → 偶有海鷗叫
   if (weather) {
-    if (archiveActive) { weather.rmat.opacity = 0; for (const m of weather.mists) m.m.opacity = 0; weather.rgeo.setDrawRange(0, 0); renderer.toneMappingExposure = weather.baseExp; }
-    else {
+    {  // 天氣排程：原 if(archiveActive) 死分支已移除，保留 else 內容為 bare block（維持區塊作用域）
       // 模式排程：晴 ↔ 降雨（小雨/大雨/大雷雨，加權隨機）
       weather.timer -= dt;
       if (weather.timer <= 0) {
@@ -3617,13 +3615,13 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     const bx = b.cx + Math.sin(t * b.sp + b.ph) * b.rad, bz = b.cz + Math.cos(t * b.sp * 0.9 + b.ph) * b.rad;
     b.s.position.set(bx, groundY(bx, bz) + b.h + Math.sin(t * 1.5 + b.ph) * 0.4, bz);
     b.s.scale.set(0.18 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.5, 0.55, 1); // 拍翅：水平縮放
-    b.m.opacity = archiveActive ? 0 : vibrancy * 0.9;
+    b.m.opacity = vibrancy * 0.9;
   }
   for (const b of bees) {                                                     // 蜜蜂：花簇上小半徑快速繞飛（白天）
     const bx = b.cx + Math.sin(t * b.sp + b.ph) * b.rad, bz = b.cz + Math.cos(t * b.sp * 1.3 + b.ph) * b.rad;
     b.s.position.set(bx, groundY(bx, bz) + b.h + Math.sin(t * 7 + b.ph) * 0.12, bz);
     b.s.scale.set(0.26 + Math.abs(Math.sin(t * 14 + b.ph)) * 0.1, 0.3, 1);    // 快速振翅
-    b.m.opacity = (worldOpen && !archiveActive) ? vibrancy * 0.95 : 0;
+    b.m.opacity = worldOpen ? vibrancy * 0.95 : 0;
   }
   for (const d of dragonflies) {                                              // 蜻蜓：水面定點懸停 → 快速換位（dart，白天）
     if (d.wait > 0) d.wait -= dt;
@@ -3633,7 +3631,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       else { const inv = 1 / dd; d.x += dx * inv * 7 * dt; d.z += dz * inv * 7 * dt; }
     }
     d.s.position.set(d.x, WORLD.water + 0.7 + Math.sin(t * 5 + d.ph) * 0.1, d.z);
-    d.m.opacity = (worldOpen && !archiveActive) ? vibrancy * 0.9 : 0;
+    d.m.opacity = worldOpen ? vibrancy * 0.9 : 0;
   }
   for (const f of fishSchools) {
     const ang = t * f.sp + f.ph, fx = f.cx + Math.cos(ang) * f.rad, fz = f.cz + Math.sin(ang) * f.rad;
@@ -3644,13 +3642,13 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
     const ang = t * b.sp + b.ph;
     b.s.position.set(Math.cos(ang) * b.r, b.h + Math.sin(t * 0.3 + b.ph) * 3, Math.sin(ang) * b.r);
     b.s.scale.y = b.base * (0.4 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.3); // 拍翅：垂直壓縮
-    b.m.opacity = archiveActive ? 0 : vibrancy * 0.5;
+    b.m.opacity = vibrancy * 0.5;
   }
   for (const b of gulls) {                                                    // 海鷗：繞燈塔 (60,224) 盤旋（白天）
     const ang = t * b.sp + b.ph;
     b.s.position.set(60 + Math.cos(ang) * b.r, b.h + Math.sin(t * 0.5 + b.ph) * 2, 224 + Math.sin(ang) * b.r);
     b.s.scale.y = b.base * (0.4 + Math.abs(Math.sin(t * b.fl + b.ph)) * 0.3);
-    b.m.opacity = (worldOpen && !archiveActive) ? vibrancy * 0.85 : 0;
+    b.m.opacity = worldOpen ? vibrancy * 0.85 : 0;
   }
   for (let i = bursts.length - 1; i >= 0; i--) { const b = bursts[i]; b.t += dt; const k = b.t / b.dur; b.ring.scale.setScalar(1 + k * b.mul); b.ring.material.opacity = Math.max(0, 0.85 * (1 - k)); if (k >= 1) { scene.remove(b.ring); b.ring.material.dispose(); b.ring.geometry.dispose(); bursts.splice(i, 1); } }
   // 落地塵土更新
