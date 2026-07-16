@@ -1007,7 +1007,7 @@ div.grid.cards > ul > li > p:first-child {
 
   /*
     Hub landing（首頁 .home-hero、分類入口 .category-hero；無 .sub-category-hero）：
-    抽屜只顯示頂層章節，不展開 active 章節子樹，並隱藏重複標題列（與桌面 L33–40 對齊）。
+    抽屜只顯示頂層章節，不展開 active 章節子樹。
   */
   .md-main:has(.home-hero, .category-hero):not(:has(.sub-category-hero))
     .md-sidebar--primary
@@ -1018,24 +1018,25 @@ div.grid.cards > ul > li > p:first-child {
     display: none;
   }
 
+  /*
+    ≤76.234375em 沒有 header tabs，active 章節的標題列是抽屜裡唯一標示「目前在哪一章」的地方，
+    故此處必須保留（桌面 L37–44 之所以能隱藏，是因為 tabs 已經顯示章節名）。
+    子樹既已隱藏，只收起點了不會有反應的展開箭頭。
+  */
   .md-main:has(.home-hero, .category-hero):not(:has(.sub-category-hero))
     .md-sidebar--primary
     .md-nav--primary.md-nav--lifted
     > .md-nav__list
     > .md-nav__item--active
-    > .md-nav__link.md-nav__container,
-  .md-main:has(.home-hero, .category-hero):not(:has(.sub-category-hero))
-    .md-sidebar--primary
-    .md-nav--primary.md-nav--lifted
-    > .md-nav__list
-    > .md-nav__item--active
+    > .md-nav__container
     > label.md-nav__link,
   .md-main:has(.home-hero, .category-hero):not(:has(.sub-category-hero))
     .md-sidebar--primary
     .md-nav--primary.md-nav--lifted
     > .md-nav__list
     > .md-nav__item--active
-    > label.md-nav__title {
+    > label.md-nav__link
+    > .md-nav__icon {
     display: none;
   }
 }
