@@ -72,35 +72,35 @@ nav:
       - 組織資安政策:
           - org/policy/index.md # sub-category
           - 資安政策參考範本: org/policy/template.md
+  # index.md 直接當 section 的第一個子項（navigation.indexes），章節本身才會是連結；
+  # 若再包一層，連結會長在內層、章節只剩展開鈕，抽屜要點兩次才到得了 landing page。
   - 常見資安事件:
-      - 資安事件:
-          - common/index.md
-          - 釣魚、詐騙郵件: common/phishing.md
-          - 勒索軟體: common/ransomware.md
-          - 帳號密碼外洩: common/leaked_password.md
-          - 社群帳號被盜（粉專／LINE）: common/social_account_takeover.md
-          - 官網遭受攻擊: common/website_attack.md
-          - NAS 遭受攻擊: common/nas_attack.md
+      - common/index.md
+      - 釣魚、詐騙郵件: common/phishing.md
+      - 勒索軟體: common/ransomware.md
+      - 帳號密碼外洩: common/leaked_password.md
+      - 社群帳號被盜（粉專／LINE）: common/social_account_takeover.md
+      - 官網遭受攻擊: common/website_attack.md
+      - NAS 遭受攻擊: common/nas_attack.md
   - 資安升級工具包:
-      - 資安提升計畫:
-          - guide/index.md
-          - 確認組織是否準備好迎接資安提升行動？: guide/cooperation-suitability.md
-          - 建立順暢的內部協作: guide/partnership.md
-          - 盤點組織工作帳號: guide/account.md
-          - 幫助組織盤點現況: guide/status.md
-          - 透過「威脅建模」盤點組織風險: guide/assessment.md
-          - 制定屬於組織的資安改善計畫: guide/initial-improvement.md
-          - 盤點組織裝置設備:
-              - guide/devices/index.md
-              - guide/devices/checklists.md
-          - 協助組織制定資安政策: guide/security-policy.md
-          - 評估資安升級的成效: guide/effectiveness-review.md
-          - 延伸顧問協作主題:
-              - guide/profile.md
-              - guide/network.md
-              - guide/e2ee.md
-              - guide/files-management.md
-              - guide/abroad.md
+      - guide/index.md
+      - 確認組織是否準備好迎接資安提升行動？: guide/cooperation-suitability.md
+      - 建立順暢的內部協作: guide/partnership.md
+      - 盤點組織工作帳號: guide/account.md
+      - 幫助組織盤點現況: guide/status.md
+      - 透過「威脅建模」盤點組織風險: guide/assessment.md
+      - 制定屬於組織的資安改善計畫: guide/initial-improvement.md
+      - 盤點組織裝置設備:
+          - guide/devices/index.md
+          - guide/devices/checklists.md
+      - 協助組織制定資安政策: guide/security-policy.md
+      - 評估資安升級的成效: guide/effectiveness-review.md
+      - 延伸顧問協作主題:
+          - guide/profile.md
+          - guide/network.md
+          - guide/e2ee.md
+          - guide/files-management.md
+          - guide/abroad.md
   - 資源、諮詢:
       - 疑問諮詢: support/index.md
       - CSCS 社群自製教材總覽: resources/cscs-materials.md

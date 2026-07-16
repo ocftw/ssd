@@ -13,7 +13,12 @@
 {% if nav.homepage %}
   {% set depth = depth + 1 %}
 {% endif %}
-{% if depth > 1 or is_blog_post %}
+{#-
+  章節拉平後（常見資安事件、資安升級工具包），其葉頁的 ancestors 只剩 1 層，
+  單用 depth > 1 會讓這些頁失去麵包屑。改以「是不是 section 的 landing 頁」判斷：
+  landing 頁（index.md）自己有 hero 標題，不需要麵包屑；葉頁只要有上層就需要。
+-#}
+{% if depth > 1 or (depth > 0 and not page.is_index) or is_blog_post %}
   <nav class="md-path" aria-label="{{ lang.t('nav') }}" {{ hidden }}>
     <ol class="md-path__list">
       <li class="md-path__item md-path__item--home">

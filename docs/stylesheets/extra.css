@@ -49,14 +49,16 @@
     display: none;
   }
 
-  /* 2) Inside the active top-level item, hide first-level children that are not active
-        (e.g. under「組織資安」只保留目前子區塊如「網路環境」這條 active 分支) */
+  /* 2) Inside the active top-level item, hide first-level *nested* children that are not active
+        (e.g. under「組織資安」只保留目前子區塊如「網路環境」這條 active 分支)。
+        與規則 3 同哲學：同層葉節點維持全部顯示。拉平後的章節（常見資安事件、資安升級工具包）
+        各篇就直接落在第一層，若連葉節點一併隱藏，側欄會只剩目前這一篇。 */
   nav.md-nav.md-nav--primary.md-nav--lifted
     > ul.md-nav__list
     > li.md-nav__item.md-nav__item--active
     > nav.md-nav
     > ul.md-nav__list
-    > li.md-nav__item:not(.md-nav__item--active) {
+    > li.md-nav__item.md-nav__item--nested:not(.md-nav__item--active) {
     display: none;
   }
 
