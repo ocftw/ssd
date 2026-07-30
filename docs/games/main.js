@@ -142,6 +142,13 @@ const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalSc
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
 const woodMap = tex('./tex/wood.webp', 1, 1, true), woodNor = tex('./tex/wood_n.webp', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
+// 建築外殼材質組（民房與水井共用）。與 applyStone/applyWood 的差別：這些不覆寫 m.color，
+// 讓呼叫端保留自己的配色——albedo 與 color 相乘，實測 concrete 亮度 0.54、wood 只有 0.37 且偏棕，
+// 所以需要保留色相的表面（牆、屋頂）只取 normalMap，中性或深色的部件才吃完整 albedo。
+const SKIN_PLASTER = () => ({ normalMap: stoneNor, normalScale: new THREE.Vector2(0.65, 0.65), roughness: 0.95 }); // 灰泥：凹凸不染色
+const SKIN_SHINGLE = () => ({ normalMap: woodNor,  normalScale: new THREE.Vector2(0.75, 0.75), roughness: 0.85 }); // 木瓦：板紋不染色
+const SKIN_STONE   = () => ({ map: stoneMap, normalMap: stoneNor, normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.95 });
+const SKIN_WOOD    = () => ({ map: woodMap,  normalMap: woodNor,  normalScale: new THREE.Vector2(0.5, 0.5),  roughness: 0.82 });
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
@@ -1310,18 +1317,60 @@ function dirtPath(ax, az, bx, bz, w = 2.8) {
   const m = new THREE.Mesh(geo, dirtMat); m.receiveShadow = true; village.add(m);
 }
 
-// 中央水井（含屋頂、井圈）
-const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 1.2, 12), mat(0xb3a48c));
-wellBase.position.set(-10.2, 0.7, -10.8); wellBase.castShadow = wellBase.receiveShadow = true; village.add(wellBase);
-const wellRim = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.18, 10, 16), mat(0x9a8a70));
-wellRim.rotation.x = Math.PI / 2; wellRim.position.set(-10.2, 1.3, -10.8); village.add(wellRim);
+// 中央水井：石砌井身＋井圈、雙坡頂（與民房同一套語彙，取代原本的八角錐）、轆轤與吊桶。
+// 原本只有井身／井圈／水面／兩根柱子，缺了「這是一口井」最關鍵的辨識物——捲軸、繩子、水桶。
+// 同材質先合併再建 Mesh：石(1)＋水(1)＋木構(1)＋屋頂(1)＋繩桶(1) ＝ 5 個 draw call，比改版前的 6 個還少。
+const WELL_X = -10.2, WELL_Z = -10.8;
 const wellWater = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.2, 16), mat(0x6cc5e0, { roughness: 0.2 }));
-wellWater.position.set(-10.2, 1.15, -10.8); village.add(wellWater);
-const wellRoof = new THREE.Group();
-for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 2.6, 10), mat(0x7a5230)); p.position.set(wx, 1.3, 0); p.castShadow = true; wellRoof.add(p); applyWood(p.material); boxUV(p.geometry); }
-const wrf = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.2, 8), mat(0x9c5b3a)); wrf.position.y = 3.2; wrf.rotation.y = Math.PI / 4; wrf.castShadow = true; wellRoof.add(wrf);
-wellRoof.position.set(-10.2, 0, -10.8); village.add(wellRoof);
-addCircleCol(-10.2, -10.8, 1.9);   // 水井實體
+wellWater.position.set(WELL_X, 1.15, WELL_Z); village.add(wellWater);
+const wellBucket = new THREE.Group();     // 繩＋桶的擺盪支點（在轆轤軸心，見 animate）
+{
+  const g = new THREE.Group(); g.position.set(WELL_X, 0, WELL_Z); village.add(g);
+  const C = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, s);
+  const put = (arr, geo, x, y, z, rz = 0, rx = 0) => { if (rz) geo.rotateZ(rz); if (rx) geo.rotateX(rx); geo.translate(x, y, z); arr.push(geo); };
+  const HZ = Math.PI / 2;
+
+  // 石：井身做成中空井筒——外壁用 openEnded 圓柱、頂面用環形，中間才是看得到水的洞。
+  // （實心圓柱的頂面會整個蓋住水面，改版前的水面其實一直看不見。）
+  const st = [];
+  put(st, new THREE.CylinderGeometry(1.7, 1.9, 1.2, 12, 1, true), 0, 0.7, 0);   // openEnded：不要頂面，否則又把水蓋住
+  put(st, new THREE.RingGeometry(1.44, 1.72, 12), 0, 1.3, 0, 0, -HZ);           // 井口環（朝上）
+  put(st, new THREE.TorusGeometry(1.75, 0.18, 10, 16), 0, 1.3, 0, 0, HZ);       // 井圈
+  const stone = new THREE.Mesh(mergeGeometries(st, false), mat(0xd8cdb8, { ...SKIN_STONE(), side: THREE.DoubleSide })); // DoubleSide：從井口往下能看到內壁
+  boxUV(stone.geometry, 1.1); stone.castShadow = stone.receiveShadow = true; g.add(stone);
+
+  // 木：兩根立柱（立在井身外緣）＋頂橫樑＋跨越兩柱的轆轤＋曲柄搖把
+  const PX = 1.85;
+  const wd = [];
+  for (const sx of [-1, 1]) put(wd, C(0.13, 0.15, 2.6), sx * PX, 1.3, 0);
+  put(wd, new THREE.BoxGeometry(PX * 2 + 0.3, 0.18, 0.18), 0, 2.66, 0);         // 頂橫樑：把兩柱綁成門形
+  put(wd, C(0.17, 0.17, PX * 2 - 0.3), 0, 2.24, 0, HZ);                         // 轆轤（捲軸）：跨在兩柱之間
+  for (const sx of [-1, 1]) put(wd, C(0.27, 0.27, 0.07), sx * (PX - 0.17), 2.24, 0, HZ); // 兩端擋板：繩子不會滑出去
+  put(wd, C(0.05, 0.05, 0.3, 8), PX + 0.17, 2.24, 0, HZ);                       // 曲柄：軸向外一小段
+  put(wd, C(0.05, 0.05, 0.34, 8), PX + 0.32, 2.24, 0.17, 0, HZ);                // 曲柄臂：垂直於轉軸
+  put(wd, C(0.055, 0.055, 0.24, 8), PX + 0.45, 2.24, 0.34, HZ);                 // 握把
+  const wood = new THREE.Mesh(mergeGeometries(wd, false), mat(0xb98d5f, SKIN_WOOD()));
+  boxUV(wood.geometry, 0.75); wood.castShadow = wood.receiveShadow = true; g.add(wood);
+
+  // 屋頂：雙坡（屋脊沿兩柱連線）＋屋簷突出，與民房同語彙。尺寸抓得只比柱距略大——
+  // 屋頂一旦明顯超出井身，整口井看起來就會頭重腳輕。
+  const RH = 0.8, HD = 1.6, ang = Math.atan2(RH, HD), slope = Math.hypot(HD, RH);
+  const rf = [];
+  for (const sz of [-1, 1]) put(rf, new THREE.BoxGeometry(PX * 2 + 0.55, 0.12, slope), 0, 2.6 + RH - Math.sin(ang) * slope / 2, sz * Math.cos(ang) * slope / 2, 0, sz * ang);
+  put(rf, new THREE.BoxGeometry(PX * 2 + 0.66, 0.15, 0.26), 0, 2.6 + RH + 0.02, 0); // 屋脊蓋板
+  const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(0x9c5b3a, SKIN_SHINGLE()));
+  boxUV(roof.geometry, 0.5); roof.castShadow = roof.receiveShadow = true; g.add(roof);
+
+  // 繩＋桶：合併成一個 mesh 掛在支點下，整組繞轆轤軸緩緩擺盪
+  wellBucket.position.set(0, 2.24, 0); g.add(wellBucket);
+  const bk = [];
+  put(bk, C(0.028, 0.028, 0.46, 6), 0, -0.23, 0);                               // 繩
+  put(bk, C(0.32, 0.26, 0.42), 0, -0.67, 0);                                    // 木桶（上寬下窄）
+  put(bk, new THREE.TorusGeometry(0.3, 0.025, 6, 12), 0, -0.5, 0, 0, HZ);       // 桶口鐵箍
+  const bucket = new THREE.Mesh(mergeGeometries(bk, false), mat(0xa8814f, SKIN_WOOD()));
+  boxUV(bucket.geometry, 0.4); bucket.castShadow = true; wellBucket.add(bucket);
+}
+addCircleCol(WELL_X, WELL_Z, 1.9);   // 水井實體
 
 // （開放式村莊：移除圓形低石牆、柱帽與村口拱門 → 無硬邊界、自然融入草原）
 
@@ -1333,10 +1382,6 @@ addCircleCol(-10.2, -10.8, 1.9);   // 水井實體
 //      牆／屋頂若吃 albedo，不但整體壓暗，五種屋頂色還會一律被染成棕色。
 // 因此：牆與屋頂只取 normalMap 的凹凸細節、albedo 維持原配色；本就中性或深色的石基／煙囪／門
 // 才用完整貼圖，並把基色提亮以補償 albedo 的相乘衰減。
-const HOUSE_PLASTER = () => ({ normalMap: stoneNor, normalScale: new THREE.Vector2(0.65, 0.65), roughness: 0.95 }); // 灰泥牆：凹凸不染色
-const HOUSE_SHINGLE = () => ({ normalMap: woodNor,  normalScale: new THREE.Vector2(0.75, 0.75), roughness: 0.85 }); // 木瓦屋頂：板紋不染色
-const HOUSE_STONE   = () => ({ map: stoneMap, normalMap: stoneNor, normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.95 });
-const HOUSE_WOOD    = () => ({ map: woodMap,  normalMap: woodNor,  normalScale: new THREE.Vector2(0.5, 0.5),  roughness: 0.82 });
 // 幾何：原本是「方盒＋八角錐」——錐頂蓋在方形牆上會讀成一頂八角帽，是最顯眼的違和。
 // 改成雙坡屋頂（山牆朝前）＋突出屋簷＋半木構外觀。山牆不另外做零件，而是把牆體擠出成
 // 五邊形（含三角形頂）：真實建築的山牆本來就是牆的一部分、同材質同色，也順帶避開
@@ -1354,14 +1399,14 @@ function cottage(color, roofC) {
   put(st, B(W + 0.2, BY, D + 0.2), 0, BY / 2, 0);
   put(st, B(0.7, 1.6, 0.7), 1.4, 5.1, -1.0);
   put(st, B(0.94, 0.16, 0.94), 1.4, 5.98, -1.0);           // 煙囪帽：壓住頂端、擋雨
-  const stone = new THREE.Mesh(mergeGeometries(st, false), mat(0xd6d2c8, HOUSE_STONE()));
+  const stone = new THREE.Mesh(mergeGeometries(st, false), mat(0xd6d2c8, SKIN_STONE()));
   boxUV(stone.geometry, 1.0); stone.castShadow = stone.receiveShadow = true; g.add(stone);
 
   // 牆：五邊形擠出＝矩形牆＋三角形山牆一體成形（保留配色，只吃 normalMap）
   const ws = new THREE.Shape();
   ws.moveTo(-W / 2, 0); ws.lineTo(W / 2, 0); ws.lineTo(W / 2, WH); ws.lineTo(0, WH + RH); ws.lineTo(-W / 2, WH); ws.closePath();
   const wallGeo = new THREE.ExtrudeGeometry(ws, { depth: D, bevelEnabled: false }).translate(0, BY, -D / 2);
-  const wall = new THREE.Mesh(wallGeo, mat(color, HOUSE_PLASTER()));
+  const wall = new THREE.Mesh(wallGeo, mat(color, SKIN_PLASTER()));
   boxUV(wall.geometry, 1.3); wall.castShadow = wall.receiveShadow = true; g.add(wall);
 
   // 屋頂：兩片斜板沿山牆斜邊鋪設、往外多伸 OV 成屋簷，再蓋一條屋脊
@@ -1371,7 +1416,7 @@ function cottage(color, roofC) {
   put(rf, B(slope, 0.16, D + OV * 2),  mx, my, 0, -ang);   // 右斜面（+x 端接屋脊、-x 端垂成屋簷）
   put(rf, B(slope, 0.16, D + OV * 2), -mx, my, 0,  ang);   // 左斜面
   put(rf, B(0.36, 0.22, D + OV * 2 + 0.12), 0, RY + 0.03, 0); // 屋脊蓋板
-  const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(roofC, HOUSE_SHINGLE()));
+  const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(roofC, SKIN_SHINGLE()));
   boxUV(roof.geometry, 0.55); roof.castShadow = roof.receiveShadow = true; g.add(roof);   // tile 小＝板紋密，讀起來像一片片木瓦
 
   // 木：半木構（四角豎樑＋腰帶＋正面斜撐）、門窗框、屋簷下椽條
@@ -1385,10 +1430,10 @@ function cottage(color, roofC) {
   put(wd, B(1.5, 2.12, 0.08), 0, BY + 1.06, D / 2 - 0.01);                                                   // 門框（門疊在前面 → 露出框邊）
   for (const wx of [-1.6, 1.6]) put(wd, B(1.14, 1.14, 0.08), wx, 2.3, D / 2 - 0.01);                         // 窗框
   for (const sx of [-1, 1]) for (const rz of [-1.55, -0.8, 0, 0.8, 1.55]) put(wd, B(0.46, 0.13, 0.13), sx * 2.62, 3.28, rz); // 屋簷下椽條
-  const wood = new THREE.Mesh(mergeGeometries(wd, false), mat(0xb98d5f, HOUSE_WOOD()));
+  const wood = new THREE.Mesh(mergeGeometries(wd, false), mat(0xb98d5f, SKIN_WOOD()));
   boxUV(wood.geometry, 0.8); wood.castShadow = wood.receiveShadow = true; g.add(wood);
 
-  const door = new THREE.Mesh(B(1.2, 1.9, 0.12), mat(0x9c7548, HOUSE_WOOD())); door.position.set(0, BY + 0.95, D / 2 + 0.04); boxUV(door.geometry, 0.7); g.add(door); // 比框深一階，門才讀得出來
+  const door = new THREE.Mesh(B(1.2, 1.9, 0.12), mat(0x9c7548, SKIN_WOOD())); door.position.set(0, BY + 0.95, D / 2 + 0.04); boxUV(door.geometry, 0.7); g.add(door); // 比框深一階，門才讀得出來
   const wg = [];
   for (const wx of [-1.6, 1.6]) put(wg, B(0.9, 0.9, 0.1), wx, 2.3, D / 2 + 0.04);
   const win = new THREE.Mesh(mergeGeometries(wg, false), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.9 }));
@@ -3385,6 +3430,7 @@ function animate(time) {
     tuftFX.uFeet.value.set(hero.position.x - gc * 0.26 + gs * fL, hero.position.z + gs * 0.26 + gc * fL,
                            hero.position.x + gc * 0.26 + gs * fR, hero.position.z - gs * 0.26 + gc * fR); }
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
+  wellBucket.rotation.z = Math.sin(t * 0.85) * 0.05;   // 吊桶緩緩擺盪（繩＋桶整組繞轆轤軸）
   // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
