@@ -1326,13 +1326,24 @@ addCircleCol(-10.2, -10.8, 1.9);   // 水井實體
 // （開放式村莊：移除圓形低石牆、柱帽與村口拱門 → 無硬邊界、自然融入草原）
 
 // 小屋（石基 + 屋簷 + 煙囪 + 雙窗）
+// 材質：接上村莊其他構件早就在用的石／木貼圖——民房原本是全村唯一純色、沒貼圖的建築。
+// 兩個陷阱：
+//   ① applyStone/applyWood 會覆寫 m.color，直接套用會讓五組屋色與屋頂色全部消失。
+//   ② albedo 與 color 是相乘的。實測 concrete 平均亮度 0.54、wood 只有 0.37 且明顯偏棕(120,89,57)，
+//      牆／屋頂若吃 albedo，不但整體壓暗，五種屋頂色還會一律被染成棕色。
+// 因此：牆與屋頂只取 normalMap 的凹凸細節、albedo 維持原配色；本就中性或深色的石基／煙囪／門
+// 才用完整貼圖，並把基色提亮以補償 albedo 的相乘衰減。
+const HOUSE_PLASTER = () => ({ normalMap: stoneNor, normalScale: new THREE.Vector2(0.65, 0.65), roughness: 0.95 }); // 灰泥牆：凹凸不染色
+const HOUSE_SHINGLE = () => ({ normalMap: woodNor,  normalScale: new THREE.Vector2(0.75, 0.75), roughness: 0.85 }); // 木瓦屋頂：板紋不染色
+const HOUSE_STONE   = () => ({ map: stoneMap, normalMap: stoneNor, normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.95 });
+const HOUSE_WOOD    = () => ({ map: woodMap,  normalMap: woodNor,  normalScale: new THREE.Vector2(0.5, 0.5),  roughness: 0.82 });
 function cottage(color, roofC) {
   const g = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.5, 4.7), mat(0x9a9080)); base.position.y = 0.25; base.castShadow = base.receiveShadow = true; g.add(base);
-  const b = new THREE.Mesh(new THREE.BoxGeometry(5, 3.0, 4.5), mat(color)); b.position.y = 2.0; b.castShadow = b.receiveShadow = true; g.add(b);
-  const r = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.6, 8), mat(roofC)); r.position.y = 4.7; r.rotation.y = Math.PI / 4; r.castShadow = true; g.add(r);
-  const ch = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.7), mat(0x8a6a55)); ch.position.set(1.4, 5.1, -1.0); ch.castShadow = true; g.add(ch);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.9, 0.12), mat(0x4a3526)); door.position.set(0, 1.45, 2.27); g.add(door);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.5, 4.7), mat(0xd6d2c8, HOUSE_STONE())); base.position.y = 0.25; base.castShadow = base.receiveShadow = true; boxUV(base.geometry); g.add(base);   // 提亮同 applyStone：×0.54 albedo 後回到原本的石灰色
+  const b = new THREE.Mesh(new THREE.BoxGeometry(5, 3.0, 4.5), mat(color, HOUSE_PLASTER())); b.position.y = 2.0; b.castShadow = b.receiveShadow = true; boxUV(b.geometry); g.add(b);
+  const r = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.6, 8), mat(roofC, HOUSE_SHINGLE())); r.position.y = 4.7; r.rotation.y = Math.PI / 4; r.castShadow = true; boxUV(r.geometry, 1.6); g.add(r);
+  const ch = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.7), mat(0xcfb9a6, HOUSE_STONE())); ch.position.set(1.4, 5.1, -1.0); ch.castShadow = true; boxUV(ch.geometry, 1.2); g.add(ch);                 // 同上補償：×0.54 後回到磚紅褐
+  const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.9, 0.12), mat(0xb98d5f, HOUSE_WOOD())); door.position.set(0, 1.45, 2.27); boxUV(door.geometry, 1.2); g.add(door);                                  // ×0.37 wood albedo 後回到深棕門色
   for (const wx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.12), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.9 })); win.position.set(wx, 2.3, 2.27); g.add(win); regNightGlow(win); } // 夜晚窗光更暖
   return g;
 }
