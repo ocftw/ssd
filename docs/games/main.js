@@ -518,18 +518,34 @@ function resolveHeroCollision() {
   hero.position.x = px; hero.position.z = pz;
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
+// 積雪（uSnow）疊在草皮混色之後：與飄雪同一套敘事——夜／荒蕪時大地覆雪，天亮隨 vibrancy 融去（見 animate）
 const grassTex = tex('./tex/grass.webp', 1, 1, true);
+const snowCover = { value: 0 };   // 0..SNOW_MAX；由 animate 依 vibrancy 驅動
+const SNOW_MAX = 0.55;            // 刻意不到 1：薄雪覆蓋的荒原，底下的草／沙／岩色仍透出來，不把夜村洗成純白
 const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
-  sh.vertexShader = 'varying vec2 vTerUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;');
-  sh.fragmentShader = 'uniform sampler2D grassMap;\nvarying vec2 vTerUv;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+  sh.uniforms.uSnow = snowCover;
+  // 積雪取「幾何法線」而非 normalMap 擾動後的法線：積雪跟隨大地形起伏，不該被地表細碎凹凸打斷。
+  // 一併帶出世界 y（vTerSnow.y）→ 水面附近不積雪，免得湖底／海底的白透過半透明水面浮出來。
+  sh.vertexShader = 'varying vec2 vTerUv;\nvarying vec2 vTerSnow;\n' + sh.vertexShader
+    .replace('#include <uv_vertex>', '#include <uv_vertex>\n  vTerUv = uv;')
+    .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+  vTerSnow = vec2(normalize(mat3(modelMatrix) * objectNormal).y, (modelMatrix * vec4(position, 1.0)).y);`);
+  sh.fragmentShader = 'uniform sampler2D grassMap;\nuniform float uSnow;\nvarying vec2 vTerUv;\nvarying vec2 vTerSnow;\n' + sh.fragmentShader
+    .replace('#include <color_fragment>', `#include <color_fragment>
   {
     float gm = smoothstep(0.04, 0.16, vColor.g - vColor.r);                 // 只在草地（綠>紅）混入
     vec3 grass = mix(texture2D(grassMap, vTerUv * 67.0).rgb, texture2D(grassMap, vTerUv * 17.0).rgb, 0.5); // 雙尺度打散重複（隨地圖放大提高重複數維持密度）
     float gv = dot(grass, vec3(0.299, 0.587, 0.114));
     diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * (0.72 + gv * 0.62), gm); // 以草皮明暗調變綠地、保留綠色基調
-  }`);
+  }
+  // 積雪：只積在夠平的朝上面（陡坡積不住）、且高於水面一段距離
+  float snowC = uSnow * smoothstep(0.55, 0.92, vTerSnow.x) * smoothstep(-1.0, 1.4, vTerSnow.y);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.90, 0.98), snowC);  // 雪色偏藍：夜晚環境光被壓到 0.16，純白會顯髒
+`)
+    .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+  roughnessFactor = mix(roughnessFactor, 0.95, snowC);                      // 雪面比草地更霧面`);
 };
 const terrain = new THREE.Mesh(tGeo, terrainMat);
 terrain.receiveShadow = true;
@@ -3249,6 +3265,7 @@ function animate(time) {
   // 世界繁榮度：色彩分級 + 天空 + 霧
   vibrancy += (vibrancyTarget - vibrancy) * Math.min(1, 1.5 * dt);
   water.material.color.lerpColors(WATER_NIGHT, WATER_DAY, vibrancy); // 平海面：白天亮藍、夜晚深藍（MeshBasic 不受光，手動調）
+  snowCover.value += ((1 - vibrancy) * SNOW_MAX - snowCover.value) * Math.min(1, 0.6 * dt); // 積雪：刻意慢於天亮（1.5/s）→ 村莊復甦後大地才慢慢融雪，過場有層次
   gradePass.uniforms.uVibrancy.value = vibrancy;
   gradePass.uniforms.uNightBr.value = torchTune.nightBr;             // 夜晚亮度（座標框可即時調）
   setWorldLight(vibrancy); // 夜→日：明暗由燈光表現，火把照到處顯原色
