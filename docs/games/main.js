@@ -1966,31 +1966,80 @@ ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
 ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
 // 檔案室改為「原地藝廊面板」（見 openArchivePanel）：不再傳送進第一人稱房間 → 操作與主世界一致、手機也好用。
 let archEnterArmed = true;      // 走近入口的一次性觸發旗標
-// 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
+// 入口建築：古典列柱檔案館。改版前是一只六面灰盒——牆面沒有窗、沒有線腳、沒有台階，
+// 光打上去毫無轉折，讀起來就是水泥方塊。列柱門廊解決的正是這件事：柱列在牆面投下一道道
+// 垂直陰影，平面立刻有了深度；「列柱 ＝ 圖書館／檔案館」也是夠強的視覺慣例，能和民房的
+// 半木構區隔開來——那是住的，這是村裡的公共知識殿堂。
 {
   const g = new THREE.Group(); g.position.copy(ARCHIVE.pos); g.rotation.y = ARCHIVE.face; // 門面朝中央水晶
-  const wallMat = applyStone(mat(0xffffff));
-  const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  add(new THREE.BoxGeometry(0.6, 4, 6), wallMat, -2.2, 2, 0);
-  add(new THREE.BoxGeometry(4.4, 4, 0.6), wallMat, 0, 2, -2.7);
-  add(new THREE.BoxGeometry(4.4, 4, 0.6), wallMat, 0, 2, 2.7);
-  add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, -2);
-  add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, 2);
-  add(new THREE.BoxGeometry(0.6, 1, 2.2), wallMat, 2.2, 3.5, 0);
-  // 屋頂：雙坡（屋脊沿長邊）＋兩端山牆，取代原本的四角錐；山牆與牆體同材質，一如真實建築
+  const wallMat = applyStone(mat(0xffffff)); wallMat.side = THREE.DoubleSide;   // 門洞看得進室內：沒有 DoubleSide 的話牆內側會被背面剔除，直接穿透看到外面的草地
+  const B = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+  const C = (rt, rb, h, s = 12) => new THREE.CylinderGeometry(rt, rb, h, s);
+  const put = (arr, geo, x, y, z) => { geo.translate(x, y, z); arr.push(geo); };
+  const RH2 = 1.55, COLX = 3.5, COLZ = [-2.15, -0.85, 0.85, 2.15];   // 柱列 x／四根柱的 z（中間兩根之間留 1.7 寬的入口通道）
+
+  // ── 石造主體（Box／Cylinder，皆為 indexed，可合併成一個 mesh）──
+  const st = [];
+  put(st, B(0.6, 4, 6), -2.2, 2, 0);                       // 後牆（背面）
+  put(st, B(4.4, 4, 0.6), 0, 2, -2.7);
+  put(st, B(4.4, 4, 0.6), 0, 2, 2.7);
+  put(st, B(0.6, 4, 2), 2.2, 2, -2);                       // 正面：門洞兩側
+  put(st, B(0.6, 4, 2), 2.2, 2, 2);
+  put(st, B(0.6, 1, 2.2), 2.2, 3.5, 0);                    // 門楣
+  put(st, B(4.2, 0.12, 5.5), 0, 0.06, 0);                  // 室內石地板
+  // 門廊地坪與前階（刻意壓到很矮：角色貼地形行走、不會爬階，太高會整雙腳沒入石頭裡）
+  put(st, B(2.5, 0.2, 6.2), 3.45, 0.1, 0);
+  put(st, B(0.55, 0.12, 6.2), 4.95, 0.06, 0);
+  // 四根列柱：柱礎＋柱身＋柱頭＋頂板
+  for (const cz of COLZ) {
+    put(st, C(0.4, 0.44, 0.22), COLX, 0.31, cz);
+    put(st, C(0.24, 0.28, 3.0), COLX, 1.92, cz);
+    put(st, C(0.42, 0.3, 0.24), COLX, 3.54, cz);
+    put(st, B(0.86, 0.14, 0.86), COLX, 3.73, cz);
+  }
+  put(st, B(2.0, 0.3, 6.4), 3.45, 3.95, 0);                // 楣樑
+  put(st, B(2.3, 0.16, 6.8), 3.45, 4.18, 0);               // 簷口
+  // 壁柱：把長牆切出節奏，避免大片無轉折的平牆
+  for (const cz of [-2.3, -0.85, 0.85, 2.3]) put(st, B(0.16, 3.5, 0.42), -2.58, 1.75, cz);
+  for (const sz of [-1, 1]) for (const cx of [-1.2, 1.2]) put(st, B(0.42, 3.5, 0.16), cx, 1.75, sz * 3.08);
+  // 高窗的石框
+  for (const cz of [-1.6, 0, 1.6]) put(st, B(0.1, 1.38, 0.64), -2.54, 2.7, cz);
+  for (const sz of [-1, 1]) put(st, B(0.64, 1.38, 0.1), 0, 2.7, sz * 3.04);
+  const stone = new THREE.Mesh(mergeGeometries(st, false), wallMat);
+  boxUV(stone.geometry); stone.castShadow = stone.receiveShadow = true; g.add(stone);
+
+  // ── 山牆與三角楣飾（ExtrudeGeometry 是 non-indexed，不能和上面那組合併）──
+  const ex = [];
+  const gs = new THREE.Shape(); gs.moveTo(-2.5, 0); gs.lineTo(2.5, 0); gs.lineTo(0, RH2); gs.closePath();
+  for (const gz of [-3.0, 2.9]) ex.push(new THREE.ExtrudeGeometry(gs, { depth: 0.1, bevelEnabled: false }).translate(0, 4, gz));
+  // 門廊上方的三角楣飾（Shape 建在 xy 平面，rotateY 轉到 yz 才會正對門口）。
+  // 高度刻意壓在主屋脊（y=5.55）之下：楣飾一旦超過屋脊就會把整片主屋頂遮掉，前後層次就沒了。
+  const ps = new THREE.Shape(); ps.moveTo(-3.4, 0); ps.lineTo(3.4, 0); ps.lineTo(0, 1.05); ps.closePath();
+  ex.push(new THREE.ExtrudeGeometry(ps, { depth: 0.42, bevelEnabled: false }).rotateY(Math.PI / 2).translate(3.66, 4.26, 0));
+  const trim = new THREE.Mesh(mergeGeometries(ex, false), wallMat);
+  boxUV(trim.geometry); trim.castShadow = trim.receiveShadow = true; g.add(trim);
+
+  // ── 主屋頂：雙坡（屋脊沿長邊）。它退在門廊楣飾之後，兩者形成前後層次 ──
   {
-    const RW = 2.85, RD = 3.35, RH2 = 1.55, ang = Math.atan2(RH2, RW), slope = Math.hypot(RW, RH2), rf = [];
-    for (const sx of [-1, 1]) { const b = new THREE.BoxGeometry(slope, 0.16, RD * 2); b.rotateZ(-sx * ang); b.translate(sx * Math.cos(ang) * slope / 2, 4 + RH2 - Math.sin(ang) * slope / 2, 0); rf.push(b); }
-    rf.push(new THREE.BoxGeometry(0.36, 0.2, RD * 2 + 0.14).translate(0, 4 + RH2 + 0.03, 0));
+    const RW = 2.85, RD = 3.35, ang = Math.atan2(RH2, RW), slope = Math.hypot(RW, RH2), rf = [];
+    for (const sx of [-1, 1]) { const b = B(slope, 0.16, RD * 2); b.rotateZ(-sx * ang); b.translate(sx * Math.cos(ang) * slope / 2, 4 + RH2 - Math.sin(ang) * slope / 2, 0); rf.push(b); }
+    rf.push(B(0.36, 0.2, RD * 2 + 0.14).translate(0, 4 + RH2 + 0.03, 0));
     const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(0x9c5b3a, SKIN_SHINGLE()));
     boxUV(roof.geometry, 0.6); roof.castShadow = true; g.add(roof);
-    const gs = new THREE.Shape(); gs.moveTo(-2.5, 0); gs.lineTo(2.5, 0); gs.lineTo(0, RH2); gs.closePath();
-    const gb = [-3.0, 2.9].map((gz) => new THREE.ExtrudeGeometry(gs, { depth: 0.1, bevelEnabled: false }).translate(0, 4, gz));
-    const gable = new THREE.Mesh(mergeGeometries(gb, false), wallMat);
-    boxUV(gable.geometry); gable.castShadow = true; g.add(gable);
   }
-  for (const sz of [-0.95, 0.95]) { const fr = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3, 0.25), RUIN.woodDk); boxUV(fr.geometry); fr.position.set(2.25, 1.5, sz); fr.castShadow = true; g.add(fr); }
-  const lab = makeLabel(UI.labelArchive); lab.o.position.set(2.4, 4.7, 0); g.add(lab.o);
+
+  // 高窗：夜裡透出暖光＝裡面有人在讀，與民房窗戶同一套 regNightGlow
+  const wn = [];
+  for (const cz of [-1.6, 0, 1.6]) put(wn, B(0.12, 1.12, 0.42), -2.58, 2.7, cz);
+  for (const sz of [-1, 1]) put(wn, B(0.42, 1.12, 0.12), 0, 2.7, sz * 3.08);
+  const win = new THREE.Mesh(mergeGeometries(wn, false), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.7 }));
+  g.add(win); regNightGlow(win);
+
+  const fr = [];
+  for (const sz of [-0.95, 0.95]) put(fr, B(0.3, 3, 0.25), 2.25, 1.5, sz);
+  const frame = new THREE.Mesh(mergeGeometries(fr, false), RUIN.woodDk);
+  boxUV(frame.geometry); frame.castShadow = true; g.add(frame);
+  const lab = makeLabel(UI.labelArchive); lab.o.position.set(4.1, 5.0, 0); g.add(lab.o);   // 移到楣飾正面
   scene.add(g);
 }
 addBoxCol(ARCHIVE.pos.x, ARCHIVE.pos.z, 2.0, 2.9, ARCHIVE.face);   // 檔案室實體（門在 +x 側；入口 trigger 半徑 1.7 > 停止距離 → 仍能進入）
