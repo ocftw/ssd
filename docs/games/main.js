@@ -1493,7 +1493,14 @@ dirtPath(0, 4, 0, 30, 3.0);                    // 出村大道（接白天入口
 function marketStall(x, z, awn) {
   const g = new THREE.Group();
   for (const px of [-1.3, 1.3]) for (const pz of [-0.9, 0.9]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.2, 8), mat(0x7a5230)); p.position.set(px, 1.1, pz); p.castShadow = true; g.add(p); applyWood(p.material); }
-  const top = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.25, 2.4), mat(awn, { emissive: awn, emissiveIntensity: 0.08 })); top.position.y = 2.3; top.castShadow = true; g.add(top);
+  // 遮陽棚：雙坡帆布＋下緣垂邊，取代原本的一塊平板
+  const AW = 1.75, AD = 1.35, ARH = 0.45, aang = Math.atan2(ARH, AD), aslope = Math.hypot(AD, ARH);
+  const aw = [];
+  for (const sz of [-1, 1]) { const b = new THREE.BoxGeometry(AW * 2, 0.08, aslope); b.rotateX(sz * aang); b.translate(0, 2.25 + ARH - Math.sin(aang) * aslope / 2, sz * Math.cos(aang) * aslope / 2); aw.push(b); }
+  aw.push(new THREE.BoxGeometry(AW * 2 + 0.1, 0.1, 0.15).translate(0, 2.25 + ARH + 0.02, 0));                    // 脊
+  for (const sz of [-1, 1]) aw.push(new THREE.BoxGeometry(AW * 2, 0.2, 0.06).translate(0, 2.16, sz * AD));        // 垂邊
+  const top = new THREE.Mesh(mergeGeometries(aw, false), mat(awn, { ...SKIN_SHINGLE(), emissive: awn, emissiveIntensity: 0.06 }));
+  boxUV(top.geometry, 0.45); top.castShadow = true; g.add(top);
   const table = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.18, 1.2), mat(0x8a6a3f)); table.position.set(0, 1.0, 0.5); table.castShadow = true; g.add(table); applyWood(table.material);
   for (let i = 0; i < 3; i++) { const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), mat(0x9c7a4a)); crate.position.set(-1 + i, 1.3, 0.5); g.add(crate); applyWood(crate.material); }
   g.position.set(x, groundY(x, z), z); g.rotation.y = Math.atan2(-x, -z); village.add(g);
@@ -1510,7 +1517,18 @@ function fence(ax, az, bx, bz) {
   for (let i = 0; i <= n; i++) { const t = i / n; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 1.1, 6), mat(0x6b5a44)); post.position.set(ax + (bx - ax) * t, 0.55, az + (bz - az) * t); post.castShadow = true; village.add(post); applyWood(post.material); }
   const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, len), mat(0x6b5a44)); rail.position.set((ax + bx) / 2, 0.78, (az + bz) / 2); rail.rotation.y = Math.atan2(bx - ax, bz - az); village.add(rail); applyWood(rail.material);
 }
-function hayPile(x, z) { const a = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 1.0, 10), mat(0xd9b65a)); a.rotation.z = Math.PI / 2; a.position.set(x, groundY(x, z) + 0.6, z); a.castShadow = true; village.add(a); }
+// 乾草堆：原本是孤零零一根橫躺的圓柱，改成三捆疊放、角度各異；normalMap 借 wood_n 當草稈纖維
+// （不能用 grass.webp 的 albedo——它是綠的，乘上乾草黃會變回青草色）
+function hayPile(x, z) {
+  const hs = [], HC = (rt, rb, h) => new THREE.CylinderGeometry(rt, rb, h, 10);
+  const put = (geo, px, py, pz, ry = 0) => { geo.rotateZ(Math.PI / 2); if (ry) geo.rotateY(ry); geo.translate(px, py, pz); hs.push(geo); };
+  put(HC(0.68, 0.8, 1.0), -0.04, 0.6, 0.08);
+  put(HC(0.6, 0.7, 0.9), 0.1, 0.56, -0.66, 0.5);
+  put(HC(0.52, 0.6, 0.8), -0.08, 1.34, -0.12, -0.38);
+  const m = new THREE.Mesh(mergeGeometries(hs, false), mat(0xd9b65a, { normalMap: woodNor, normalScale: new THREE.Vector2(0.85, 0.85), roughness: 1 }));
+  boxUV(m.geometry, 0.5); m.castShadow = m.receiveShadow = true;
+  m.position.set(x, groundY(x, z), z); m.rotation.y = rand(0, TAU); village.add(m);
+}
 const dress = TIER !== 'low';
 marketStall(8, 11, 0xff7a45); marketStall(-9, 10, 0x5b9cff); if (dress) marketStall(0, 17, 0xffd166); // 中央小市集
 gardenPatch(17, -3); gardenPatch(-17, -3); gardenPatch(6, -19); if (dress) { gardenPatch(-6, -19); gardenPatch(20, 13); }
@@ -1542,7 +1560,14 @@ const board = new THREE.Group();
 for (const bx of [-1.4, 1.4]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 3.4, 12), mat(0x7a5230)); p.position.set(bx, 1.7, 0); p.castShadow = true; board.add(p); applyWood(p.material); boxUV(p.geometry); }
 const sign = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 0.25), mat(0xe7c884)); sign.position.set(0, 2.9, 0); sign.castShadow = true; board.add(sign); applyWood(sign.material); boxUV(sign.geometry);
 const frame = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 0.3), mat(0x9c6b41)); frame.position.set(0, 4.05, 0); board.add(frame); applyWood(frame.material); boxUV(frame.geometry);
-const roofb = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.5, 1.2), mat(0x9c5b3a)); roofb.position.set(0, 4.35, 0); roofb.castShadow = true; board.add(roofb);
+// 牌頂：小雙坡（同民房語彙），取代原本的一塊平板
+{
+  const BW = 2.35, BD = 0.9, BRH = 0.42, bang = Math.atan2(BRH, BD), bslope = Math.hypot(BD, BRH), rb = [];
+  for (const sz of [-1, 1]) { const b = new THREE.BoxGeometry(BW * 2, 0.1, bslope); b.rotateX(sz * bang); b.translate(0, 4.28 + BRH - Math.sin(bang) * bslope / 2, sz * Math.cos(bang) * bslope / 2); rb.push(b); }
+  rb.push(new THREE.BoxGeometry(BW * 2 + 0.12, 0.12, 0.18).translate(0, 4.28 + BRH + 0.02, 0));
+  const roofb = new THREE.Mesh(mergeGeometries(rb, false), mat(0x9c5b3a, SKIN_SHINGLE()));
+  boxUV(roofb.geometry, 0.5); roofb.castShadow = true; board.add(roofb);
+}
 board.position.set(-9.2, 0, 13.1); board.rotation.y = Math.atan2(-board.position.x, -board.position.z); village.add(board); // 面朝中央水晶（村心）
 addBoxCol(-9.2, 13.1, 1.9, 0.35, Math.atan2(9.2, -13.1));   // 告示牌實體（薄盒；POI openDist 4.5 仍可讀）
 
@@ -1952,7 +1977,18 @@ let archEnterArmed = true;      // 走近入口的一次性觸發旗標
   add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, -2);
   add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, 2);
   add(new THREE.BoxGeometry(0.6, 1, 2.2), wallMat, 2.2, 3.5, 0);
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(4.4, 1.8, 4), mat(0x9c5b3a)); roof.position.set(0, 5, 0); roof.rotation.y = Math.PI / 4; roof.castShadow = true; g.add(roof);
+  // 屋頂：雙坡（屋脊沿長邊）＋兩端山牆，取代原本的四角錐；山牆與牆體同材質，一如真實建築
+  {
+    const RW = 2.85, RD = 3.35, RH2 = 1.55, ang = Math.atan2(RH2, RW), slope = Math.hypot(RW, RH2), rf = [];
+    for (const sx of [-1, 1]) { const b = new THREE.BoxGeometry(slope, 0.16, RD * 2); b.rotateZ(-sx * ang); b.translate(sx * Math.cos(ang) * slope / 2, 4 + RH2 - Math.sin(ang) * slope / 2, 0); rf.push(b); }
+    rf.push(new THREE.BoxGeometry(0.36, 0.2, RD * 2 + 0.14).translate(0, 4 + RH2 + 0.03, 0));
+    const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(0x9c5b3a, SKIN_SHINGLE()));
+    boxUV(roof.geometry, 0.6); roof.castShadow = true; g.add(roof);
+    const gs = new THREE.Shape(); gs.moveTo(-2.5, 0); gs.lineTo(2.5, 0); gs.lineTo(0, RH2); gs.closePath();
+    const gb = [-3.0, 2.9].map((gz) => new THREE.ExtrudeGeometry(gs, { depth: 0.1, bevelEnabled: false }).translate(0, 4, gz));
+    const gable = new THREE.Mesh(mergeGeometries(gb, false), wallMat);
+    boxUV(gable.geometry); gable.castShadow = true; g.add(gable);
+  }
   for (const sz of [-0.95, 0.95]) { const fr = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3, 0.25), RUIN.woodDk); boxUV(fr.geometry); fr.position.set(2.25, 1.5, sz); fr.castShadow = true; g.add(fr); }
   const lab = makeLabel(UI.labelArchive); lab.o.position.set(2.4, 4.7, 0); g.add(lab.o);
   scene.add(g);
