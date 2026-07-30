@@ -322,7 +322,9 @@ function assignFireflies() {
 }
 
 // ── 沉浸感：天氣（桌機限定）＋動態生物（蝴蝶／魚影／飛鳥）。輕量、純裝飾，不影響玩法 ──
-// A2 天氣：飄霧（夜濃日淡）＋偶發細雨（僅桌機 Q.weather）
+// A2 天氣：飄霧（夜濃日淡）＋偶發降水（僅桌機 Q.weather）
+// 降水「型態」繫於 vibrancy：夜／荒蕪下雪、天亮轉雨（見 animate 的 snowMix）——雪＝世界凍結的象徵，
+// 天亮融雪與村莊復甦同步，強度／排程則雨雪共用同一套（amt / mode），不新增狀態機。
 let weather = null;
 if (Q.weather) {
   const softTex = (() => {
@@ -351,12 +353,36 @@ if (Q.weather) {
   const rgeo = new THREE.BufferGeometry(); rgeo.setAttribute('position', new THREE.BufferAttribute(rpos, 3)); rgeo.setDrawRange(0, 0);
   const rmat = new THREE.PointsMaterial({ map: rainTex, color: 0xcdd9e6, size: 9, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false }); // 螢幕固定垂直雨絲
   const rain = new THREE.Points(rgeo, rmat); rain.frustumCulled = false; wg.add(rain);
-  // mode：clear晴／light小雨／heavy大雨／storm大雷雨。amt=整體強度(0..1)、storm=雷雨程度(調光+閃電)、flash=閃電亮度
-  weather = { mists, rain, rgeo, rmat, RN, amt: 0, mode: 'clear', storm: 0, timer: rand(18, 40),
+  const snowTex = (() => { // 柔邊圓點＝雪片（六角雪花在實際觀看距離下看不出形狀，不值得畫）
+    const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d');
+    const g = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 32, 32);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx;
+  })();
+  const SN = 2200, spos = new Float32Array(SN * 3);                              // 雪片數少於雨滴：落得慢、單片更大更明顯，2200 已是暴風雪密度
+  for (let i = 0; i < SN; i++) { spos[i * 3] = rand(-46, 46); spos[i * 3 + 1] = rand(0, 44); spos[i * 3 + 2] = rand(-46, 46); }
+  const sgeo = new THREE.BufferGeometry(); sgeo.setAttribute('position', new THREE.BufferAttribute(spos, 3)); sgeo.setDrawRange(0, 0);
+  // 與雨相反的兩個選擇：sizeAttenuation 開（雪片近大遠小＝有實體感，雨絲則是螢幕固定長度）、吃霧（遠處沒入霧色，不會在天邊糊成一片白）
+  const smat = new THREE.PointsMaterial({ map: snowTex, color: 0xdfe9f7, size: 0.42, sizeAttenuation: true, transparent: true, opacity: 0, depthWrite: false, fog: true });
+  const snowT = { value: 0 };
+  // 橫向飄擺（雪與雨最大的體感差別）放進 vertex shader：CPU 每幀只更新 y（與雨一樣便宜），
+  // 相位取自雪片自身座標 → 每片各飄各的、不必為此多存一份屬性。
+  smat.onBeforeCompile = (sh) => {
+    sh.uniforms.uT = snowT;
+    sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+  transformed.x += sin(uT * 0.7 + position.y * 0.6 + position.z) * 0.9;
+  transformed.z += cos(uT * 0.5 + position.y * 0.4 + position.x) * 0.7;`);
+  };
+  const snow = new THREE.Points(sgeo, smat); snow.frustumCulled = false; wg.add(snow);
+  // mode：clear晴／light小／heavy大／storm大雷雨（雷雨在夜晚即暴風雪）。amt=整體強度(0..1)、storm=雷雨程度(調光+閃電)、flash=閃電亮度
+  // snowMix=降水中雪的比例(0..1)，由 vibrancy 驅動；-1＝尚未初始化，首幀直接對齊當下日夜
+  weather = { mists, rain, rgeo, rmat, RN, snow, sgeo, smat, SN, snowT, snowMix: -1, amt: 0, mode: 'clear', storm: 0, timer: rand(18, 40),
     flash: 0, reStrike: 0, strikeTimer: rand(3, 8), thunderDelay: 0,
     baseExp: renderer.toneMappingExposure, baseCol: new THREE.Color(0xcdd9e6), stormCol: new THREE.Color(0xeaf0f8), fogStorm: new THREE.Color(0x7e8b99) };
 }
-// T 鍵：手動循環天氣（晴→小雨→大雨→大雷雨→晴），方便展示／測試；保持所選 60 秒後恢復自動排程
+// T 鍵：手動循環降水強度（晴→小→大→大雷雨→晴），方便展示／測試；保持所選 60 秒後恢復自動排程。
+// 型態（雨／雪）不在此循環內——它繫於日夜：想看雪就在夜晚按 T，想看雨就全破關或 ?explore=1 後按 T。
 addEventListener('keydown', (e) => {
   if (e.code !== 'KeyT' || !weather || (document.activeElement && document.activeElement.tagName === 'INPUT')) return;
   const order = ['clear', 'light', 'heavy', 'storm'];
@@ -3567,15 +3593,29 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
         m.s.position.set(mx, terrainHeight(mx, mz) + m.h, mz);
         m.m.opacity = 0.03 + 0.05 * night + weather.amt * 0.06;   // 飄霧維持淡（雷雨陰霾改交給平滑的距離霧，避免大張霧 sprite 貼地處的硬邊斷層）
       }
+      // 降水型態：夜／荒蕪＝雪、天亮＝雨。過渡刻意放慢（0.35/s）→ 天亮那幾秒是雨夾雪，即「融雪」的漸變
+      weather.snowMix = weather.snowMix < 0 ? night                                        // 首幀直接對齊（載入已全清存檔／探索模式時不會先飄幾秒雪）
+        : weather.snowMix + (night - weather.snowMix) * Math.min(1, 0.35 * dt);
+      const rainMix = 1 - weather.snowMix;
       // 雨：密度(drawRange)、落速、不透明度、尺寸隨強度遞增；雷雨偏灰
       const arr = weather.rgeo.attributes.position.array, fall = (45 + weather.amt * 72 + weather.storm * 45) * dt; // 雷雨落得更急
       for (let i = 1; i < arr.length; i += 3) { arr[i] -= fall; if (arr[i] < 0) arr[i] += 46; }                   // 直接讀 typed array（5000 滴仍便宜）
       weather.rgeo.attributes.position.needsUpdate = true;
-      weather.rgeo.setDrawRange(0, Math.floor(weather.amt * weather.RN));                                          // 雷雨 amt≈1 → 吃滿全池＝最密
+      weather.rgeo.setDrawRange(0, Math.floor(weather.amt * rainMix * weather.RN));                                // 雷雨 amt≈1 → 吃滿全池＝最密；夜晚 rainMix→0＝改由雪接手
       weather.rain.position.set(cam.x, cam.y - 22, cam.z);
       weather.rmat.opacity = Math.min(1, weather.amt * 0.9 + weather.storm * 0.1);                                 // 雷雨幾近不透明
       weather.rmat.size = 8 + weather.amt * 6 + weather.storm * 3;                                                 // 雷雨雨絲更粗長
       weather.rmat.color.copy(weather.baseCol).lerp(weather.stormCol, weather.storm * 0.55);          // 雷雨：雨絲轉亮白 → 在壓暗的場景中更明顯（不再偏灰沒入背景）
+      // 雪：共用雨的強度與排程，僅型態不同。落速只有雨的 ~5%（看得清單片），橫向飄擺已在 vertex shader 內
+      const snowAmt = weather.amt * weather.snowMix;
+      weather.snowT.value = t;
+      const sarr = weather.sgeo.attributes.position.array, sfall = (2.6 + weather.amt * 2.4 + weather.storm * 2.2) * dt; // 暴風雪落得較急，但仍遠慢於雨
+      for (let i = 1; i < sarr.length; i += 3) { sarr[i] -= sfall; if (sarr[i] < 0) sarr[i] += 44; }
+      weather.sgeo.attributes.position.needsUpdate = true;
+      weather.sgeo.setDrawRange(0, Math.floor(snowAmt * weather.SN));
+      weather.snow.position.set(cam.x, cam.y - 20, cam.z);
+      weather.smat.opacity = Math.min(0.95, snowAmt * 1.15);
+      weather.smat.size = 0.34 + snowAmt * 0.22;                                                      // 暴風雪：雪片更大
       // 大雷雨：閃電（偶發、有時雙閃）＋延遲雷聲（聲慢於光）
       if (weather.storm > 0.25) {
         weather.strikeTimer -= dt;
@@ -3594,7 +3634,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
       // 雨後彩虹：夠久的雨（wet>6s）在白天轉晴的「瞬間」觸發。以前一幀 mode 比較偵測轉晴 → 自動排程與 T 鍵手動切換都涵蓋；
       //   純觀察、只動自己的貼片 opacity，不寫入霧色/far/曝光/天氣欄位（不干擾剛調好的雷雨陰霾）。
       if (rainbow) {
-        if (weather.mode !== 'clear' && weather.amt > 0.45) rainbow.wet += dt;                        // 只累計「真的在下」的時間
+        if (weather.mode !== 'clear' && weather.amt > 0.45 && rainMix > 0.5) rainbow.wet += dt;       // 只累計「真的在下雨」的時間（下雪不算：沒有雪後彩虹）
         if (rainbow.prev !== 'clear' && weather.mode === 'clear') {
           if (rainbow.wet > 6 && vibrancy > 0.6) { rainbow.phase = 'in'; rainbow.t = 0; }
           rainbow.wet = 0;
