@@ -1337,14 +1337,62 @@ const HOUSE_PLASTER = () => ({ normalMap: stoneNor, normalScale: new THREE.Vecto
 const HOUSE_SHINGLE = () => ({ normalMap: woodNor,  normalScale: new THREE.Vector2(0.75, 0.75), roughness: 0.85 }); // 木瓦屋頂：板紋不染色
 const HOUSE_STONE   = () => ({ map: stoneMap, normalMap: stoneNor, normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.95 });
 const HOUSE_WOOD    = () => ({ map: woodMap,  normalMap: woodNor,  normalScale: new THREE.Vector2(0.5, 0.5),  roughness: 0.82 });
+// 幾何：原本是「方盒＋八角錐」——錐頂蓋在方形牆上會讀成一頂八角帽，是最顯眼的違和。
+// 改成雙坡屋頂（山牆朝前）＋突出屋簷＋半木構外觀。山牆不另外做零件，而是把牆體擠出成
+// 五邊形（含三角形頂）：真實建築的山牆本來就是牆的一部分、同材質同色，也順帶避開
+// mergeGeometries 不能混合 indexed(Box) 與 non-indexed(Extrude) 幾何的限制。
+// 零件雖然變多，但同材質的先合併再建 Mesh，每棟仍是 6 個 draw call（與改版前相同）。
 function cottage(color, roofC) {
   const g = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.5, 4.7), mat(0xd6d2c8, HOUSE_STONE())); base.position.y = 0.25; base.castShadow = base.receiveShadow = true; boxUV(base.geometry); g.add(base);   // 提亮同 applyStone：×0.54 albedo 後回到原本的石灰色
-  const b = new THREE.Mesh(new THREE.BoxGeometry(5, 3.0, 4.5), mat(color, HOUSE_PLASTER())); b.position.y = 2.0; b.castShadow = b.receiveShadow = true; boxUV(b.geometry); g.add(b);
-  const r = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.6, 8), mat(roofC, HOUSE_SHINGLE())); r.position.y = 4.7; r.rotation.y = Math.PI / 4; r.castShadow = true; boxUV(r.geometry, 1.6); g.add(r);
-  const ch = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.7), mat(0xcfb9a6, HOUSE_STONE())); ch.position.set(1.4, 5.1, -1.0); ch.castShadow = true; boxUV(ch.geometry, 1.2); g.add(ch);                 // 同上補償：×0.54 後回到磚紅褐
-  const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.9, 0.12), mat(0xb98d5f, HOUSE_WOOD())); door.position.set(0, 1.45, 2.27); boxUV(door.geometry, 1.2); g.add(door);                                  // ×0.37 wood albedo 後回到深棕門色
-  for (const wx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.12), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.9 })); win.position.set(wx, 2.3, 2.27); g.add(win); regNightGlow(win); } // 夜晚窗光更暖
+  const W = 5, D = 4.5, WH = 3.0, RH = 2.2, OV = 0.5;      // 牆寬／牆深／牆高／屋頂高／屋簷突出
+  const BY = 0.5, WT = BY + WH, RY = WT + RH;              // 石基頂／牆頂／屋脊高
+  const B = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+  const put = (arr, geo, x, y, z, rz = 0, ry = 0) => { if (rz) geo.rotateZ(rz); if (ry) geo.rotateY(ry); geo.translate(x, y, z); arr.push(geo); }; // 先斜再轉向：rz 定傾角、ry 把它擺到側牆
+
+  // 石：石基＋煙囪＋煙囪帽（中性色，吃完整 albedo）
+  const st = [];
+  put(st, B(W + 0.2, BY, D + 0.2), 0, BY / 2, 0);
+  put(st, B(0.7, 1.6, 0.7), 1.4, 5.1, -1.0);
+  put(st, B(0.94, 0.16, 0.94), 1.4, 5.98, -1.0);           // 煙囪帽：壓住頂端、擋雨
+  const stone = new THREE.Mesh(mergeGeometries(st, false), mat(0xd6d2c8, HOUSE_STONE()));
+  boxUV(stone.geometry, 1.0); stone.castShadow = stone.receiveShadow = true; g.add(stone);
+
+  // 牆：五邊形擠出＝矩形牆＋三角形山牆一體成形（保留配色，只吃 normalMap）
+  const ws = new THREE.Shape();
+  ws.moveTo(-W / 2, 0); ws.lineTo(W / 2, 0); ws.lineTo(W / 2, WH); ws.lineTo(0, WH + RH); ws.lineTo(-W / 2, WH); ws.closePath();
+  const wallGeo = new THREE.ExtrudeGeometry(ws, { depth: D, bevelEnabled: false }).translate(0, BY, -D / 2);
+  const wall = new THREE.Mesh(wallGeo, mat(color, HOUSE_PLASTER()));
+  boxUV(wall.geometry, 1.3); wall.castShadow = wall.receiveShadow = true; g.add(wall);
+
+  // 屋頂：兩片斜板沿山牆斜邊鋪設、往外多伸 OV 成屋簷，再蓋一條屋脊
+  const ang = Math.atan2(RH, W / 2), slope = Math.hypot(W / 2, RH) + OV;
+  const mx = Math.cos(ang) * slope / 2, my = RY - Math.sin(ang) * slope / 2;
+  const rf = [];
+  put(rf, B(slope, 0.16, D + OV * 2),  mx, my, 0, -ang);   // 右斜面（+x 端接屋脊、-x 端垂成屋簷）
+  put(rf, B(slope, 0.16, D + OV * 2), -mx, my, 0,  ang);   // 左斜面
+  put(rf, B(0.36, 0.22, D + OV * 2 + 0.12), 0, RY + 0.03, 0); // 屋脊蓋板
+  const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(roofC, HOUSE_SHINGLE()));
+  boxUV(roof.geometry, 0.55); roof.castShadow = roof.receiveShadow = true; g.add(roof);   // tile 小＝板紋密，讀起來像一片片木瓦
+
+  // 木：半木構（四角豎樑＋腰帶＋正面斜撐）、門窗框、屋簷下椽條
+  const wd = [];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(wd, B(0.22, WH, 0.22), sx * (W / 2 - 0.1), BY + WH / 2, sz * (D / 2 - 0.1));
+  for (const sz of [-1, 1]) put(wd, B(W + 0.06, 0.18, 0.09), 0, BY + WH * 0.58, sz * (D / 2 + 0.04));       // 腰帶（前後）
+  for (const sx of [-1, 1]) put(wd, B(0.09, 0.18, D + 0.06), sx * (W / 2 + 0.04), BY + WH * 0.58, 0);       // 腰帶（左右）
+  for (const sz of [-1, 1]) put(wd, B(W + 0.12, 0.2, 0.11), 0, WT - 0.1, sz * (D / 2 + 0.05));              // 牆頂橫樑＝山牆底邊
+  // 斜撐只放側牆：正面被門(1.5)與雙窗(各 1.14)佔滿，硬塞會變成從窗下伸出的棍子
+  for (const sx of [-1, 1]) for (const k of [-1, 1]) put(wd, B(1.45, 0.15, 0.08), sx * (W / 2 + 0.04), BY + WH * 0.72, k * 1.15, k * 0.58, Math.PI / 2);
+  put(wd, B(1.5, 2.12, 0.08), 0, BY + 1.06, D / 2 - 0.01);                                                   // 門框（門疊在前面 → 露出框邊）
+  for (const wx of [-1.6, 1.6]) put(wd, B(1.14, 1.14, 0.08), wx, 2.3, D / 2 - 0.01);                         // 窗框
+  for (const sx of [-1, 1]) for (const rz of [-1.55, -0.8, 0, 0.8, 1.55]) put(wd, B(0.46, 0.13, 0.13), sx * 2.62, 3.28, rz); // 屋簷下椽條
+  const wood = new THREE.Mesh(mergeGeometries(wd, false), mat(0xb98d5f, HOUSE_WOOD()));
+  boxUV(wood.geometry, 0.8); wood.castShadow = wood.receiveShadow = true; g.add(wood);
+
+  const door = new THREE.Mesh(B(1.2, 1.9, 0.12), mat(0x9c7548, HOUSE_WOOD())); door.position.set(0, BY + 0.95, D / 2 + 0.04); boxUV(door.geometry, 0.7); g.add(door); // 比框深一階，門才讀得出來
+  const wg = [];
+  for (const wx of [-1.6, 1.6]) put(wg, B(0.9, 0.9, 0.1), wx, 2.3, D / 2 + 0.04);
+  const win = new THREE.Mesh(mergeGeometries(wg, false), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.9 }));
+  g.add(win); regNightGlow(win);   // 夜晚窗光更暖
   return g;
 }
 const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x4f6c92], [0xc98f9b, 0x8a5663], [0xcdb87e, 0x8a6e3a]];
