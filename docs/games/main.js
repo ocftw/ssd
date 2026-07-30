@@ -521,7 +521,10 @@ function resolveHeroCollision() {
 // 積雪（uSnow）疊在草皮混色之後：與飄雪同一套敘事——夜／荒蕪時大地覆雪，天亮隨 vibrancy 融去（見 animate）
 const grassTex = tex('./tex/grass.webp', 1, 1, true);
 const snowCover = { value: 0 };   // 0..SNOW_MAX；由 animate 依 vibrancy 驅動
-const SNOW_MAX = 0.55;            // 刻意不到 1：薄雪覆蓋的荒原，底下的草／沙／岩色仍透出來，不把夜村洗成純白
+const SNOW_MAX = 0.8;             // 刻意不到 1：薄雪覆蓋的荒原，底下的草／沙／岩色仍透出來，不把夜村洗成純白
+const snowyNow = () => (SNOW_MAX > 0 ? Math.min(1, snowCover.value / SNOW_MAX) : 0); // 當下地面積雪程度 0..1；腳印與踢起的粉塵共用
+const GRASS_SNOW_MIX = 0.7;       // 草的褪色上限（見 makeGrassMaterial）：保留三成原色當層次，夜晚才不會整片灰成一塊沒有前後景
+const TREE_SNOW_MIX  = 0.6;       // 樹冠的褪色上限（見 makeFoliageMaterial）：略低於草——葉冠在空中，雪只掛得住上/外層，內層仍應是深綠
 const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
@@ -861,6 +864,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   const m = new THREE.MeshStandardMaterial({ map: leafMap, alphaTest: 0.42, vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: 0.08 });
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol; sh.uniforms.uWind = { value: FOLIAGE_WIND };
+    sh.uniforms.uSnow = snowCover;                                                       // 與地形／草共用同一個 uniform 物件
     sh.vertexShader = 'uniform float uTime, uWind;\nattribute float aSway, aLeaf;\nvarying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vSway;\n' +
       sh.vertexShader.replace('#include <project_vertex>', `
     vGrassUp = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
@@ -874,13 +878,19 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
     vViewW = normalize(cameraPosition - gWorld.xyz); vSway = aSway;
     vec4 mvPosition = viewMatrix * gWorld; gl_Position = projectionMatrix * mvPosition;
   `);
-    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vSway;\nuniform vec3 uSunDir, uSunCol;\n' +
+    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vSway;\nuniform vec3 uSunDir, uSunCol;\nuniform float uSnow;\n' +
       sh.fragmentShader
         .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, 0.55)); // 整冠像柔軟受光體、不是一片片各自反光')
         .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
   {
+    // 積雪：沿用草的做法（去飽和 → 帶雪色）。權重取 vSway——它本就是「頂/外層最大、內層為 0」，
+    // 正好等於雪掛得住的地方：上外層積白、樹冠內部維持深綠，不會整棵刷成白團。
+    float snowK = clamp(uSnow / ${SNOW_MAX.toFixed(3)}, 0.0, 1.0) * ${TREE_SNOW_MIX.toFixed(3)};
+    float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+    diffuseColor.rgb = mix(diffuseColor.rgb, mix(vec3(lum), vec3(0.82, 0.87, 0.95), 0.20 + 0.55 * vSway), snowK);
+    float snowDim = 1.0 - snowK * 0.6;                                                   // 同草：掛雪的葉不透光，否則褪白後逆光反而更亮
     float back = pow(max(dot(-vViewW, uSunDir), 0.0), 2.5);
-    totalEmissiveRadiance += uSunCol * back * (0.25 + 0.75 * vSway) * 0.9 * diffuseColor.rgb; // 逆光透光：外/上層葉透最多
+    totalEmissiveRadiance += uSunCol * back * (0.25 + 0.75 * vSway) * 0.9 * diffuseColor.rgb * snowDim; // 逆光透光：外/上層葉透最多
   }`);
   };
   return m;
@@ -992,12 +1002,13 @@ const tuftFX = { uTime: { value: 0 }, uPlayer: { value: new THREE.Vector3(0, -10
   uSunDir: { value: new THREE.Vector3(48, 72, 32).normalize() },   // 指向主光的世界方向（sun 跟隨 hero、偏移固定 → 算一次即可）
   uSunCol: { value: new THREE.Color(0xffe6a8).multiplyScalar(0.85) } }; // 透光色×強度（暖金，乘上綠色 diffuse → 暖黃綠逆光＝白天陽光穿過葉；可調）
 const grassTrail = new THREE.Vector3(0, 0, 1e4);                   // 撥草膠囊尾點（世界座標，只用 xz；初始放遠處＝開場無撥動）
-function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {               // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度（兩種草分開調）
+function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0, snowI = 1.0) {  // part=撥草開關；upMix=法線往天光混合量；envI=天空環境反射量；transI=逆光透光強度；sheenI=尖端 sheen 強度；snowI=積雪褪色倍率（兩種草分開調）
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0, envMapIntensity: envI });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uTime = tuftFX.uTime; sh.uniforms.uPlayer = tuftFX.uPlayer;
     sh.uniforms.uTrail = tuftFX.uTrail; sh.uniforms.uFeet = tuftFX.uFeet;                 // 貼身撥草用：身體膠囊尾點＋雙腳位置
     sh.uniforms.uSunDir = tuftFX.uSunDir; sh.uniforms.uSunCol = tuftFX.uSunCol;           // 透光/sheen 用：主光方向＋透光色
+    sh.uniforms.uSnow = snowCover;                                                        // 與地形積雪共用同一個 uniform 物件 → 零額外每幀更新
     sh.uniforms.uWind = { value: GRASS_WIND }; sh.uniforms.uPartR = { value: GRASS_PARTR }; sh.uniforms.uPartPush = { value: GRASS_PARTPUSH }; sh.uniforms.uPartPress = { value: GRASS_PARTPRESS }; sh.uniforms.uFootR = { value: GRASS_FOOTR };
     const partGLSL = part ? `
     float rj = 0.78 + 0.44 * fract(sin(gBase.x * 12.9898 + gBase.z * 78.233) * 3758.5453); // 每叢半徑抖動 ±22% → 撥開輪廓毛邊、不是圓規畫的正圓
@@ -1036,21 +1047,27 @@ function makeGrassMaterial(part, upMix, envI, transI = 0.0, sheenI = 0.0) {     
     vec4 mvPosition = viewMatrix * gWorld;
     gl_Position = projectionMatrix * mvPosition;
   `);
-    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\nuniform vec3 uSunDir, uSunCol;\n' +
+    sh.fragmentShader = 'varying vec3 vGrassUp;\nvarying vec3 vViewW;\nvarying float vGH;\nuniform vec3 uSunDir, uSunCol;\nuniform float uSnow;\n' +
       sh.fragmentShader
         .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n  normal = normalize(mix(normal, vGrassUp, ' + upMix.toFixed(3) + ')); // 葉法線往天光混合 → 柔軟整片受光（lights 用 geometryNormal，會由 normal copy）')
         .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
   {
+    // 積雪：草不是被埋掉而是褪色——先去飽和成灰綠，再往雪色帶，草尖帶得比草根多（雪積在頂端）。
+    // 保留部分原色（GRASS_SNOW_MIX）：夜晚已經夠暗，草若整片刷白會和地面糊成一塊、失去前後景。
+    float snowK = clamp(uSnow / ${SNOW_MAX.toFixed(3)}, 0.0, 1.0) * ${(GRASS_SNOW_MIX * snowI).toFixed(3)};
+    float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+    diffuseColor.rgb = mix(diffuseColor.rgb, mix(vec3(lum), vec3(0.82, 0.87, 0.95), 0.25 + 0.5 * vGH), snowK);
+    float snowDim = 1.0 - snowK * 0.6;                                                   // 掛雪的草不透光：逆光透光與尖端 sheen 同步壓低，否則褪白後反而更亮
     float back = pow(max(dot(-vViewW, uSunDir), 0.0), 2.5);                              // 望向光源、穿過草 → 最亮（逆光透光/假 SSS）
-    totalEmissiveRadiance += uSunCol * back * (0.20 + 0.80 * vGH) * ${transI.toFixed(3)} * diffuseColor.rgb; // 尖端薄→透最多；加進 emissive 不被陰影/衰減吃掉＝stylized 穩定背光
-    float rim = pow(max(dot(-vViewW, uSunDir), 0.0), 6.0) * vGH * ${sheenI.toFixed(3)};  // 尖端 sheen：比透光更聚焦、只在尖端（芒草銀穗逆光發亮）
+    totalEmissiveRadiance += uSunCol * back * (0.20 + 0.80 * vGH) * ${transI.toFixed(3)} * diffuseColor.rgb * snowDim; // 尖端薄→透最多；加進 emissive 不被陰影/衰減吃掉＝stylized 穩定背光
+    float rim = pow(max(dot(-vViewW, uSunDir), 0.0), 6.0) * vGH * ${sheenI.toFixed(3)} * snowDim; // 尖端 sheen：比透光更聚焦、只在尖端（芒草銀穗逆光發亮）
     totalEmissiveRadiance += uSunCol * rim;
   }`);
   };
   return mat;
 }
-const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06, 0.85, 0.0);                   // 薩爾達綠草：少混天光、純綠不偏青；風 + 撥草 + 中等逆光透光（碳水綠葉，sheen 關以免整片過亮）
-const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30, 1.25, 0.5);                   // 芒草：較柔；風 + 撥草 + 較強透光 + 尖端 sheen（銀白穗頭逆光發亮）
+const grassMatGreen  = makeGrassMaterial(true, 0.42, 0.06, 0.85, 0.0, 1.00);             // 薩爾達綠草：少混天光、純綠不偏青；風 + 撥草 + 中等逆光透光（碳水綠葉，sheen 關以免整片過亮）；鮮綠與雪最衝突 → 褪色吃滿
+const grassMatSusuki = makeGrassMaterial(true, 0.55, 0.30, 1.25, 0.5, 0.45);              // 芒草：較柔；風 + 撥草 + 較強透光 + 尖端 sheen（銀白穗頭逆光發亮）；本身已是金綠→銀白，雪地上原就協調 → 只需輕度褪色
 // 只在「綠地」長草：沿用地形上色判定 —— 沙岸/黃土（y<water+1.2）、高地岩石（y>15）、陡坡（坡度>0.5）都不長。
 function isGrassGround(x, z) {
   const y = terrainHeight(x, z);
@@ -2864,12 +2881,18 @@ function downloadBlob(blob) {
 // 塵土：受光的塵色小團塊往外噴、上飄後受重力落下並淡出。
 // power≈衝擊力；o 可微調顆數/外擴/上飄/大小/壽命/透明度（走路用很小的揚塵）。
 const dustGeo = new THREE.IcosahedronGeometry(0.22, 0);
+const DUST_DIRT = new THREE.Color(0xcdbfa0);   // 沙土
+const DUST_SNOW = new THREE.Color(0xeef4ff);   // 雪粉（受光材質，夜裡會自然被壓暗，不必刻意調低）
+const _dustCol = new THREE.Color();
+// 玩家踩踏／落地揚起的粉塵顏色：隨積雪由沙土轉雪粉
+const stepDustCol = () => _dustCol.copy(DUST_DIRT).lerp(DUST_SNOW, snowyNow());
 const dusts = [];
 function spawnDust(x, y, z, power, o = {}) {
   const n = o.n ?? (6 + Math.round(power * 5));
   const out = o.out ?? (0.7 + power * 0.7), upMin = o.upMin ?? 1.0, upMax = o.upMax ?? 2.2;
   const sMin = o.sMin ?? 0.4, sMax = o.sMax ?? 0.9, dur = o.dur ?? 0.55, op = o.op ?? 0.7;
-  const mat = new THREE.MeshStandardMaterial({ color: 0xcdbfa0, roughness: 1, metalness: 0, transparent: true, opacity: op, flatShading: false });
+  // 預設沙土色；玩家踩踏／落地時改傳雪粉色（見 stepDustCol），地底生物挖出來的仍是土
+  const mat = new THREE.MeshStandardMaterial({ color: o.col ?? DUST_DIRT, roughness: 1, metalness: 0, transparent: true, opacity: op, flatShading: false });
   const parts = [];
   for (let i = 0; i < n; i++) {
     const a = (i / n) * TAU + rand(-0.4, 0.4), sp = out * rand(0.7, 1.3);
@@ -2883,13 +2906,21 @@ function spawnDust(x, y, z, power, o = {}) {
 }
 
 // 走路腳印：地面上的小暗痕，沿前進方向、隨時間淡出（有數量上限，超過先回收最舊的）
+// 雪地上改留偏藍的凹陷影，且更明顯、更持久——雪會保留踩痕，泥土很快恢復。濃度繫於 snowCover，
+// 天亮融雪後自動變回泥痕，不必另外切換狀態。
 const printGeo = new THREE.PlaneGeometry(0.32, 0.46);
+const PRINT_DIRT = new THREE.Color(0x3a2f26);   // 泥土：暖棕
+const PRINT_SNOW = new THREE.Color(0x33435c);   // 雪地：冷藍灰。亮度刻意抓得與泥棕相近——Basic 材質不受光，太亮會在夜裡像自體發光
+const _printCol = new THREE.Color();
 const prints = [];
 function spawnFootprint(x, y, z, ry) {
-  const mat = new THREE.MeshBasicMaterial({ color: 0x3a2f26, transparent: true, opacity: 0.3, depthWrite: false });
+  const snowy = snowyNow();
+  // 雪地：印子更深、留得更久（4.5→8 秒）。上限同步放寬，否則衝刺（每 0.21 秒一步）會在淡出前就撞到上限、最舊的瞬間消失
+  const op = 0.3 + snowy * 0.12, dur = 4.5 + snowy * 3.5, cap = 28 + Math.round(snowy * 14);
+  const mat = new THREE.MeshBasicMaterial({ color: _printCol.copy(PRINT_DIRT).lerp(PRINT_SNOW, snowy), transparent: true, opacity: op, depthWrite: false });
   const m = new THREE.Mesh(printGeo, mat); m.position.set(x, y + 0.03, z); m.rotation.set(-Math.PI / 2, 0, -ry); m.renderOrder = 1;
-  scene.add(m); prints.push({ m, mat, t: 0, dur: 4.5, op: 0.3 });
-  if (prints.length > 28) { const old = prints.shift(); scene.remove(old.m); old.mat.dispose(); }
+  scene.add(m); prints.push({ m, mat, t: 0, dur, op });
+  if (prints.length > cap) { const old = prints.shift(); scene.remove(old.m); old.mat.dispose(); }
 }
 
 // ── 小地圖（世界縮影；隨鏡頭旋轉＝鏡頭正前方在盤頂；盤緣東南西北羅盤）──────────
@@ -3107,7 +3138,7 @@ function animate(time) {
     else if (!doubleJumped) { jumpVel = 7.2; doubleJumped = true; spinning = true; spinT = 0; yawBeforeSpin = hero.rotation.y; SFX.jump(); }
   }
   jumpHeld = spaceDown; jumpPending = false;
-  if (jumpVel !== 0 || jumpOff > 0) { jumpVel -= 23 * dt; jumpOff = Math.max(0, jumpOff + jumpVel * dt); if (jumpOff === 0) { const sp = -jumpVel; jumpVel = 0; doubleJumped = false; spinning = false; spinT = 0; if (sp > 1) spawnDust(hero.position.x, terrainHeight(hero.position.x, hero.position.z), hero.position.z, Math.min(1.4, sp / 8)); } }
+  if (jumpVel !== 0 || jumpOff > 0) { jumpVel -= 23 * dt; jumpOff = Math.max(0, jumpOff + jumpVel * dt); if (jumpOff === 0) { const sp = -jumpVel; jumpVel = 0; doubleJumped = false; spinning = false; spinT = 0; if (sp > 1) spawnDust(hero.position.x, terrainHeight(hero.position.x, hero.position.z), hero.position.z, Math.min(1.4, sp / 8), { col: stepDustCol() }); } }
   const airborne = jumpOff > 0.05;
   // 空中轉一圈（沿垂直軸 360°，緩入緩出，落地前回正）
   if (spinning) { spinT += dt; const e = Math.min(1, spinT / SPIN_DUR), k = e * e * (3 - 2 * e); hero.rotation.y = yawBeforeSpin + k * TAU; if (e >= 1) { spinning = false; spinT = 0; hero.rotation.y = yawBeforeSpin; } }
@@ -3128,7 +3159,7 @@ function animate(time) {
         const ry = hero.rotation.y, side = (sf % 2 === 0) ? 0.26 : -0.26;
         const fx = hero.position.x + Math.cos(ry) * side, fz = hero.position.z - Math.sin(ry) * side, fy = terrainHeight(fx, fz);
         spawnFootprint(fx, fy, fz, ry);
-        spawnDust(fx, fy, fz, 0.2, { n: 3, out: 0.5, upMin: 0.3, upMax: 0.8, sMin: 0.2, sMax: 0.42, dur: 0.45, op: 0.45 });
+        spawnDust(fx, fy, fz, 0.2, { n: 3, out: 0.5, upMin: 0.3, upMax: 0.8, sMin: 0.2, sMax: 0.42, dur: 0.45, op: 0.45, col: stepDustCol() });
       }
     }
   } else {
@@ -3595,16 +3626,23 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
   SFX.ambient(dt, vibrancy, worldOpen && Math.hypot(hero.position.x, hero.position.z) > 195); // 白天走到海岸帶 → 偶有海鷗叫
   if (weather) {
     {  // 天氣排程：原 if(archiveActive) 死分支已移除，保留 else 內容為 bare block（維持區塊作用域）
-      // 模式排程：晴 ↔ 降雨（小雨/大雨/大雷雨，加權隨機）
+      const night = 1 - vibrancy;
+      // 模式排程：晴 ↔ 降水（小／大／大雷雨，加權隨機）。
+      // 夜／荒蕪偏向降水：晴的空檔縮短、降水拉長 → 飄雪成為夜晚的常態（約七成時間在下），
+      // 天亮後回到原本偏晴的節奏（約三成）。暴風雪權重同步壓低，免得雷聲隨降水變頻繁而過吵。
       weather.timer -= dt;
       if (weather.timer <= 0) {
-        if (weather.mode === 'clear') { const r = Math.random(); weather.mode = r < 0.45 ? 'light' : r < 0.78 ? 'heavy' : 'storm'; weather.timer = rand(18, 38); }
-        else { weather.mode = 'clear'; weather.timer = rand(45, 95); }
+        if (weather.mode === 'clear') {
+          const r = Math.random(), stormCut = 0.78 + night * 0.14;          // 暴風雪佔比：白天 22% → 夜晚 8%
+          weather.mode = r < 0.45 ? 'light' : r < stormCut ? 'heavy' : 'storm';
+          weather.timer = rand(18, 38) * (1 + night * 1.2);                 // 降水時長：夜晚 ×2.2
+        }
+        else { weather.mode = 'clear'; weather.timer = rand(45, 95) * (1 - night * 0.65); } // 晴的空檔：夜晚 ×0.35
       }
       const tgt = weather.mode === 'clear' ? 0 : weather.mode === 'light' ? 0.38 : weather.mode === 'heavy' ? 0.82 : 1.0;
       weather.amt += (tgt - weather.amt) * Math.min(1, 0.5 * dt);
       weather.storm += ((weather.mode === 'storm' ? 1 : 0) - weather.storm) * Math.min(1, 0.6 * dt);
-      const night = 1 - vibrancy, cam = camera.position;
+      const cam = camera.position;
       for (const m of weather.mists) {
         const mx = cam.x + m.ox + Math.sin(t * m.sp + m.ph) * 16, mz = cam.z + m.oz + Math.cos(t * m.sp * 0.8 + m.ph) * 16;
         m.s.position.set(mx, terrainHeight(mx, mz) + m.h, mz);
