@@ -1400,6 +1400,41 @@ const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x
 const houseSpots = [[24, 6], [30, -10], [34, 2], [14, -26], [-14, -26], [-28, -8], [-26, 12], [-32, 2]];
 houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], groundY(s[0], s[1]), s[1]); c.rotation.y = Math.atan2(-s[0], -s[1]); village.add(c); });
 houseSpots.forEach((s) => addBoxCol(s[0], s[1], 2.6, 2.35, Math.atan2(-s[0], -s[1])));   // 房子實體（有向矩形）
+// 炊煙（白天）：煙囪冒出的柔煙，讓村子有「有人在生活」的感覺。刻意不是每棟同時、也不是一直冒——
+// 每支煙囪各自開關計時，此起彼落；夜晚（vibrancy 低）全部停止，正好呼應褪色→復甦的敘事。
+// 全村共用一組 Points＝1 個 draw call；每顆粒子固定屬於一支煙囪，靠 per-particle 的
+// vec4 color（itemSize 4 → three.js 啟用 USE_COLOR_ALPHA）與 aSize 各自淡出、各自擴散。
+const smoke = (() => {
+  const smokeTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    // 中心保持大片不透明再收邊：柔邊拉太長的話，畫面上看得出來的範圍會遠小於 gl_PointSize，煙就變成一串小點
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.38, 'rgba(255,255,255,0.94)');
+    g.addColorStop(0.72, 'rgba(255,255,255,0.38)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  // 煙囪口的世界座標：房子帶 rotation.y，局部 (1.4, 6.06, -1.0)（煙囪帽頂）要跟著轉
+  const stacks = houseSpots.map((s) => {
+    const ry = Math.atan2(-s[0], -s[1]), c = Math.cos(ry), sn = Math.sin(ry), lx = 1.4, lz = -1.0;
+    return { x: s[0] + lx * c + lz * sn, y: groundY(s[0], s[1]) + 6.06, z: s[1] - lx * sn + lz * c,
+             on: Math.random() < 0.55, timer: rand(3, 20) };
+  });
+  const PER = Q.rich ? 16 : 8, N = stacks.length * PER;   // 每支煙囪的煙團數：太少會斷成一顆顆，連不成一縷
+  const pos = new Float32Array(N * 3), col = new Float32Array(N * 4), siz = new Float32Array(N);
+  const P = [];
+  for (let i = 0; i < N; i++) P.push({ st: stacks[(i / PER) | 0], life: -Math.random(), dur: rand(3.6, 6.0),
+    ox: rand(-0.12, 0.12), oz: rand(-0.12, 0.12), ph: rand(0, TAU),
+    rise: rand(0.85, 1.45), drift: rand(0.5, 1.3), s0: rand(0.8, 1.25), s1: rand(3.8, 5.6) });   // s0/s1＝煙團出口／散去時的直徑（公尺）
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 4));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(siz, 1));
+  const m = new THREE.PointsMaterial({ map: smokeTex, vertexColors: true, transparent: true, depthWrite: false, sizeAttenuation: true, size: 1, fog: true });
+  m.onBeforeCompile = (sh) => { sh.vertexShader = 'attribute float aSize;\n' + sh.vertexShader.replace('gl_PointSize = size;', 'gl_PointSize = size * aSize;'); }; // 每顆煙團自己的直徑（公尺）
+  const pts = new THREE.Points(geo, m); pts.frustumCulled = false; village.add(pts);
+  return { stacks, P, geo, pos, col, siz };
+})();
 
 // 泥土小徑網：中央 hub 往各民房／水井／告示牌／檔案室／出村方向放射（隨村莊放大而加長）
 const HUB = [0, 5];
@@ -3764,6 +3799,32 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
         }
       }
     }
+  }
+  // 炊煙：白天才冒。每支煙囪各自開關 → 村裡此起彼落，不會八棟一起吞吐
+  {
+    const day = Math.max(0, Math.min(1, (vibrancy - 0.35) / 0.65));   // 夜晚不冒；天亮的過程中漸漸升起
+    for (const st of smoke.stacks) {
+      st.timer -= dt;
+      if (st.timer <= 0) { st.on = !st.on; st.timer = st.on ? rand(14, 40) : rand(10, 32); }
+    }
+    const pos = smoke.pos, col = smoke.col, siz = smoke.siz;
+    for (let i = 0; i < smoke.P.length; i++) {
+      const p = smoke.P[i], o = i * 3, o4 = i * 4;
+      p.life += dt / p.dur;
+      if (p.life >= 1) p.life = (p.st.on && day > 0.02) ? -Math.random() * 0.28 : 1; // 熄火就停在死亡狀態；重新點燃時用負 life 錯開，避免整縷煙同時湧出（等待太久則會斷成一節一節）
+      const L = p.life;
+      if (L < 0) { col[o4 + 3] = 0; continue; }                                     // 尚未出生
+      const dr = L * L * p.drift;                                                   // 側飄隨高度加速（風向同草／雪的 0.86,0.5）
+      pos[o]     = p.st.x + p.ox + 0.86 * dr + Math.sin(t * 0.8 + p.ph) * 0.3 * L;
+      pos[o + 1] = p.st.y + L * p.dur * p.rise;
+      pos[o + 2] = p.st.z + p.oz + 0.5 * dr + Math.cos(t * 0.7 + p.ph) * 0.3 * L;
+      siz[i] = p.s0 + (p.s1 - p.s0) * L;                                            // 上升同時擴散
+      col[o4] = 0.93; col[o4 + 1] = 0.92; col[o4 + 2] = 0.89;
+      col[o4 + 3] = Math.min(1, L * 14) * Math.pow(1 - L, 1.25) * 1.0 * day;        // 淡入夠快，煙才是從煙囪口長出來、而不是浮在上方半公尺處；衰減指數刻意小於 2，平方會讓整縷煙淡到看不見
+    }
+    smoke.geo.attributes.position.needsUpdate = true;
+    smoke.geo.attributes.color.needsUpdate = true;
+    smoke.geo.attributes.aSize.needsUpdate = true;
   }
   for (const b of butterflies) {
     const bx = b.cx + Math.sin(t * b.sp + b.ph) * b.rad, bz = b.cz + Math.cos(t * b.sp * 0.9 + b.ph) * b.rad;
