@@ -12,18 +12,18 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=bddeafa6';
-import { BATTLES_ALL } from './i18n/battles.js?v=bddeafa6';
-import { UI_ALL } from './i18n/ui.js?v=bddeafa6';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=bddeafa6';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=bddeafa6';
-import { BattleSystem } from './battle.js?v=bddeafa6';
+import { CONTENT } from './i18n/content.js?v=7ac66a7f';
+import { BATTLES_ALL } from './i18n/battles.js?v=7ac66a7f';
+import { UI_ALL } from './i18n/ui.js?v=7ac66a7f';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=7ac66a7f';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=7ac66a7f';
+import { BattleSystem } from './battle.js?v=7ac66a7f';
 import { FISHING_ALL } from './i18n/fishing.js';
 import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
 import { Stations } from './stations.js';
 import { STATIONS_ALL } from './i18n/stations.js';
-import { SFX } from './audio.js?v=bddeafa6';
+import { SFX } from './audio.js?v=7ac66a7f';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -123,7 +123,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=bddeafa6', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=bddeafa6', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=7ac66a7f', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=7ac66a7f', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -140,8 +140,15 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=bddeafa6', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=bddeafa6', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=7ac66a7f', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=7ac66a7f', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
+// 建築外殼材質組（民房與水井共用）。與 applyStone/applyWood 的差別：這些不覆寫 m.color，
+// 讓呼叫端保留自己的配色——albedo 與 color 相乘，實測 concrete 亮度 0.54、wood 只有 0.37 且偏棕，
+// 所以需要保留色相的表面（牆、屋頂）只取 normalMap，中性或深色的部件才吃完整 albedo。
+const SKIN_PLASTER = () => ({ normalMap: stoneNor, normalScale: new THREE.Vector2(0.65, 0.65), roughness: 0.95 }); // 灰泥：凹凸不染色
+const SKIN_SHINGLE = () => ({ normalMap: woodNor,  normalScale: new THREE.Vector2(0.75, 0.75), roughness: 0.85 }); // 木瓦：板紋不染色
+const SKIN_STONE   = () => ({ map: stoneMap, normalMap: stoneNor, normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.95 });
+const SKIN_WOOD    = () => ({ map: woodMap,  normalMap: woodNor,  normalScale: new THREE.Vector2(0.5, 0.5),  roughness: 0.82 });
 
 // ── 渲染器 / 場景 / 鏡頭 ─────────────────────────────────────────
 const app = document.getElementById('app');
@@ -519,13 +526,13 @@ function resolveHeroCollision() {
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
 // 積雪（uSnow）疊在草皮混色之後：與飄雪同一套敘事——夜／荒蕪時大地覆雪，天亮隨 vibrancy 融去（見 animate）
-const grassTex = tex('./tex/grass.webp?v=bddeafa6', 1, 1, true);
+const grassTex = tex('./tex/grass.webp?v=7ac66a7f', 1, 1, true);
 const snowCover = { value: 0 };   // 0..SNOW_MAX；由 animate 依 vibrancy 驅動
 const SNOW_MAX = 0.8;             // 刻意不到 1：薄雪覆蓋的荒原，底下的草／沙／岩色仍透出來，不把夜村洗成純白
 const snowyNow = () => (SNOW_MAX > 0 ? Math.min(1, snowCover.value / SNOW_MAX) : 0); // 當下地面積雪程度 0..1；腳印與踢起的粉塵共用
 const GRASS_SNOW_MIX = 0.7;       // 草的褪色上限（見 makeGrassMaterial）：保留三成原色當層次，夜晚才不會整片灰成一塊沒有前後景
 const TREE_SNOW_MIX  = 0.6;       // 樹冠的褪色上限（見 makeFoliageMaterial）：略低於草——葉冠在空中，雪只掛得住上/外層，內層仍應是深綠
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=bddeafa6', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=7ac66a7f', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.uniforms.uSnow = snowCover;
@@ -896,7 +903,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   return m;
 }
 const foliageMat = makeFoliageMaterial();
-const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=bddeafa6', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=bddeafa6', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=7ac66a7f', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=7ac66a7f', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
 // 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
 const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
@@ -926,7 +933,7 @@ TREE_SPECIES.forEach((sp, si) => {
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=bddeafa6', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=bddeafa6', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=7ac66a7f', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=7ac66a7f', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -1280,7 +1287,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=bddeafa6', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=7ac66a7f', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1310,30 +1317,127 @@ function dirtPath(ax, az, bx, bz, w = 2.8) {
   const m = new THREE.Mesh(geo, dirtMat); m.receiveShadow = true; village.add(m);
 }
 
-// 中央水井（含屋頂、井圈）
-const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.9, 1.2, 12), mat(0xb3a48c));
-wellBase.position.set(-10.2, 0.7, -10.8); wellBase.castShadow = wellBase.receiveShadow = true; village.add(wellBase);
-const wellRim = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.18, 10, 16), mat(0x9a8a70));
-wellRim.rotation.x = Math.PI / 2; wellRim.position.set(-10.2, 1.3, -10.8); village.add(wellRim);
+// 中央水井：石砌井身＋井圈、雙坡頂（與民房同一套語彙，取代原本的八角錐）、轆轤與吊桶。
+// 原本只有井身／井圈／水面／兩根柱子，缺了「這是一口井」最關鍵的辨識物——捲軸、繩子、水桶。
+// 同材質先合併再建 Mesh：石(1)＋水(1)＋木構(1)＋屋頂(1)＋繩桶(1) ＝ 5 個 draw call，比改版前的 6 個還少。
+const WELL_X = -10.2, WELL_Z = -10.8;
 const wellWater = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.2, 16), mat(0x6cc5e0, { roughness: 0.2 }));
-wellWater.position.set(-10.2, 1.15, -10.8); village.add(wellWater);
-const wellRoof = new THREE.Group();
-for (const wx of [-1.5, 1.5]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 2.6, 10), mat(0x7a5230)); p.position.set(wx, 1.3, 0); p.castShadow = true; wellRoof.add(p); applyWood(p.material); boxUV(p.geometry); }
-const wrf = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.2, 8), mat(0x9c5b3a)); wrf.position.y = 3.2; wrf.rotation.y = Math.PI / 4; wrf.castShadow = true; wellRoof.add(wrf);
-wellRoof.position.set(-10.2, 0, -10.8); village.add(wellRoof);
-addCircleCol(-10.2, -10.8, 1.9);   // 水井實體
+wellWater.position.set(WELL_X, 1.15, WELL_Z); village.add(wellWater);
+const wellBucket = new THREE.Group();     // 繩＋桶的擺盪支點（在轆轤軸心，見 animate）
+{
+  const g = new THREE.Group(); g.position.set(WELL_X, 0, WELL_Z); village.add(g);
+  const C = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, s);
+  const put = (arr, geo, x, y, z, rz = 0, rx = 0) => { if (rz) geo.rotateZ(rz); if (rx) geo.rotateX(rx); geo.translate(x, y, z); arr.push(geo); };
+  const HZ = Math.PI / 2;
+
+  // 石：井身做成中空井筒——外壁用 openEnded 圓柱、頂面用環形，中間才是看得到水的洞。
+  // （實心圓柱的頂面會整個蓋住水面，改版前的水面其實一直看不見。）
+  const st = [];
+  put(st, new THREE.CylinderGeometry(1.7, 1.9, 1.2, 12, 1, true), 0, 0.7, 0);   // openEnded：不要頂面，否則又把水蓋住
+  put(st, new THREE.RingGeometry(1.44, 1.72, 12), 0, 1.3, 0, 0, -HZ);           // 井口環（朝上）
+  put(st, new THREE.TorusGeometry(1.75, 0.18, 10, 16), 0, 1.3, 0, 0, HZ);       // 井圈
+  const stone = new THREE.Mesh(mergeGeometries(st, false), mat(0xd8cdb8, { ...SKIN_STONE(), side: THREE.DoubleSide })); // DoubleSide：從井口往下能看到內壁
+  boxUV(stone.geometry, 1.1); stone.castShadow = stone.receiveShadow = true; g.add(stone);
+
+  // 木：兩根立柱（立在井身外緣）＋頂橫樑＋跨越兩柱的轆轤＋曲柄搖把
+  const PX = 1.85;
+  const wd = [];
+  for (const sx of [-1, 1]) put(wd, C(0.13, 0.15, 2.6), sx * PX, 1.3, 0);
+  put(wd, new THREE.BoxGeometry(PX * 2 + 0.3, 0.18, 0.18), 0, 2.66, 0);         // 頂橫樑：把兩柱綁成門形
+  put(wd, C(0.17, 0.17, PX * 2 - 0.3), 0, 2.24, 0, HZ);                         // 轆轤（捲軸）：跨在兩柱之間
+  for (const sx of [-1, 1]) put(wd, C(0.27, 0.27, 0.07), sx * (PX - 0.17), 2.24, 0, HZ); // 兩端擋板：繩子不會滑出去
+  put(wd, C(0.05, 0.05, 0.3, 8), PX + 0.17, 2.24, 0, HZ);                       // 曲柄：軸向外一小段
+  put(wd, C(0.05, 0.05, 0.34, 8), PX + 0.32, 2.24, 0.17, 0, HZ);                // 曲柄臂：垂直於轉軸
+  put(wd, C(0.055, 0.055, 0.24, 8), PX + 0.45, 2.24, 0.34, HZ);                 // 握把
+  const wood = new THREE.Mesh(mergeGeometries(wd, false), mat(0xb98d5f, SKIN_WOOD()));
+  boxUV(wood.geometry, 0.75); wood.castShadow = wood.receiveShadow = true; g.add(wood);
+
+  // 屋頂：雙坡（屋脊沿兩柱連線）＋屋簷突出，與民房同語彙。尺寸抓得只比柱距略大——
+  // 屋頂一旦明顯超出井身，整口井看起來就會頭重腳輕。
+  const RH = 0.8, HD = 1.6, ang = Math.atan2(RH, HD), slope = Math.hypot(HD, RH);
+  const rf = [];
+  for (const sz of [-1, 1]) put(rf, new THREE.BoxGeometry(PX * 2 + 0.55, 0.12, slope), 0, 2.6 + RH - Math.sin(ang) * slope / 2, sz * Math.cos(ang) * slope / 2, 0, sz * ang);
+  put(rf, new THREE.BoxGeometry(PX * 2 + 0.66, 0.15, 0.26), 0, 2.6 + RH + 0.02, 0); // 屋脊蓋板
+  const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(0x9c5b3a, SKIN_SHINGLE()));
+  boxUV(roof.geometry, 0.5); roof.castShadow = roof.receiveShadow = true; g.add(roof);
+
+  // 繩＋桶：合併成一個 mesh 掛在支點下，整組繞轆轤軸緩緩擺盪
+  wellBucket.position.set(0, 2.24, 0); g.add(wellBucket);
+  const bk = [];
+  put(bk, C(0.028, 0.028, 0.46, 6), 0, -0.23, 0);                               // 繩
+  put(bk, C(0.32, 0.26, 0.42), 0, -0.67, 0);                                    // 木桶（上寬下窄）
+  put(bk, new THREE.TorusGeometry(0.3, 0.025, 6, 12), 0, -0.5, 0, 0, HZ);       // 桶口鐵箍
+  const bucket = new THREE.Mesh(mergeGeometries(bk, false), mat(0xa8814f, SKIN_WOOD()));
+  boxUV(bucket.geometry, 0.4); bucket.castShadow = true; wellBucket.add(bucket);
+}
+addCircleCol(WELL_X, WELL_Z, 1.9);   // 水井實體
 
 // （開放式村莊：移除圓形低石牆、柱帽與村口拱門 → 無硬邊界、自然融入草原）
 
 // 小屋（石基 + 屋簷 + 煙囪 + 雙窗）
+// 材質：接上村莊其他構件早就在用的石／木貼圖——民房原本是全村唯一純色、沒貼圖的建築。
+// 兩個陷阱：
+//   ① applyStone/applyWood 會覆寫 m.color，直接套用會讓五組屋色與屋頂色全部消失。
+//   ② albedo 與 color 是相乘的。實測 concrete 平均亮度 0.54、wood 只有 0.37 且明顯偏棕(120,89,57)，
+//      牆／屋頂若吃 albedo，不但整體壓暗，五種屋頂色還會一律被染成棕色。
+// 因此：牆與屋頂只取 normalMap 的凹凸細節、albedo 維持原配色；本就中性或深色的石基／煙囪／門
+// 才用完整貼圖，並把基色提亮以補償 albedo 的相乘衰減。
+// 幾何：原本是「方盒＋八角錐」——錐頂蓋在方形牆上會讀成一頂八角帽，是最顯眼的違和。
+// 改成雙坡屋頂（山牆朝前）＋突出屋簷＋半木構外觀。山牆不另外做零件，而是把牆體擠出成
+// 五邊形（含三角形頂）：真實建築的山牆本來就是牆的一部分、同材質同色，也順帶避開
+// mergeGeometries 不能混合 indexed(Box) 與 non-indexed(Extrude) 幾何的限制。
+// 零件雖然變多，但同材質的先合併再建 Mesh，每棟仍是 6 個 draw call（與改版前相同）。
 function cottage(color, roofC) {
   const g = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.5, 4.7), mat(0x9a9080)); base.position.y = 0.25; base.castShadow = base.receiveShadow = true; g.add(base);
-  const b = new THREE.Mesh(new THREE.BoxGeometry(5, 3.0, 4.5), mat(color)); b.position.y = 2.0; b.castShadow = b.receiveShadow = true; g.add(b);
-  const r = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.6, 8), mat(roofC)); r.position.y = 4.7; r.rotation.y = Math.PI / 4; r.castShadow = true; g.add(r);
-  const ch = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.6, 0.7), mat(0x8a6a55)); ch.position.set(1.4, 5.1, -1.0); ch.castShadow = true; g.add(ch);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.9, 0.12), mat(0x4a3526)); door.position.set(0, 1.45, 2.27); g.add(door);
-  for (const wx of [-1.6, 1.6]) { const win = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.12), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.9 })); win.position.set(wx, 2.3, 2.27); g.add(win); regNightGlow(win); } // 夜晚窗光更暖
+  const W = 5, D = 4.5, WH = 3.0, RH = 2.2, OV = 0.5;      // 牆寬／牆深／牆高／屋頂高／屋簷突出
+  const BY = 0.5, WT = BY + WH, RY = WT + RH;              // 石基頂／牆頂／屋脊高
+  const B = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+  const put = (arr, geo, x, y, z, rz = 0, ry = 0) => { if (rz) geo.rotateZ(rz); if (ry) geo.rotateY(ry); geo.translate(x, y, z); arr.push(geo); }; // 先斜再轉向：rz 定傾角、ry 把它擺到側牆
+
+  // 石：石基＋煙囪＋煙囪帽（中性色，吃完整 albedo）
+  const st = [];
+  put(st, B(W + 0.2, BY, D + 0.2), 0, BY / 2, 0);
+  put(st, B(0.7, 1.6, 0.7), 1.4, 5.1, -1.0);
+  put(st, B(0.94, 0.16, 0.94), 1.4, 5.98, -1.0);           // 煙囪帽：壓住頂端、擋雨
+  const stone = new THREE.Mesh(mergeGeometries(st, false), mat(0xd6d2c8, SKIN_STONE()));
+  boxUV(stone.geometry, 1.0); stone.castShadow = stone.receiveShadow = true; g.add(stone);
+
+  // 牆：五邊形擠出＝矩形牆＋三角形山牆一體成形（保留配色，只吃 normalMap）
+  const ws = new THREE.Shape();
+  ws.moveTo(-W / 2, 0); ws.lineTo(W / 2, 0); ws.lineTo(W / 2, WH); ws.lineTo(0, WH + RH); ws.lineTo(-W / 2, WH); ws.closePath();
+  const wallGeo = new THREE.ExtrudeGeometry(ws, { depth: D, bevelEnabled: false }).translate(0, BY, -D / 2);
+  const wall = new THREE.Mesh(wallGeo, mat(color, SKIN_PLASTER()));
+  boxUV(wall.geometry, 1.3); wall.castShadow = wall.receiveShadow = true; g.add(wall);
+
+  // 屋頂：兩片斜板沿山牆斜邊鋪設、往外多伸 OV 成屋簷，再蓋一條屋脊
+  const ang = Math.atan2(RH, W / 2), slope = Math.hypot(W / 2, RH) + OV;
+  const mx = Math.cos(ang) * slope / 2, my = RY - Math.sin(ang) * slope / 2;
+  const rf = [];
+  put(rf, B(slope, 0.16, D + OV * 2),  mx, my, 0, -ang);   // 右斜面（+x 端接屋脊、-x 端垂成屋簷）
+  put(rf, B(slope, 0.16, D + OV * 2), -mx, my, 0,  ang);   // 左斜面
+  put(rf, B(0.36, 0.22, D + OV * 2 + 0.12), 0, RY + 0.03, 0); // 屋脊蓋板
+  const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(roofC, SKIN_SHINGLE()));
+  boxUV(roof.geometry, 0.55); roof.castShadow = roof.receiveShadow = true; g.add(roof);   // tile 小＝板紋密，讀起來像一片片木瓦
+
+  // 木：半木構（四角豎樑＋腰帶＋正面斜撐）、門窗框、屋簷下椽條
+  const wd = [];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(wd, B(0.22, WH, 0.22), sx * (W / 2 - 0.1), BY + WH / 2, sz * (D / 2 - 0.1));
+  for (const sz of [-1, 1]) put(wd, B(W + 0.06, 0.18, 0.09), 0, BY + WH * 0.58, sz * (D / 2 + 0.04));       // 腰帶（前後）
+  for (const sx of [-1, 1]) put(wd, B(0.09, 0.18, D + 0.06), sx * (W / 2 + 0.04), BY + WH * 0.58, 0);       // 腰帶（左右）
+  for (const sz of [-1, 1]) put(wd, B(W + 0.12, 0.2, 0.11), 0, WT - 0.1, sz * (D / 2 + 0.05));              // 牆頂橫樑＝山牆底邊
+  // 斜撐只放側牆：正面被門(1.5)與雙窗(各 1.14)佔滿，硬塞會變成從窗下伸出的棍子
+  for (const sx of [-1, 1]) for (const k of [-1, 1]) put(wd, B(1.45, 0.15, 0.08), sx * (W / 2 + 0.04), BY + WH * 0.72, k * 1.15, k * 0.58, Math.PI / 2);
+  put(wd, B(1.5, 2.12, 0.08), 0, BY + 1.06, D / 2 - 0.01);                                                   // 門框（門疊在前面 → 露出框邊）
+  for (const wx of [-1.6, 1.6]) put(wd, B(1.14, 1.14, 0.08), wx, 2.3, D / 2 - 0.01);                         // 窗框
+  for (const sx of [-1, 1]) for (const rz of [-1.55, -0.8, 0, 0.8, 1.55]) put(wd, B(0.46, 0.13, 0.13), sx * 2.62, 3.28, rz); // 屋簷下椽條
+  const wood = new THREE.Mesh(mergeGeometries(wd, false), mat(0xb98d5f, SKIN_WOOD()));
+  boxUV(wood.geometry, 0.8); wood.castShadow = wood.receiveShadow = true; g.add(wood);
+
+  const door = new THREE.Mesh(B(1.2, 1.9, 0.12), mat(0x9c7548, SKIN_WOOD())); door.position.set(0, BY + 0.95, D / 2 + 0.04); boxUV(door.geometry, 0.7); g.add(door); // 比框深一階，門才讀得出來
+  const wg = [];
+  for (const wx of [-1.6, 1.6]) put(wg, B(0.9, 0.9, 0.1), wx, 2.3, D / 2 + 0.04);
+  const win = new THREE.Mesh(mergeGeometries(wg, false), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.9 }));
+  g.add(win); regNightGlow(win);   // 夜晚窗光更暖
   return g;
 }
 const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x4f6c92], [0xc98f9b, 0x8a5663], [0xcdb87e, 0x8a6e3a]];
@@ -1341,6 +1445,41 @@ const cottageColors = [[0x8fb98f, 0x55794f], [0xd9a577, 0x9c6b41], [0x8aa6c9, 0x
 const houseSpots = [[24, 6], [30, -10], [34, 2], [14, -26], [-14, -26], [-28, -8], [-26, 12], [-32, 2]];
 houseSpots.forEach((s, i) => { const c = cottage(...cottageColors[i % cottageColors.length]); c.position.set(s[0], groundY(s[0], s[1]), s[1]); c.rotation.y = Math.atan2(-s[0], -s[1]); village.add(c); });
 houseSpots.forEach((s) => addBoxCol(s[0], s[1], 2.6, 2.35, Math.atan2(-s[0], -s[1])));   // 房子實體（有向矩形）
+// 炊煙（白天）：煙囪冒出的柔煙，讓村子有「有人在生活」的感覺。刻意不是每棟同時、也不是一直冒——
+// 每支煙囪各自開關計時，此起彼落；夜晚（vibrancy 低）全部停止，正好呼應褪色→復甦的敘事。
+// 全村共用一組 Points＝1 個 draw call；每顆粒子固定屬於一支煙囪，靠 per-particle 的
+// vec4 color（itemSize 4 → three.js 啟用 USE_COLOR_ALPHA）與 aSize 各自淡出、各自擴散。
+const smoke = (() => {
+  const smokeTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    // 中心保持大片不透明再收邊：柔邊拉太長的話，畫面上看得出來的範圍會遠小於 gl_PointSize，煙就變成一串小點
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.38, 'rgba(255,255,255,0.94)');
+    g.addColorStop(0.72, 'rgba(255,255,255,0.38)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  // 煙囪口的世界座標：房子帶 rotation.y，局部 (1.4, 6.06, -1.0)（煙囪帽頂）要跟著轉
+  const stacks = houseSpots.map((s) => {
+    const ry = Math.atan2(-s[0], -s[1]), c = Math.cos(ry), sn = Math.sin(ry), lx = 1.4, lz = -1.0;
+    return { x: s[0] + lx * c + lz * sn, y: groundY(s[0], s[1]) + 6.06, z: s[1] - lx * sn + lz * c,
+             on: Math.random() < 0.55, timer: rand(3, 20) };
+  });
+  const PER = Q.rich ? 16 : 8, N = stacks.length * PER;   // 每支煙囪的煙團數：太少會斷成一顆顆，連不成一縷
+  const pos = new Float32Array(N * 3), col = new Float32Array(N * 4), siz = new Float32Array(N);
+  const P = [];
+  for (let i = 0; i < N; i++) P.push({ st: stacks[(i / PER) | 0], life: -Math.random(), dur: rand(3.6, 6.0),
+    ox: rand(-0.12, 0.12), oz: rand(-0.12, 0.12), ph: rand(0, TAU),
+    rise: rand(0.85, 1.45), drift: rand(0.5, 1.3), s0: rand(0.8, 1.25), s1: rand(3.8, 5.6) });   // s0/s1＝煙團出口／散去時的直徑（公尺）
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 4));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(siz, 1));
+  const m = new THREE.PointsMaterial({ map: smokeTex, vertexColors: true, transparent: true, depthWrite: false, sizeAttenuation: true, size: 1, fog: true });
+  m.onBeforeCompile = (sh) => { sh.vertexShader = 'attribute float aSize;\n' + sh.vertexShader.replace('gl_PointSize = size;', 'gl_PointSize = size * aSize;'); }; // 每顆煙團自己的直徑（公尺）
+  const pts = new THREE.Points(geo, m); pts.frustumCulled = false; village.add(pts);
+  return { stacks, P, geo, pos, col, siz };
+})();
 
 // 泥土小徑網：中央 hub 往各民房／水井／告示牌／檔案室／出村方向放射（隨村莊放大而加長）
 const HUB = [0, 5];
@@ -1354,7 +1493,14 @@ dirtPath(0, 4, 0, 30, 3.0);                    // 出村大道（接白天入口
 function marketStall(x, z, awn) {
   const g = new THREE.Group();
   for (const px of [-1.3, 1.3]) for (const pz of [-0.9, 0.9]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.2, 8), mat(0x7a5230)); p.position.set(px, 1.1, pz); p.castShadow = true; g.add(p); applyWood(p.material); }
-  const top = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.25, 2.4), mat(awn, { emissive: awn, emissiveIntensity: 0.08 })); top.position.y = 2.3; top.castShadow = true; g.add(top);
+  // 遮陽棚：雙坡帆布＋下緣垂邊，取代原本的一塊平板
+  const AW = 1.75, AD = 1.35, ARH = 0.45, aang = Math.atan2(ARH, AD), aslope = Math.hypot(AD, ARH);
+  const aw = [];
+  for (const sz of [-1, 1]) { const b = new THREE.BoxGeometry(AW * 2, 0.08, aslope); b.rotateX(sz * aang); b.translate(0, 2.25 + ARH - Math.sin(aang) * aslope / 2, sz * Math.cos(aang) * aslope / 2); aw.push(b); }
+  aw.push(new THREE.BoxGeometry(AW * 2 + 0.1, 0.1, 0.15).translate(0, 2.25 + ARH + 0.02, 0));                    // 脊
+  for (const sz of [-1, 1]) aw.push(new THREE.BoxGeometry(AW * 2, 0.2, 0.06).translate(0, 2.16, sz * AD));        // 垂邊
+  const top = new THREE.Mesh(mergeGeometries(aw, false), mat(awn, { ...SKIN_SHINGLE(), emissive: awn, emissiveIntensity: 0.06 }));
+  boxUV(top.geometry, 0.45); top.castShadow = true; g.add(top);
   const table = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.18, 1.2), mat(0x8a6a3f)); table.position.set(0, 1.0, 0.5); table.castShadow = true; g.add(table); applyWood(table.material);
   for (let i = 0; i < 3; i++) { const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), mat(0x9c7a4a)); crate.position.set(-1 + i, 1.3, 0.5); g.add(crate); applyWood(crate.material); }
   g.position.set(x, groundY(x, z), z); g.rotation.y = Math.atan2(-x, -z); village.add(g);
@@ -1371,7 +1517,18 @@ function fence(ax, az, bx, bz) {
   for (let i = 0; i <= n; i++) { const t = i / n; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 1.1, 6), mat(0x6b5a44)); post.position.set(ax + (bx - ax) * t, 0.55, az + (bz - az) * t); post.castShadow = true; village.add(post); applyWood(post.material); }
   const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, len), mat(0x6b5a44)); rail.position.set((ax + bx) / 2, 0.78, (az + bz) / 2); rail.rotation.y = Math.atan2(bx - ax, bz - az); village.add(rail); applyWood(rail.material);
 }
-function hayPile(x, z) { const a = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 1.0, 10), mat(0xd9b65a)); a.rotation.z = Math.PI / 2; a.position.set(x, groundY(x, z) + 0.6, z); a.castShadow = true; village.add(a); }
+// 乾草堆：原本是孤零零一根橫躺的圓柱，改成三捆疊放、角度各異；normalMap 借 wood_n 當草稈纖維
+// （不能用 grass.webp 的 albedo——它是綠的，乘上乾草黃會變回青草色）
+function hayPile(x, z) {
+  const hs = [], HC = (rt, rb, h) => new THREE.CylinderGeometry(rt, rb, h, 10);
+  const put = (geo, px, py, pz, ry = 0) => { geo.rotateZ(Math.PI / 2); if (ry) geo.rotateY(ry); geo.translate(px, py, pz); hs.push(geo); };
+  put(HC(0.68, 0.8, 1.0), -0.04, 0.6, 0.08);
+  put(HC(0.6, 0.7, 0.9), 0.1, 0.56, -0.66, 0.5);
+  put(HC(0.52, 0.6, 0.8), -0.08, 1.34, -0.12, -0.38);
+  const m = new THREE.Mesh(mergeGeometries(hs, false), mat(0xd9b65a, { normalMap: woodNor, normalScale: new THREE.Vector2(0.85, 0.85), roughness: 1 }));
+  boxUV(m.geometry, 0.5); m.castShadow = m.receiveShadow = true;
+  m.position.set(x, groundY(x, z), z); m.rotation.y = rand(0, TAU); village.add(m);
+}
 const dress = TIER !== 'low';
 marketStall(8, 11, 0xff7a45); marketStall(-9, 10, 0x5b9cff); if (dress) marketStall(0, 17, 0xffd166); // 中央小市集
 gardenPatch(17, -3); gardenPatch(-17, -3); gardenPatch(6, -19); if (dress) { gardenPatch(-6, -19); gardenPatch(20, 13); }
@@ -1403,7 +1560,14 @@ const board = new THREE.Group();
 for (const bx of [-1.4, 1.4]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 3.4, 12), mat(0x7a5230)); p.position.set(bx, 1.7, 0); p.castShadow = true; board.add(p); applyWood(p.material); boxUV(p.geometry); }
 const sign = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.2, 0.25), mat(0xe7c884)); sign.position.set(0, 2.9, 0); sign.castShadow = true; board.add(sign); applyWood(sign.material); boxUV(sign.geometry);
 const frame = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 0.3), mat(0x9c6b41)); frame.position.set(0, 4.05, 0); board.add(frame); applyWood(frame.material); boxUV(frame.geometry);
-const roofb = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.5, 1.2), mat(0x9c5b3a)); roofb.position.set(0, 4.35, 0); roofb.castShadow = true; board.add(roofb);
+// 牌頂：小雙坡（同民房語彙），取代原本的一塊平板
+{
+  const BW = 2.35, BD = 0.9, BRH = 0.42, bang = Math.atan2(BRH, BD), bslope = Math.hypot(BD, BRH), rb = [];
+  for (const sz of [-1, 1]) { const b = new THREE.BoxGeometry(BW * 2, 0.1, bslope); b.rotateX(sz * bang); b.translate(0, 4.28 + BRH - Math.sin(bang) * bslope / 2, sz * Math.cos(bang) * bslope / 2); rb.push(b); }
+  rb.push(new THREE.BoxGeometry(BW * 2 + 0.12, 0.12, 0.18).translate(0, 4.28 + BRH + 0.02, 0));
+  const roofb = new THREE.Mesh(mergeGeometries(rb, false), mat(0x9c5b3a, SKIN_SHINGLE()));
+  boxUV(roofb.geometry, 0.5); roofb.castShadow = true; board.add(roofb);
+}
 board.position.set(-9.2, 0, 13.1); board.rotation.y = Math.atan2(-board.position.x, -board.position.z); village.add(board); // 面朝中央水晶（村心）
 addBoxCol(-9.2, 13.1, 1.9, 0.35, Math.atan2(9.2, -13.1));   // 告示牌實體（薄盒；POI openDist 4.5 仍可讀）
 
@@ -1533,7 +1697,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=bddeafa6'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=7ac66a7f'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1726,7 +1890,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=bddeafa6'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=7ac66a7f'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -1802,20 +1966,80 @@ ARCHIVE.dir = new THREE.Vector3(-ARCHIVE.pos.x, 0, -ARCHIVE.pos.z).normalize();
 ARCHIVE.enter = ARCHIVE.pos.clone().addScaledVector(ARCHIVE.dir, 2);
 // 檔案室改為「原地藝廊面板」（見 openArchivePanel）：不再傳送進第一人稱房間 → 操作與主世界一致、手機也好用。
 let archEnterArmed = true;      // 走近入口的一次性觸發旗標
-// 入口建築（水泥牆 + 木門框 + 屋頂 + 招牌；+x 側留門）
+// 入口建築：古典列柱檔案館。改版前是一只六面灰盒——牆面沒有窗、沒有線腳、沒有台階，
+// 光打上去毫無轉折，讀起來就是水泥方塊。列柱門廊解決的正是這件事：柱列在牆面投下一道道
+// 垂直陰影，平面立刻有了深度；「列柱 ＝ 圖書館／檔案館」也是夠強的視覺慣例，能和民房的
+// 半木構區隔開來——那是住的，這是村裡的公共知識殿堂。
 {
   const g = new THREE.Group(); g.position.copy(ARCHIVE.pos); g.rotation.y = ARCHIVE.face; // 門面朝中央水晶
-  const wallMat = applyStone(mat(0xffffff));
-  const add = (geo, m, x, y, z) => { boxUV(geo); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  add(new THREE.BoxGeometry(0.6, 4, 6), wallMat, -2.2, 2, 0);
-  add(new THREE.BoxGeometry(4.4, 4, 0.6), wallMat, 0, 2, -2.7);
-  add(new THREE.BoxGeometry(4.4, 4, 0.6), wallMat, 0, 2, 2.7);
-  add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, -2);
-  add(new THREE.BoxGeometry(0.6, 4, 2), wallMat, 2.2, 2, 2);
-  add(new THREE.BoxGeometry(0.6, 1, 2.2), wallMat, 2.2, 3.5, 0);
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(4.4, 1.8, 4), mat(0x9c5b3a)); roof.position.set(0, 5, 0); roof.rotation.y = Math.PI / 4; roof.castShadow = true; g.add(roof);
-  for (const sz of [-0.95, 0.95]) { const fr = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3, 0.25), RUIN.woodDk); boxUV(fr.geometry); fr.position.set(2.25, 1.5, sz); fr.castShadow = true; g.add(fr); }
-  const lab = makeLabel(UI.labelArchive); lab.o.position.set(2.4, 4.7, 0); g.add(lab.o);
+  const wallMat = applyStone(mat(0xffffff)); wallMat.side = THREE.DoubleSide;   // 門洞看得進室內：沒有 DoubleSide 的話牆內側會被背面剔除，直接穿透看到外面的草地
+  const B = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+  const C = (rt, rb, h, s = 12) => new THREE.CylinderGeometry(rt, rb, h, s);
+  const put = (arr, geo, x, y, z) => { geo.translate(x, y, z); arr.push(geo); };
+  const RH2 = 1.55, COLX = 3.5, COLZ = [-2.15, -0.85, 0.85, 2.15];   // 柱列 x／四根柱的 z（中間兩根之間留 1.7 寬的入口通道）
+
+  // ── 石造主體（Box／Cylinder，皆為 indexed，可合併成一個 mesh）──
+  const st = [];
+  put(st, B(0.6, 4, 6), -2.2, 2, 0);                       // 後牆（背面）
+  put(st, B(4.4, 4, 0.6), 0, 2, -2.7);
+  put(st, B(4.4, 4, 0.6), 0, 2, 2.7);
+  put(st, B(0.6, 4, 2), 2.2, 2, -2);                       // 正面：門洞兩側
+  put(st, B(0.6, 4, 2), 2.2, 2, 2);
+  put(st, B(0.6, 1, 2.2), 2.2, 3.5, 0);                    // 門楣
+  put(st, B(4.2, 0.12, 5.5), 0, 0.06, 0);                  // 室內石地板
+  // 門廊地坪與前階（刻意壓到很矮：角色貼地形行走、不會爬階，太高會整雙腳沒入石頭裡）
+  put(st, B(2.5, 0.2, 6.2), 3.45, 0.1, 0);
+  put(st, B(0.55, 0.12, 6.2), 4.95, 0.06, 0);
+  // 四根列柱：柱礎＋柱身＋柱頭＋頂板
+  for (const cz of COLZ) {
+    put(st, C(0.4, 0.44, 0.22), COLX, 0.31, cz);
+    put(st, C(0.24, 0.28, 3.0), COLX, 1.92, cz);
+    put(st, C(0.42, 0.3, 0.24), COLX, 3.54, cz);
+    put(st, B(0.86, 0.14, 0.86), COLX, 3.73, cz);
+  }
+  put(st, B(2.0, 0.3, 6.4), 3.45, 3.95, 0);                // 楣樑
+  put(st, B(2.3, 0.16, 6.8), 3.45, 4.18, 0);               // 簷口
+  // 壁柱：把長牆切出節奏，避免大片無轉折的平牆
+  for (const cz of [-2.3, -0.85, 0.85, 2.3]) put(st, B(0.16, 3.5, 0.42), -2.58, 1.75, cz);
+  for (const sz of [-1, 1]) for (const cx of [-1.2, 1.2]) put(st, B(0.42, 3.5, 0.16), cx, 1.75, sz * 3.08);
+  // 高窗的石框
+  for (const cz of [-1.6, 0, 1.6]) put(st, B(0.1, 1.38, 0.64), -2.54, 2.7, cz);
+  for (const sz of [-1, 1]) put(st, B(0.64, 1.38, 0.1), 0, 2.7, sz * 3.04);
+  const stone = new THREE.Mesh(mergeGeometries(st, false), wallMat);
+  boxUV(stone.geometry); stone.castShadow = stone.receiveShadow = true; g.add(stone);
+
+  // ── 山牆與三角楣飾（ExtrudeGeometry 是 non-indexed，不能和上面那組合併）──
+  const ex = [];
+  const gs = new THREE.Shape(); gs.moveTo(-2.5, 0); gs.lineTo(2.5, 0); gs.lineTo(0, RH2); gs.closePath();
+  for (const gz of [-3.0, 2.9]) ex.push(new THREE.ExtrudeGeometry(gs, { depth: 0.1, bevelEnabled: false }).translate(0, 4, gz));
+  // 門廊上方的三角楣飾（Shape 建在 xy 平面，rotateY 轉到 yz 才會正對門口）。
+  // 高度刻意壓在主屋脊（y=5.55）之下：楣飾一旦超過屋脊就會把整片主屋頂遮掉，前後層次就沒了。
+  const ps = new THREE.Shape(); ps.moveTo(-3.4, 0); ps.lineTo(3.4, 0); ps.lineTo(0, 1.05); ps.closePath();
+  ex.push(new THREE.ExtrudeGeometry(ps, { depth: 0.42, bevelEnabled: false }).rotateY(Math.PI / 2).translate(3.66, 4.26, 0));
+  const trim = new THREE.Mesh(mergeGeometries(ex, false), wallMat);
+  boxUV(trim.geometry); trim.castShadow = trim.receiveShadow = true; g.add(trim);
+
+  // ── 主屋頂：雙坡（屋脊沿長邊）。它退在門廊楣飾之後，兩者形成前後層次 ──
+  {
+    const RW = 2.85, RD = 3.35, ang = Math.atan2(RH2, RW), slope = Math.hypot(RW, RH2), rf = [];
+    for (const sx of [-1, 1]) { const b = B(slope, 0.16, RD * 2); b.rotateZ(-sx * ang); b.translate(sx * Math.cos(ang) * slope / 2, 4 + RH2 - Math.sin(ang) * slope / 2, 0); rf.push(b); }
+    rf.push(B(0.36, 0.2, RD * 2 + 0.14).translate(0, 4 + RH2 + 0.03, 0));
+    const roof = new THREE.Mesh(mergeGeometries(rf, false), mat(0x9c5b3a, SKIN_SHINGLE()));
+    boxUV(roof.geometry, 0.6); roof.castShadow = true; g.add(roof);
+  }
+
+  // 高窗：夜裡透出暖光＝裡面有人在讀，與民房窗戶同一套 regNightGlow
+  const wn = [];
+  for (const cz of [-1.6, 0, 1.6]) put(wn, B(0.12, 1.12, 0.42), -2.58, 2.7, cz);
+  for (const sz of [-1, 1]) put(wn, B(0.42, 1.12, 0.12), 0, 2.7, sz * 3.08);
+  const win = new THREE.Mesh(mergeGeometries(wn, false), mat(0xffe9a8, { emissive: 0xffcf6b, emissiveIntensity: 0.7 }));
+  g.add(win); regNightGlow(win);
+
+  const fr = [];
+  for (const sz of [-0.95, 0.95]) put(fr, B(0.3, 3, 0.25), 2.25, 1.5, sz);
+  const frame = new THREE.Mesh(mergeGeometries(fr, false), RUIN.woodDk);
+  boxUV(frame.geometry); frame.castShadow = true; g.add(frame);
+  const lab = makeLabel(UI.labelArchive); lab.o.position.set(4.1, 5.0, 0); g.add(lab.o);   // 移到楣飾正面
   scene.add(g);
 }
 addBoxCol(ARCHIVE.pos.x, ARCHIVE.pos.z, 2.0, 2.9, ARCHIVE.face);   // 檔案室實體（門在 +x 側；入口 trigger 半徑 1.7 > 停止距離 → 仍能進入）
@@ -3291,6 +3515,7 @@ function animate(time) {
     tuftFX.uFeet.value.set(hero.position.x - gc * 0.26 + gs * fL, hero.position.z + gs * 0.26 + gc * fL,
                            hero.position.x + gc * 0.26 + gs * fR, hero.position.z - gs * 0.26 + gc * fR); }
   wellWater.position.y = 1.15 + Math.sin(t * 1.5) * 0.03;
+  wellBucket.rotation.z = Math.sin(t * 0.85) * 0.05;   // 吊桶緩緩擺盪（繩＋桶整組繞轆轤軸）
   // 海面完全靜止：移除潮汐升降（不做任何模擬動態）→ 水位固定在 WORLD.water（建立時已設定），岸邊不再隨升降掃動而閃爍。
 
   // 世界繁榮度：色彩分級 + 天空 + 霧
@@ -3705,6 +3930,32 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
         }
       }
     }
+  }
+  // 炊煙：白天才冒。每支煙囪各自開關 → 村裡此起彼落，不會八棟一起吞吐
+  {
+    const day = Math.max(0, Math.min(1, (vibrancy - 0.35) / 0.65));   // 夜晚不冒；天亮的過程中漸漸升起
+    for (const st of smoke.stacks) {
+      st.timer -= dt;
+      if (st.timer <= 0) { st.on = !st.on; st.timer = st.on ? rand(14, 40) : rand(10, 32); }
+    }
+    const pos = smoke.pos, col = smoke.col, siz = smoke.siz;
+    for (let i = 0; i < smoke.P.length; i++) {
+      const p = smoke.P[i], o = i * 3, o4 = i * 4;
+      p.life += dt / p.dur;
+      if (p.life >= 1) p.life = (p.st.on && day > 0.02) ? -Math.random() * 0.28 : 1; // 熄火就停在死亡狀態；重新點燃時用負 life 錯開，避免整縷煙同時湧出（等待太久則會斷成一節一節）
+      const L = p.life;
+      if (L < 0) { col[o4 + 3] = 0; continue; }                                     // 尚未出生
+      const dr = L * L * p.drift;                                                   // 側飄隨高度加速（風向同草／雪的 0.86,0.5）
+      pos[o]     = p.st.x + p.ox + 0.86 * dr + Math.sin(t * 0.8 + p.ph) * 0.3 * L;
+      pos[o + 1] = p.st.y + L * p.dur * p.rise;
+      pos[o + 2] = p.st.z + p.oz + 0.5 * dr + Math.cos(t * 0.7 + p.ph) * 0.3 * L;
+      siz[i] = p.s0 + (p.s1 - p.s0) * L;                                            // 上升同時擴散
+      col[o4] = 0.93; col[o4 + 1] = 0.92; col[o4 + 2] = 0.89;
+      col[o4 + 3] = Math.min(1, L * 14) * Math.pow(1 - L, 1.25) * 1.0 * day;        // 淡入夠快，煙才是從煙囪口長出來、而不是浮在上方半公尺處；衰減指數刻意小於 2，平方會讓整縷煙淡到看不見
+    }
+    smoke.geo.attributes.position.needsUpdate = true;
+    smoke.geo.attributes.color.needsUpdate = true;
+    smoke.geo.attributes.aSize.needsUpdate = true;
   }
   for (const b of butterflies) {
     const bx = b.cx + Math.sin(t * b.sp + b.ph) * b.rad, bz = b.cz + Math.cos(t * b.sp * 0.9 + b.ph) * b.rad;
