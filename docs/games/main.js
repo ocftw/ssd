@@ -2294,6 +2294,20 @@ const keys = new Set();
 addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); bumpActive(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); });
 let yaw = Math.PI, pitch = 0.6, dist = 24;
+// ── 第一／第三人稱：兩模式共用同一組 yaw/pitch ─────────────────────
+// pitch 在第三人稱是「相機比主角高多少」、在第一人稱是「視線俯角」，但方向一致（越大越往下看），
+// 所以兩邊拖曳手感相同、切換時畫面不會上下顛倒；差別只在可用範圍：第三人稱不能鑽到地面下，第一人稱要能抬頭看天。
+let fpv = false;
+const FP_EYE = 2.6;                      // 視點高度＝頭部中心（hero 局部 y）；主角約 3m 高
+// 視點往視線前方推 0.45：相機原本剛好架在自己軀幹（膠囊 r=0.55）的正上方，稍微低頭就有一大塊橘色身體糊在畫面下緣。
+// 推到身體之前就看不到了，身體本身仍留著投影（低頭雖看不到腳，但陽光下自己的影子還在）。
+// 上限受碰撞半徑約束：HERO_R=0.6 讓身體停在牆前 0.6，相機推 0.45 後離牆面還有 0.15 > near plane 0.1 → 貼牆也不會穿進室內。
+const FP_FWD = 0.45;
+const FP_FOV = 68, TP_FOV = camera.fov;  // 第三人稱 52° 用在第一人稱會像望遠鏡；FPS 慣例 65–75°
+// 抬頭到 +1.35（77°，留餘裕避開 lookAt 在正上方的 up 向量退化），低頭只到 1.0（57°）：
+// 相機往前推的 0.45 小於軀幹半徑 0.55，再往下看就會拍到自己那塊沒有細節的膠囊——1.0 已足夠看清腳前的地面。
+const FP_PITCH_UP = 1.35, FP_PITCH_DN = 1.0;
+const clampPitch = (p) => (fpv ? THREE.MathUtils.clamp(p, -FP_PITCH_UP, FP_PITCH_DN) : THREE.MathUtils.clamp(p, 0.16, 1.2));
 // 開場就把鏡頭擺到跟隨位置，避免從原點 (0,0,0) 起始＝卡在中央水晶光束裡（遺跡全通後光束很亮會洗版）
 { const sy = groundY(hero.position.x, hero.position.z); camera.position.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, sy + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist); }
 const moveTarget = new THREE.Vector3(); let hasTarget = false;
@@ -2305,11 +2319,11 @@ dom.addEventListener('pointermove', (e) => {
   if (!pDown) return;
   const dx = e.clientX - lastX, dy = e.clientY - lastY;
   if (!dragging && Math.hypot(e.clientX - downX, e.clientY - downY) > 6) dragging = true;
-  if (dragging) { yaw -= dx * 0.005; pitch = THREE.MathUtils.clamp(pitch - dy * 0.004, 0.16, 1.2); bumpActive(); }
+  if (dragging) { yaw -= dx * 0.005; pitch = clampPitch(pitch - dy * 0.004); bumpActive(); }
   lastX = e.clientX; lastY = e.clientY;
 });
 dom.addEventListener('pointerup', (e) => {
-  if (pDown && !dragging) {
+  if (pDown && !dragging && !fpv) {   // 第一人稱不做點地移動：盯著地面點一下然後自己走過去，與「視線＝面向」的語意衝突（手機仍有搖桿）
     ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     const hit = raycaster.intersectObject(terrain, false)[0];
@@ -2322,7 +2336,20 @@ dom.addEventListener('pointerup', (e) => {
   }
   pDown = false; dragging = false;
 });
-addEventListener('wheel', (e) => { dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 14, 56); bumpActive(); }, { passive: true });
+addEventListener('wheel', (e) => { if (fpv) return; dist = THREE.MathUtils.clamp(dist + e.deltaY * 0.025, 14, 56); bumpActive(); }, { passive: true });
+// 視角切換：V 鍵或右上角 👁。dist 保持不動 → 切回第三人稱時鏡頭距離跟切走前一樣。
+const fpvBtn = document.getElementById('fpvbtn');
+function setFPV(on) {
+  if (on === fpv) return;
+  fpv = on;
+  pitch = clampPitch(pitch);                                                  // 第一人稱→第三人稱時把抬頭的視角壓回地面以上
+  camera.fov = fpv ? FP_FOV : TP_FOV; camera.updateProjectionMatrix();
+  heroBubble.visible = !fpv;                                                  // 泡泡掛在頭頂 y=3.6＝第一人稱相機正上方 1m，CSS2D 投影會跑到畫面外
+  hasTarget = false;                                                          // 取消進行中的點地移動
+  fpvBtn.classList.toggle('on', fpv); fpvBtn.setAttribute('aria-pressed', fpv ? 'true' : 'false');
+  bumpActive();
+}
+fpvBtn.addEventListener('click', () => setFPV(!fpv));
 // 首次互動解鎖音訊（瀏覽器自動播放限制；iOS 需多種手勢）
 ['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => addEventListener(ev, () => SFX.unlock(), { passive: true }));
 document.addEventListener('visibilitychange', () => { if (!document.hidden) SFX.unlock(); });
@@ -3261,6 +3288,7 @@ const torchParams = [
 let torchSel = 0;
 addEventListener('keydown', (e) => {
   if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  if (e.code === 'KeyV') { setFPV(!fpv); return; }
   if (e.code === 'KeyG') { coordsEl.classList.toggle('show'); return; }
   if (!coordsEl.classList.contains('show')) return;
   if (e.code === 'BracketLeft') torchSel = (torchSel + torchParams.length - 1) % torchParams.length;
@@ -3316,7 +3344,7 @@ function animate(time) {
   if (egg.active) { labelRenderer.domElement.style.display = 'none'; egg.update(dt); return; } // 彩蛋小遊戲：凍結 3D 世界，僅跑 2D 覆蓋層（不透明、免 renderScene）
   if (fishing.active) { labelRenderer.domElement.style.display = 'none'; fishing.update(dt); return; } // 釣魚小遊戲：同彩蛋，凍結 3D 世界
   if (stations.active) { labelRenderer.domElement.style.display = 'none'; stations.update(dt); return; } // 支線站台：同上，凍結 3D 世界，僅跑 DOM 覆蓋層
-  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); renderScene(); return; }
+  if (battle.active) { labelRenderer.domElement.style.display = 'none'; head.visible = true; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); renderScene(); return; } // 戰鬥自己接管相機（第三人稱運鏡）且提早 return 跳過下面的鏡頭段 → 頭要在這裡裝回去，否則第一人稱切進戰鬥會是無頭主角
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
@@ -3349,9 +3377,12 @@ function animate(time) {
     if (len > worldLim()) hero.position.multiplyScalar(worldLim() / len);
     resolveHeroCollision();   // 剛體碰撞：把玩家推出重疊的實體（撞牆停住、沿牆滑）
     const tr = Math.atan2(moveDir.x, moveDir.z);
-    if (!spinning) hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
+    if (!spinning && !fpv) hero.rotation.y += ((((tr - hero.rotation.y) % TAU) + Math.PI * 3) % TAU - Math.PI) * Math.min(1, 12 * dt);
     moving = true;
   }
+  // 第一人稱：身體恆跟著視線（不是跟著移動方向）。否則按 A 側移時身體會轉開，而火把與地面光錐是吃 hero.rotation.y 的 → 夜裡光束會憑空甩到旁邊。
+  // 相機視線水平方向是 (-sin yaw, -cos yaw)、主角正面是 (sin ry, cos ry) → ry = yaw + π。二段跳轉圈時讓位給 spin。
+  if (fpv && !spinning && !finaleActive) hero.rotation.y = yaw + Math.PI;
 
   // 跳躍：空白鍵或手機跳躍鍵；在地面起跳，空中再按一次＝二段跳並轉一圈；終局運鏡時禁用
   const grounded = jumpOff <= 0;
@@ -3409,14 +3440,28 @@ function animate(time) {
   }
   wasInWater = inWater;
 
-  // 鏡頭：第三人稱（避免穿地）——檔案室已改原地面板，不再有第一人稱模式
+  // 鏡頭：第一／第三人稱（V 或右上角 👁 切換）。終局運鏡自己接管相機 → 那時一律走第三人稱、把頭裝回去
   {
-    camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, hero.position.y + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
-    const camGround = terrainHeight(camPos.x, camPos.z) + 3;
-    if (camPos.y < camGround) camPos.y = camGround;
-    camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
-    if (camera.position.distanceToSquared(camPos) < 1e-4) camera.position.copy(camPos); // 夠近就吸附＝相機完全停住；否則指數逼近永遠到不了，靜止後相機仍每幀次像素微動 → 水岸線等高對比邊緣持續閃爍（看起來像水面在抖）
-    lookAt.set(hero.position.x, hero.position.y + 2.4, hero.position.z); camera.lookAt(lookAt);
+    const inFP = fpv && !finaleActive;
+    // 只藏頭：髮與眼是 head 的子物件會一起消失。不整個 hero 隱藏——three.js 中 visible=false 就不投影，白天主角影子會憑空不見。
+    // 留著身體還能低頭看到自己，沉浸感更好；眼球在頭前 0.45m、near plane 才 0.1，不藏頭會有兩顆黑點糊在畫面中央。
+    head.visible = !inFP;
+    if (inFP) {
+      // 不 lerp、不夾地：相機本來就長在身上，插值只會變成拖曳感，而視點恆在地面之上。
+      // 走路時 hero.position.y 已有 0.12 的踏步起伏 → 第一人稱的鏡頭晃動是免費附送的。
+      const fx = -Math.sin(yaw), fz = -Math.cos(yaw);   // 視線的水平方向（與 hero.rotation.y = yaw + π 同向）
+      camera.position.set(hero.position.x + fx * FP_FWD, hero.position.y + FP_EYE, hero.position.z + fz * FP_FWD);
+      const cp = Math.cos(pitch);   // 視線＝第三人稱「主角→相機」方位取負號，所以兩模式的 yaw/pitch 可以直接共用
+      lookAt.set(camera.position.x + fx * cp, camera.position.y - Math.sin(pitch), camera.position.z + fz * cp);
+      camera.lookAt(lookAt);
+    } else {
+      camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, hero.position.y + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
+      const camGround = terrainHeight(camPos.x, camPos.z) + 3;
+      if (camPos.y < camGround) camPos.y = camGround;
+      camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
+      if (camera.position.distanceToSquared(camPos) < 1e-4) camera.position.copy(camPos); // 夠近就吸附＝相機完全停住；否則指數逼近永遠到不了，靜止後相機仍每幀次像素微動 → 水岸線等高對比邊緣持續閃爍（看起來像水面在抖）
+      lookAt.set(hero.position.x, hero.position.y + 2.4, hero.position.z); camera.lookAt(lookAt);
+    }
   }
   // 終局運鏡：鏡頭飛向村莊中央大水晶，看完噴發動畫後才彈出完成畫面
   if (finaleActive) {
