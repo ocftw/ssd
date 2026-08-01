@@ -232,11 +232,25 @@ const WATER_NIGHT = new THREE.Color(0x1f3a52), WATER_DAY = new THREE.Color(0x4f9
 
 // 桌機：大氣散射天空（Sky addon）＋夜空星點；手機：維持原漸層天空球（零變動）
 let atmoSky = null, stars = null;
+const SKY_KNEE = 1.0, SKY_CEIL = 1.8;   // 天空進 bloom 前的軟上限（見下方說明）；1.8/2.5/3.2/5.0 都量過，1.8 是地面完全不過曝的最高值
 const _skySun = new THREE.Vector3();
 if (Q.richSky) {
   atmoSky = new Sky(); atmoSky.scale.setScalar(1200); // 控制在鏡頭 far(1200) 內、又比場景大 → 永遠當背景
   const su = atmoSky.material.uniforms;
   su.turbidity.value = 6; su.rayleigh.value = 2.2; su.mieCoefficient.value = 0.005; su.mieDirectionalG.value = 0.8;
+  // 天空亮度軟上限。Sky 輸出的是物理輻射值（白天實測 12–25），而它的 <tonemapping_fragment> 在離屏
+  // render target 上是 no-op（three.js 對 render target 一律關 tone mapping，留給最後的 OutputPass）→
+  // 整片天空以 12–25 的量進入 bloom（threshold 才 1.05），再被 radius 0.4 的大範圍糊開。
+  // 第三人稱天空只佔畫面上緣，糊下來還在可接受範圍；第一人稱地平線落在畫面中央，就把整個下半部洗白。
+  // 這裡在天空自己的 shader 收斂：SKY_KNEE 以下原封不動（雲、日出日落的層次全留著），之上漸近逼近 SKY_CEIL。
+  // 只動天空 → 水晶／火把／法師球等 emissive 的 bloom 完全不受影響（選擇性 bloom 雙 composer 已知會在部分裝置讓發光物消失，不走那條）。
+  su.uSkyCeil = { value: SKY_CEIL };
+  atmoSky.material.fragmentShader = 'uniform float uSkyCeil;\n' + atmoSky.material.fragmentShader.replace(
+    'gl_FragColor = vec4( texColor, 1.0 );',
+    `{ float m = max(max(texColor.r, texColor.g), texColor.b);          // 取最亮通道 → 等比縮放、不偏色
+       if (m > ${SKY_KNEE.toFixed(1)}) texColor *= (${SKY_KNEE.toFixed(1)} + (m - ${SKY_KNEE.toFixed(1)}) / (1.0 + (m - ${SKY_KNEE.toFixed(1)}) / max(1e-3, uSkyCeil - ${SKY_KNEE.toFixed(1)}))) / m; }
+     gl_FragColor = vec4( texColor, 1.0 );`);
+  atmoSky.material.needsUpdate = true;
   if ('cloudCoverage' in su) { su.cloudCoverage.value = 0.35; su.cloudDensity.value = 0.35; su.cloudSpeed.value = 0.00006; } // r184 內建微雲
   scene.add(atmoSky);
   // 夜空星點：上半球隨機分布，opacity 由 (1-vibrancy) 驅動 → 夜晚顯現、白天淡出
