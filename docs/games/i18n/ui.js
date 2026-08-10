@@ -254,6 +254,11 @@ export const UI_ALL = {
     qualityAuto: '自動',
     qualityLow: '精簡',
     qualityHigh: '精緻',
+    comfortHd: '晃動',
+    comfortAuto: '自動',
+    comfortOn: '減少',
+    comfortOff: '完整',
+    comfortHint: '容易 3D 暈就選「減少」：鏡頭更穩、移動時畫面周圍變暗、關掉雨天與閃電、小地圖固定朝北。自動＝跟隨系統的「減少動態效果」設定。',
 
     // 3D 標籤
     labelBoard: '村長告示牌',
@@ -627,6 +632,11 @@ export const UI_ALL = {
     qualityAuto: '自动',
     qualityLow: '精简',
     qualityHigh: '精致',
+    comfortHd: '晃动',
+    comfortAuto: '自动',
+    comfortOn: '减少',
+    comfortOff: '完整',
+    comfortHint: '容易 3D 晕就选「减少」：镜头更稳、移动时画面周围变暗、关掉雨天与闪电、小地图固定朝北。自动＝跟随系统的「减少动态效果」设定。',
 
     labelBoard: '村长告示牌',
     labelOcf: 'OCF 纪念碑',
@@ -991,6 +1001,11 @@ export const UI_ALL = {
     qualityAuto: `Auto`,
     qualityLow: `Lite`,
     qualityHigh: `Rich`,
+    comfortHd: `Motion`,
+    comfortAuto: `Auto`,
+    comfortOn: `Reduced`,
+    comfortOff: `Full`,
+    comfortHint: `Prone to motion sickness? Pick "Reduced": steadier camera, the screen edges dim while you move, no rain or lightning, and the minimap stays north-up. Auto follows your system's reduce-motion setting.`,
 
     labelBoard: `Notice Board`,
     labelOcf: `OCF Monument`,

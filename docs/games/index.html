@@ -333,10 +333,13 @@
     #landing .landinglang button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
       background:rgba(29,36,51,.06); padding:5px 11px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
     #landing .landinglang button.on { color:#fff; background:var(--brand); }
-    #landing .landingquality { display:flex; justify-content:center; gap:3px; margin:10px 0 0; flex-wrap:wrap; }
-    #landing .landingquality button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
+    #landing .landingquality, #landing .landingcomfort { display:flex; justify-content:center; gap:3px; margin:10px 0 0; flex-wrap:wrap; }
+    #landing .landingquality button, #landing .landingcomfort button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
       background:rgba(29,36,51,.06); padding:5px 11px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
-    #landing .landingquality button.on { color:#fff; background:var(--brand); }
+    #landing .landingquality button.on, #landing .landingcomfort button.on { color:#fff; background:var(--brand); }
+    /* 畫質／晃動兩組並排，窄螢幕自動換行（landing 卡片已經很長，不再多吃一整段高度） */
+    #landing .landingopts { display:flex; gap:16px; flex-wrap:wrap; }
+    #landing .landingopts .opt { flex:1 1 140px; }
     #landing .lead { font-size:46px; line-height:1; }
     #landing h1 { margin:6px 0 0; font-size:22px; }
     #landing .desc { margin:12px 0 0; font-size:14px; line-height:1.7; color:#3c4356; text-align:left; }
@@ -696,8 +699,16 @@
       <p class="desc" data-i18n="landingDesc">走出村莊，尋找散落荒野的「資安遺跡」。</p>
       <div class="topics-hd" data-i18n="landingTopicsHd">你會探索的五大主題</div>
       <div class="topics"></div>
-      <div class="topics-hd" data-i18n="qualityHd">畫質</div>
-      <div class="landingquality"></div>
+      <div class="landingopts">
+        <div class="opt">
+          <div class="topics-hd" data-i18n="qualityHd">畫質</div>
+          <div class="landingquality"></div>
+        </div>
+        <div class="opt">
+          <div class="topics-hd" data-i18n="comfortHd">晃動</div>
+          <div class="landingcomfort" data-i18n-title="comfortHint" title=""></div>
+        </div>
+      </div>
       <div class="prep"><div class="spin"></div></div>
       <button id="startbtn" class="start" disabled data-i18n="landingPreparing">世界生成中…</button>
       <button id="explorebtn" class="landingexplore" data-i18n="landingExplore" data-i18n-title="landingExploreHint" title="">☀️ 白天自由探索</button>
