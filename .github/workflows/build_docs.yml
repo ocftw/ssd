@@ -17,7 +17,7 @@ jobs:
         run: |
           git config user.name ocf-ssd[bot]
           git config user.email ssd+bot@ocf.tw
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install uv
