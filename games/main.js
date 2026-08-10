@@ -12,18 +12,18 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=7ac66a7f';
-import { BATTLES_ALL } from './i18n/battles.js?v=7ac66a7f';
-import { UI_ALL } from './i18n/ui.js?v=7ac66a7f';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=7ac66a7f';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=7ac66a7f';
-import { BattleSystem } from './battle.js?v=7ac66a7f';
+import { CONTENT } from './i18n/content.js?v=d3c202b3';
+import { BATTLES_ALL } from './i18n/battles.js?v=d3c202b3';
+import { UI_ALL } from './i18n/ui.js?v=d3c202b3';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=d3c202b3';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=d3c202b3';
+import { BattleSystem } from './battle.js?v=d3c202b3';
 import { FISHING_ALL } from './i18n/fishing.js';
 import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
 import { Stations } from './stations.js';
 import { STATIONS_ALL } from './i18n/stations.js';
-import { SFX } from './audio.js?v=7ac66a7f';
+import { SFX } from './audio.js?v=d3c202b3';
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -67,7 +67,7 @@ function showUnsupported() {
   if (btn) { btn.disabled = true; btn.textContent = UI.cantPlayBtn; }
   if (root) {
     const prep = root.querySelector('.prep'); if (prep) prep.style.display = 'none';   // 收起「世界生成中」轉圈
-    root.querySelectorAll('.topics-hd, .topics, .landingquality, .landingexplore').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質/探索區塊
+    root.querySelectorAll('.topics-hd, .topics, .landingopts, .landingquality, .landingcomfort, .landingexplore').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質/晃動/探索區塊
     const card = root.querySelector('.card');
     if (card && !card.querySelector('.cantplay')) {
       const p = document.createElement('p'); p.className = 'cantplay';
@@ -99,6 +99,25 @@ const Q = ({
           bloom: true, richSky: true, rich: true, weather: true },
 })[TIER];
 
+// ── 舒適模式（減少 3D 暈 / motion sickness）─────────────────────
+// 動暈的成因是「看到的運動」與「內耳感受到的靜止」對不上；能減輕的方向就三個：
+// 少一點非玩家主動造成的鏡頭位移、少一點週邊視野的光流（vection）、少一點全螢幕明暗與粒子跳動。
+// 預設 auto＝跟隨系統的 prefers-reduced-motion；使用者可在 landing 手動覆寫（會記在 localStorage）。
+// 註：真正的暈眩修正（鏡頭與走路 bob 解耦、地形抬升平滑、注視點平滑、直向 FOV 補償）一律套用、不看這個開關——
+//     那些本來就是手感 bug，關掉舒適模式也不該把它們找回來。這裡只放「會犧牲一點氛圍」的取捨項。
+const CKEY = 'ssd-village-comfort';                       // 'auto' | 'on' | 'off'
+let cOverride = 'auto';
+try { cOverride = localStorage.getItem(CKEY) || 'auto'; } catch (e) {}
+let PRM = false;
+try { PRM = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+const COMFORT = cOverride === 'on' || (cOverride === 'auto' && PRM);
+if (COMFORT) {
+  Q.weather = false;        // 螢幕空間雨絲（sizeAttenuation:false）與世界的運動方向不一致＝最典型的 vection 衝突；雷雨還會整屏調光
+  Q.bloomStrength = 0.22;   // 亮部光暈減半：加法混合的螢火蟲／光柱在移動時會整片明滅
+} else {
+  Q.bloomStrength = 0.45;
+}
+
 // ── 探索模式（?explore=1 或 landing 次要按鈕）：直接以白天自由探索 ──
 // 只「借光」＋開放白天內容（花海/海岸/釣魚台/拍照點/日之碎片…）；故事狀態照實呈現：
 // 遺跡水晶、維護者石化、中央大水晶、螢火蟲仍依真實進度，課程任務照常可玩、全完成仍觸發終局。
@@ -123,7 +142,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=7ac66a7f', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=7ac66a7f', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=d3c202b3', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=d3c202b3', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -140,7 +159,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=7ac66a7f', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=7ac66a7f', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=d3c202b3', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=d3c202b3', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 // 建築外殼材質組（民房與水井共用）。與 applyStone/applyWood 的差別：這些不覆寫 m.color，
 // 讓呼叫端保留自己的配色——albedo 與 color 相乘，實測 concrete 亮度 0.54、wood 只有 0.37 且偏棕，
@@ -173,7 +192,21 @@ app.appendChild(labelRenderer.domElement);
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xcfe4f0, 120, 360);
-const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 1200);
+// 視野：52° 是以 16:9 桌機為基準的「垂直」FOV。手機直向 aspect≈0.46 時若垂直固定 52°，水平只剩約 25°——
+// 望遠鏡效應會把每一次晃動的角速度放大，且看不到週邊參照，是行動裝置動暈最大的單一來源。
+// 故採 Hor+：以 16:9 的水平視野為基準回推垂直 FOV，畫面越窄補越多（上限 66°：再寬會看到更多遠景，
+// 這個世界的霧是照桌機視野調的，直向會整片糊成白霧）。
+// 寬於 16:9（桌機、手機橫向）一律夾在 52° 下限 → 既有桌機構圖完全不變。
+const FOV_BASE = 52, FOV_REF_ASPECT = 16 / 9, FOV_MAX = 66;
+const camera = new THREE.PerspectiveCamera(FOV_BASE, innerWidth / innerHeight, 0.1, 1200);
+function applyCameraFraming() {
+  camera.aspect = innerWidth / innerHeight;
+  const halfH = Math.tan(THREE.MathUtils.degToRad(FOV_BASE) * 0.5) * FOV_REF_ASPECT;   // 基準水平半視野（存 tan 值）
+  const vFov = THREE.MathUtils.radToDeg(2 * Math.atan(halfH / Math.max(camera.aspect, 0.05)));
+  camera.fov = THREE.MathUtils.clamp(vFov, FOV_BASE, FOV_MAX);
+  camera.updateProjectionMatrix();
+}
+applyCameraFraming();
 
 // 後製：桌機＝全域 Bloom（亮部光暈，給水晶/光束/燈籠/法師球等發光物電影感）→ 色彩分級 → SMAA；手機＝直接色彩分級（無 bloom）。
 // 採單一 composer 的標準全域 bloom：穩定、各 GPU 一致、不會吃掉或壓暗任何物件。
@@ -184,13 +217,13 @@ composer.setPixelRatio(PR);
 composer.addPass(new RenderPass(scene, camera));
 let bloomPass = null;
 if (Q.bloom) {
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.4, 1.05); // strength, radius, threshold(>1：只發較亮處)
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), Q.bloomStrength, 0.4, 1.05); // strength, radius, threshold(>1：只發較亮處)
   composer.addPass(bloomPass);
 }
 const gradePass = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 }, uNightBr: { value: 0.4 }, uRich: { value: Q.rich ? 1 : 0 } },
+  uniforms: { tDiffuse: { value: null }, uVibrancy: { value: 0 }, uNightBr: { value: 0.4 }, uRich: { value: Q.rich ? 1 : 0 }, uVig: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; uniform float uNightBr; uniform float uRich; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVibrancy; uniform float uNightBr; uniform float uRich; uniform float uVig; varying vec2 vUv;
     void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
       float sat = mix(0.90, 1.0, uVibrancy);                          // 夜晚仍保留原色（不再大幅去飽和）
       vec3 tint = mix(vec3(0.82, 0.88, 1.0), vec3(1.0), uVibrancy);   // 夜晚淡淡冷藍月色
@@ -201,6 +234,12 @@ const gradePass = new ShaderPass({
         col = mix(vec3(l2), col, mix(0.82, 0.92, uVibrancy));        // 收斂卡通飽和（白天也略降）
         float lum = clamp(l2, 0.0, 1.0);
         col *= mix(vec3(0.96, 0.99, 1.05), vec3(1.05, 1.0, 0.94), lum); // 微 split-tone：陰影偏冷、亮部偏暖
+      }
+      // 舒適模式的「移動暗角」：只在移動中壓暗畫面四周（uVig 由主迴圈依移動速度緩動；非舒適模式恆為 0）。
+      // 週邊視野正是產生 vection（看著畫面卻覺得自己在動）的地方，遮掉一部分是 VR 界最有效也最便宜的減暈手段。
+      if (uVig > 0.001) {
+        float r = length(vUv - 0.5) * 1.4142;                          // 0＝畫面中心、1＝四角
+        col *= 1.0 - uVig * smoothstep(0.42, 1.0, r) * 0.85;           // 中心完全不動，只由中段往外漸暗
       }
       gl_FragColor = vec4(col, c.a); }`,
 });
@@ -526,13 +565,13 @@ function resolveHeroCollision() {
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
 // 積雪（uSnow）疊在草皮混色之後：與飄雪同一套敘事——夜／荒蕪時大地覆雪，天亮隨 vibrancy 融去（見 animate）
-const grassTex = tex('./tex/grass.webp?v=7ac66a7f', 1, 1, true);
+const grassTex = tex('./tex/grass.webp?v=d3c202b3', 1, 1, true);
 const snowCover = { value: 0 };   // 0..SNOW_MAX；由 animate 依 vibrancy 驅動
 const SNOW_MAX = 0.8;             // 刻意不到 1：薄雪覆蓋的荒原，底下的草／沙／岩色仍透出來，不把夜村洗成純白
 const snowyNow = () => (SNOW_MAX > 0 ? Math.min(1, snowCover.value / SNOW_MAX) : 0); // 當下地面積雪程度 0..1；腳印與踢起的粉塵共用
 const GRASS_SNOW_MIX = 0.7;       // 草的褪色上限（見 makeGrassMaterial）：保留三成原色當層次，夜晚才不會整片灰成一塊沒有前後景
 const TREE_SNOW_MIX  = 0.6;       // 樹冠的褪色上限（見 makeFoliageMaterial）：略低於草——葉冠在空中，雪只掛得住上/外層，內層仍應是深綠
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=7ac66a7f', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=d3c202b3', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.uniforms.uSnow = snowCover;
@@ -903,7 +942,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   return m;
 }
 const foliageMat = makeFoliageMaterial();
-const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=7ac66a7f', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=7ac66a7f', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=d3c202b3', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=d3c202b3', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
 // 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
 const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
@@ -933,7 +972,7 @@ TREE_SPECIES.forEach((sp, si) => {
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=7ac66a7f', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=7ac66a7f', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=d3c202b3', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=d3c202b3', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -1287,7 +1326,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=7ac66a7f', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=d3c202b3', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1697,7 +1736,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=7ac66a7f'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=d3c202b3'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1890,7 +1929,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=7ac66a7f'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=d3c202b3'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -2293,7 +2332,9 @@ let nativeHz = 60, lastRaf = 0, frameTick = 0;                                  
 const keys = new Set();
 addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); bumpActive(); });
 addEventListener('keyup', (e) => { keys.delete(e.code); });
-let yaw = Math.PI, pitch = 0.6, dist = 24;
+// 舒適模式的起始構圖：略高的俯角＋略遠的距離。鏡頭越貼近地平線，畫面就越被水平流動的地表填滿（vection 最強的方向）；
+// 拉高拉遠後地平線退到畫面上緣、角色在畫面裡的比例變小，等於多了一個穩定的靜止參考物。
+let yaw = Math.PI, pitch = COMFORT ? 0.72 : 0.6, dist = COMFORT ? 28 : 24;
 // 開場就把鏡頭擺到跟隨位置，避免從原點 (0,0,0) 起始＝卡在中央水晶光束裡（遺跡全通後光束很亮會洗版）
 { const sy = groundY(hero.position.x, hero.position.z); camera.position.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, sy + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist); }
 const moveTarget = new THREE.Vector3(); let hasTarget = false;
@@ -3190,11 +3231,14 @@ function drawMinimap() {
   mc.clearRect(0, 0, 176, 176);
   mc.save(); mc.beginPath(); mc.arc(88, 88, DISC, 0, TAU); mc.clip();
   mc.fillStyle = worldOpen ? '#4a93c4' : '#33425a'; mc.fillRect(0, 0, 176, 176);   // 海／夜色襯底（圖邊角安全色）
-  mc.save(); mc.translate(88, 88); mc.rotate(yaw); mc.imageSmoothingEnabled = true; // 地形實地縮圖隨鏡頭旋轉（與 w2s 標記同尺度）
+  // 舒適模式：小地圖固定北方朝上，不隨鏡頭轉。轉動的地圖要靠腦補做座標轉換，本身就是暈眩／方向感失調的來源之一；
+  // 玩家箭頭畫的是世界朝向、羅盤也一起定住，所以不轉照樣看得出自己面向哪邊。
+  const mapYaw = COMFORT ? 0 : yaw;
+  mc.save(); mc.translate(88, 88); mc.rotate(mapYaw); mc.imageSmoothingEnabled = true; // 地形實地縮圖隨鏡頭旋轉（與 w2s 標記同尺度）
   mc.drawImage(worldOpen ? terrainMapDay : terrainMapNight, -DISC, -DISC, DISC * 2, DISC * 2);
   mc.restore();
   // 鏡頭旋轉：把置中座標(mx,mz) 轉成螢幕座標。鏡頭正前方(世界 -sin/-cos yaw)恰落在盤頂；文字另畫直立故全程用 rot() 不用 ctx.rotate
-  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const cy = Math.cos(mapYaw), sy = Math.sin(mapYaw);
   const rot = (mx, mz) => [88 + mx * cy - mz * sy, 88 + mx * sy + mz * cy];
   const w2s = (x, z) => { const [mx, mz] = w2c(x, z); return rot(mx, mz); };
   // 村莊（盤心）
@@ -3238,8 +3282,14 @@ function drawMinimap() {
 // ── 主迴圈 ──────────────────────────────────────────────────────
 const timer = new THREE.Timer();
 const up = new THREE.Vector3(0, 1, 0), fwd = new THREE.Vector3(), right = new THREE.Vector3(), moveDir = new THREE.Vector3();
-const camPos = new THREE.Vector3(), lookAt = new THREE.Vector3();
-let walkPhase = 0, mmAcc = 0, lastStepFloor = 0, waterAcc = 0;
+const camPos = new THREE.Vector3(), lookAt = new THREE.Vector3(), lookTarget = new THREE.Vector3();
+// 鏡頭高度不再讀 hero.position.y：改用「低通過的地面高度 camBaseY」＋「平滑過的地形抬升量 camFloorY」，
+// 走路 bob（±0.12、走 1.6Hz／跑 2.4Hz）與地形碎起伏都被擋在鏡頭之外；跳躍另外全額疊加（玩家主動操作要有回饋）。
+let camBaseY = terrainHeight(hero.position.x, hero.position.z), camFloorY = 0;
+// 平滑速率（1/s，越小越穩）：舒適模式再放慢，代價是鏡頭稍微「跟不上」，換來持續晃動幾乎消失
+const CAM_BASE_K = COMFORT ? 4.5 : 8, CAM_FLOOR_K = COMFORT ? 2.5 : 4, CAM_LOOK_K = COMFORT ? 6 : 10;
+lookAt.set(hero.position.x, camBaseY + 2.4, hero.position.z);
+let walkPhase = 0, mmAcc = 0, lastStepFloor = 0, waterAcc = 0, vigNow = 0; // vigNow＝舒適模式移動暗角的當前強度
 let jumpVel = 0, jumpOff = 0, jumpHeld = false; // 跳躍：地面高度之上的位移
 let doubleJumped = false, spinning = false, spinT = 0, yawBeforeSpin = 0; // 二段跳 + 空中轉一圈
 const SPIN_DUR = 0.55;
@@ -3316,7 +3366,7 @@ function animate(time) {
   if (egg.active) { labelRenderer.domElement.style.display = 'none'; egg.update(dt); return; } // 彩蛋小遊戲：凍結 3D 世界，僅跑 2D 覆蓋層（不透明、免 renderScene）
   if (fishing.active) { labelRenderer.domElement.style.display = 'none'; fishing.update(dt); return; } // 釣魚小遊戲：同彩蛋，凍結 3D 世界
   if (stations.active) { labelRenderer.domElement.style.display = 'none'; stations.update(dt); return; } // 支線站台：同上，凍結 3D 世界，僅跑 DOM 覆蓋層
-  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; setWorldLight(1); battle.update(dt); renderScene(); return; }
+  if (battle.active) { labelRenderer.domElement.style.display = 'none'; gradePass.uniforms.uVibrancy.value = 1; gradePass.uniforms.uVig.value = vigNow = 0; setWorldLight(1); battle.update(dt); renderScene(); return; } // 戰鬥是定點運鏡、玩家不移動 → 收掉暗角
   labelRenderer.domElement.style.display = finaleActive ? 'none' : '';
 
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
@@ -3367,8 +3417,9 @@ function animate(time) {
   // 空中轉一圈（沿垂直軸 360°，緩入緩出，落地前回正）
   if (spinning) { spinT += dt; const e = Math.min(1, spinT / SPIN_DUR), k = e * e * (3 - 2 * e); hero.rotation.y = yawBeforeSpin + k * TAU; if (e >= 1) { spinning = false; spinT = 0; hero.rotation.y = yawBeforeSpin; } }
   // 速度特效：轉圈時環繞弧線高速旋轉、淡入淡出
-  if (spinning) { spinFX.visible = true; spinFX.rotation.y += dt * 26; spinFXMat.opacity = Math.sin(Math.min(1, spinT / SPIN_DUR) * Math.PI) * 0.55; }
-  else if (spinFX.visible) { spinFX.rotation.y += dt * 26; spinFXMat.opacity *= 0.82; if (spinFXMat.opacity < 0.02) { spinFX.visible = false; spinFXMat.opacity = 0; } }
+  const SPIN_RPS = COMFORT ? 7 : 26, SPIN_OP = COMFORT ? 0.2 : 0.55;   // 舒適模式：畫面中央的高速旋轉物最容易誘發不適 → 轉慢、也淡很多
+  if (spinning) { spinFX.visible = true; spinFX.rotation.y += dt * SPIN_RPS; spinFXMat.opacity = Math.sin(Math.min(1, spinT / SPIN_DUR) * Math.PI) * SPIN_OP; }
+  else if (spinFX.visible) { spinFX.rotation.y += dt * SPIN_RPS; spinFXMat.opacity *= 0.82; if (spinFXMat.opacity < 0.02) { spinFX.visible = false; spinFXMat.opacity = 0; } }
 
   const groundH = terrainHeight(hero.position.x, hero.position.z);
   if (moving) {
@@ -3409,20 +3460,44 @@ function animate(time) {
   }
   wasInWater = inWater;
 
+  // 舒適模式的移動暗角：強度隨移動速度緩入緩出（奔跑時週邊光流最強 → 遮最多）。停下就淡回全視野。
+  if (COMFORT) {
+    const vigTo = moving ? (sprint ? 1 : 0.62) : 0;
+    vigNow += (vigTo - vigNow) * (1 - Math.exp(-3.5 * dt));
+    gradePass.uniforms.uVig.value = vigNow;
+  }
+
   // 鏡頭：第三人稱（避免穿地）——檔案室已改原地面板，不再有第一人稱模式
+  // 抗動暈三件事，都在這個區塊：①高度基準不吃走路 bob ②地形抬升改平滑、不再硬夾彈跳 ③注視點也要平滑
   {
-    camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, hero.position.y + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
-    const camGround = terrainHeight(camPos.x, camPos.z) + 3;
-    if (camPos.y < camGround) camPos.y = camGround;
+    // ① 高度基準＝低通過的地面高度。以前直接用 hero.position.y，等於把 |sin(walkPhase)|*0.12 的走路彈跳
+    //    和每一顆地形碎起伏原封不動送進鏡頭與注視點；鏡頭雖有 lerp，1.6～2.4Hz 的低幅高頻震盪幾乎穿透得過去。
+    camBaseY += (groundH - camBaseY) * (1 - Math.exp(-CAM_BASE_K * dt));
+    if (Math.abs(groundH - camBaseY) < 1e-3) camBaseY = groundH;              // 夠近就吸附（同下方鏡頭 snap 的理由：避免靜止後仍每幀微動）
+    const anchorY = camBaseY + jumpOff;                                        // 跳躍＝玩家主動觸發，全額跟上才有回饋
+    camPos.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, anchorY + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist);
+    // ② 鏡頭後方地形高起時要把鏡頭抬離地面。以前是硬夾（camPos.y = camGround），走上下坡或背對山壁會瞬間彈高、
+    //    俯角跟著突變＝典型的「鏡頭彈跳」暈源。改成對「抬升量」做時間平滑，抬與放都變成滑順過渡。
+    const floorTarget = Math.max(0, terrainHeight(camPos.x, camPos.z) + 3 - camPos.y);
+    camFloorY += (floorTarget - camFloorY) * (1 - Math.exp(-CAM_FLOOR_K * dt));
+    if (Math.abs(floorTarget - camFloorY) < 1e-3) camFloorY = floorTarget;    // 同上：靜止時要能真的停住
+    camPos.y += camFloorY;
     camera.position.lerp(camPos, 1 - Math.exp(-6 * dt));
     if (camera.position.distanceToSquared(camPos) < 1e-4) camera.position.copy(camPos); // 夠近就吸附＝相機完全停住；否則指數逼近永遠到不了，靜止後相機仍每幀次像素微動 → 水岸線等高對比邊緣持續閃爍（看起來像水面在抖）
-    lookAt.set(hero.position.x, hero.position.y + 2.4, hero.position.z); camera.lookAt(lookAt);
+    // ③ 注視點以前是每幀直接 set：鏡頭位置有平滑、視線卻沒有，被碰撞推開或踩過地形落差時整個畫面會瞬移。
+    //    終局時要讓下面的運鏡獨佔注視點——兩段 lerp 一起拉會互相抵消，視線就卡在主角與水晶之間了。
+    if (!finaleActive) {
+      lookTarget.set(hero.position.x, anchorY + 2.4, hero.position.z);
+      lookAt.lerp(lookTarget, 1 - Math.exp(-CAM_LOOK_K * dt));
+      if (lookAt.distanceToSquared(lookTarget) < 1e-6) lookAt.copy(lookTarget);
+      camera.lookAt(lookAt);
+    }
   }
   // 終局運鏡：鏡頭飛向村莊中央大水晶，看完噴發動畫後才彈出完成畫面
   if (finaleActive) {
     finaleT += dt;
     camPos.set(9, 13, 24); camera.position.lerp(camPos, 1 - Math.exp(-2.2 * dt));
-    lookAt.set(0, 7, 0); camera.lookAt(lookAt);
+    lookTarget.set(0, 7, 0); lookAt.lerp(lookTarget, 1 - Math.exp(-2.2 * dt)); camera.lookAt(lookAt); // 注視點與鏡頭同速緩動：進終局不再瞬間扭頭（以前 lookAt 是硬切）
     if (finaleT > 3.2 && !finaleShown) { finaleShown = true; showFinaleOverlay(); }
   }
 
@@ -4022,7 +4097,7 @@ greatMat.metalness = 0.35 - greatGlow * 0.35;           // 白天 0：純介電�
 }
 renderer.setAnimationLoop(animate);
 
-addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
+addEventListener('resize', () => { applyCameraFraming(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); }); // 轉向／改變視窗都要重算 Hor+ 垂直 FOV
 // ── 進場 landing（兼作世界生成等待畫面）──────────────────────────
 function setupLanding() {
   const root = document.getElementById('landing');
@@ -4055,6 +4130,20 @@ function setupLanding() {
         location.reload();
       });
       qEl.appendChild(b);
+    });
+  }
+  // landing 舒適模式切換器：自動（跟隨系統 prefers-reduced-motion）／減少晃動／完整效果——同樣走 localStorage + reload
+  const cEl = root.querySelector('.landingcomfort');
+  if (cEl) {
+    [['auto', UI.comfortAuto], ['on', UI.comfortOn], ['off', UI.comfortOff]].forEach(([v, label]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      if (v === cOverride) b.classList.add('on');
+      b.addEventListener('click', () => {
+        if (v === cOverride) return;
+        try { localStorage.setItem(CKEY, v); } catch (e) {}
+        location.reload();
+      });
+      cEl.appendChild(b);
     });
   }
   // 「開始探險」：解鎖音訊 →「載入中」轉圈 → 非阻塞預編譯著色器 → 暖機數幀 → 淡出 landing 平順進場
