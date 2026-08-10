@@ -73,7 +73,7 @@ export class BattleSystem {
     this.ui = ui;   // 多語系介面字串（由 main.js 注入；含 battle 子物件）
     this.active = false; this.mon = null; this.state = 'idle'; this.stateT = 0; this.locked = false;
     this.monPos = new THREE.Vector3(); this.dir = new THREE.Vector3(); this.right = new THREE.Vector3();
-    this._camPos = new THREE.Vector3(); this._look = new THREE.Vector3();
+    this._camPos = new THREE.Vector3(); this._look = new THREE.Vector3(); this._lookTo = new THREE.Vector3();
     this.bursts = [];
     const $ = (s) => document.querySelector('#battle ' + s);
     this.el = { root: document.getElementById('battle'), name: $('.mon-name'), emoji: $('.mon-emoji'), hp: $('.mon-hp i'), hearts: $('.hearts'), q: $('.q'), opts: $('.opts'), fb: $('.fb'), fbIcon: $('.fb .ic'), fbWhy: $('.fb .why'), fbLink: $('.fb .lnk'), fbNext: $('.fb .next'), flash: $('.hit-flash'), flee: $('.flee') };
@@ -115,6 +115,7 @@ export class BattleSystem {
       // 戰鬥時直接隱藏守關遺跡（連同光束、水晶、標籤），避免擋住主角與怪物
       this._ruin = poi.group; this._ruin.visible = false;
       this.state = 'enter'; this.stateT = 0; this.active = true; this.locked = false;
+      this.camera.getWorldDirection(this._look).multiplyScalar(12).add(this.camera.position); // 注視點從「鏡頭當下的視線」起算，下方再緩動到怪物：進戰鬥不瞬間扭頭（非玩家觸發的鏡頭急轉最容易暈）
       SFX.battleStart();
       // UI
       this.el.emoji.textContent = data.monster.emoji; this.el.name.textContent = data.monster.name;
@@ -305,7 +306,8 @@ export class BattleSystem {
     // 戰鬥運鏡：過肩、低角度仰看怪物，主角與怪物抬升至畫面上半（避開底部選項）
     this._camPos.set(this.heroStand.x - this.dir.x * 8 + this.right.x * 2.4, this.heroStand.y + 2.0, this.heroStand.z - this.dir.z * 8 + this.right.z * 2.4);
     this.camera.position.lerp(this._camPos, 1 - Math.exp(-5 * dt));
-    this._look.set(this.monPos.x, this.monPos.y + 1.0, this.monPos.z);
+    this._lookTo.set(this.monPos.x, this.monPos.y + 1.0, this.monPos.z);
+    this._look.lerp(this._lookTo, 1 - Math.exp(-5 * dt));                                   // 與鏡頭位置同速緩動（以前是每幀硬 set → 開場視線瞬移）
     this.camera.lookAt(this._look);
     // 法陣旋轉與呼吸
     if (this.arena) { this.arena.rotation.z += dt * 0.35; this.arena.material.opacity = 0.18 + Math.sin(t * 3) * 0.06; }
