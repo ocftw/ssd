@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  pages: read      # 讀 Pages 建置狀態，等它發佈完成再清 Cloudflare 快取
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -40,6 +41,33 @@ jobs:
         run: uv sync
       - name: Build and Deploy Docs
         run: uv run mkdocs gh-deploy --force
+      # gh-deploy 只是把檔案推上 gh-pages 分支；GitHub Pages 接著才建置發佈，實測約 40 秒。
+      # 不等它就清 Cloudflare 快取，清完的第一個請求會回源抓到「還沒換上的舊版」再快取一次，等於白清：
+      # 2026-08-11 那次就是清快取 16:35:40、Pages 實際完成 16:36:22，之後 10 分鐘內都可能拿到舊的 index.html。
+      - name: Wait for GitHub Pages to publish
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          target=$(git rev-parse gh-pages 2>/dev/null || git rev-parse origin/gh-pages 2>/dev/null || echo "")
+          if [ -z "${target}" ]; then
+            echo "::warning::找不到 gh-pages 的 commit，略過等待"
+            exit 0
+          fi
+          echo "等待 GitHub Pages 發佈 ${target}"
+          for i in $(seq 1 60); do
+            latest=$(gh api "repos/${GITHUB_REPOSITORY}/pages/builds/latest" --jq '.status + " " + .commit' 2>/dev/null || echo "unknown none")
+            status="${latest%% *}"; commit="${latest##* }"
+            if [ "${status}" = "built" ] && [ "${commit}" = "${target}" ]; then
+              echo "✅ Pages 已發佈 ${commit}（等了 $((i * 5))s）"
+              exit 0
+            fi
+            sleep 5
+          done
+          # 逾時不讓整個部署失敗：檔案其實已經推上去了，只是快取可能清得太早
+          echo "::warning::等 GitHub Pages 發佈逾時（5 分鐘），仍繼續清快取；若線上仍是舊版，10 分鐘後 index.html 快取自然過期"
+
       - name: Purge Cloudflare cache (ssd.ocf.tw)
         if: success()
         env:
