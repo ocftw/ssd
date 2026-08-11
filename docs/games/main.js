@@ -128,10 +128,13 @@ try { EXPLORE = new URLSearchParams(location.search).get('explore') === '1'; } c
 // ── 展示模式（?attract=1）：擺攤用。自動開場 → 沒人操作就自動巡遊五座遺跡 → 循環 ──
 // 有人一碰（鍵盤／點畫面／滾輪／搖桿）就交還控制權變成正常遊玩，再閒置 ATTRACT_IDLE_MS 又自己接手。
 // 隱含白天（EXPLORE）：展示要的是最亮、內容最多的狀態——五座支線站台、海岸、花海都在。
+// 日夜由既有的 explore 參數決定，不另外發明一套：
+//   ?attract=1            → 夜晚（故事起點：迷霧、螢火蟲、遺跡光柱，遺跡還沒被發現）
+//   ?attract=1&explore=1  → 白天（最亮、內容最多：海岸、花海、五座支線站台）
 let ATTRACT = false;
 try { ATTRACT = new URLSearchParams(location.search).get('attract') === '1'; } catch (e) { /* ignore */ }
 const ATTRACT_IDLE_MS = 30000;   // 玩家放手多久後重新接管；擺攤現場太短會打斷猶豫中的人，太長則螢幕空等
-if (ATTRACT) EXPLORE = true;
+const ATTRACT_ASK_MS = 10000;    // 「要接手嗎？」等多久沒回應就當作誤碰，自己回去繼續展示
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -2368,6 +2371,21 @@ const attract = new Attract({
 });
 // 展示模式的邀請泡泡：抵達每座遺跡、停下來繞鏡頭時冒出來。停留 8 秒、泡泡顯示 6 秒，
 // 剩下的時間留白，免得整場都掛著一句話反而沒人看。輪流講不同句，同一句不連著出現兩次。
+// 「要不要接手」詢問：擺攤現場滑鼠常被路過的人誤碰，碰一下就直接中斷展示太敏感。
+// 改成先問；沒人回答就當作誤碰，10 秒後自己回去繼續巡遊（巡遊進度是暫停不是重置，不會從第一站重走）。
+const askEl = document.getElementById('attractask');
+let askUntil = 0;
+function showAttractAsk() {
+  if (!askEl) { attract.exit(); return; }         // 沒有詢問框（理論上不會）就退回舊行為，至少不會卡住不能玩
+  askUntil = performance.now() + ATTRACT_ASK_MS;
+  askEl.classList.add('show');
+}
+function hideAttractAsk() { askUntil = 0; if (askEl) askEl.classList.remove('show'); }
+// 婉拒或逾時：把 lastInputAt 推回很早，否則剛才那次碰觸會在下一幀又被判定成「有人碰」，變成問個不停
+function attractKeepShowing() { hideAttractAsk(); lastInputAt = -1e9; attract.resume(); }
+document.getElementById('attractyes')?.addEventListener('click', () => { hideAttractAsk(); attract.exit(); });
+document.getElementById('attractno')?.addEventListener('click', attractKeepShowing);
+
 let lastInviteIdx = -1;
 function attractInvite() {
   const lines = UI.attractInvites;
@@ -2704,7 +2722,7 @@ function renderConfCompare() {
   el.textContent = UI.confCompare(CONF_FACES[a], CONF_FACES[b], msg);
 }
 function maybeShowPreConfidence() {
-  if (EXPLORE) return;                       // 前後測是課程成效量測：探索模式進來的人不計，避免污染數據
+  if (EXPLORE || ATTRACT) return;            // 前後測是課程成效量測：探索模式與展示模式（沒有真人在答）進來的都不計，避免污染數據
   if (localStorage.getItem(CONF_PRE) != null) return;
   setTimeout(() => showConfidence('pre'), 800);
 }
@@ -2722,7 +2740,9 @@ function checkAllDone() {
 document.getElementById('finale-close').addEventListener('click', () => { document.getElementById('finale').classList.remove('show'); finaleActive = false; });
 
 // 匿名最小化分析：gtag 不存在（DNT 或離線）即 no-op，遊戲照常運作；不送任何個資
-function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { /* no-op */ } }
+// 展示模式一律不送分析事件：擺攤機一天會自動開場很多次、自己巡遊發現遺跡，
+// 這些不是真人行為，混進 GA 會讓遊戲的成效數據失真（同 maybeShowPreConfidence 的顧慮）。
+function track(name, params) { if (ATTRACT) return; try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { /* no-op */ } }
 // 給通往課程的連結補上 UTM（僅 ocf.tw 站內），讓站內 GA 能歸因「遊戲 → 學習」
 function withUtm(url) { try { const u = new URL(url, location.href); if (/(^|\.)ocf\.tw$/.test(u.hostname)) { u.searchParams.set('utm_source', 'game'); u.searchParams.set('utm_medium', 'finale'); u.searchParams.set('utm_campaign', 'village-game'); } return u.toString(); } catch (e) { return url; } }
 // 終局面板上任何外連（課程／部落格）被點 → 記一次 cta_to_course（只送路徑、無個資）
@@ -3424,9 +3444,10 @@ function animate(time) {
   // 展示模式：沒人碰就自己巡遊，有人一碰就立刻讓出控制權（放手 ATTRACT_IDLE_MS 後再接手）。
   // 擺在移動計算之前：attract 設好的 moveTarget/hasTarget 會直接被下面同一套走路邏輯消化。
   if (ATTRACT) {
-    const idle = performance.now() - lastInputAt > ATTRACT_IDLE_MS;
-    if (attract.active) { if (!idle) attract.exit(); }
-    else if (idle && !isBusy()) { attract.enter(); attractInvite(); }   // 一接手就先招呼一次，不必等走到第一站
+    const now = performance.now(), sinceInput = now - lastInputAt;
+    if (attract.active && !attract.paused && sinceInput < 400) { attract.pause(); showAttractAsk(); }  // 有人碰到 → 先問，別直接中斷展示
+    if (askUntil && now > askUntil) attractKeepShowing();                                              // 問了沒人答＝誤碰
+    if (!attract.active && !isBusy() && sinceInput > ATTRACT_IDLE_MS) { attract.enter(); attractInvite(); } // 放手夠久 → 重新接手（一接手就先招呼一次）
     attract.update(dt, hero.position.x, hero.position.z);
     if (attract.active) { kx = 0; kz = 0; }   // 巡遊中忽略殘留的鍵盤/搖桿輸入，避免和自動移動打架
   }
@@ -4200,6 +4221,13 @@ function setupLanding() {
       cEl.appendChild(b);
     });
   }
+  // landing 的展示模式入口（擺攤用）：帶參數重新載入。ATTRACT 會決定存檔用哪個 key、世界從日或夜開場，
+  // 這些都在模組初始化時就定下來，沒辦法在 runtime 切換，所以沿用語言／畫質切換器那套 reload 模式。
+  const goAttract = (day) => { location.href = day ? '?attract=1&explore=1' : '?attract=1'; };
+  document.getElementById('attractnight')?.addEventListener('click', () => goAttract(false));
+  document.getElementById('attractday')?.addEventListener('click', () => goAttract(true));
+  if (ATTRACT) { const a = root.querySelector('.landingattract'); if (a) a.style.display = 'none'; }  // 已經在展示模式裡，不必再顯示入口
+
   // 「開始探險」：解鎖音訊 →「載入中」轉圈 → 非阻塞預編譯著色器 → 暖機數幀 → 淡出 landing 平順進場
   // （首幀卡頓主因是第一次 render 同步編譯全部著色器＋上傳貼圖；改用 compileAsync 預編譯，並在 landing 仍蓋著時暖機幾幀，把卡頓藏起來）
   const btn = document.getElementById('startbtn');

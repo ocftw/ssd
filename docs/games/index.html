@@ -360,6 +360,23 @@
       background:rgba(255,210,75,.22); padding:9px 18px; border-radius:999px; transition:filter .12s ease; -webkit-tap-highlight-color:transparent; }
     #landing .landingexplore:hover:not(:disabled) { filter:brightness(1.05); }
     #landing .landingexplore:disabled { opacity:.55; cursor:default; }
+    /* landing：進入展示模式（擺攤用）。日夜各一顆，直接帶著參數重新載入，沿用語言/畫質切換器那套 reload 模式 */
+    #landing .landingattract { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:10px; flex-wrap:wrap; font-size:12px; color:#6b7488; }
+    #landing .landingattract button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#4a5568;
+      background:rgba(29,36,51,.06); padding:5px 11px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
+    #landing .landingattract button:hover { color:#fff; background:var(--brand); }
+    /* 展示模式的「要不要接手」詢問：擺在畫面下方而非正中央，讓後面的巡遊畫面繼續看得見 */
+    #attractask { position:fixed; left:0; right:0; bottom:11%; z-index:37; display:grid; place-items:center; padding:0 16px;
+      opacity:0; pointer-events:none; transition:opacity .25s ease; }
+    #attractask.show { opacity:1; pointer-events:auto; }
+    #attractask .card { background:rgba(251,247,239,.97); border-radius:18px; padding:15px 20px; text-align:center;
+      max-width:min(92vw,380px); box-shadow:var(--shadow); transform:translateY(10px); transition:transform .25s cubic-bezier(.2,.9,.3,1.2); }
+    #attractask.show .card { transform:translateY(0); }
+    #attractask p { margin:0 0 12px; font-size:16px; font-weight:800; color:var(--ink); }
+    #attractask .btns { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    #attractask button { cursor:pointer; border:0; font:inherit; font-size:14px; font-weight:800; padding:10px 18px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
+    #attractask .yes { color:#fff; background:var(--brand); }
+    #attractask .no { color:#6b7488; background:rgba(29,36,51,.08); }
     #landing .landingabout { display:inline-block; margin-top:12px; font-size:12.5px; font-weight:700; color:#6b7488;
       text-decoration:none; -webkit-tap-highlight-color:transparent; }
     #landing .landingabout:hover { color:var(--brand); text-decoration:underline; }
@@ -690,6 +707,17 @@
     <div class="st-body"></div>
   </div>
 
+  <!-- 展示模式：有人碰到輸入時先問要不要接手，避免路過誤碰就中斷展示（沒回應 10 秒自動回去繼續巡遊） -->
+  <div id="attractask">
+    <div class="card">
+      <p data-i18n="attractAskTitle">要接手玩玩看嗎？</p>
+      <div class="btns">
+        <button id="attractyes" type="button" class="yes" data-i18n="attractAskYes">好，我來玩</button>
+        <button id="attractno" type="button" class="no" data-i18n="attractAskNo">繼續展示</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 進場 landing：首屏即顯示，說明遊戲目的＋預告五大主題；世界在背後生成，按「開始探險」進入 -->
   <div id="landing">
     <div class="card">
@@ -712,6 +740,11 @@
       <div class="prep"><div class="spin"></div></div>
       <button id="startbtn" class="start" disabled data-i18n="landingPreparing">世界生成中…</button>
       <button id="explorebtn" class="landingexplore" data-i18n="landingExplore" data-i18n-title="landingExploreHint" title="">☀️ 白天自由探索</button>
+      <div class="landingattract" data-i18n-title="attractHint" title="">
+        <span data-i18n="attractHd">🖥️ 展示模式</span>
+        <button id="attractnight" type="button" data-i18n="attractNight">🌙 夜晚</button>
+        <button id="attractday" type="button" data-i18n="attractDay">☀️ 白天</button>
+      </div>
       <a id="aboutlink" class="landingabout" href="https://ssd.ocf.tw/play/" target="_blank" rel="noopener" data-i18n="landingAbout">📖 遊戲簡介</a>
     </div>
   </div>

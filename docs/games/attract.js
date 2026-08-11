@@ -22,7 +22,16 @@ export class Attract {
     this._goto = goto; this._spin = spin; this._stop = stop;
     this._onArrive = onArrive || (() => {});
     Object.assign(this, DEFAULTS, tune);
-    this.active = false; this.i = -1; this.phase = 'travel'; this.t = 0;
+    this.active = false; this.paused = false; this.i = -1; this.phase = 'travel'; this.t = 0;
+  }
+
+  // 暫停／恢復：用在「有人碰到了，先問要不要接手」的等待期間。
+  // 不能用 exit()+enter() 代替——那會把巡遊重置回第一站，等於誤碰一下就從頭再走一遍。
+  pause() { if (this.active && !this.paused) { this.paused = true; this._stop(); } }
+  resume() {
+    if (!this.active || !this.paused) return;
+    this.paused = false;
+    if (this.phase === 'travel') { const w = this.wp[this.i]; if (w) this._goto(w.x, w.z); }   // 還在路上：把剛才收掉的移動目標接回去
   }
 
   enter() {
@@ -34,7 +43,7 @@ export class Attract {
   // 交還控制權：一定要收掉自動移動目標，否則玩家接手後角色會繼續自己往路點走
   exit() {
     if (!this.active) return;
-    this.active = false;
+    this.active = false; this.paused = false;
     this._stop();
   }
 
@@ -46,7 +55,7 @@ export class Attract {
   }
 
   update(dt, hx, hz) {
-    if (!this.active) return;
+    if (!this.active || this.paused) return;   // 詢問「要不要接手」期間整個凍住：計時不前進、鏡頭不轉，答完才接續
     this.t += dt;
     const w = this.wp[this.i];
     if (!w) return;
