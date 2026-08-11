@@ -141,15 +141,31 @@ try { ATTRACT = new URLSearchParams(location.search).get('attract') === '1'; } c
 const ATTRACT_IDLE_MS = 30000;   // 玩家放手多久後重新接管；擺攤現場太短會打斷猶豫中的人，太長則螢幕空等
 const ATTRACT_ASK_MS = 10000;    // 「要接手嗎？」等多久沒回應就當作誤碰，自己回去繼續展示
 
-// landing 在這裡就先建好，不等世界。整份世界是同步建構的（地形、植被、村莊、遺跡…），
-// 過去 setupLanding() 排在檔案最末尾，等於語言／畫面模式這些切換器要等世界跑完才長出來——
-// 而它們一按就是 reload，於是「調個設定」變成「每調一次等一輪世界生成」。
-// 這裡只建 DOM 與掛事件；真正吃資源的動作都在事件處理器裡，那時世界早就好了。
-// 「開始探險」仍由檔案末尾的 landingReady() 在世界建好後才解除 disabled。
-// 包 try：萬一這裡引用到某個還沒初始化的東西，不能讓整個模組跟著中斷——
-// 退回原本行為（世界建好後再建一次），遊戲照常能玩，只是切換器要多等一下。
+// ── 世界生成閘門：按下「開始探險」之前，一律不生成世界 ──────────
+// 整份世界是同步建構的（地形、植被、村莊、遺跡…），一跑起來就把主執行緒卡住數秒，
+// 期間整個頁面凍結、按鈕點不動。過去它在模組載入時就跑，於是每次切語言／畫面模式
+// （都要 reload）都得再凍一次——調三次設定就凍三次，而且使用者根本不知道在等什麼。
+//
+// top-level await 會把「後面所有 top-level 程式碼」整段延後到 Promise 解決之後，
+// 所以只要在這裡擋一道，世界生成就自然搬到按下開始之後，不必把 4000 行包進函式。
+// 函式宣告已在模組實例化時提升，下面的 setupLanding() 不受影響。
+//
+// 於是：reload → landing 立刻可用（完全沒有世界生成）→ 想調幾次設定都不必等 →
+// 按下「開始探險」才生成，而且那時畫面明確顯示載入中，等待有了歸屬。
+let releaseWorld, worldBuilt;
+let worldIsBuilt = false;                                      // 給 landing 的事件處理器判斷「世界建好了沒」（見探索按鈕）
+// 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）。
+// 宣告必須在閘門之前：探索按鈕的處理器一開頭就讀它，而那顆按鈕在世界生成前就能點了。
+let started = false;
+const worldGate = new Promise((r) => { releaseWorld = r; });   // landing 按下開始 → 放行
+const worldReady = new Promise((r) => { worldBuilt = r; });    // 世界建完 → 通知 landing 接著做預編譯與淡出
+
+// landing 先建好。包 try：萬一這裡引用到某個還沒初始化的東西，不能讓整個模組跟著中斷。
+// 失敗時必須立刻自行放行閘門——否則沒有任何按鈕能呼叫 releaseWorld()，會直接死鎖。
 let landingBuilt = false;
-try { setupLanding(); landingBuilt = true; } catch (e) { console.warn('[landing] 提前初始化失敗，改在世界就緒後重試', e); }
+try { setupLanding(); landingBuilt = true; landingReady(); }
+catch (e) { console.warn('[landing] 提前初始化失敗，退回「先生成世界、之後再建 landing」的舊流程', e); releaseWorld(); }
+await worldGate;
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -3421,7 +3437,6 @@ function doScreenshot() {
 }
 addEventListener('keydown', (e) => { if (e.code === 'KeyP' && !(document.activeElement && document.activeElement.tagName === 'INPUT')) { e.preventDefault(); requestScreenshot(); } }); // P＝截圖
 
-let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
 function animate(time) {
   if (!started) return;     // landing 仍在最前：完全跳過模擬與渲染（場景被不透明 landing 蓋住，不需畫）
   // 幀率閘門（降溫）：互動時 60fps、閒置時 30fps。用「整數抽幀」鎖原生 vsync（每 N 個 native tick 才畫 1 幀）
@@ -4252,7 +4267,9 @@ function setupLanding() {
     // 載入中狀態：重新顯示轉圈、按鈕轉文字
     btn.textContent = UI.landingLoading;
     const prep = root.querySelector('.prep'); if (prep) prep.classList.remove('done');
-    await frame(); await frame();                              // 先讓「載入中」畫面上屏
+    await frame(); await frame();                              // 先讓「載入中」畫面上屏，再開始卡主執行緒的工作
+    releaseWorld();                                            // 放行世界生成（同步、會凍住畫面數秒，但此刻已明確顯示載入中）
+    await worldReady;                                          // 等世界建完，才有 renderer/scene/camera 可用
     try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) {} // 非阻塞預編譯場景著色器（支援並行編譯時轉圈不卡）
     started = true;                                            // 開始模擬與渲染
     track('game_start', { mode: EXPLORE ? 'explore' : 'story' });
@@ -4265,22 +4282,27 @@ function setupLanding() {
   if (exBtn) {
     if (EXPLORE) exBtn.style.display = 'none';                 // 已由網址進入探索模式：不重複顯示
     exBtn.addEventListener('click', () => {
-      if (!btn || btn.disabled || started) return;             // 世界還在生成或已開始：無作用
+      if (!btn || btn.disabled || started) return;             // 已開始：無作用
       EXPLORE = true;
       try { const u = new URL(location.href); u.searchParams.set('explore', '1'); history.replaceState(null, '', u); } catch (e) { /* ignore */ }
-      setWorldOpen(true); computeVibrancy(); vibrancy = vibrancyTarget; // 立即切白天（重算地形被 landing 蓋住）
-      refreshExploreBadge();
+      // 一般情況下世界還沒生成（要等下面 btn.click() 才開始），生成時會自己依 EXPLORE 決定日夜，
+      // 這裡不能碰 setWorldOpen／vibrancy 那些世界建好才存在的東西。只有走過後備路徑（世界先生成、
+      // landing 後補）時世界已經是夜晚狀態，才需要即時切成白天。
+      if (worldIsBuilt) { setWorldOpen(true); computeVibrancy(); vibrancy = vibrancyTarget; refreshExploreBadge(); }
       exBtn.disabled = true;
       btn.click();                                             // 沿用主按鈕同一套載入／暖機／淡出流程
     });
   }
 }
+// 放行「開始探險」。世界改成按下之後才生成，所以這支在 landing 一建好就跑，不必等世界——
+// 轉圈也先收起來（此刻沒有任何東西在載入），按下去才重新顯示。
 function landingReady() {
   const root = document.getElementById('landing'); if (!root) return;
   const prep = root.querySelector('.prep'); if (prep) prep.classList.add('done');
   const btn = document.getElementById('startbtn');
   if (btn) { btn.disabled = false; btn.textContent = UI.landingStart; }
-  if (ATTRACT && btn) btn.click();   // 展示模式：不等人點「開始探險」，世界一生成好就自己進場
+  if (ATTRACT && btn) btn.click();   // 展示模式：不等人點「開始探險」
 }
-if (!landingBuilt) setupLanding();                            // 提前初始化失敗時的後備（見檔案前段）
-requestAnimationFrame(() => setTimeout(landingReady, 350));   // 世界（同步）建好了才放行「開始探險」
+worldIsBuilt = true;
+worldBuilt();                                       // 世界建完 → 讓「開始探險」的處理器接著做預編譯與淡出
+if (!landingBuilt) { setupLanding(); landingReady(); }   // 後備路徑：提前初始化失敗過，現在世界已就緒，把 landing 補建起來
