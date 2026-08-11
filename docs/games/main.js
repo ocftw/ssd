@@ -24,6 +24,7 @@ import { EggGame } from './egg.js';
 import { Stations } from './stations.js';
 import { STATIONS_ALL } from './i18n/stations.js';
 import { SFX } from './audio.js';
+import { Attract } from './attract.js';           // 展示模式（?attract=1）：擺攤待機自動巡遊
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -123,6 +124,14 @@ if (COMFORT) {
 // 遺跡水晶、維護者石化、中央大水晶、螢火蟲仍依真實進度，課程任務照常可玩、全完成仍觸發終局。
 let EXPLORE = false;
 try { EXPLORE = new URLSearchParams(location.search).get('explore') === '1'; } catch (e) { /* ignore */ }
+
+// ── 展示模式（?attract=1）：擺攤用。自動開場 → 沒人操作就自動巡遊五座遺跡 → 循環 ──
+// 有人一碰（鍵盤／點畫面／滾輪／搖桿）就交還控制權變成正常遊玩，再閒置 ATTRACT_IDLE_MS 又自己接手。
+// 隱含白天（EXPLORE）：展示要的是最亮、內容最多的狀態——五座支線站台、海岸、花海都在。
+let ATTRACT = false;
+try { ATTRACT = new URLSearchParams(location.search).get('attract') === '1'; } catch (e) { /* ignore */ }
+const ATTRACT_IDLE_MS = 30000;   // 玩家放手多久後重新接管；擺攤現場太短會打斷猶豫中的人，太長則螢幕空等
+if (ATTRACT) EXPLORE = true;
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -2327,7 +2336,10 @@ function heroNearNPC() {
 
 // ── 控制 ────────────────────────────────────────────────────────
 // ── 幀率管理：互動 60fps、閒置 30fps（降溫省電）。整數抽幀鎖原生 vsync（幀距均勻、不用累積器 → 避免 CSS2D 標籤抖動）──
-let activeUntil = 0; const bumpActive = () => { activeUntil = performance.now() + 600; }; // 任意操作後 0.6s 維持 60fps，之後無動作才降 30fps
+// lastInputAt 起始給一個很早的時間：展示模式才能在進場當下就判定為「閒置」並立刻接手，不用先空等 30 秒。
+// bumpActive() 只被真人的輸入事件呼叫（展示模式是直接設移動目標、不派合成事件），所以這個判斷不會被自己觸發。
+let activeUntil = 0, lastInputAt = -1e9;
+const bumpActive = () => { const n = performance.now(); activeUntil = n + 600; lastInputAt = n; }; // 任意操作後 0.6s 維持 60fps，之後無動作才降 30fps
 let nativeHz = 60, lastRaf = 0, frameTick = 0;                                            // 平滑推估的原生更新率 + native tick 計數
 const keys = new Set();
 addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); bumpActive(); });
@@ -2339,6 +2351,20 @@ let yaw = Math.PI, pitch = COMFORT ? 0.72 : 0.6, dist = COMFORT ? 28 : 24;
 { const sy = groundY(hero.position.x, hero.position.z); camera.position.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, sy + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist); }
 const moveTarget = new THREE.Vector3(); let hasTarget = false;
 const ndc = new THREE.Vector2(); const raycaster = new THREE.Raycaster(); const hitPoint = new THREE.Vector3();
+
+// 展示模式的巡遊路線＝五座遺跡，但停在「靠村莊那一側、距中心 6」的位置：
+// 遺跡本體的碰撞半徑是 4（走不進去，硬要走會卡住直到 travelTimeout），而 POI 的 openDist 是 6.5，
+// 取 6 剛好落在兩者之間 → 角色停得下來，課程卡也會自己跳出來，等於免費的內容輪播。
+const ATTRACT_APPROACH = 6;
+const attract = new Attract({
+  waypoints: ruinAt.map((r) => {
+    const d = Math.hypot(r.x, r.z) || 1, k = Math.max(0, (d - ATTRACT_APPROACH) / d);
+    return { x: r.x * k, z: r.z * k };
+  }),
+  goto: (x, z) => { moveTarget.set(x, 0, z); hasTarget = true; },   // 沿用「點地面走過去」那條路：碰撞、沿牆滑、邊緣減速、轉身與腳步聲全都免費跟著來
+  spin: (d) => { yaw += d; },
+  stop: () => { hasTarget = false; },
+});
 let pDown = false, dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
 const dom = renderer.domElement;
 dom.addEventListener('pointerdown', (e) => { pDown = true; dragging = false; lastX = downX = e.clientX; lastY = downY = e.clientY; dom.setPointerCapture(e.pointerId); bumpActive(); });
@@ -2388,7 +2414,10 @@ joyEl.addEventListener('pointerup', joyEnd);
 joyEl.addEventListener('pointercancel', joyEnd);
 
 // ── 進度（localStorage）────────────────────────────────────────
-const SAVE_KEY = 'ssd-village-v1';
+// 展示模式用獨立的 key 並在每次開啟時清掉：擺攤機一整天巡遊會不斷「發現」遺跡，
+// 若寫進正式存檔，這台機器之後就再也展示不出「還沒找到」的初始樣貌，也會污染真人玩家的進度。
+const SAVE_KEY = ATTRACT ? 'ssd-village-attract' : 'ssd-village-v1';
+if (ATTRACT) { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 let progress = { discovered: [], completed: [] };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.discovered) progress = s; } catch (e) { /* ignore */ }
 if (!Array.isArray(progress.seen)) progress.seen = []; // 小地圖：固定地標/NPC 探索揭示清單（向後相容：舊存檔自動補空陣列，不影響進度/通關條件）
@@ -3380,6 +3409,16 @@ function animate(time) {
   const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
   if (finaleActive) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡時凍結玩家
 
+  // 展示模式：沒人碰就自己巡遊，有人一碰就立刻讓出控制權（放手 ATTRACT_IDLE_MS 後再接手）。
+  // 擺在移動計算之前：attract 設好的 moveTarget/hasTarget 會直接被下面同一套走路邏輯消化。
+  if (ATTRACT) {
+    const idle = performance.now() - lastInputAt > ATTRACT_IDLE_MS;
+    if (attract.active) { if (!idle) attract.exit(); }
+    else if (idle && !isBusy()) attract.enter();
+    attract.update(dt, hero.position.x, hero.position.z);
+    if (attract.active) { kx = 0; kz = 0; }   // 巡遊中忽略殘留的鍵盤/搖桿輸入，避免和自動移動打架
+  }
+
   moveDir.set(0, 0, 0);
   if (kx || kz) { hasTarget = false; moveDir.addScaledVector(fwd, kz).addScaledVector(right, kx); }
   else if (hasTarget) { moveDir.set(moveTarget.x - hero.position.x, 0, moveTarget.z - hero.position.z); if (moveDir.length() < 0.4) hasTarget = false; }
@@ -4185,6 +4224,7 @@ function landingReady() {
   const prep = root.querySelector('.prep'); if (prep) prep.classList.add('done');
   const btn = document.getElementById('startbtn');
   if (btn) { btn.disabled = false; btn.textContent = UI.landingStart; }
+  if (ATTRACT && btn) btn.click();   // 展示模式：不等人點「開始探險」，世界一生成好就自己進場
 }
 setupLanding();
 requestAnimationFrame(() => setTimeout(landingReady, 350));
