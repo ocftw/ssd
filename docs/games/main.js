@@ -94,18 +94,8 @@ try { qOverride = localStorage.getItem(QKEY) || 'auto'; } catch (e) {}
 // 需要手動指定的場合：跑不動的舊桌機、擺攤機想省電，或要比對兩檔畫質時。
 try { const q = new URLSearchParams(location.search).get('q'); if (q === 'low' || q === 'high') qOverride = q; } catch (e) { /* ignore */ }
 const COARSE = matchMedia('(pointer: coarse)').matches;   // 觸控／行動裝置
-const TIER = (qOverride === 'low' || qOverride === 'high') ? qOverride : (COARSE ? 'low' : 'high');
-const Q = ({
-  // low＝手機精簡：低發熱、省電優先；視覺精簡但玩法與功能完整（寫實效果全關，渲染路徑與現狀完全一致）
-  low:  { maxPR: 2,   smaa: false, msaa: 4, shadowType: THREE.PCFShadowMap,
-          sunShadow: 1024, torchShadow: 512,  waterSeg: 28, waterStep: 0.066, aniso: 2, mageNight: false,
-          bloom: false, richSky: false, rich: false, weather: false },
-  // high＝桌機精緻：解除為手機而設的限制＋開啟寫實後製（光暈、大氣天空＋星空、電影色調）
-  // 註：maxPR 1.5（由 2.0 再降）＝把填充率砍約 44%，緩解 GPU 滿載造成的風扇狂轉與幀距不均（高刷新/高DPI 螢幕上水面等大平面最容易顯出抖動）；SMAA 在 1.5 下仍可接受。弱機可手動切「精簡」走 low 路徑
-  high: { maxPR: 1.5, smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
-          sunShadow: 2048, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true, // 太陽陰影 4096→2048：texel 砍 3/4 降填充/頻寬，PCFSoft 下幾乎無感
-          bloom: true, richSky: true, rich: true, weather: true },
-})[TIER];
+// TIER／Q 的實際計算延到「世界生成閘門」之後（見下方 worldGate）：在 landing 上改畫面模式時，
+// 世界都還沒建，只要更新 qOverride 就好，不必 reload 整頁。
 
 // ── 舒適模式（減少 3D 暈 / motion sickness）─────────────────────
 // 動暈的成因是「看到的運動」與「內耳感受到的靜止」對不上；能減輕的方向就三個：
@@ -113,18 +103,13 @@ const Q = ({
 // 預設 auto＝跟隨系統的 prefers-reduced-motion；使用者可在 landing 手動覆寫（會記在 localStorage）。
 // 註：真正的暈眩修正（鏡頭與走路 bob 解耦、地形抬升平滑、注視點平滑、直向 FOV 補償）一律套用、不看這個開關——
 //     那些本來就是手感 bug，關掉舒適模式也不該把它們找回來。這裡只放「會犧牲一點氛圍」的取捨項。
+// COMFORT 同樣延到閘門之後才定案，理由同上。
 const CKEY = 'ssd-village-comfort';                       // 'auto' | 'on' | 'off'
 let cOverride = 'auto';
 try { cOverride = localStorage.getItem(CKEY) || 'auto'; } catch (e) {}
 let PRM = false;
 try { PRM = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-const COMFORT = cOverride === 'on' || (cOverride === 'auto' && PRM);
-if (COMFORT) {
-  Q.weather = false;        // 螢幕空間雨絲（sizeAttenuation:false）與世界的運動方向不一致＝最典型的 vection 衝突；雷雨還會整屏調光
-  Q.bloomStrength = 0.22;   // 亮部光暈減半：加法混合的螢火蟲／光柱在移動時會整片明滅
-} else {
-  Q.bloomStrength = 0.45;
-}
+const comfortWanted = () => (cOverride === 'auto' ? PRM : cOverride === 'on');   // landing 與世界共用同一套判斷
 
 // ── 探索模式（?explore=1 或 landing 次要按鈕）：直接以白天自由探索 ──
 // 只「借光」＋開放白天內容（花海/海岸/釣魚台/拍照點/日之碎片…）；故事狀態照實呈現：
@@ -167,6 +152,29 @@ let landingBuilt = false;
 try { setupLanding(); landingBuilt = true; landingReady(); }
 catch (e) { console.warn('[landing] 提前初始化失敗，退回「先生成世界、之後再建 landing」的舊流程', e); releaseWorld(); }
 await worldGate;
+
+// ── 畫質檔位與舒適模式：到這裡才定案 ──────────────────────────
+// 放在閘門之後，是為了讓 landing 上改畫面模式時世界還沒建，改個變數就好、不必 reload 整頁。
+// 一旦放行就固定下來，之後整個世界都依這份設定建構。
+const TIER = (qOverride === 'low' || qOverride === 'high') ? qOverride : (COARSE ? 'low' : 'high');
+const Q = ({
+  // low＝手機精簡：低發熱、省電優先；視覺精簡但玩法與功能完整（寫實效果全關，渲染路徑與現狀完全一致）
+  low:  { maxPR: 2,   smaa: false, msaa: 4, shadowType: THREE.PCFShadowMap,
+          sunShadow: 1024, torchShadow: 512,  waterSeg: 28, waterStep: 0.066, aniso: 2, mageNight: false,
+          bloom: false, richSky: false, rich: false, weather: false },
+  // high＝桌機精緻：解除為手機而設的限制＋開啟寫實後製（光暈、大氣天空＋星空、電影色調）
+  // 註：maxPR 1.5（由 2.0 再降）＝把填充率砍約 44%，緩解 GPU 滿載造成的風扇狂轉與幀距不均（高刷新/高DPI 螢幕上水面等大平面最容易顯出抖動）；SMAA 在 1.5 下仍可接受。弱機可手動切「精簡」走 low 路徑
+  high: { maxPR: 1.5, smaa: true,  msaa: 0, shadowType: THREE.PCFSoftShadowMap,
+          sunShadow: 2048, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true, // 太陽陰影 4096→2048：texel 砍 3/4 降填充/頻寬，PCFSoft 下幾乎無感
+          bloom: true, richSky: true, rich: true, weather: true },
+})[TIER];
+const COMFORT = comfortWanted();
+if (COMFORT) {
+  Q.weather = false;        // 螢幕空間雨絲（sizeAttenuation:false）與世界的運動方向不一致＝最典型的 vection 衝突；雷雨還會整屏調光
+  Q.bloomStrength = 0.22;   // 亮部光暈減半：加法混合的螢火蟲／光柱在移動時會整片明滅
+} else {
+  Q.bloomStrength = 0.45;
+}
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -4237,18 +4245,23 @@ function setupLanding() {
   if (mEl) {
     // 沒選過（'auto'）時實際生效的是系統的「減少動態效果」設定 → 圈選當下真正生效的那一個，
     // 免得使用者看到選在「一般」、玩起來卻是防暈模式（或反過來）。
-    const comfortOn = cOverride === 'auto' ? COMFORT : cOverride === 'on';
-    const current = comfortOn ? 'comfort' : (qOverride === 'low' ? 'perf' : 'normal');
+    const currentMode = () => (comfortWanted() ? 'comfort' : (qOverride === 'low' ? 'perf' : 'normal'));
+    const btns = [];
     [['normal', UI.modeNormal], ['perf', UI.modePerf], ['comfort', UI.modeComfort]].forEach(([v, label]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-      if (v === current) b.classList.add('on');
+      b.dataset.mode = v;
+      // 不 reload：世界要等按下「開始探險」才生成，所以在 landing 上換模式只是改兩個變數，
+      // 之後世界會依新值建構。以前這裡 location.reload()，整個介面消失再重畫，看起來像當掉。
       b.addEventListener('click', () => {
-        if (v === current) return;
-        try { localStorage.setItem(QKEY, MODES[v].q); localStorage.setItem(CKEY, MODES[v].c); } catch (e) {}
-        location.reload();
+        qOverride = MODES[v].q; cOverride = MODES[v].c;
+        try { localStorage.setItem(QKEY, qOverride); localStorage.setItem(CKEY, cOverride); } catch (e) { /* ignore */ }
+        const now = currentMode();
+        btns.forEach((x) => x.classList.toggle('on', x.dataset.mode === now));
       });
-      mEl.appendChild(b);
+      btns.push(b); mEl.appendChild(b);
     });
+    const now = currentMode();
+    btns.forEach((x) => x.classList.toggle('on', x.dataset.mode === now));
   }
   // landing 的展示模式入口（擺攤用）：帶參數重新載入。ATTRACT 會決定存檔用哪個 key、世界從日或夜開場，
   // 這些都在模組初始化時就定下來，沒辦法在 runtime 切換，所以沿用語言／畫質切換器那套 reload 模式。
