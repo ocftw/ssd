@@ -2364,7 +2364,19 @@ const attract = new Attract({
   goto: (x, z) => { moveTarget.set(x, 0, z); hasTarget = true; },   // 沿用「點地面走過去」那條路：碰撞、沿牆滑、邊緣減速、轉身與腳步聲全都免費跟著來
   spin: (d) => { yaw += d; },
   stop: () => { hasTarget = false; },
+  onArrive: () => attractInvite(),                                  // 每停一站就招呼一次路過的人
 });
+// 展示模式的邀請泡泡：抵達每座遺跡、停下來繞鏡頭時冒出來。停留 8 秒、泡泡顯示 6 秒，
+// 剩下的時間留白，免得整場都掛著一句話反而沒人看。輪流講不同句，同一句不連著出現兩次。
+let lastInviteIdx = -1;
+function attractInvite() {
+  const lines = UI.attractInvites;
+  if (!lines || !lines.length) return;
+  let i = Math.floor(Math.random() * lines.length);
+  if (lines.length > 1 && i === lastInviteIdx) i = (i + 1) % lines.length;
+  lastInviteIdx = i;
+  heroSay(lines[i], 6);
+}
 let pDown = false, dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
 const dom = renderer.domElement;
 dom.addEventListener('pointerdown', (e) => { pDown = true; dragging = false; lastX = downX = e.clientX; lastY = downY = e.clientY; dom.setPointerCapture(e.pointerId); bumpActive(); });
@@ -3414,7 +3426,7 @@ function animate(time) {
   if (ATTRACT) {
     const idle = performance.now() - lastInputAt > ATTRACT_IDLE_MS;
     if (attract.active) { if (!idle) attract.exit(); }
-    else if (idle && !isBusy()) attract.enter();
+    else if (idle && !isBusy()) { attract.enter(); attractInvite(); }   // 一接手就先招呼一次，不必等走到第一站
     attract.update(dt, hero.position.x, hero.position.z);
     if (attract.active) { kx = 0; kz = 0; }   // 巡遊中忽略殘留的鍵盤/搖桿輸入，避免和自動移動打架
   }
@@ -3489,7 +3501,10 @@ function animate(time) {
 
   // 對話泡：踩水反應 + 漫步自言自語
   const nearNPC = heroNearNPC();   // 靠近可對話 NPC 時，主角先不自言自語（並立即收起正在顯示的台詞）
-  if (nearNPC) { if (sayTimer > 0) { sayTimer = 0; heroBubbleEl.classList.remove('show'); } }
+  // 展示模式例外：巡遊停的每座遺跡旁都站著維護者（keeper 8 單位內就算 nearNPC），照這條規則邀請泡泡
+  // 會在剛冒出來的瞬間被收掉。「靠近 NPC 就閉嘴」是為了別讓主角碎念蓋掉 NPC 對話，而展示模式沒有真人
+  // 會去跟 NPC 對話，這個顧慮不存在。
+  if (nearNPC && !attract.active) { if (sayTimer > 0) { sayTimer = 0; heroBubbleEl.classList.remove('show'); } }
   else if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
   const inWater = groundH < WORLD.water + 0.2;
   if (!finaleActive && !nearNPC) {

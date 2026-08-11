@@ -16,9 +16,11 @@ const DEFAULTS = {
 
 export class Attract {
   // waypoints: [{x, z}]／goto(x,z): 設定自動移動目標／spin(dYaw): 轉鏡頭／stop(): 收掉自動移動
-  constructor({ waypoints, goto, spin, stop, ...tune }) {
+  // onArrive(): 抵達路點、要開始停留展示時通知一次（主角頭上冒邀請泡泡就掛在這）
+  constructor({ waypoints, goto, spin, stop, onArrive, ...tune }) {
     this.wp = waypoints || [];
     this._goto = goto; this._spin = spin; this._stop = stop;
+    this._onArrive = onArrive || (() => {});
     Object.assign(this, DEFAULTS, tune);
     this.active = false; this.i = -1; this.phase = 'travel'; this.t = 0;
   }
@@ -50,7 +52,7 @@ export class Attract {
     if (!w) return;
     if (this.phase === 'travel') {
       this._spin(this.spinTravel * dt);
-      if (Math.hypot(hx - w.x, hz - w.z) <= this.arriveDist) { this.phase = 'dwell'; this.t = 0; this._stop(); }
+      if (Math.hypot(hx - w.x, hz - w.z) <= this.arriveDist) { this.phase = 'dwell'; this.t = 0; this._stop(); this._onArrive(); }
       else if (this.t >= this.travelTimeout) this._next();   // 卡住就直接換下一站：停在半路繞鏡頭沒東西可看，不如快點離開
     } else {
       this._spin(this.spinDwell * dt);

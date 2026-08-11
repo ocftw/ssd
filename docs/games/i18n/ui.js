@@ -317,6 +317,14 @@ export const UI_ALL = {
 
     // 主角頭頂對話泡
     waterLines: ['哇！水好冰～', '我的鞋全濕了…', '撲通！這裡能游泳嗎？', '等等，我不太會游泳啦！', '冷颼颼…該上岸了。'],
+    // 展示模式（?attract=1）：巡遊到每座遺跡停下來時，主角頭上冒出的邀請泡泡——擺攤時用來招呼路過的人
+    attractInvites: [
+      '要不要一起來找資安遺跡？',
+      '想試試看嗎？碰一下鍵盤就換你玩！',
+      '這裡有五座遺跡，要不要來探險？',
+      '按任意鍵，就能接手喔！',
+      '有興趣的話，隨時可以來接手～',
+    ],
     idleLines: [
       // 資安小提醒
       '可疑連結，絕對不點！',
@@ -689,6 +697,14 @@ export const UI_ALL = {
     confCompare: (faceA, faceB, msg) => `把握度：${faceA} → ${faceB}　${msg}`,
 
     waterLines: ['哇！水好冰～', '我的鞋全湿了…', '扑通！这里能游泳吗？', '等等，我不太会游泳啦！', '冷飕飕…该上岸了。'],
+    // 展示模式（?attract=1）：巡游到每座遗迹停下来时，主角头上冒出的邀请泡泡——摆摊时用来招呼路过的人
+    attractInvites: [
+      '要不要一起来找资安遗迹？',
+      '想试试看吗？碰一下键盘就换你玩！',
+      '这里有五座遗迹，要不要来探险？',
+      '按任意键，就能接手喔！',
+      '有兴趣的话，随时可以来接手～',
+    ],
     idleLines: [
       '可疑链接，绝对不点！',
       '两步验证开了，账号才安心～',
@@ -1058,6 +1074,14 @@ export const UI_ALL = {
     confCompare: (faceA, faceB, msg) => `Confidence: ${faceA} → ${faceB}  ${msg}`,
 
     waterLines: [`Whoa, the water's freezing!`, `My shoes are soaked…`, `Splash! Can you swim here?`, `Wait, I'm not a great swimmer!`, `Brr… time to get out.`],
+    // 展示模式（?attract=1）：巡遊到每座遺跡停下來時，主角頭上冒出的邀請泡泡——擺攤時用來招呼路過的人
+    attractInvites: [
+      `Want to hunt for security ruins with me?`,
+      `Care to try? Press any key and it's yours!`,
+      `Five ruins out there — fancy an adventure?`,
+      `Press any key to take over!`,
+      `Jump in whenever you like~`,
+    ],
     idleLines: [
       `Suspicious link? Never clicking that!`,
       `Two-factor's on — now my account's safe~`,
