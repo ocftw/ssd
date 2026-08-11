@@ -324,9 +324,15 @@
 
     /* 進場 landing（兼作世界生成時的等待畫面） */
     @keyframes spin { to { transform:rotate(360deg); } }
+    /* 先別畫內容：module script 是 deferred，瀏覽器會先把空殼（沒有主題、沒有按鈕、只有轉圈）畫出來，
+       等 JS 執行才逐項填入，看起來就是整個版面被往下推一次。填完才加 .ready 顯示。
+       animation 是保險：JS 沒跑或掛掉時 1.2s 後照樣顯示，不會留下一片空白。 */
     #landing { position:fixed; inset:0; z-index:50; display:grid; place-items:center; padding:18px;
-      background:linear-gradient(180deg,#bfe0f0 0%,#f6ead7 100%); transition:opacity .5s ease; }
-    #landing.hide { opacity:0; pointer-events:none; }
+      background:linear-gradient(180deg,#bfe0f0 0%,#f6ead7 100%); transition:opacity .5s ease;
+      opacity:0; animation:landingFallback 0s 1.2s forwards; }
+    #landing.ready:not(.hide) { opacity:1; animation:none; }
+    #landing.hide { opacity:0; pointer-events:none; animation:none; }
+    @keyframes landingFallback { to { opacity:1; } }
     #landing .card { background:rgba(251,247,239,.97); border-radius:22px; padding:22px 26px; text-align:center;
       max-width:min(94vw,520px); max-height:90dvh; overflow-y:auto; box-shadow:var(--shadow); }
     #landing .landinglang { display:flex; justify-content:center; gap:3px; margin-bottom:6px; }

@@ -70,6 +70,7 @@ function showUnsupported() {
   const btn = document.getElementById('startbtn');
   if (btn) { btn.disabled = true; btn.textContent = UI.cantPlayBtn; }
   if (root) {
+    root.classList.add('ready');                                                       // landing 預設是隱藏的（見 .ready），錯誤訊息也得讓它顯示出來
     const prep = root.querySelector('.prep'); if (prep) prep.style.display = 'none';   // 收起「世界生成中」轉圈
     root.querySelectorAll('.topics-hd, .topics, .landingmode, .landingexplore, .landingattract').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/模式/探索/展示區塊
     const card = root.querySelector('.card');
@@ -4301,6 +4302,7 @@ function landingReady() {
   const prep = root.querySelector('.prep'); if (prep) prep.classList.add('done');
   const btn = document.getElementById('startbtn');
   if (btn) { btn.disabled = false; btn.textContent = UI.landingStart; }
+  root.classList.add('ready');       // 內容都填完了才顯示，避免使用者看到空殼被一項項填入
   if (ATTRACT && btn) btn.click();   // 展示模式：不等人點「開始探險」
 }
 worldIsBuilt = true;
