@@ -34,6 +34,9 @@ const LANG = AVAILABLE_LANGS.includes(resolveLang()) ? resolveLang() : FALLBACK_
 const UI = UI_ALL[LANG] || UI_ALL[FALLBACK_LANG];
 const BATTLES = BATTLES_ALL[LANG] || BATTLES_ALL[FALLBACK_LANG];
 const { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST, GUIDE_KIT, MONUMENT, LIGHTHOUSE, PARTNER_WALL } = CONTENT[LANG] || CONTENT[FALLBACK_LANG];
+// 五座遺跡＝五門課程的推薦順序（唯一來源；紀念碑心法／推薦遺跡／landing 主題預告共用）。
+// 放在這裡而非世界建構區：landing 的主題預告要在世界生成之前就畫得出來。
+const RUIN_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
 
 // 套用 index.html 內的靜態介面文字（data-i18n＝textContent、-html＝innerHTML、-aria／-title＝屬性）
 function applyStaticI18n() {
@@ -130,7 +133,6 @@ try { EXPLORE = new URLSearchParams(location.search).get('explore') === '1'; } c
 
 // ── 展示模式（?attract=1）：擺攤用。自動開場 → 沒人操作就自動巡遊五座遺跡 → 循環 ──
 // 有人一碰（鍵盤／點畫面／滾輪／搖桿）就交還控制權變成正常遊玩，再閒置 ATTRACT_IDLE_MS 又自己接手。
-// 隱含白天（EXPLORE）：展示要的是最亮、內容最多的狀態——五座支線站台、海岸、花海都在。
 // 日夜由既有的 explore 參數決定，不另外發明一套：
 //   ?attract=1            → 夜晚（故事起點：迷霧、螢火蟲、遺跡光柱，遺跡還沒被發現）
 //   ?attract=1&explore=1  → 白天（最亮、內容最多：海岸、花海、五座支線站台）
@@ -138,6 +140,16 @@ let ATTRACT = false;
 try { ATTRACT = new URLSearchParams(location.search).get('attract') === '1'; } catch (e) { /* ignore */ }
 const ATTRACT_IDLE_MS = 30000;   // 玩家放手多久後重新接管；擺攤現場太短會打斷猶豫中的人，太長則螢幕空等
 const ATTRACT_ASK_MS = 10000;    // 「要接手嗎？」等多久沒回應就當作誤碰，自己回去繼續展示
+
+// landing 在這裡就先建好，不等世界。整份世界是同步建構的（地形、植被、村莊、遺跡…），
+// 過去 setupLanding() 排在檔案最末尾，等於語言／畫面模式這些切換器要等世界跑完才長出來——
+// 而它們一按就是 reload，於是「調個設定」變成「每調一次等一輪世界生成」。
+// 這裡只建 DOM 與掛事件；真正吃資源的動作都在事件處理器裡，那時世界早就好了。
+// 「開始探險」仍由檔案末尾的 landingReady() 在世界建好後才解除 disabled。
+// 包 try：萬一這裡引用到某個還沒初始化的東西，不能讓整個模組跟著中斷——
+// 退回原本行為（世界建好後再建一次），遊戲照常能玩，只是切換器要多等一下。
+let landingBuilt = false;
+try { setupLanding(); landingBuilt = true; } catch (e) { console.warn('[landing] 提前初始化失敗，改在世界就緒後重試', e); }
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -1852,7 +1864,6 @@ function placeDayStruct(built, data, x, z, labelY, openDist, faceOrigin) {
   POIS.push({ data, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist, dayOnly: true });
   return built;
 }
-const RUIN_ORDER = ['personal', 'common', 'tools', 'org', 'guide']; // 五座遺跡＝五門課程的推薦順序（唯一來源；紀念碑心法／推薦遺跡／landing 主題預告共用）
 // 守護者紀念碑與 CSCS 夥伴牆：打散到荒野各方位（不再擠在村莊出口）；面朝村心、座標用 STELE_AT/WALL_AT 單一來源（OCF 紀念碑也已移到外圍，見 content.js ocf）
 const lessonStele = placeDayStruct(buildLessonStele(),
   { ...MONUMENT, desc: RUIN_ORDER.map((id) => '・' + UI.shardLesson[id]).join('\n') }, // desc＝五則心法（重用既有三語、零新翻譯）
@@ -4180,10 +4191,13 @@ addEventListener('resize', () => { applyCameraFraming(); renderer.setSize(innerW
 function setupLanding() {
   const root = document.getElementById('landing');
   if (!root) return;
-  // 五大主題預告：依推薦學習順序，文字直接取自當前語言的 RUINS（自動多語）
+  // 可重入：提前初始化若失敗會在世界就緒後重試一次，清空動態容器避免按鈕被 append 兩份
+  ['.landinglang', '.landingmodeseg'].forEach((s) => { const el = root.querySelector(s); if (el) el.innerHTML = ''; });
+  // 五大主題預告：依推薦學習順序，文字直接取自當前語言的 RUINS（自動多語）。
+  // 讀 RUINS 原始資料而不是 poiById()——後者要等世界把 POIS 建好，landing 就得跟著等。
   const topics = root.querySelector('.topics');
   if (topics) topics.innerHTML = RUIN_ORDER.map((id) => {
-    const r = (poiById(id) || {}).data; if (!r) return '';
+    const r = RUINS.find((x) => x.id === id); if (!r) return '';
     return `<div class="t"><span class="e">${r.emoji}</span><span class="n">${r.title}</span></div>`;
   }).join('');
   // landing 專用語言切換器（沿用 buildLangSwitcher 邏輯；少於 2 種語言不顯示）
@@ -4196,20 +4210,25 @@ function setupLanding() {
       langEl.appendChild(b);
     });
   }
-  // landing 畫面模式：一般／防 3D 暈，二選一（存 localStorage，沿用語言切換器的 reload 模式）。
-  // 畫質不再放進 landing——它本來就依裝置自動分檔（手機精簡／桌機精緻），多數人不需要碰；
-  // 真要手動指定仍可用 ?q=low / ?q=high，見 README。
+  // landing 畫面模式：一般／省效能／防 3D 暈，三選一。一顆按鈕同時定下畫質與動態兩個底層設定，
+  // 使用者不必分別理解「畫質」和「晃動」是什麼——他們只知道自己「機器跑不動」或「玩了會暈」。
+  const MODES = {
+    normal:  { q: 'auto', c: 'off' },   // 畫質依裝置自動分檔、動態完整
+    perf:    { q: 'low',  c: 'off' },   // 強制精簡檔：舊桌機跑不動、或擺攤機要少發熱時
+    comfort: { q: 'auto', c: 'on'  },   // 減暈：鏡頭更穩、移動暗角、關雨天閃電、小地圖固定朝北
+  };
   const mEl = root.querySelector('.landingmodeseg');
   if (mEl) {
-    // 預設 'auto' 時，實際生效的是系統的「減少動態效果」設定 → 圈選當下真正生效的那一個，
+    // 沒選過（'auto'）時實際生效的是系統的「減少動態效果」設定 → 圈選當下真正生效的那一個，
     // 免得使用者看到選在「一般」、玩起來卻是防暈模式（或反過來）。
-    const current = cOverride === 'auto' ? (COMFORT ? 'on' : 'off') : cOverride;
-    [['off', UI.modeNormal], ['on', UI.modeComfort]].forEach(([v, label]) => {
+    const comfortOn = cOverride === 'auto' ? COMFORT : cOverride === 'on';
+    const current = comfortOn ? 'comfort' : (qOverride === 'low' ? 'perf' : 'normal');
+    [['normal', UI.modeNormal], ['perf', UI.modePerf], ['comfort', UI.modeComfort]].forEach(([v, label]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
       if (v === current) b.classList.add('on');
       b.addEventListener('click', () => {
         if (v === current) return;
-        try { localStorage.setItem(CKEY, v); } catch (e) {}
+        try { localStorage.setItem(QKEY, MODES[v].q); localStorage.setItem(CKEY, MODES[v].c); } catch (e) {}
         location.reload();
       });
       mEl.appendChild(b);
@@ -4263,5 +4282,5 @@ function landingReady() {
   if (btn) { btn.disabled = false; btn.textContent = UI.landingStart; }
   if (ATTRACT && btn) btn.click();   // 展示模式：不等人點「開始探險」，世界一生成好就自己進場
 }
-setupLanding();
-requestAnimationFrame(() => setTimeout(landingReady, 350));
+if (!landingBuilt) setupLanding();                            // 提前初始化失敗時的後備（見檔案前段）
+requestAnimationFrame(() => setTimeout(landingReady, 350));   // 世界（同步）建好了才放行「開始探險」
