@@ -12,18 +12,19 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'; // 桌機：亮部光暈（電影感）
 import { Sky } from 'three/addons/objects/Sky.js';                                 // 桌機：大氣散射天空
-import { CONTENT } from './i18n/content.js?v=d3c202b3';
-import { BATTLES_ALL } from './i18n/battles.js?v=d3c202b3';
-import { UI_ALL } from './i18n/ui.js?v=d3c202b3';
-import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=d3c202b3';
-import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=d3c202b3';
-import { BattleSystem } from './battle.js?v=d3c202b3';
+import { CONTENT } from './i18n/content.js?v=8c182a8b';
+import { BATTLES_ALL } from './i18n/battles.js?v=8c182a8b';
+import { UI_ALL } from './i18n/ui.js?v=8c182a8b';
+import { LANGS, resolveLang, setLang } from './i18n/lang.js?v=8c182a8b';
+import { WORLD, terrainHeight, groundY, setTerrainOpenness } from './terrain.js?v=8c182a8b';
+import { BattleSystem } from './battle.js?v=8c182a8b';
 import { FISHING_ALL } from './i18n/fishing.js';
 import { FishingGame } from './fishing.js';
 import { EggGame } from './egg.js';
 import { Stations } from './stations.js';
 import { STATIONS_ALL } from './i18n/stations.js';
-import { SFX } from './audio.js?v=d3c202b3';
+import { SFX } from './audio.js?v=8c182a8b';
+import { Attract } from './attract.js';           // 展示模式（?attract=1）：擺攤待機自動巡遊
 
 // ── 多語系：解析語言、取出該語言的內容／測驗／介面字典 ──────────────
 // 只認「三個字典都備妥」的語言；尚未翻譯者一律退回正體中文（避免半套）。
@@ -33,6 +34,9 @@ const LANG = AVAILABLE_LANGS.includes(resolveLang()) ? resolveLang() : FALLBACK_
 const UI = UI_ALL[LANG] || UI_ALL[FALLBACK_LANG];
 const BATTLES = BATTLES_ALL[LANG] || BATTLES_ALL[FALLBACK_LANG];
 const { VILLAGE_BOARD, RUINS, OCF_STATUE, LEGEND, ARCHIVE_DOCS, WEAPON_CHEST, GUIDE_KIT, MONUMENT, LIGHTHOUSE, PARTNER_WALL } = CONTENT[LANG] || CONTENT[FALLBACK_LANG];
+// 五座遺跡＝五門課程的推薦順序（唯一來源；紀念碑心法／推薦遺跡／landing 主題預告共用）。
+// 放在這裡而非世界建構區：landing 的主題預告要在世界生成之前就畫得出來。
+const RUIN_ORDER = ['personal', 'common', 'tools', 'org', 'guide'];
 
 // 套用 index.html 內的靜態介面文字（data-i18n＝textContent、-html＝innerHTML、-aria／-title＝屬性）
 function applyStaticI18n() {
@@ -66,8 +70,9 @@ function showUnsupported() {
   const btn = document.getElementById('startbtn');
   if (btn) { btn.disabled = true; btn.textContent = UI.cantPlayBtn; }
   if (root) {
+    root.classList.add('ready');                                                       // landing 預設是隱藏的（見 .ready），錯誤訊息也得讓它顯示出來
     const prep = root.querySelector('.prep'); if (prep) prep.style.display = 'none';   // 收起「世界生成中」轉圈
-    root.querySelectorAll('.topics-hd, .topics, .landingopts, .landingquality, .landingcomfort, .landingexplore').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質/晃動/探索區塊
+    root.querySelectorAll('.topics-hd, .topics, .landingmode, .landingexplore, .landingattract').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/模式/探索/展示區塊
     const card = root.querySelector('.card');
     if (card && !card.querySelector('.cantplay')) {
       const p = document.createElement('p'); p.className = 'cantplay';
@@ -85,7 +90,72 @@ if (!webgl2ok) { showUnsupported(); throw new Error('WebGL2 unsupported — game
 const QKEY = 'ssd-village-quality';                       // 'auto' | 'low' | 'high'
 let qOverride = 'auto';
 try { qOverride = localStorage.getItem(QKEY) || 'auto'; } catch (e) {}
+// 畫質已從 landing 收掉（本來就依裝置自動分檔，多數人不需要碰）；?q=low / ?q=high 留給
+// 需要手動指定的場合：跑不動的舊桌機、擺攤機想省電，或要比對兩檔畫質時。
+try { const q = new URLSearchParams(location.search).get('q'); if (q === 'low' || q === 'high') qOverride = q; } catch (e) { /* ignore */ }
 const COARSE = matchMedia('(pointer: coarse)').matches;   // 觸控／行動裝置
+// TIER／Q 的實際計算延到「世界生成閘門」之後（見下方 worldGate）：在 landing 上改畫面模式時，
+// 世界都還沒建，只要更新 qOverride 就好，不必 reload 整頁。
+
+// ── 舒適模式（減少 3D 暈 / motion sickness）─────────────────────
+// 動暈的成因是「看到的運動」與「內耳感受到的靜止」對不上；能減輕的方向就三個：
+// 少一點非玩家主動造成的鏡頭位移、少一點週邊視野的光流（vection）、少一點全螢幕明暗與粒子跳動。
+// 預設 auto＝跟隨系統的 prefers-reduced-motion；使用者可在 landing 手動覆寫（會記在 localStorage）。
+// 註：真正的暈眩修正（鏡頭與走路 bob 解耦、地形抬升平滑、注視點平滑、直向 FOV 補償）一律套用、不看這個開關——
+//     那些本來就是手感 bug，關掉舒適模式也不該把它們找回來。這裡只放「會犧牲一點氛圍」的取捨項。
+// COMFORT 同樣延到閘門之後才定案，理由同上。
+const CKEY = 'ssd-village-comfort';                       // 'auto' | 'on' | 'off'
+let cOverride = 'auto';
+try { cOverride = localStorage.getItem(CKEY) || 'auto'; } catch (e) {}
+let PRM = false;
+try { PRM = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+const comfortWanted = () => (cOverride === 'auto' ? PRM : cOverride === 'on');   // landing 與世界共用同一套判斷
+
+// ── 探索模式（?explore=1 或 landing 次要按鈕）：直接以白天自由探索 ──
+// 只「借光」＋開放白天內容（花海/海岸/釣魚台/拍照點/日之碎片…）；故事狀態照實呈現：
+// 遺跡水晶、維護者石化、中央大水晶、螢火蟲仍依真實進度，課程任務照常可玩、全完成仍觸發終局。
+let EXPLORE = false;
+try { EXPLORE = new URLSearchParams(location.search).get('explore') === '1'; } catch (e) { /* ignore */ }
+
+// ── 展示模式（?attract=1）：擺攤用。自動開場 → 沒人操作就自動巡遊五座遺跡 → 循環 ──
+// 有人一碰（鍵盤／點畫面／滾輪／搖桿）就交還控制權變成正常遊玩，再閒置 ATTRACT_IDLE_MS 又自己接手。
+// 日夜由既有的 explore 參數決定，不另外發明一套：
+//   ?attract=1            → 夜晚（故事起點：迷霧、螢火蟲、遺跡光柱，遺跡還沒被發現）
+//   ?attract=1&explore=1  → 白天（最亮、內容最多：海岸、花海、五座支線站台）
+let ATTRACT = false;
+try { ATTRACT = new URLSearchParams(location.search).get('attract') === '1'; } catch (e) { /* ignore */ }
+const ATTRACT_IDLE_MS = 30000;   // 玩家放手多久後重新接管；擺攤現場太短會打斷猶豫中的人，太長則螢幕空等
+const ATTRACT_ASK_MS = 10000;    // 「要接手嗎？」等多久沒回應就當作誤碰，自己回去繼續展示
+
+// ── 世界生成閘門：按下「開始探險」之前，一律不生成世界 ──────────
+// 整份世界是同步建構的（地形、植被、村莊、遺跡…），一跑起來就把主執行緒卡住數秒，
+// 期間整個頁面凍結、按鈕點不動。過去它在模組載入時就跑，於是每次切語言／畫面模式
+// （都要 reload）都得再凍一次——調三次設定就凍三次，而且使用者根本不知道在等什麼。
+//
+// top-level await 會把「後面所有 top-level 程式碼」整段延後到 Promise 解決之後，
+// 所以只要在這裡擋一道，世界生成就自然搬到按下開始之後，不必把 4000 行包進函式。
+// 函式宣告已在模組實例化時提升，下面的 setupLanding() 不受影響。
+//
+// 於是：reload → landing 立刻可用（完全沒有世界生成）→ 想調幾次設定都不必等 →
+// 按下「開始探險」才生成，而且那時畫面明確顯示載入中，等待有了歸屬。
+let releaseWorld, worldBuilt;
+let worldIsBuilt = false;                                      // 給 landing 的事件處理器判斷「世界建好了沒」（見探索按鈕）
+// 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）。
+// 宣告必須在閘門之前：探索按鈕的處理器一開頭就讀它，而那顆按鈕在世界生成前就能點了。
+let started = false;
+const worldGate = new Promise((r) => { releaseWorld = r; });   // landing 按下開始 → 放行
+const worldReady = new Promise((r) => { worldBuilt = r; });    // 世界建完 → 通知 landing 接著做預編譯與淡出
+
+// landing 先建好。包 try：萬一這裡引用到某個還沒初始化的東西，不能讓整個模組跟著中斷。
+// 失敗時必須立刻自行放行閘門——否則沒有任何按鈕能呼叫 releaseWorld()，會直接死鎖。
+let landingBuilt = false;
+try { setupLanding(); landingBuilt = true; landingReady(); }
+catch (e) { console.warn('[landing] 提前初始化失敗，退回「先生成世界、之後再建 landing」的舊流程', e); releaseWorld(); }
+await worldGate;
+
+// ── 畫質檔位與舒適模式：到這裡才定案 ──────────────────────────
+// 放在閘門之後，是為了讓 landing 上改畫面模式時世界還沒建，改個變數就好、不必 reload 整頁。
+// 一旦放行就固定下來，之後整個世界都依這份設定建構。
 const TIER = (qOverride === 'low' || qOverride === 'high') ? qOverride : (COARSE ? 'low' : 'high');
 const Q = ({
   // low＝手機精簡：低發熱、省電優先；視覺精簡但玩法與功能完整（寫實效果全關，渲染路徑與現狀完全一致）
@@ -98,31 +168,13 @@ const Q = ({
           sunShadow: 2048, torchShadow: 2048, waterSeg: 48, waterStep: 0.033, aniso: 8, mageNight: true, // 太陽陰影 4096→2048：texel 砍 3/4 降填充/頻寬，PCFSoft 下幾乎無感
           bloom: true, richSky: true, rich: true, weather: true },
 })[TIER];
-
-// ── 舒適模式（減少 3D 暈 / motion sickness）─────────────────────
-// 動暈的成因是「看到的運動」與「內耳感受到的靜止」對不上；能減輕的方向就三個：
-// 少一點非玩家主動造成的鏡頭位移、少一點週邊視野的光流（vection）、少一點全螢幕明暗與粒子跳動。
-// 預設 auto＝跟隨系統的 prefers-reduced-motion；使用者可在 landing 手動覆寫（會記在 localStorage）。
-// 註：真正的暈眩修正（鏡頭與走路 bob 解耦、地形抬升平滑、注視點平滑、直向 FOV 補償）一律套用、不看這個開關——
-//     那些本來就是手感 bug，關掉舒適模式也不該把它們找回來。這裡只放「會犧牲一點氛圍」的取捨項。
-const CKEY = 'ssd-village-comfort';                       // 'auto' | 'on' | 'off'
-let cOverride = 'auto';
-try { cOverride = localStorage.getItem(CKEY) || 'auto'; } catch (e) {}
-let PRM = false;
-try { PRM = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-const COMFORT = cOverride === 'on' || (cOverride === 'auto' && PRM);
+const COMFORT = comfortWanted();
 if (COMFORT) {
   Q.weather = false;        // 螢幕空間雨絲（sizeAttenuation:false）與世界的運動方向不一致＝最典型的 vection 衝突；雷雨還會整屏調光
   Q.bloomStrength = 0.22;   // 亮部光暈減半：加法混合的螢火蟲／光柱在移動時會整片明滅
 } else {
   Q.bloomStrength = 0.45;
 }
-
-// ── 探索模式（?explore=1 或 landing 次要按鈕）：直接以白天自由探索 ──
-// 只「借光」＋開放白天內容（花海/海岸/釣魚台/拍照點/日之碎片…）；故事狀態照實呈現：
-// 遺跡水晶、維護者石化、中央大水晶、螢火蟲仍依真實進度，課程任務照常可玩、全完成仍觸發終局。
-let EXPLORE = false;
-try { EXPLORE = new URLSearchParams(location.search).get('explore') === '1'; } catch (e) { /* ignore */ }
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const TAU = Math.PI * 2;
@@ -142,7 +194,7 @@ const tex = (url, rx = 1, ry = 1, srgb = false) => {
   return t;
 };
 // 結構石材＝水泥/混凝土貼圖（repeat 1；密度由 boxUV 依各物件大小烘進 UV → 大小物件一致）
-const stoneMap = tex('./tex/concrete.webp?v=d3c202b3', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=d3c202b3', 1, 1);
+const stoneMap = tex('./tex/concrete.webp?v=8c182a8b', 1, 1, true), stoneNor = tex('./tex/concrete_n.webp?v=8c182a8b', 1, 1);
 // 立方投影 UV：依頂點法線主軸把局部座標投影成 UV，任意大小的網格都得到一致的貼圖密度
 function boxUV(geo, tile = 2.6) {
   if (!geo.attributes.normal) geo.computeVertexNormals();
@@ -159,7 +211,7 @@ function boxUV(geo, tile = 2.6) {
 }
 const applyStone = (m) => { m.map = stoneMap; m.normalMap = stoneNor; m.normalScale = new THREE.Vector2(0.4, 0.4); m.color.set(0xd6d2c8); m.roughness = 0.95; m.needsUpdate = true; return m; }; // 提亮成淺水泥灰，蓋掉原本偏暗的色調
 // 木造貼圖（木板）：告示牌/市集/井頂支柱/旗桿等
-const woodMap = tex('./tex/wood.webp?v=d3c202b3', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=d3c202b3', 1, 1);
+const woodMap = tex('./tex/wood.webp?v=8c182a8b', 1, 1, true), woodNor = tex('./tex/wood_n.webp?v=8c182a8b', 1, 1);
 const applyWood = (m) => { m.map = woodMap; m.normalMap = woodNor; m.normalScale = new THREE.Vector2(0.5, 0.5); m.color.set(0xc9a877); m.roughness = 0.82; m.needsUpdate = true; return m; };
 // 建築外殼材質組（民房與水井共用）。與 applyStone/applyWood 的差別：這些不覆寫 m.color，
 // 讓呼叫端保留自己的配色——albedo 與 color 相乘，實測 concrete 亮度 0.54、wood 只有 0.37 且偏棕，
@@ -565,13 +617,13 @@ function resolveHeroCollision() {
 }
 // 地形材質：保留 vertexColors 分區，草地區（頂點色 g>r）以 shader 混入草皮細節、雙尺度打散重複；沙/岩不受影響
 // 積雪（uSnow）疊在草皮混色之後：與飄雪同一套敘事——夜／荒蕪時大地覆雪，天亮隨 vibrancy 融去（見 animate）
-const grassTex = tex('./tex/grass.webp?v=d3c202b3', 1, 1, true);
+const grassTex = tex('./tex/grass.webp?v=8c182a8b', 1, 1, true);
 const snowCover = { value: 0 };   // 0..SNOW_MAX；由 animate 依 vibrancy 驅動
 const SNOW_MAX = 0.8;             // 刻意不到 1：薄雪覆蓋的荒原，底下的草／沙／岩色仍透出來，不把夜村洗成純白
 const snowyNow = () => (SNOW_MAX > 0 ? Math.min(1, snowCover.value / SNOW_MAX) : 0); // 當下地面積雪程度 0..1；腳印與踢起的粉塵共用
 const GRASS_SNOW_MIX = 0.7;       // 草的褪色上限（見 makeGrassMaterial）：保留三成原色當層次，夜晚才不會整片灰成一塊沒有前後景
 const TREE_SNOW_MIX  = 0.6;       // 樹冠的褪色上限（見 makeFoliageMaterial）：略低於草——葉冠在空中，雪只掛得住上/外層，內層仍應是深綠
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=d3c202b3', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: false, roughness: 1, normalMap: tex('./tex/ground_n.webp?v=8c182a8b', 112, 112), normalScale: new THREE.Vector2(0.5, 0.5) });
 terrainMat.onBeforeCompile = (sh) => {
   sh.uniforms.grassMap = { value: grassTex };
   sh.uniforms.uSnow = snowCover;
@@ -942,7 +994,7 @@ function makeFoliageMaterial() {                            // 葉冠材質：al
   return m;
 }
 const foliageMat = makeFoliageMaterial();
-const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=d3c202b3', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=d3c202b3', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
+const barkMat = mat(0xc9b79c, { map: tex('./tex/bark.webp?v=8c182a8b', 3, 2, true), normalMap: tex('./tex/bark_n.webp?v=8c182a8b', 3, 2), normalScale: new THREE.Vector2(0.8, 0.8) });
 // 5 種樹（闊葉＋針葉混合）：圓冠橡木 / 傘狀大樹 / 針葉松 / 垂枝柳 / 矮叢樹。tr=[頂半徑,底半徑,高]
 const TREE_SPECIES = [
   { type: 'round',    R: 2.2, cy: 4.2, flatY: 0.90, cards: 46, card: 1.5, c0: 0x2f5d2a, c1: 0x86c25a, tr: [0.34, 0.50, 3.4] },
@@ -972,7 +1024,7 @@ TREE_SPECIES.forEach((sp, si) => {
 const treeSway = trees.map(() => ({ ang: 0, vel: 0, dx: 0, dz: 1 }));
 const _tQ = new THREE.Quaternion(), _tQy = new THREE.Quaternion(), _tAx = new THREE.Vector3(), _tUp = new THREE.Vector3(0, 1, 0), _tObj = new THREE.Object3D();
 // 岩石：3 種抖動石形 + 每顆隨機旋轉/非等比縮放/色調 → 自然多變（避免千篇一律）
-const rockMap = tex('./tex/rock.webp?v=d3c202b3', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=d3c202b3', 1, 1);
+const rockMap = tex('./tex/rock.webp?v=8c182a8b', 1, 1, true), rockNor = tex('./tex/rock_n.webp?v=8c182a8b', 1, 1);
 const rockMat = new THREE.MeshStandardMaterial({ map: rockMap, normalMap: rockNor, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.95, metalness: 0, envMapIntensity: 0.5, color: 0xd2d0c8 }); // 色調偏中性灰，壓掉貼圖的暖粉
 function craggyRockGeo(amp) {
   const g = mergeVertices(new THREE.IcosahedronGeometry(1, 1)); // 先焊接共用頂點，沿頂點方向抖動才不會裂成尖刺
@@ -1326,7 +1378,7 @@ const dirtTex = (() => {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso || 1;
   t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; return t;
 })();
-const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=d3c202b3', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const dirtMat = new THREE.MeshStandardMaterial({ map: dirtTex, normalMap: tex('./tex/ground_n.webp?v=8c182a8b', 1, 1), normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 // 小徑＝沿「彎曲曲線」生成的緞帶（非直線），寬度兩側漸隱柔邊＋沿長度平鋪貼圖 → 自然蜿蜒不死板
 function dirtPath(ax, az, bx, bz, w = 2.8) {
   const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz) || 1, nx = -dz / L, nz = dx / L; // 垂直方向
@@ -1736,7 +1788,7 @@ function buildOcf() {
   // 金色銘牌框 + OCF 標誌（朝向村莊／玩家）
   const plaqueMat = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(0.9), emissive: col.clone(), emissiveIntensity: 0.45, roughness: 0.35, metalness: 0.5, flatShading: false });
   add(new THREE.BoxGeometry(2.4, 1.12, 0.12), plaqueMat, 0, 3.6, 0.36);
-  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=d3c202b3'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
+  const logoTex = new THREE.TextureLoader().load('./ocf_logo.png?v=8c182a8b'); logoTex.colorSpace = THREE.SRGBColorSpace; logoTex.anisotropy = 4;
   const signMat = new THREE.MeshBasicMaterial({ map: logoTex });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.94), signMat); sign.position.set(0, 3.6, 0.43); g.add(sign);
   // 頂端發光地球儀 + 經緯環（象徵「開放」）
@@ -1837,7 +1889,6 @@ function placeDayStruct(built, data, x, z, labelY, openDist, faceOrigin) {
   POIS.push({ data, isRuin: false, pos: new THREE.Vector3(x, y, z), el: lab.el, openDist, dayOnly: true });
   return built;
 }
-const RUIN_ORDER = ['personal', 'common', 'tools', 'org', 'guide']; // 五座遺跡＝五門課程的推薦順序（唯一來源；紀念碑心法／推薦遺跡／landing 主題預告共用）
 // 守護者紀念碑與 CSCS 夥伴牆：打散到荒野各方位（不再擠在村莊出口）；面朝村心、座標用 STELE_AT/WALL_AT 單一來源（OCF 紀念碑也已移到外圍，見 content.js ocf）
 const lessonStele = placeDayStruct(buildLessonStele(),
   { ...MONUMENT, desc: RUIN_ORDER.map((id) => '・' + UI.shardLesson[id]).join('\n') }, // desc＝五則心法（重用既有三語、零新翻譯）
@@ -1929,7 +1980,7 @@ function buildMonument() {
   const ped = cast(new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.4, 4), RUIN.stone)); ped.position.set(0, 6.3, 0); ped.rotation.y = Math.PI / 4; g.add(ped); // 山形頂
   const W = 4.0, H = W / 1.232;
   add(new THREE.BoxGeometry(W + 0.3, H + 0.3, 0.3), RUIN.stoneIn, 0, 3.0, 0);   // 畫框背板（前後壁畫共用的石芯）
-  const tex = new THREE.TextureLoader().load('./legend.png?v=d3c202b3'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const tex = new THREE.TextureLoader().load('./legend.png?v=8c182a8b'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const face = (s) => { // s=+1 前面(+z)、-1 背面(-z)：兩面都掛上首頁主視覺壁畫
     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ color: 0xfbf7ef }));
     canvas.position.set(0, 3.0, s * 0.18); if (s < 0) canvas.rotation.y = Math.PI; g.add(canvas);
@@ -2327,7 +2378,10 @@ function heroNearNPC() {
 
 // ── 控制 ────────────────────────────────────────────────────────
 // ── 幀率管理：互動 60fps、閒置 30fps（降溫省電）。整數抽幀鎖原生 vsync（幀距均勻、不用累積器 → 避免 CSS2D 標籤抖動）──
-let activeUntil = 0; const bumpActive = () => { activeUntil = performance.now() + 600; }; // 任意操作後 0.6s 維持 60fps，之後無動作才降 30fps
+// lastInputAt 起始給一個很早的時間：展示模式才能在進場當下就判定為「閒置」並立刻接手，不用先空等 30 秒。
+// bumpActive() 只被真人的輸入事件呼叫（展示模式是直接設移動目標、不派合成事件），所以這個判斷不會被自己觸發。
+let activeUntil = 0, lastInputAt = -1e9;
+const bumpActive = () => { const n = performance.now(); activeUntil = n + 600; lastInputAt = n; }; // 任意操作後 0.6s 維持 60fps，之後無動作才降 30fps
 let nativeHz = 60, lastRaf = 0, frameTick = 0;                                            // 平滑推估的原生更新率 + native tick 計數
 const keys = new Set();
 addEventListener('keydown', (e) => { if (e.code === 'Space') e.preventDefault(); keys.add(e.code); bumpActive(); });
@@ -2339,6 +2393,47 @@ let yaw = Math.PI, pitch = COMFORT ? 0.72 : 0.6, dist = COMFORT ? 28 : 24;
 { const sy = groundY(hero.position.x, hero.position.z); camera.position.set(hero.position.x + Math.sin(yaw) * Math.cos(pitch) * dist, sy + Math.sin(pitch) * dist + 2, hero.position.z + Math.cos(yaw) * Math.cos(pitch) * dist); }
 const moveTarget = new THREE.Vector3(); let hasTarget = false;
 const ndc = new THREE.Vector2(); const raycaster = new THREE.Raycaster(); const hitPoint = new THREE.Vector3();
+
+// 展示模式的巡遊路線＝五座遺跡，但停在「靠村莊那一側、距中心 6」的位置：
+// 遺跡本體的碰撞半徑是 4（走不進去，硬要走會卡住直到 travelTimeout），而 POI 的 openDist 是 6.5，
+// 取 6 剛好落在兩者之間 → 角色停得下來，課程卡也會自己跳出來，等於免費的內容輪播。
+const ATTRACT_APPROACH = 6;
+const attract = new Attract({
+  waypoints: ruinAt.map((r) => {
+    const d = Math.hypot(r.x, r.z) || 1, k = Math.max(0, (d - ATTRACT_APPROACH) / d);
+    return { x: r.x * k, z: r.z * k };
+  }),
+  goto: (x, z) => { moveTarget.set(x, 0, z); hasTarget = true; },   // 沿用「點地面走過去」那條路：碰撞、沿牆滑、邊緣減速、轉身與腳步聲全都免費跟著來
+  spin: (d) => { yaw += d; },
+  stop: () => { hasTarget = false; },
+  onArrive: () => attractInvite(),                                  // 每停一站就招呼一次路過的人
+});
+// 展示模式的邀請泡泡：抵達每座遺跡、停下來繞鏡頭時冒出來。停留 8 秒、泡泡顯示 6 秒，
+// 剩下的時間留白，免得整場都掛著一句話反而沒人看。輪流講不同句，同一句不連著出現兩次。
+// 「要不要接手」詢問：擺攤現場滑鼠常被路過的人誤碰，碰一下就直接中斷展示太敏感。
+// 改成先問；沒人回答就當作誤碰，10 秒後自己回去繼續巡遊（巡遊進度是暫停不是重置，不會從第一站重走）。
+const askEl = document.getElementById('attractask');
+let askUntil = 0;
+function showAttractAsk() {
+  if (!askEl) { attract.exit(); return; }         // 沒有詢問框（理論上不會）就退回舊行為，至少不會卡住不能玩
+  askUntil = performance.now() + ATTRACT_ASK_MS;
+  askEl.classList.add('show');
+}
+function hideAttractAsk() { askUntil = 0; if (askEl) askEl.classList.remove('show'); }
+// 婉拒或逾時：把 lastInputAt 推回很早，否則剛才那次碰觸會在下一幀又被判定成「有人碰」，變成問個不停
+function attractKeepShowing() { hideAttractAsk(); lastInputAt = -1e9; attract.resume(); }
+document.getElementById('attractyes')?.addEventListener('click', () => { hideAttractAsk(); attract.exit(); });
+document.getElementById('attractno')?.addEventListener('click', attractKeepShowing);
+
+let lastInviteIdx = -1;
+function attractInvite() {
+  const lines = UI.attractInvites;
+  if (!lines || !lines.length) return;
+  let i = Math.floor(Math.random() * lines.length);
+  if (lines.length > 1 && i === lastInviteIdx) i = (i + 1) % lines.length;
+  lastInviteIdx = i;
+  heroSay(lines[i], 6);
+}
 let pDown = false, dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0;
 const dom = renderer.domElement;
 dom.addEventListener('pointerdown', (e) => { pDown = true; dragging = false; lastX = downX = e.clientX; lastY = downY = e.clientY; dom.setPointerCapture(e.pointerId); bumpActive(); });
@@ -2388,7 +2483,10 @@ joyEl.addEventListener('pointerup', joyEnd);
 joyEl.addEventListener('pointercancel', joyEnd);
 
 // ── 進度（localStorage）────────────────────────────────────────
-const SAVE_KEY = 'ssd-village-v1';
+// 展示模式用獨立的 key 並在每次開啟時清掉：擺攤機一整天巡遊會不斷「發現」遺跡，
+// 若寫進正式存檔，這台機器之後就再也展示不出「還沒找到」的初始樣貌，也會污染真人玩家的進度。
+const SAVE_KEY = ATTRACT ? 'ssd-village-attract' : 'ssd-village-v1';
+if (ATTRACT) { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 let progress = { discovered: [], completed: [] };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.discovered) progress = s; } catch (e) { /* ignore */ }
 if (!Array.isArray(progress.seen)) progress.seen = []; // 小地圖：固定地標/NPC 探索揭示清單（向後相容：舊存檔自動補空陣列，不影響進度/通關條件）
@@ -2663,7 +2761,7 @@ function renderConfCompare() {
   el.textContent = UI.confCompare(CONF_FACES[a], CONF_FACES[b], msg);
 }
 function maybeShowPreConfidence() {
-  if (EXPLORE) return;                       // 前後測是課程成效量測：探索模式進來的人不計，避免污染數據
+  if (EXPLORE || ATTRACT) return;            // 前後測是課程成效量測：探索模式與展示模式（沒有真人在答）進來的都不計，避免污染數據
   if (localStorage.getItem(CONF_PRE) != null) return;
   setTimeout(() => showConfidence('pre'), 800);
 }
@@ -2681,7 +2779,9 @@ function checkAllDone() {
 document.getElementById('finale-close').addEventListener('click', () => { document.getElementById('finale').classList.remove('show'); finaleActive = false; });
 
 // 匿名最小化分析：gtag 不存在（DNT 或離線）即 no-op，遊戲照常運作；不送任何個資
-function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { /* no-op */ } }
+// 展示模式一律不送分析事件：擺攤機一天會自動開場很多次、自己巡遊發現遺跡，
+// 這些不是真人行為，混進 GA 會讓遊戲的成效數據失真（同 maybeShowPreConfidence 的顧慮）。
+function track(name, params) { if (ATTRACT) return; try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch (e) { /* no-op */ } }
 // 給通往課程的連結補上 UTM（僅 ocf.tw 站內），讓站內 GA 能歸因「遊戲 → 學習」
 function withUtm(url) { try { const u = new URL(url, location.href); if (/(^|\.)ocf\.tw$/.test(u.hostname)) { u.searchParams.set('utm_source', 'game'); u.searchParams.set('utm_medium', 'finale'); u.searchParams.set('utm_campaign', 'village-game'); } return u.toString(); } catch (e) { return url; } }
 // 終局面板上任何外連（課程／部落格）被點 → 記一次 cta_to_course（只送路徑、無個資）
@@ -3346,7 +3446,6 @@ function doScreenshot() {
 }
 addEventListener('keydown', (e) => { if (e.code === 'KeyP' && !(document.activeElement && document.activeElement.tagName === 'INPUT')) { e.preventDefault(); requestScreenshot(); } }); // P＝截圖
 
-let started = false;        // 按「開始探險」後才開始模擬與渲染（讀 landing 時不跑 GPU、不發熱）
 function animate(time) {
   if (!started) return;     // landing 仍在最前：完全跳過模擬與渲染（場景被不透明 landing 蓋住，不需畫）
   // 幀率閘門（降溫）：互動時 60fps、閒置時 30fps。用「整數抽幀」鎖原生 vsync（每 N 個 native tick 才畫 1 幀）
@@ -3379,6 +3478,17 @@ function animate(time) {
   kx += joyX; kz += joyZ;   // 虛擬搖桿
   const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
   if (finaleActive) { kx = 0; kz = 0; hasTarget = false; } // 終局運鏡時凍結玩家
+
+  // 展示模式：沒人碰就自己巡遊，有人一碰就立刻讓出控制權（放手 ATTRACT_IDLE_MS 後再接手）。
+  // 擺在移動計算之前：attract 設好的 moveTarget/hasTarget 會直接被下面同一套走路邏輯消化。
+  if (ATTRACT) {
+    const now = performance.now(), sinceInput = now - lastInputAt;
+    if (attract.active && !attract.paused && sinceInput < 400) { attract.pause(); showAttractAsk(); }  // 有人碰到 → 先問，別直接中斷展示
+    if (askUntil && now > askUntil) attractKeepShowing();                                              // 問了沒人答＝誤碰
+    if (!attract.active && !isBusy() && sinceInput > ATTRACT_IDLE_MS) { attract.enter(); attractInvite(); } // 放手夠久 → 重新接手（一接手就先招呼一次）
+    attract.update(dt, hero.position.x, hero.position.z);
+    if (attract.active) { kx = 0; kz = 0; }   // 巡遊中忽略殘留的鍵盤/搖桿輸入，避免和自動移動打架
+  }
 
   moveDir.set(0, 0, 0);
   if (kx || kz) { hasTarget = false; moveDir.addScaledVector(fwd, kz).addScaledVector(right, kx); }
@@ -3450,7 +3560,10 @@ function animate(time) {
 
   // 對話泡：踩水反應 + 漫步自言自語
   const nearNPC = heroNearNPC();   // 靠近可對話 NPC 時，主角先不自言自語（並立即收起正在顯示的台詞）
-  if (nearNPC) { if (sayTimer > 0) { sayTimer = 0; heroBubbleEl.classList.remove('show'); } }
+  // 展示模式例外：巡遊停的每座遺跡旁都站著維護者（keeper 8 單位內就算 nearNPC），照這條規則邀請泡泡
+  // 會在剛冒出來的瞬間被收掉。「靠近 NPC 就閉嘴」是為了別讓主角碎念蓋掉 NPC 對話，而展示模式沒有真人
+  // 會去跟 NPC 對話，這個顧慮不存在。
+  if (nearNPC && !attract.active) { if (sayTimer > 0) { sayTimer = 0; heroBubbleEl.classList.remove('show'); } }
   else if (sayTimer > 0) { sayTimer -= dt; if (sayTimer <= 0) heroBubbleEl.classList.remove('show'); }
   const inWater = groundH < WORLD.water + 0.2;
   if (!finaleActive && !nearNPC) {
@@ -4102,10 +4215,13 @@ addEventListener('resize', () => { applyCameraFraming(); renderer.setSize(innerW
 function setupLanding() {
   const root = document.getElementById('landing');
   if (!root) return;
-  // 五大主題預告：依推薦學習順序，文字直接取自當前語言的 RUINS（自動多語）
+  // 可重入：提前初始化若失敗會在世界就緒後重試一次，清空動態容器避免按鈕被 append 兩份
+  ['.landinglang', '.landingmodeseg'].forEach((s) => { const el = root.querySelector(s); if (el) el.innerHTML = ''; });
+  // 五大主題預告：依推薦學習順序，文字直接取自當前語言的 RUINS（自動多語）。
+  // 讀 RUINS 原始資料而不是 poiById()——後者要等世界把 POIS 建好，landing 就得跟著等。
   const topics = root.querySelector('.topics');
   if (topics) topics.innerHTML = RUIN_ORDER.map((id) => {
-    const r = (poiById(id) || {}).data; if (!r) return '';
+    const r = RUINS.find((x) => x.id === id); if (!r) return '';
     return `<div class="t"><span class="e">${r.emoji}</span><span class="n">${r.title}</span></div>`;
   }).join('');
   // landing 專用語言切換器（沿用 buildLangSwitcher 邏輯；少於 2 種語言不顯示）
@@ -4118,34 +4234,42 @@ function setupLanding() {
       langEl.appendChild(b);
     });
   }
-  // landing 專用畫質切換器：自動／精簡／精緻（存 localStorage，沿用語言切換器的 reload 模式）
-  const qEl = root.querySelector('.landingquality');
-  if (qEl) {
-    [['auto', UI.qualityAuto], ['low', UI.qualityLow], ['high', UI.qualityHigh]].forEach(([v, label]) => {
+  // landing 畫面模式：一般／省效能／防 3D 暈，三選一。一顆按鈕同時定下畫質與動態兩個底層設定，
+  // 使用者不必分別理解「畫質」和「晃動」是什麼——他們只知道自己「機器跑不動」或「玩了會暈」。
+  const MODES = {
+    normal:  { q: 'auto', c: 'off' },   // 畫質依裝置自動分檔、動態完整
+    perf:    { q: 'low',  c: 'off' },   // 強制精簡檔：舊桌機跑不動、或擺攤機要少發熱時
+    comfort: { q: 'auto', c: 'on'  },   // 減暈：鏡頭更穩、移動暗角、關雨天閃電、小地圖固定朝北
+  };
+  const mEl = root.querySelector('.landingmodeseg');
+  if (mEl) {
+    // 沒選過（'auto'）時實際生效的是系統的「減少動態效果」設定 → 圈選當下真正生效的那一個，
+    // 免得使用者看到選在「一般」、玩起來卻是防暈模式（或反過來）。
+    const currentMode = () => (comfortWanted() ? 'comfort' : (qOverride === 'low' ? 'perf' : 'normal'));
+    const btns = [];
+    [['normal', UI.modeNormal], ['perf', UI.modePerf], ['comfort', UI.modeComfort]].forEach(([v, label]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-      if (v === qOverride) b.classList.add('on');
+      b.dataset.mode = v;
+      // 不 reload：世界要等按下「開始探險」才生成，所以在 landing 上換模式只是改兩個變數，
+      // 之後世界會依新值建構。以前這裡 location.reload()，整個介面消失再重畫，看起來像當掉。
       b.addEventListener('click', () => {
-        if (v === qOverride) return;
-        try { localStorage.setItem(QKEY, v); } catch (e) {}
-        location.reload();
+        qOverride = MODES[v].q; cOverride = MODES[v].c;
+        try { localStorage.setItem(QKEY, qOverride); localStorage.setItem(CKEY, cOverride); } catch (e) { /* ignore */ }
+        const now = currentMode();
+        btns.forEach((x) => x.classList.toggle('on', x.dataset.mode === now));
       });
-      qEl.appendChild(b);
+      btns.push(b); mEl.appendChild(b);
     });
+    const now = currentMode();
+    btns.forEach((x) => x.classList.toggle('on', x.dataset.mode === now));
   }
-  // landing 舒適模式切換器：自動（跟隨系統 prefers-reduced-motion）／減少晃動／完整效果——同樣走 localStorage + reload
-  const cEl = root.querySelector('.landingcomfort');
-  if (cEl) {
-    [['auto', UI.comfortAuto], ['on', UI.comfortOn], ['off', UI.comfortOff]].forEach(([v, label]) => {
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-      if (v === cOverride) b.classList.add('on');
-      b.addEventListener('click', () => {
-        if (v === cOverride) return;
-        try { localStorage.setItem(CKEY, v); } catch (e) {}
-        location.reload();
-      });
-      cEl.appendChild(b);
-    });
-  }
+  // landing 的展示模式入口（擺攤用）：帶參數重新載入。ATTRACT 會決定存檔用哪個 key、世界從日或夜開場，
+  // 這些都在模組初始化時就定下來，沒辦法在 runtime 切換，所以沿用語言／畫質切換器那套 reload 模式。
+  const goAttract = (day) => { location.href = day ? '?attract=1&explore=1' : '?attract=1'; };
+  document.getElementById('attractnight')?.addEventListener('click', () => goAttract(false));
+  document.getElementById('attractday')?.addEventListener('click', () => goAttract(true));
+  if (ATTRACT) { const a = root.querySelector('.landingattract'); if (a) a.style.display = 'none'; }  // 已經在展示模式裡，不必再顯示入口
+
   // 「開始探險」：解鎖音訊 →「載入中」轉圈 → 非阻塞預編譯著色器 → 暖機數幀 → 淡出 landing 平順進場
   // （首幀卡頓主因是第一次 render 同步編譯全部著色器＋上傳貼圖；改用 compileAsync 預編譯，並在 landing 仍蓋著時暖機幾幀，把卡頓藏起來）
   const btn = document.getElementById('startbtn');
@@ -4157,7 +4281,9 @@ function setupLanding() {
     // 載入中狀態：重新顯示轉圈、按鈕轉文字
     btn.textContent = UI.landingLoading;
     const prep = root.querySelector('.prep'); if (prep) prep.classList.remove('done');
-    await frame(); await frame();                              // 先讓「載入中」畫面上屏
+    await frame(); await frame();                              // 先讓「載入中」畫面上屏，再開始卡主執行緒的工作
+    releaseWorld();                                            // 放行世界生成（同步、會凍住畫面數秒，但此刻已明確顯示載入中）
+    await worldReady;                                          // 等世界建完，才有 renderer/scene/camera 可用
     try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) {} // 非阻塞預編譯場景著色器（支援並行編譯時轉圈不卡）
     started = true;                                            // 開始模擬與渲染
     track('game_start', { mode: EXPLORE ? 'explore' : 'story' });
@@ -4170,21 +4296,28 @@ function setupLanding() {
   if (exBtn) {
     if (EXPLORE) exBtn.style.display = 'none';                 // 已由網址進入探索模式：不重複顯示
     exBtn.addEventListener('click', () => {
-      if (!btn || btn.disabled || started) return;             // 世界還在生成或已開始：無作用
+      if (!btn || btn.disabled || started) return;             // 已開始：無作用
       EXPLORE = true;
       try { const u = new URL(location.href); u.searchParams.set('explore', '1'); history.replaceState(null, '', u); } catch (e) { /* ignore */ }
-      setWorldOpen(true); computeVibrancy(); vibrancy = vibrancyTarget; // 立即切白天（重算地形被 landing 蓋住）
-      refreshExploreBadge();
+      // 一般情況下世界還沒生成（要等下面 btn.click() 才開始），生成時會自己依 EXPLORE 決定日夜，
+      // 這裡不能碰 setWorldOpen／vibrancy 那些世界建好才存在的東西。只有走過後備路徑（世界先生成、
+      // landing 後補）時世界已經是夜晚狀態，才需要即時切成白天。
+      if (worldIsBuilt) { setWorldOpen(true); computeVibrancy(); vibrancy = vibrancyTarget; refreshExploreBadge(); }
       exBtn.disabled = true;
       btn.click();                                             // 沿用主按鈕同一套載入／暖機／淡出流程
     });
   }
 }
+// 放行「開始探險」。世界改成按下之後才生成，所以這支在 landing 一建好就跑，不必等世界——
+// 轉圈也先收起來（此刻沒有任何東西在載入），按下去才重新顯示。
 function landingReady() {
   const root = document.getElementById('landing'); if (!root) return;
   const prep = root.querySelector('.prep'); if (prep) prep.classList.add('done');
   const btn = document.getElementById('startbtn');
   if (btn) { btn.disabled = false; btn.textContent = UI.landingStart; }
+  root.classList.add('ready');       // 內容都填完了才顯示，避免使用者看到空殼被一項項填入
+  if (ATTRACT && btn) btn.click();   // 展示模式：不等人點「開始探險」
 }
-setupLanding();
-requestAnimationFrame(() => setTimeout(landingReady, 350));
+worldIsBuilt = true;
+worldBuilt();                                       // 世界建完 → 讓「開始探險」的處理器接著做預編譯與淡出
+if (!landingBuilt) { setupLanding(); landingReady(); }   // 後備路徑：提前初始化失敗過，現在世界已就緒，把 landing 補建起來

@@ -324,22 +324,36 @@
 
     /* 進場 landing（兼作世界生成時的等待畫面） */
     @keyframes spin { to { transform:rotate(360deg); } }
+    /* landing 這一層必須始終不透明：它同時是遮罩，底下的 HUD／搖桿／小地圖是預設可見的，
+       整層一透明就會露出還沒進遊戲的介面。所以只淡入「卡片」——module script 是 deferred，
+       瀏覽器會先把空殼卡片（沒有主題、沒有按鈕）畫出來，等 JS 才逐項填入，看起來就是版面被往下推。
+       animation 是保險：JS 沒跑或掛掉時 1.2s 後照樣顯示卡片，不會只剩一片漸層背景。 */
     #landing { position:fixed; inset:0; z-index:50; display:grid; place-items:center; padding:18px;
       background:linear-gradient(180deg,#bfe0f0 0%,#f6ead7 100%); transition:opacity .5s ease; }
     #landing.hide { opacity:0; pointer-events:none; }
+    #landing .card { opacity:0; animation:landingCardIn 0s 1.2s forwards; }
+    #landing.ready .card { opacity:1; animation:none; transition:opacity .18s ease; }
+    @keyframes landingCardIn { to { opacity:1; } }
     #landing .card { background:rgba(251,247,239,.97); border-radius:22px; padding:22px 26px; text-align:center;
       max-width:min(94vw,520px); max-height:90dvh; overflow-y:auto; box-shadow:var(--shadow); }
     #landing .landinglang { display:flex; justify-content:center; gap:3px; margin-bottom:6px; }
     #landing .landinglang button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
       background:rgba(29,36,51,.06); padding:5px 11px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
     #landing .landinglang button.on { color:#fff; background:var(--brand); }
-    #landing .landingquality, #landing .landingcomfort { display:flex; justify-content:center; gap:3px; margin:10px 0 0; flex-wrap:wrap; }
-    #landing .landingquality button, #landing .landingcomfort button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
-      background:rgba(29,36,51,.06); padding:5px 11px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
-    #landing .landingquality button.on, #landing .landingcomfort button.on { color:#fff; background:var(--brand); }
-    /* 畫質／晃動兩組並排，窄螢幕自動換行（landing 卡片已經很長，不再多吃一整段高度） */
-    #landing .landingopts { display:flex; gap:16px; flex-wrap:wrap; }
-    #landing .landingopts .opt { flex:1 1 140px; }
+    /* 畫面模式：原本是「畫質」「晃動」兩組六顆鈕，佔掉約 120px 又跟「五大主題」一樣重。
+       畫質本來就會依裝置自動判斷（手機精簡／桌機精緻），多數人不需要碰，所以收成兩個模式二選一；
+       要手動指定畫質仍可用 ?q=low / ?q=high。 */
+    #landing .landingmode { display:flex; align-items:center; justify-content:center; gap:9px; margin-top:14px; }
+    #landing .landingmode .k { font-size:12.5px; font-weight:700; color:#5a6270; }
+    /* 分段控制：一條軌道內二選一，比兩顆分離的圓鈕更像「單選」 */
+    #landing .seg { display:flex; gap:2px; padding:2px; border-radius:999px; background:rgba(29,36,51,.07); }
+    #landing .seg button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#6b7488;
+      background:transparent; padding:6px 14px; border-radius:999px; -webkit-tap-highlight-color:transparent;
+      transition:color .15s ease, background .15s ease; }
+    #landing .seg button:hover { color:#3c4356; }
+    #landing .seg button.on { color:var(--ink); background:#fff; box-shadow:0 1px 3px rgba(29,36,51,.16); }
+    #landing .seg button:focus-visible { outline:2px solid var(--brand); outline-offset:1px; }
+    @media (prefers-reduced-motion: reduce) { #landing .seg button { transition:none; } }
     #landing .lead { font-size:46px; line-height:1; }
     #landing h1 { margin:6px 0 0; font-size:22px; }
     #landing .desc { margin:12px 0 0; font-size:14px; line-height:1.7; color:#3c4356; text-align:left; }
@@ -360,6 +374,23 @@
       background:rgba(255,210,75,.22); padding:9px 18px; border-radius:999px; transition:filter .12s ease; -webkit-tap-highlight-color:transparent; }
     #landing .landingexplore:hover:not(:disabled) { filter:brightness(1.05); }
     #landing .landingexplore:disabled { opacity:.55; cursor:default; }
+    /* landing：進入展示模式（擺攤用）。日夜各一顆，直接帶著參數重新載入，沿用語言/畫質切換器那套 reload 模式 */
+    #landing .landingattract { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:10px; flex-wrap:wrap; font-size:12px; color:#6b7488; }
+    #landing .landingattract button { cursor:pointer; border:0; font:inherit; font-size:12px; font-weight:700; color:#4a5568;
+      background:rgba(29,36,51,.06); padding:5px 11px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
+    #landing .landingattract button:hover { color:#fff; background:var(--brand); }
+    /* 展示模式的「要不要接手」詢問：擺在畫面下方而非正中央，讓後面的巡遊畫面繼續看得見 */
+    #attractask { position:fixed; left:0; right:0; bottom:11%; z-index:37; display:grid; place-items:center; padding:0 16px;
+      opacity:0; pointer-events:none; transition:opacity .25s ease; }
+    #attractask.show { opacity:1; pointer-events:auto; }
+    #attractask .card { background:rgba(251,247,239,.97); border-radius:18px; padding:15px 20px; text-align:center;
+      max-width:min(92vw,380px); box-shadow:var(--shadow); transform:translateY(10px); transition:transform .25s cubic-bezier(.2,.9,.3,1.2); }
+    #attractask.show .card { transform:translateY(0); }
+    #attractask p { margin:0 0 12px; font-size:16px; font-weight:800; color:var(--ink); }
+    #attractask .btns { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    #attractask button { cursor:pointer; border:0; font:inherit; font-size:14px; font-weight:800; padding:10px 18px; border-radius:999px; -webkit-tap-highlight-color:transparent; }
+    #attractask .yes { color:#fff; background:var(--brand); }
+    #attractask .no { color:#6b7488; background:rgba(29,36,51,.08); }
     #landing .landingabout { display:inline-block; margin-top:12px; font-size:12.5px; font-weight:700; color:#6b7488;
       text-decoration:none; -webkit-tap-highlight-color:transparent; }
     #landing .landingabout:hover { color:var(--brand); text-decoration:underline; }
@@ -690,6 +721,17 @@
     <div class="st-body"></div>
   </div>
 
+  <!-- 展示模式：有人碰到輸入時先問要不要接手，避免路過誤碰就中斷展示（沒回應 10 秒自動回去繼續巡遊） -->
+  <div id="attractask">
+    <div class="card">
+      <p data-i18n="attractAskTitle">要接手玩玩看嗎？</p>
+      <div class="btns">
+        <button id="attractyes" type="button" class="yes" data-i18n="attractAskYes">好，我來玩</button>
+        <button id="attractno" type="button" class="no" data-i18n="attractAskNo">繼續展示</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 進場 landing：首屏即顯示，說明遊戲目的＋預告五大主題；世界在背後生成，按「開始探險」進入 -->
   <div id="landing">
     <div class="card">
@@ -699,23 +741,22 @@
       <p class="desc" data-i18n="landingDesc">走出村莊，尋找散落荒野的「資安遺跡」。</p>
       <div class="topics-hd" data-i18n="landingTopicsHd">你會探索的五大主題</div>
       <div class="topics"></div>
-      <div class="landingopts">
-        <div class="opt">
-          <div class="topics-hd" data-i18n="qualityHd">畫質</div>
-          <div class="landingquality"></div>
-        </div>
-        <div class="opt">
-          <div class="topics-hd" data-i18n="comfortHd">晃動</div>
-          <div class="landingcomfort" data-i18n-title="comfortHint" title=""></div>
-        </div>
-      </div>
       <div class="prep"><div class="spin"></div></div>
       <button id="startbtn" class="start" disabled data-i18n="landingPreparing">世界生成中…</button>
+      <div class="landingmode" data-i18n-title="modeHint" title="">
+        <span class="k" data-i18n="modeHd">畫面</span>
+        <div class="seg landingmodeseg"></div>
+      </div>
       <button id="explorebtn" class="landingexplore" data-i18n="landingExplore" data-i18n-title="landingExploreHint" title="">☀️ 白天自由探索</button>
+      <div class="landingattract" data-i18n-title="attractHint" title="">
+        <span data-i18n="attractHd">🖥️ 展示模式</span>
+        <button id="attractnight" type="button" data-i18n="attractNight">🌙 夜晚</button>
+        <button id="attractday" type="button" data-i18n="attractDay">☀️ 白天</button>
+      </div>
       <a id="aboutlink" class="landingabout" href="https://ssd.ocf.tw/play/" target="_blank" rel="noopener" data-i18n="landingAbout">📖 遊戲簡介</a>
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=d3c202b3"></script>
+  <script type="module" src="./main.js?v=8c182a8b"></script>
 </body>
 </html>
