@@ -68,7 +68,7 @@ function showUnsupported() {
   if (btn) { btn.disabled = true; btn.textContent = UI.cantPlayBtn; }
   if (root) {
     const prep = root.querySelector('.prep'); if (prep) prep.style.display = 'none';   // 收起「世界生成中」轉圈
-    root.querySelectorAll('.topics-hd, .topics, .landingopts, .landingquality, .landingcomfort, .landingexplore').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/畫質/晃動/探索區塊
+    root.querySelectorAll('.topics-hd, .topics, .landingmode, .landingexplore, .landingattract').forEach((el) => { el.style.display = 'none'; }); // 錯誤頁不顯示空的主題/模式/探索/展示區塊
     const card = root.querySelector('.card');
     if (card && !card.querySelector('.cantplay')) {
       const p = document.createElement('p'); p.className = 'cantplay';
@@ -86,6 +86,9 @@ if (!webgl2ok) { showUnsupported(); throw new Error('WebGL2 unsupported — game
 const QKEY = 'ssd-village-quality';                       // 'auto' | 'low' | 'high'
 let qOverride = 'auto';
 try { qOverride = localStorage.getItem(QKEY) || 'auto'; } catch (e) {}
+// 畫質已從 landing 收掉（本來就依裝置自動分檔，多數人不需要碰）；?q=low / ?q=high 留給
+// 需要手動指定的場合：跑不動的舊桌機、擺攤機想省電，或要比對兩檔畫質時。
+try { const q = new URLSearchParams(location.search).get('q'); if (q === 'low' || q === 'high') qOverride = q; } catch (e) { /* ignore */ }
 const COARSE = matchMedia('(pointer: coarse)').matches;   // 觸控／行動裝置
 const TIER = (qOverride === 'low' || qOverride === 'high') ? qOverride : (COARSE ? 'low' : 'high');
 const Q = ({
@@ -4193,32 +4196,23 @@ function setupLanding() {
       langEl.appendChild(b);
     });
   }
-  // landing 專用畫質切換器：自動／精簡／精緻（存 localStorage，沿用語言切換器的 reload 模式）
-  const qEl = root.querySelector('.landingquality');
-  if (qEl) {
-    [['auto', UI.qualityAuto], ['low', UI.qualityLow], ['high', UI.qualityHigh]].forEach(([v, label]) => {
+  // landing 畫面模式：一般／防 3D 暈，二選一（存 localStorage，沿用語言切換器的 reload 模式）。
+  // 畫質不再放進 landing——它本來就依裝置自動分檔（手機精簡／桌機精緻），多數人不需要碰；
+  // 真要手動指定仍可用 ?q=low / ?q=high，見 README。
+  const mEl = root.querySelector('.landingmodeseg');
+  if (mEl) {
+    // 預設 'auto' 時，實際生效的是系統的「減少動態效果」設定 → 圈選當下真正生效的那一個，
+    // 免得使用者看到選在「一般」、玩起來卻是防暈模式（或反過來）。
+    const current = cOverride === 'auto' ? (COMFORT ? 'on' : 'off') : cOverride;
+    [['off', UI.modeNormal], ['on', UI.modeComfort]].forEach(([v, label]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-      if (v === qOverride) b.classList.add('on');
+      if (v === current) b.classList.add('on');
       b.addEventListener('click', () => {
-        if (v === qOverride) return;
-        try { localStorage.setItem(QKEY, v); } catch (e) {}
-        location.reload();
-      });
-      qEl.appendChild(b);
-    });
-  }
-  // landing 舒適模式切換器：自動（跟隨系統 prefers-reduced-motion）／減少晃動／完整效果——同樣走 localStorage + reload
-  const cEl = root.querySelector('.landingcomfort');
-  if (cEl) {
-    [['auto', UI.comfortAuto], ['on', UI.comfortOn], ['off', UI.comfortOff]].forEach(([v, label]) => {
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-      if (v === cOverride) b.classList.add('on');
-      b.addEventListener('click', () => {
-        if (v === cOverride) return;
+        if (v === current) return;
         try { localStorage.setItem(CKEY, v); } catch (e) {}
         location.reload();
       });
-      cEl.appendChild(b);
+      mEl.appendChild(b);
     });
   }
   // landing 的展示模式入口（擺攤用）：帶參數重新載入。ATTRACT 會決定存檔用哪個 key、世界從日或夜開場，
