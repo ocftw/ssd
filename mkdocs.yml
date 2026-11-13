@@ -197,6 +197,7 @@ plugins:
       enabled: !ENV [CI, false]
       minify_html: true
       minify_css: true
+      cache_safe: true
       css_files:
         - stylesheets/extra.css
       htmlmin_opts:
