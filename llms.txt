@@ -98,9 +98,9 @@
 
 ## Optional
 
-- [延伸閱讀](https://ssd.ocf.tw/blog/index.md): 延伸閱讀部落格
+- [專欄文章](https://ssd.ocf.tw/blog/index.md): 專欄文章
 - [一次性密碼、驗證器、備份碼：MFA 核心機制入門](https://ssd.ocf.tw/blog/2026/04/17/mfa-basics.md)
-- [歡迎來到資安新手村延伸閱讀](https://ssd.ocf.tw/blog/2026/04/17/welcome.md)
+- [歡迎來到資安新手村專欄文章](https://ssd.ocf.tw/blog/2026/04/17/welcome.md)
 - [密碼強度與破解成本：長度、複雜度、密碼短語](https://ssd.ocf.tw/blog/2026/04/24/password-strength.md)
 - [VPN、Tor、Proxy：工具差異與使用時機](https://ssd.ocf.tw/blog/2026/05/01/vpn-tor-proxy.md)
 - [組織導入密碼管理器：分階段落地策略](https://ssd.ocf.tw/blog/2026/05/08/org-password-manager.md)
@@ -110,4 +110,5 @@
 - [帳號生命週期管理：加入、調整、離職的權限閉環](https://ssd.ocf.tw/blog/2026/06/05/account-lifecycle.md)
 - [權限矩陣實作：RBAC 在小型公民團體的落地方法](https://ssd.ocf.tw/blog/2026/06/12/rbac-permission-matrix.md)
 - [備份加密與存取控制：備份也要最小權限](https://ssd.ocf.tw/blog/2026/06/19/backup-encryption.md)
+- [【公民社會威脅速報】釣魚信如何取得 Google 帳號的資料存取權？](https://ssd.ocf.tw/blog/2026/10/27/google-oauth-phishing-alert.md)
 

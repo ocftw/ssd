@@ -231,7 +231,7 @@ export const UI_ALL = {
     finaleH2: '新手村重生！',
     finaleP: '五道防線全部重建，中央大水晶綻放光芒，灰暗的村莊重獲生機——被石化的村民也解開了。這是你這趟旅程練成的「英雄守則」，把它帶回現實世界吧：',
     finaleScrollHd: '📜 英雄守則・你的個人行動清單',
-    finaleTakeaway: '📚 延伸閱讀：進階文章 →',
+    finaleTakeaway: '📚 專欄文章 →',
     finaleRank: '榮銜：資安守護者 🛡️',
     finaleClose: '繼續探索 →',
 
@@ -621,7 +621,7 @@ export const UI_ALL = {
     finaleH2: '新手村重生！',
     finaleP: '五道防线全部重建，中央大水晶绽放光芒，灰暗的村庄重获生机——被石化的村民也解开了。这是你这趟旅程练成的「英雄守则」，把它带回现实世界吧：',
     finaleScrollHd: '📜 英雄守则・你的个人行动清单',
-    finaleTakeaway: '📚 延伸阅读：进阶文章 →',
+    finaleTakeaway: '📚 专栏文章 →',
     finaleRank: '荣衔：安全守护者 🛡️',
     finaleClose: '继续探索 →',
 
@@ -1001,7 +1001,7 @@ export const UI_ALL = {
     finaleH2: `The village is reborn!`,
     finaleP: `All five defenses are rebuilt, the great central crystal blazes with light, and the gray village comes back to life — even the petrified villagers are freed. This is the "Hero's Code" you forged on this journey; take it back to the real world:`,
     finaleScrollHd: `📜 Hero's Code · your personal action list`,
-    finaleTakeaway: `📚 Further reading: advanced articles →`,
+    finaleTakeaway: `📚 Featured articles →`,
     finaleRank: `Title: Security Guardian 🛡️`,
     finaleClose: `Keep exploring →`,
 
