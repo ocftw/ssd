@@ -1,5 +1,5 @@
 {#-
-  Blog post 樣板覆寫：拿掉預設左側 post 元數據 sidebar，並補上麵包屑（首頁 > 延伸閱讀）。
+  Blog post 樣板覆寫：拿掉預設左側 post 元數據 sidebar，並補上麵包屑（首頁 > 專欄文章）。
   其餘 header / tabs / footer / right TOC 由 main.html → base.html 繼承。
 
   關鍵設計決定：
@@ -13,12 +13,6 @@
   <div class="md-content md-content--blog" data-md-component="content">
     {% set created_at = page.meta.date.created if page.meta and page.meta.date and page.meta.date.created else none %}
     {% set created_at_display = created_at.strftime("%Y-%m-%d") if created_at and created_at.strftime else (created_at | string).split(" ")[0] if created_at else none %}
-    {% set cover_image = page.meta.cover_image if page.meta and page.meta.cover_image else none %}
-    {% if cover_image %}
-      <div class="blog-post-cover">
-        <img src="{{ cover_image | url }}" alt="" loading="eager" decoding="async" />
-      </div>
-    {% endif %}
     {% if "navigation.path" in features %}
       {% include "partials/path.html" %}
     {% endif %}

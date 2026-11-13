@@ -56,7 +56,7 @@ const TEXT = {
     monument: {
       title: '守護者紀念碑', sub: '你學到的五件事',
       chips: ['個人帳號', '事件應變', '工具四件套', '組織防護', '進度盤點'],
-      stateText: '通關紀念', goText: '📚 延伸閱讀：進階文章 →',
+      stateText: '通關紀念', goText: '📚 專欄文章 →',
     },
     lighthouse: {
       title: '守護燈塔', sub: '照亮他人的路',
@@ -169,7 +169,7 @@ const TEXT = {
     monument: {
       title: '守护者纪念碑', sub: '你学到的五件事',
       chips: ['个人账号', '事件应变', '工具四件套', '组织防护', '进度盘点'],
-      stateText: '通关纪念', goText: '📚 延伸阅读：进阶文章 →',
+      stateText: '通关纪念', goText: '📚 专栏文章 →',
     },
     lighthouse: {
       title: '守护灯塔', sub: '照亮他人的路',
@@ -282,7 +282,7 @@ const TEXT = {
     monument: {
       title: `Guardian's Monument`, sub: `The five things you learned`,
       chips: [`Personal accounts`, `Incident response`, `Toolkit of four`, `Org defense`, `Take stock`],
-      stateText: `Completion memento`, goText: `📚 Further reading: advanced articles →`,
+      stateText: `Completion memento`, goText: `📚 Featured articles →`,
     },
     lighthouse: {
       title: `Guardian Lighthouse`, sub: `Lighting the way for others`,

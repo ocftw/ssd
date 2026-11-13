@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: mfa-basics
 title: 一次性密碼、驗證器、備份碼：MFA 核心機制入門
 cover_image: asserts/blog-mfa-basics.webp

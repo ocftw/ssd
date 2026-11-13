@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: account-lifecycle
 title: 帳號生命週期管理：加入、調整、離職的權限閉環
 cover_image: asserts/blog-account-lifecycle.webp

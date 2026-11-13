@@ -1,7 +1,7 @@
 {#-
   麵包屑：最前加首頁圖示連結，其餘與主題相同（樣式沿用 Material .md-path，僅見 extra.css 微調圖示尺寸）
   sub-category layout 由 sub_category-page.html 在 hero 前內嵌，此處跳過以避免重複
-  Blog post：page.ancestors 為空，改以 blog index 作為唯一上層；標題沿用「延伸閱讀」對應 nav 設定。
+  Blog post：page.ancestors 為空，改以 blog index 作為唯一上層；標題沿用「專欄文章」對應 nav 設定。
 -#}
 {% if not (page.meta and page.meta.layout == "sub-category") %}
 {% import "partials/path-item.html" as item with context %}
@@ -27,7 +27,7 @@
       </li>
       {% if is_blog_post %}
         <li class="md-path__item">
-          <a href="{{ 'blog/' | url }}" class="md-path__link">延伸閱讀</a>
+          <a href="{{ 'blog/' | url }}" class="md-path__link">專欄文章</a>
         </li>
       {% else %}
         {% for nav_item in page.ancestors | reverse %}

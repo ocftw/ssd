@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: passkey-fido2
 title: Passkey、FIDO2、安全金鑰：無密碼與硬體驗證全圖
 cover_image: asserts/blog-passkey-fido2.webp

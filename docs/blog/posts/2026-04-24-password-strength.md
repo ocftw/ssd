@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: password-strength
 title: 密碼強度與破解成本：長度、複雜度、密碼短語
 cover_image: asserts/blog-passwork-strength.webp

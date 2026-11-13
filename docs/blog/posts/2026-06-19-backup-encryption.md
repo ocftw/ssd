@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: backup-encryption
 title: 備份加密與存取控制：備份也要最小權限
 cover_image: asserts/blog-backup-encryption.webp

@@ -61,42 +61,13 @@ hide:
   </div>
 </div>
 
-<!-- 文章預覽：白底、三張寫死卡片 -->
-<div class="home-section home-section--white" markdown="1">
+<!-- 專欄卡片由 hooks/home_articles.py 自動帶入最新三篇已發布文章。 -->
+<section class="home-section home-section--white" aria-labelledby="home-columns-title">
+  <h2 id="home-columns-title">專欄文章</h2>
 
-## 最新內容
-
-<div class="home-article-cards">
-
-<div class="home-article-card">
-  <a href="blog/2026/04/17/mfa-basics.html"><img src="./asserts/blog-mfa-basics.webp" alt="placeholder" /></a>
-  <p class="home-article-card__title"><a href="blog/2026/04/17/mfa-basics.html">一次性密碼、驗證器、備份碼：MFA 核心機制入門</a></p>
-  <p class="home-article-card__date">2026/04/17</p>
-  <p>開啟多重驗證（MFA）之後，面對驗證應用程式、簡訊驗證碼、備份碼這幾個選項，該怎麼選？當手機遺失、換機時，還能不能進得了自己的帳號？</p>
-  <a href="blog/2026/04/17/mfa-basics.html" class="md-button md-button--primary">閱讀更多 ›</a>
-</div>
-
-<div class="home-article-card">
-  <a href="blog/2026/04/24/password-strength.html"><img src="./asserts/blog-passwork-strength.webp" alt="placeholder" /></a>
-  <p class="home-article-card__title"><a href="blog/2026/04/24/password-strength.html">密碼強度與破解成本：長度、複雜度、密碼短語</a></p>
-  <p class="home-article-card__date">2026/04/24</p>
-  <p>密碼到底要設多長、要加什麼字元、為什麼光是「定期更換」不夠，以及當你不想靠密碼管理器時，怎麼設計一組記得住又真的難破的密碼。</p>
-  <a href="blog/2026/04/24/password-strength.html" class="md-button md-button--primary">閱讀更多 ›</a>
-</div>
-
-<div class="home-article-card">
-  <a href="blog/2026/05/01/vpn-tor-proxy.html"><img src="./asserts/blog-vpn-tor-proxy.webp" alt="placeholder" /></a>
-  <p class="home-article-card__title"><a href="blog/2026/05/01/vpn-tor-proxy.html">VPN、Tor、Proxy：工具差異與使用時機</a></p>
-  <p class="home-article-card__date">2026/05/01</p>
-  <p>當你需要保護網路連線時，VPN、Tor、Proxy 各自能做到什麼、不能做到什麼，以及在不同威脅情境下該優先選哪一種。</p>
-  <a href="blog/2026/05/01/vpn-tor-proxy.html" class="md-button md-button--primary">閱讀更多 ›</a>
-</div>
-
-</div>
-
-[更多文章  ›](blog/){ .md-button .md-button--outline }
-
-</div>
+  <!-- home-articles -->
+  <p><a href="blog/" class="md-button md-button--outline">更多文章 ›</a></p>
+</section>
 
 <!-- Let knowledge spread：淺灰、左文右按鈕 -->
 <div class="home-section home-section--gray home-section--cta" markdown="1">

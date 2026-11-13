@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: rbac-permission-matrix
 title: 權限矩陣實作：RBAC 在小型公民團體的落地方法
 cover_image: asserts/blog-rbac-permission-matrix.webp

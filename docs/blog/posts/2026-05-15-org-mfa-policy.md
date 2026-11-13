@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: org-mfa-policy
 title: 組織 MFA 政策設計：人員差異與風險分級
 cover_image: asserts/blog-org-mfa-policy.webp

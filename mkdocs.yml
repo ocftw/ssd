@@ -12,6 +12,7 @@ exclude_docs: |
 # 建置後給 /games 的 ES module 加內容雜湊版本號，避免部署時新舊 .js 混搭載入失敗
 hooks:
   - hooks/cache_bust.py
+  - hooks/home_articles.py
 nav:
   - 首頁:
       - index.md
@@ -113,8 +114,7 @@ nav:
               - assessment/checklist/index.md
               - 場勘紀錄表: assessment/checklist/site_survey.md
               - 課後任務清單: assessment/checklist/homework.md
-  - 延伸閱讀:
-      - blog/index.md
+
 theme:
   name: material
   logo: asserts/logo.svg
@@ -143,6 +143,7 @@ theme:
 plugins:
   - meta
   - blog:
+      draft_on_serve: false
       post_date_format: full
       post_url_date_format: yyyy/MM/dd
       archive_date_format: yyyy
@@ -190,7 +191,7 @@ plugins:
           - contribute/*.md
           - assessment/*.md
         Optional:
-          - blog/index.md: 延伸閱讀部落格
+          - blog/index.md: 專欄文章
           - blog/posts/*.md
   - minify:
       enabled: !ENV [CI, false]
@@ -224,8 +225,6 @@ markdown_extensions:
 extra:
   # 頁尾第一列快速連結（overrides/partials/footer.html）
   footer_primary:
-    - text: 延伸閱讀
-      link: /blog/
     - text: 資安升級工具包
       link: /guide/
     - text: 疑問諮詢

@@ -1,4 +1,6 @@
 ---
+draft: true
+unlisted: true
 slug: org-password-manager
 title: 組織導入密碼管理器：分階段落地策略
 cover_image: asserts/blog-org-password-manager.webp
