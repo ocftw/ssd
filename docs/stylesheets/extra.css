@@ -1551,21 +1551,15 @@ div.grid.cards > ul > li > p:first-child {
   opacity: 0.85;
 }
 
-/* Blog post：非手機模式下先採 80% 寬，超寬螢幕回到與 nav 同寬。 */
-@media screen and (min-width: 76.25em) {
-  .md-content--blog > .md-content__inner,
-  .md-content--blog > .md-path {
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-}
-
-@media screen and (min-width: 100em) {
-  .md-content--blog > .md-content__inner,
-  .md-content--blog > .md-path {
-    width: 100%;
-    max-width: none;
+/* 專欄文章參考教材頁主文寬度，收窄至 688px；桌面與平板置中，手機沿用既有 gutter。 */
+@media screen and (min-width: 48em) {
+  .md-content--blog > .md-content__inner--blog-post,
+  .md-content--blog:has(> .md-content__inner--blog-post) > .md-path {
+    box-sizing: border-box;
+    width: calc(100% - 4rem);
+    max-width: 688px;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 }
 
@@ -1848,7 +1842,7 @@ div.grid.cards > ul > li > p:first-child {
   margin: 1.5rem auto;
 }
 .md-typeset img.article-image--portrait {
-  max-width: 480px;
+  max-width: 750px;
 }
 
 .md-content--blog .md-content__inner--blog-post > p.article-image-caption {
