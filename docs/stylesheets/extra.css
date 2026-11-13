@@ -1551,7 +1551,7 @@ div.grid.cards > ul > li > p:first-child {
   opacity: 0.85;
 }
 
-/* 專欄文章參考教材頁主文寬度，收窄至 688px；桌面與平板置中，手機沿用既有 gutter。 */
+/* 專欄文章參考「帳號密碼外洩」頁主文寬度，最大 688px；桌面與平板置中，手機沿用既有 gutter。 */
 @media screen and (min-width: 48em) {
   .md-content--blog > .md-content__inner--blog-post,
   .md-content--blog:has(> .md-content__inner--blog-post) > .md-path {

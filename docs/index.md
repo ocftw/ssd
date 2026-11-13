@@ -79,7 +79,7 @@ hide:
 <div class="home-cta-buttons" markdown="1">
 
 [關於 OCF  ›](https://ocf.tw/){ .md-button .home-cta-button .home-cta-button--outline target="_blank" }
-[捐款支持  ›](https://ocf.tw/donate/){ .md-button .md-button--primary target="_blank" }
+[捐款支持  ›](https://ocf.tw/supportus/){ .md-button .md-button--primary target="_blank" }
 
 </div>
 
